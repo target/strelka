@@ -1577,7 +1577,7 @@ Below is a partial scan result for a document file that contains VBA/VBScript, t
 ```
 
 ## Contributing
-Guidelines for contributing can be found [here](https://github.com/target/strelka/CONTRIBUTING.md).
+Guidelines for contributing can be found [here](https://github.com/target/strelka/blob/master/CONTRIBUTING.md).
 
 ## Related Projects
 * [Laika BOSS](https://github.com/lmco/laikaboss)

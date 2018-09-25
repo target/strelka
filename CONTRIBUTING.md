@@ -2,7 +2,7 @@
 Thank you so much for your interest in contributing to Strelka! This document includes guidelines to follow when contributing to the project.
 
 ## Code of Conduct
-The Code of Conduct can be reviewed [here](https://github.com/target/strelka/CODE_OF_CONDUCT.md).
+The Code of Conduct can be reviewed [here](https://github.com/target/strelka/blob/master/CODE_OF_CONDUCT.md).
 
 ## Submitting Changes
 Pull requests should be submitted using the pull request template and follow the [branching style guide](#branching). Changes will be validated by the project maintainers before merging to master.
