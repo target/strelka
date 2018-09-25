@@ -19,7 +19,7 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Server and project version:**
+**Server and project version**
  - OS: [e.g. Ubuntu Bionic]
  - Commit Hash: [e.g. 8519b9c16acdf1b8dc54a9627695789222c35cc0]
 
