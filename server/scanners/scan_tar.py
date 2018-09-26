@@ -47,7 +47,7 @@ class ScanTar(objects.StrelkaScanner):
                                     self.metadata["total"]["extracted"] += 1
 
                             except KeyError:
-                                file_object.flags.append("{self.scanner_name}::key_error")
+                                file_object.flags.append(f"{self.scanner_name}::key_error")
 
             except tarfile.ReadError:
-                file_object.flags.append("{self.scanner_name}::tarfile_read_error")
+                file_object.flags.append(f"{self.scanner_name}::tarfile_read_error")
