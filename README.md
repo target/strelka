@@ -140,7 +140,7 @@ The recommended operating system for Strelka is Ubuntu 18.04 LTS (Bionic Beaver)
 
 5. Clone this repository
     ```sh
-    git clone git.target.com/strelka /opt/strelka/
+    git clone https://github.com/target/strelka.git /opt/strelka/
     ```
 
 6. Compile the Strelka protobuf
@@ -156,7 +156,7 @@ The recommended operating system for Strelka is Ubuntu 18.04 LTS (Bionic Beaver)
 ### Docker
 1. Clone this repository
     ```sh
-    git clone git.target.com/strelka /opt/strelka/
+    git clone https://github.com/target/strelka.git /opt/strelka/
     ```
 
 2. Build the container
