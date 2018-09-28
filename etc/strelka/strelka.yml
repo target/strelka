@@ -365,7 +365,10 @@ scan:
         options:
           tempfile_directory: '/dev/shm/'
     'ScanUrl':
-      - positive:
+      - negative:
+          flavors:
+            - 'javascript_file'
+        positive:
           flavors:
             - 'text/plain'
         priority: 5

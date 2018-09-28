@@ -32,20 +32,6 @@ Below are some quickstart commands for testing a development build using Docker:
 We rely on contributors to test any changes before they are submitted as pull requests. Any components added or changed should be tested and tests documented in the pull request. To assist in testing, the project maintainers may ask for file samples.
 
 ## Style Guides
-### Branching
-When submitting changes to the project, please follow these guidelines:
-* Pull requests must be in their own branch based on the latest master branch
-  * New features should be put into `feature/*` branches
-  * Bug fixes should be put into `bug/*` branches
-  * Documentation updates should be put into `doc/*` branches
-  * Updates that do not fit into the above categories should be put into `misc/*` branches
-* Branch names should include:
-  * username of the author
-  * short, one to three word present-tense description of what is in the branch
-  ```
-  feature/jshlbrd-add-go-client
-  ```
-
 ### Python
 Python code should attempt to adhere as closely to [PEP8](https://www.python.org/dev/peps/pep-0008/) as possible. We may ask authors to refactor code for better PEP8 compliance, but we do not enforce 100% compliance.
 
