@@ -380,6 +380,7 @@ class StrelkaFile(object):
             yara_file: Location of the YARA file that contains rules used
                 to taste files.
         """
+        taste_yara_file = None
         try:
             global compiled_yara
             if compiled_yara is None:
@@ -395,7 +396,7 @@ class StrelkaFile(object):
         except (yara.Error, yara.TimeoutError) as YaraError:
             self.flags.append("StrelkaFile::yara_scan_error")
             logging.exception("Exception while tasting with YARA file"
-                              f" {yara_file} (see traceback below)")
+                              f" {taste_yara_file} (see traceback below)")
 
 
 class StrelkaScanner(object):
