@@ -565,39 +565,41 @@ rule javascript_file
     meta:
         type = "script"
     strings:
-        $a = { 76 61 72 20 } // var
-        $b = { 66 75 6E 63 74 69 6F 6E } // function
-        $c = { 66 75 6E 63 74 69 6F 6E [0-1] 28 } // function[0-1](
-        $d = { 69 66 [0-1] 28 } // if[0-1](
-        $e = { 24 28 } // $(
-        $f = { 2F ( 2A | 2F ) } // \/(\/|\*)
-        $g = { 6A 51 75 65 72 79 } // jQuery
-        $h = { 74 72 79 [0-1] 7B } // try[0-1]{
-        $i = { 63 61 74 63 68 28 } // catch(
-        $j = { 2E 70 75 73 68 28 } // .push(
-        $k = { 6E 65 77 20 41 72 72 61 79 28 } // new Array(
-        $l = { 64 6f 63 75 6d 65 6e 74 2e 63 72 65 61 74 65 } // document.create
-        $m = { 64 6F 63 75 6D 65 6E 74 2E 77 72 69 74 65 } // document.write
-        $n = { 77 69 6E 64 6F 77 2E ( 6C 6F 63 61 74 69 6F 6E | 6F 70 65 6E ) } // window.(location|open)
-        $o = { 64 65 66 69 6E 65 28 } // define(
-        $p = { 65 76 61 6C 28 } // eval(
-        $q = { 75 6E 65 73 63 61 70 65 28 } // unescape(
+        $var = { 76 61 72 20 } // var
+        $function1 = { 66 75 6E 63 74 69 6F 6E } // function
+        $function2 = { 28 66 75 6E 63 74 69 6F 6E } // (function
+        $function3 = { 66 75 6E 63 74 69 6F 6E [0-1] 28 } // function[0-1](
+        $if = { 69 66 [0-1] 28 } // if[0-1](
+        $misc1 = { 24 28 } // $(
+        $misc2 = { 2F ( 2A | 2F ) } // \/(\/|\*)
+        $jquery = { 6A 51 75 65 72 79 } // jQuery
+        $try = { 74 72 79 [0-1] 7B } // try[0-1]{
+        $catch = { 63 61 74 63 68 28 } // catch(
+        $push = { 2E 70 75 73 68 28 } // .push(
+        $array = { 6E 65 77 20 41 72 72 61 79 28 } // new Array(
+        $document1 = { 64 6f 63 75 6d 65 6e 74 2e 63 72 65 61 74 65 } // document.create
+        $document2 = { 64 6F 63 75 6D 65 6E 74 2E 77 72 69 74 65 } // document.write
+        $window = { 77 69 6E 64 6F 77 ( 2E | 5B ) } // window[.\[]
+        $define = { 64 65 66 69 6E 65 28 } // define(
+        $eval = { 65 76 61 6C 28 } // eval(
+        $unescape = { 75 6E 65 73 63 61 70 65 28 } // unescape(
     condition:
-        $a at 0 or
-        $b at 0 or
-        $d at 0 or
-        $g at 0 or
-        $c in (0..30) or
-        $j in (0..30) or
-        $k in (0..30) or
-        ( $h at 0 and $i in (5..1000) ) or
-        $n in (0..100) or
-        $l in (0..100) or
-        $m in (0..100) or
-        $o in (0..100) or
-        $p in (0..100) or
-        $q in (0..100) or
-        ( ( $f at 0 or $e at 0 ) and $a and $b and $d )
+        $var at 0 or
+        $function1 at 0 or
+        $function2 at 0 or
+        $if at 0 or
+        $jquery at 0 or
+        $function3 in (0..30) or
+        $push in (0..30) or
+        $array in (0..30) or
+        ( $try at 0 and $catch in (5..1000) ) or
+        $document1 in (0..100) or
+        $document2 in (0..100) or
+        $window in (0..100) or
+        $define in (0..100) or
+        $eval in (0..100) or
+        $unescape in (0..100) or
+        ( ( $misc1 at 0 or $misc2 at 0 ) and $var and $function1 and $if )
 }
 
 rule vb_file

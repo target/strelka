@@ -201,7 +201,7 @@ The help page for `strelka.py` is shown below:
 ```
 usage: strelka.py [options]
 
-used for running Strelka as a distributed cluster.
+runs Strelka as a distributed cluster.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -225,7 +225,7 @@ The help page for `strelka_dirstream.py` is shown below:
 ```
 usage: strelka_dirstream.py [options]
 
-used for sending files from a directory to a Strelka cluster in near real-time.
+sends files from a directory to a Strelka cluster in near real-time.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -246,7 +246,7 @@ The help page for `strelka_user_client.py` is shown below:
 ```
 usage: strelka_user_client.py [options]
 
-used for sending ad-hoc file requests to a Strelka cluster.
+sends ad-hoc file requests to a Strelka cluster.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -279,14 +279,14 @@ optional arguments:
 
 The help page for `generate_curve_certificates.py` is shown below:
 ```
-usage: generate-curve-certificates.py [options]
+usage: generate_curve_certificates.py [options]
 
-used for generating curve certificates used by brokers and clients.
+generates curve certificates used by brokers and clients.
 
 optional arguments:
   -h, --help            show this help message and exit
-  -p, --path            working path to store keys in (defaults to current
-                        working directory)
+  -p PATH, --path PATH  path to store keys in (defaults to current working
+                        directory)
   -b, --broker          generate curve certificates for a broker
   -c, --client          generate curve certificates for a client
   -cf CLIENT_FILE, --client-file CLIENT_FILE
@@ -295,7 +295,6 @@ optional arguments:
                         client keys at once
 ```
 
-
 #### validate_yara.py
 `validate_yara.py` is a utility used for recursively validating a directory of YARA rules files. This can be useful when debugging issues related to the `ScanYara` scanner.
 
@@ -303,7 +302,7 @@ The help page for `validate_yara.py` is shown below:
 ```
 usage: validate_yara.py [options]
 
-used for validating YARA rules files.
+validates YARA rules files.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -675,7 +674,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanTar | Extract files from tar archives | "limit" -- maximum number of files to extract (defaults to 1000) |
 | ScanTnef | Collects metadata and extract files from TNEF files | N/A |
 | ScanUpx | Decompresses UPX packed files | "tempfile_directory" -- location where `tempfile` will write temporary files (defaults to "/tmp/") |
-| ScanUrl | Collects URLs from files | N/A |
+| ScanUrl | Collects URLs from files | "regex" -- dictionary entry that establishes the regular expression pattern used for URL parsing (defaults to a widely scoped regex) |
 | ScanVb | Collects metadata from Visual Basic script files | N/A |
 | ScanVba | Extracts and analyzes VBA from document files | "analyze_macros" -- boolean that determines if macros should be analyzed (defaults to True) |
 | ScanX509 | Collects metadata from x509 and CRL files | "type" -- string that determines the type of x509 certificate being scanned (no default, assigned as either "der" or "pem" depending on flavor) |
