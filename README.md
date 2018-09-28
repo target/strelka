@@ -281,7 +281,7 @@ The help page for `generate_curve_certificates.py` is shown below:
 ```
 usage: generate-curve-certificates.py [options]
 
-used for generating curve certifilcates used by brokers and clients.
+used for generating curve certificates used by brokers and clients.
 
 optional arguments:
   -h, --help            show this help message and exit
