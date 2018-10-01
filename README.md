@@ -8,6 +8,8 @@ Strelka differs from its sibling projects in a few significant ways:
 * Uses widely supported networking, messaging, and data libraries/formats (ZeroMQ, protocol buffers, YAML, JSON)
 * Built-in scan result logging and log management (compatible with Filebeat/ElasticStack, Splunk, etc.)
 
+[![Target’s CFC-Open-Source Slack](https://cfc-slack-inv.herokuapp.com/badge.svg?colorA=155799&colorB=159953)](https://cfc-slack-inv.herokuapp.com/)
+
 ## Table of Contents
 * [FAQ](#frequently-asked-questions)
 * [Installation](#installation)
