@@ -47,6 +47,7 @@ RUN apt-get -qq update && \
     inflection \
     inotify_simple \
     interruptingcow \
+    jsbeautifier \
     libarchive-c \
     lxml \
     git+https://github.com/aaronst/macholibre.git \

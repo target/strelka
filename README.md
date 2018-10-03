@@ -111,7 +111,7 @@ The recommended operating system for Strelka is Ubuntu 18.04 LTS (Bionic Beaver)
 
 2. Install pip3 packages
     ```sh
-    pip3 install beautifulsoup4 boltons boto3 gevent google-cloud-storage html5lib inflection inotify_simple interruptingcow libarchive-c lxml git+https://github.com/aaronst/macholibre.git olefile oletools pdfminer.six pefile pgpdump3 protobuf pyelftools pygments pyjsparser pylzma git+https://github.com/jshlbrd/pyopenssl.git python-docx git+https://github.com/jshlbrd/python-entropy.git python-keystoneclient python-magic python-swiftclient pyyaml pyzmq rarfile requests rpmfile schedule ssdeep tnefparse
+    pip3 install beautifulsoup4 boltons boto3 gevent google-cloud-storage html5lib inflection inotify_simple interruptingcow jsbeautifier libarchive-c lxml git+https://github.com/aaronst/macholibre.git olefile oletools pdfminer.six pefile pgpdump3 protobuf pyelftools pygments pyjsparser pylzma git+https://github.com/jshlbrd/pyopenssl.git python-docx git+https://github.com/jshlbrd/python-entropy.git python-keystoneclient python-magic python-swiftclient pyyaml pyzmq rarfile requests rpmfile schedule ssdeep tnefparse
     ```
 
 3. Install YARA
@@ -655,7 +655,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanHeader | Collects file header | "length" -- number of header characters to log as metadata (defaults to 50) |
 | ScanHtml | Collects metadata and extracts embedded files from HTML files | "parser" -- sets the HTML parser used during scanning (defaults to "html.parser") |
 | ScanJarManifest | Collects metadata from JAR manifest files | N/A |
-| ScanJavascript | Collects metadata from Javascript files | N/A |
+| ScanJavascript | Collects metadata from Javascript files | "beautify" -- deobfuscates JavaScript before parsing (defaults to True) |
 | ScanJpeg | Extracts data embedded in JPEG files | N/A |
 | ScanJson | Collects keys from JSON files | N/A |
 | ScanLibarchive | Extracts files from libarchive-compatible archives. | "limit" -- maximum number of files to extract (defaults to 1000) |
