@@ -1,18 +1,30 @@
+import jsbeautifier
 import pyjsparser
 
 from server import objects
 
 
 class ScanJavascript(objects.StrelkaScanner):
-    """Collects metadata from JavaScript files."""
+    """Collects metadata from JavaScript files.
+
+    Options:
+        beautify: Boolean that determines if JavaScript should be deobfuscated.
+            Defaults to True.
+    """
     def scan(self, file_object, options):
+        beautify = options.get("beautify", True)
+
         self.metadata.setdefault("literals", [])
         self.metadata.setdefault("functions", [])
         self.metadata.setdefault("variables", [])
 
         try:
-            p = pyjsparser.PyJsParser()
-            parsed = p.parse(file_object.data.decode())
+            if beautify:
+                js = jsbeautifier.beautify(file_object.data.decode())
+            else:
+                js = file_object.data.decode()
+            parser = pyjsparser.PyJsParser()
+            parsed = parser.parse(js)
             self._javascript_recursion(self, parsed)
 
         except AttributeError:

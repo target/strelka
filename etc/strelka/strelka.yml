@@ -212,6 +212,8 @@ scan:
             - 'javascript_file'
             - 'javascript'
         priority: 5
+        options:
+          beautify: True
     'ScanJpeg':
       - positive:
           flavors:
