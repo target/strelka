@@ -2,6 +2,8 @@
 Changes to the project will be tracked in this file via the date of change.
 
 ## 2018-10-05
+### Added
+- New scanner ScanStrings can collect strings from file data (similar to Unix "strings" utility)
 ### Changed
 - ScanPdf was unintentionally extracting duplicate streams, but now it is fixed to only extract unique streams (Josh Liburdi)
 

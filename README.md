@@ -672,6 +672,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanRpm | Collects metadata and extracts files from RPM files | "tempfile_directory" -- location where `tempfile` will write temporary files (defaults to "/tmp/") |
 | ScanRtf | Extracts embedded files from RTF files | "limit" -- maximum number of files to extract (defaults to 1000) |
 | ScanSelf | Collects metadata from the file's internal attributes | N/A |
+| ScanStrings | Collects strings from file data | "limit" -- maximum number of strings to collect, starting from the beginning of the file (defaults to 0, collects all strings) |
 | ScanSwf | Decompresses swf (Flash) files | N/A |
 | ScanTar | Extract files from tar archives | "limit" -- maximum number of files to extract (defaults to 1000) |
 | ScanTnef | Collects metadata and extract files from TNEF files | N/A |
