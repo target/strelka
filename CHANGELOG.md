@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2018-10-05
+### Changed
+- ScanPdf was unintentionally extracting duplicate streams, but now it is fixed to only extract unique streams (Josh Liburdi)
+
 ## 2018-10-03
 ### Added
 - ScanJavascript now supports deobfuscating JavaScript files before parsing metadata (Josh Liburdi)
