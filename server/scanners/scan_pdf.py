@@ -28,6 +28,7 @@ class ScanPdf(objects.StrelkaScanner):
         file_limit = options.get("limit", 2000)
 
         self.metadata["total"] = {"objects": 0, "extracted": 0}
+        extracted_objects = set()
 
         try:
             with io.BytesIO(file_object.data) as pdf_object:
@@ -71,8 +72,9 @@ class ScanPdf(objects.StrelkaScanner):
                                                                    parent_hash=file_object.hash,
                                                                    root_hash=file_object.root_hash,
                                                                    source=self.scanner_name)
-                                    if child_fo not in self.children:
+                                    if object_id not in extracted_objects:
                                         self.children.append(child_fo)
+                                        extracted_objects.add(object_id)
                                         self.metadata["total"]["extracted"] += 1
 
                                 except TypeError:
