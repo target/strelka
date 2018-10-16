@@ -667,6 +667,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanPdf | Collects metadata and extracts streams from PDF files | "extract_text" -- boolean that determines if document text should be extracted as a child file (defaults to False)<br>"limit" -- maximum number of files to extract (defaults to 2000) |
 | ScanPe | Collects metadata from PE files | N/A |
 | ScanPgp | Collects metadata from PGP files | N/A |
+| ScanPhp | Collects metadata from PHP files | N/A |
 | ScanPkcs7 | Extracts files from PKCS7 certificate files | N/A |
 | ScanRar | Extracts files from RAR archives | "limit" -- maximum number of files to extract (defaults to 1000) |
 | ScanRpm | Collects metadata and extracts files from RPM files | "tempfile_directory" -- location where `tempfile` will write temporary files (defaults to "/tmp/") |
