@@ -294,8 +294,8 @@ scan:
     'ScanPhp':
       - positive:
           flavors:
-            - 'php_file'
             - 'text/x-php'
+            - 'php_file'
         priority: 5
     'ScanPe':
       - positive:
