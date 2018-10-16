@@ -291,6 +291,12 @@ scan:
         options:
           extract_text: False
           limit: 2000
+    'ScanPhp':
+      - positive:
+          flavors:
+            - 'php_file'
+            - 'text/x-php'
+        priority: 5
     'ScanPe':
       - positive:
           flavors:

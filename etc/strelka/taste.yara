@@ -678,6 +678,16 @@ rule json_file
         $a at 0
 }
 
+rule php_file
+{
+    meta:
+        type = "text"
+    strings:
+        $a = { 3c 3f 70 68 70 }
+    condition:
+        $a at 0
+}
+
 rule soap_file
 {
     meta:
