@@ -195,8 +195,6 @@ scan:
           api_secret: ''
           server: ''
           auth_check: True
-          out_path: ''
-          get_maec: False
           depth: 0
           envID: []
     'ScanGif':
