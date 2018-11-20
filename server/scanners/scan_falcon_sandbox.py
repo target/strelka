@@ -27,7 +27,12 @@ class ScanFalconSandbox(objects.StrelkaScanner):
         depth: Recursion depth for file submission to Falcon Sandbox.
             Defaults to 0.
         envID: List of sandbox environments to submit sample to.
-            Defaults to {}
+            Public Sandbox environments ID: 300: 'Linux (Ubuntu 16.04, 64 bit)',
+                                            200: 'Android Static Analysis’,
+                                            160: 'Windows 10 64 bit’,
+                                            110: 'Windows 7 64 bit’,
+                                            100: ‘Windows 7 32 bit’
+            Defaults to [100]
     """
 
     def init(self):
@@ -36,16 +41,16 @@ class ScanFalconSandbox(objects.StrelkaScanner):
         self.server = ''
         self.auth_check = False
         self.depth = 0
-        self.envID = {}
+        self.envID = [100]
 
 
-    def submit_file(self, file_object):
+    def submit_file(self, file_object, envID):
         url = self.server + '/api/submit'
         files = {'file': file_object.data}
 
         data = {
             'nosharevt': 1,
-            'environmentId': self.envID,
+            'environmentId': envID,
             'allowCommunityAccess': 1}
 
 
@@ -85,11 +90,13 @@ class ScanFalconSandbox(objects.StrelkaScanner):
         self.server = options.get("server", '')
         self.priority = options.get("priority", 3)
         self.timeout = options.get("timeout", 60)
-        self.envID = options.get("envID", {})
+        self.envID = options.get("envID", [100])
 
         if not self.auth_check:
             self.api_key = options.get("api_key", None) or os.environ.get("FS_API_KEY")
             self.api_secret = options.get("api_secret", None) or os.environ.get("FS_API_SECKEY")
             self.auth_check = True
 
-        self.submit_file(file_object)
+        # Allow submission to multiple environments (e.g. 32-bit and 64-bit)
+        for env in self.envID:
+            self.submit_file(file_object, env)

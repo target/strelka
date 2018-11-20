@@ -196,7 +196,7 @@ scan:
           server: ''
           auth_check: True
           depth: 0
-          envID: []
+          envID: [100]
     'ScanGif':
       - positive:
           flavors:
