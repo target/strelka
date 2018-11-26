@@ -163,40 +163,6 @@ scan:
         priority: 5
         options:
           tempfile_directory: '/dev/shm/'
-    'ScanFalconSandbox':
-      - positive:
-          flavors:
-            - 'application/msword'
-            - 'application/vnd.openxmlformats-officedocument'
-            - 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-            - 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            - 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            - 'olecf_file'
-            - 'ooxml_file'
-            - 'mhtml_file'
-            - 'application/pdf'
-            - 'pdf_file'
-            - 'text/rtf'
-            - 'rtf_file'
-            - 'wordml_file'
-            - 'application/x-dosexec'
-            - 'mz_file'
-            - 'application/x-object'
-            - 'application/x-executable'
-            - 'application/x-sharedlib'
-            - 'application/x-coredump'
-            - 'elf_file'
-            - 'lnk_file'
-            - 'application/x-mach-binary'
-            - 'application/x-shockwave-flash'
-        priority: 5
-        options:
-          api_key: ''
-          api_secret: ''
-          server: ''
-          auth_check: True
-          depth: 0
-          envID: [100]
     'ScanGif':
       - positive:
           flavors:

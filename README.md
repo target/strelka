@@ -649,6 +649,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanEmail | Collects metadata and extract files from email messages | N/A |
 | ScanEntropy | Calculates entropy of files | N/A |
 | ScanExiftool | Collects metadata parsed by Exiftool | "tempfile_directory" -- location where tempfile writes temporary files (defaults to "/tmp/") |
+| ScanFalconSandbox | Sends files to an instance of Falcon Sandbox | "server" -- URL of the Falcon Sandbox API inteface. <br>"priority" -- Falcon Sandbox priority assigned to the task (defaults to 3)<br>"timeout" -- amount of time (in seconds) to wait for the task to upload (defaults to 60)<br>"envID" -- list of numeric envrionment IDs that tells Falcon Sandbox which sandbox to submit a sample to (defaults to [100])<br>"api_key" -- API key used for authenticating to Falcon Sandbox (defaults to None, optionally read from environment variable "FS_API_KEY")<br>"api_secret" --  API secret key used for authenticating to Falcon Sandbox (defaults to None, optionally read from environment variable "FS_API_SECKEY") |
 | ScanGif | Extracts data embedded in GIF files | N/A |
 | ScanGzip | Decompresses gzip files | N/A
 | ScanHash | Calculates file hash values | N/A |
