@@ -1,13 +1,17 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2018-11-27
+### Added
+- New scanner ScanFalconSandbox can send files to CrowdStrike's Falcon Sandbox (Kristin Dahl)
+
 ## 2018-10-16
 ### Added
-- New scanner ScanPhp can collect tokenized metadata from PHP files
+- New scanner ScanPhp can collect tokenized metadata from PHP files (Josh Liburdi)
 
 ## 2018-10-05
 ### Added
-- New scanner ScanStrings can collect strings from file data (similar to Unix "strings" utility)
+- New scanner ScanStrings can collect strings from file data (similar to Unix "strings" utility) (Josh Liburdi)
 ### Changed
 - ScanPdf was unintentionally extracting duplicate streams, but now it is fixed to only extract unique streams (Josh Liburdi)
 
