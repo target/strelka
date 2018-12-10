@@ -111,7 +111,7 @@ The recommended operating system for Strelka is Ubuntu 18.04 LTS (Bionic Beaver)
 
 2. Install pip3 packages
     ```sh
-    pip3 install beautifulsoup4 boltons boto3 gevent google-cloud-storage html5lib inflection inotify_simple interruptingcow jsbeautifier libarchive-c lxml git+https://github.com/aaronst/macholibre.git olefile oletools pdfminer.six pefile pgpdump3 protobuf pyelftools pygments pyjsparser pylzma git+https://github.com/jshlbrd/pyopenssl.git python-docx git+https://github.com/jshlbrd/python-entropy.git python-keystoneclient python-magic python-swiftclient pyyaml pyzmq rarfile requests rpmfile schedule ssdeep tnefparse
+    pip3 install beautifulsoup4 boltons boto3 gevent google-cloud-storage html5lib inflection interruptingcow jsbeautifier libarchive-c lxml git+https://github.com/aaronst/macholibre.git olefile oletools pdfminer.six pefile pgpdump3 protobuf pyelftools pygments pyjsparser pylzma git+https://github.com/jshlbrd/pyopenssl.git python-docx git+https://github.com/jshlbrd/python-entropy.git python-keystoneclient python-magic python-swiftclient pyyaml pyzmq rarfile requests rpmfile schedule ssdeep tnefparse
     ```
 
 3. Install YARA
@@ -469,31 +469,31 @@ scanners:
 `strelka.py` uses an ini file (`etc/strelka/pylogging.ini`) to manage cluster-level statistics and information output by the Python logger. By default, this configuration file will log data to stdout and disable logging for packages imported by scanners.
 
 #### DirStream Configuration (`strelka_dirstream.py`)
-Strelka's dirstream configuration file is stored in `etc/dirstream/dirstream.yml` and contains three sub-sections: processes, directory, and network.
+Strelka's dirstream configuration file is stored in `etc/dirstream/dirstream.yml` and contains two sub-sections: processes and workers.
 
 The "processes" section controls the processes launched by the utility. The configuration options are:
-* "worker_count": number of workers to spawn, increasing this count may allow the host to process greater loads of files at the expense of utilized RAM (defaults to 1)
 * "shutdown_timeout": amount of time (in seconds) that will elapse before the utility forcibly kills child processes after they have received a shutdown command (defaults to 10 seconds)
 
-The "network" section controls network connectivity and encryption/authentication of client-to-broker connections. The configuration options are:
-* "broker": network address and network port of the broker (defaults to 127.0.0.1:5558)
+The "workers" section controls directory settings and network settings for each worker that sends files to the Strelka cluster. This section is a list; adding multiple directory/network settings makes it so multiple directories can be monitored at once.
+The configuration options are:
+* "directory": directory that files are sent from (defaults to None)
+* "source": application that writes files to the directory, used to control metadata parsing functionality (defaults to None)
+* "meta_separator": unique string used to separate pieces of metadata in a filename, used to parse metadata and send it along with the file to the cluster (defaults to "S^E^P")
+* "file_mtime_delta": delta (in seconds) that must pass since a file was last modified before it is sent to the cluster (defaults to 5 seconds)
+* "delete_files": boolean that determines if files should be deleted after they are sent to the cluster (defaults to False)
+* "broker": network address and network port of the broker (defaults to "127.0.0.1:5558")
 * "timeout": amount of time (in seconds) to wait for a file to be successfully sent to the broker (defaults to 10)
 * "use_green": boolean that determines if PyZMQ green should be used (this can increase performance at the risk of message loss, defaults to True)
 * "broker_public_key": location of the broker Curve public key certificate (enables Curve encryption, must be used if the broker has Curve enabled)
 * "client_secret_key": location of the client Curve secret key certificate (enables Curve encryption, must be used if the broker has Curve enabled)
-
-The "directory" section controls settings related to the directory watched by the utility. The configuration options are:
-* "directory": directory that files are sent from
-* "source": application that writes files to the directory, used to control metadata parsing functionality (defaults to None)
-* "meta_separator": unique string used to separate pieces of metadata in a filename, used to parse metadata and send it along with the file to the cluster (defaults to S^E^P)
-* "delete_files": boolean that determines if files should be deleted after they are sent to the cluster (defaults to False)
-* "report_frequency": frequency (in seconds) at which the worker reports how many files it successfully sent (defaults to 60)
 
 To enable Bro support, a Bro file extraction script must be run by the Bro application; Strelka's file extraction script is stored in `etc/bro/extract-strelka.bro` and includes variables that can be redefined at Bro runtime. These variables are:
 * "mime_table": table of strings (Bro `source`) mapped to a set of strings (Bro `mime_type`) -- this variable defines which file MIME types Bro extracts and is configurable based on the location Bro identified the file (e.g. extract `application/x-dosexec` files from SMTP, but not SMB or FTP)
 * "filename_re": regex pattern that can extract files based on Bro `filename`
 * "unknown_mime_source": set of strings (Bro `source`) that determines if files of an unknown MIME type should be extracted based on the location Bro identified the file (e.g. extract unknown files from SMTP, but not SMB or FTP)
 * "meta_separator": string used in extracted filenames to separate embedded Bro metadata -- this must match the equivalent value in `etc/dirstream/dirstream.yml`
+* "directory_count_interval": interval used to schedule how often the script checks the file count in the extraction directory
+* "directory_count_threshold": int that is used as a trigger to temporarily disable file extraction if the file count in the extraction directory reaches the threshold
 
 ### Encryption and Authentication
 Strelka has built-in, optional encryption and authentication for client connections provided by CurveZMQ.

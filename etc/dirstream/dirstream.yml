@@ -8,19 +8,18 @@
 #===============================================================================
 dirstream:
   processes:
-    worker_count: 1
     shutdown_timeout: 10
 
-  network:
-    broker: "127.0.0.1:5558"
-    timeout: 10
-    use_green: False
-    broker_public_key: null
-    client_secret_key: null
-
-  directory:
-    directory: null
-    source: null
-    meta_separator: "S^E^P"
-    delete_files: False
-    report_frequency: 60
+  workers:
+    - directory:
+        directory: "/samples/"
+        source: null
+        meta_separator: "S^E^P"
+        file_mtime_delta: 5
+        delete_files: False
+      network:
+        broker: "127.0.0.1:5558"
+        timeout: 10
+        use_green: True
+        broker_public_key: null
+        client_secret_key: null
