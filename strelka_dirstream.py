@@ -20,7 +20,6 @@ import socket
 import sys
 import time
 
-import inotify_simple
 import interruptingcow
 
 from client import lib
@@ -29,64 +28,35 @@ from shared import errors
 from shared import utils
 
 
-class Worker(multiprocessing.Process):
-    """Class that defines file senders.
-
-    Attributes:
-        intake_queue: Queue which holds file paths to be processed.
-        hostname: Hostname of the server dirstream is running on.
-        broker: Network address plus network port of the broker
-            (e.g. "127.0.0.1:5558").
-        timeout: Amount of time (in seconds) to wait for a file to be
-            successfully sent to the broker.
-        use_green: Boolean that determines if PyZMQ green should be used.
-            This can increase performance at the risk of message loss.
-        broker_public_key: Location of the broker Curve public key
-            certificate. If set to None, then Curve encryption is not enabled.
-            Defaults to None. Must be enabled if the broker is confgured to
-            use Curve encryption.
-        client_secret_key: Location of the client Curve secret key
-            certificate. If set to None, then Curve encryption is not enabled.
-            Defaults to None. Must be enabled if the broker is confgured to
-            use Curve encryption.
-        source: Application that writes files to the directory, used to
-            control metadata parsing functionality.
-        meta_separator: Unique string used to separate pieces of metadata in a
-            filename, used to parse metadata and send it along with the file
-            to the cluster.
-        delete_files: Boolean that determines if files should be deleted after
-            they are sent to the cluster.
-        report_frequency: Frequency (in seconds) at which the worker reports
-            how many files it successfully sent.
-
-    Args:
-        directory_cfg: Dictionary containing parsed dirstream directory configuration.
-        network_cfg: Dictionary containing parsed dirstream network configuration.
+class DirWorker(multiprocessing.Process):
+    """Class that defines workers that poll a directory and send files to Strelka.
     """
-
-    def __init__(self, intake_queue, directory_cfg, network_cfg):
+    def __init__(self, worker_cfg):
         super().__init__()
-        self.hostname = socket.gethostname()
-        self.intake_queue = intake_queue
+        directory_cfg = worker_cfg.get("directory", {})
+        network_cfg = worker_cfg.get("network", {})
+        self.directory = directory_cfg.get("directory", None)
+        self.source = directory_cfg.get("source", None)
+        self.meta_separator = directory_cfg.get("meta_separator", "S^E^P")
+        self.file_mtime_delta = directory_cfg.get("file_mtime_delta", 5)
+        self.delete_files = directory_cfg.get("delete_files", False)
         self.broker = network_cfg.get("broker", "127.0.0.1:5558")
         self.timeout = network_cfg.get("timeout", 10)
         self.use_green = network_cfg.get("use_green", True)
         self.broker_public_key = network_cfg.get("broker_public_key", None)
         self.client_secret_key = network_cfg.get("client_secret_key", None)
-        self.source = directory_cfg.get("source", None)
-        self.meta_separator = directory_cfg.get("meta_separator", "S^E^P")
-        self.delete_files = directory_cfg.get("delete_files", False)
-        self.report_frequency = directory_cfg.get("report_frequency", 60)
+        self.hostname = socket.gethostname()
+        self.sent = 0
 
     def run(self):
         """Defines main dirstream process."""
         logging.info(f"{self.name}: starting up")
         signal.signal(signal.SIGUSR1,
                       functools.partial(utils.shutdown_handler, self))
-        client = lib.Client(f"tcp://{self.broker}",
-                            use_green=self.use_green,
-                            broker_public_key=self.broker_public_key,
-                            client_secret_key=self.client_secret_key)
+        self.client = lib.Client(f"tcp://{self.broker}",
+                                 use_green=self.use_green,
+                                 broker_public_key=self.broker_public_key,
+                                 client_secret_key=self.client_secret_key)
         if self.client_secret_key and self.broker_public_key:
             logging.info(f"{self.name}: initialized connection to"
                          f" {self.broker} using Curve")
@@ -95,72 +65,78 @@ class Worker(multiprocessing.Process):
                          f" {self.broker} using plaintext")
 
         try:
-            self.sent = 0
-            self.report_at = time.time() + self.report_frequency
-
             while 1:
-                file_path = self.intake_queue.get()
-                filename = file_path.split("/")[-1]
-                filename = filename.replace("%2F", "/")
-
-                metadata = {}
-                flavors = []
-                if (self.source is not None and
-                    self.meta_separator in filename):
-                    if self.source == "bro":
-                        (metadata,
-                         flavors) = lib.parse_bro_metadata(filename,
-                                                           self.meta_separator)
-
-                try:
-                    with open(file_path, "rb") as open_file:
-                        file_request = lib.request_to_protobuf(file=open_file.read(),
-                                                               filename=filename,
-                                                               source=self.hostname,
-                                                               flavors=flavors,
-                                                               metadata=metadata)
-                        result = client.send(file_request,
-                                             timeout=self.timeout)
-                        if not result:
-                            logging.debug(f"{self.name}: failed to send"
-                                          f" file {filename}")
-                        else:
-                            self.sent += 1
-
-                except IOError:
-                    logging.error(f"{self.name}: failed to open"
-                                  f" file {file_path} (IOError)")
-
-                if self.delete_files:
-                    try:
-                        os.remove(file_path)
-
-                    except OSError:
-                        logging.error(f"{self.name}: failed to delete"
-                                      f" file {file_path} (OSError)")
-                    except PermissionError:
-                        logging.error(f"{self.name}: failed to delete"
-                                      f" file {file_path} (PermissionError)")
-
-                self.report_metrics()
+                current_time = time.time()
+                with os.scandir(self.directory) as sd:
+                    for entry in sd:
+                        if not entry.name.startswith(".") and entry.is_file():
+                            file_mtime = entry.stat().st_mtime
+                            mtime_delta = current_time - file_mtime
+                            if mtime_delta >= self.file_mtime_delta:
+                                path = os.path.join(self.directory, entry.name)
+                                self.send_file(path)
+                                if self.delete_files:
+                                    self.delete_file(path)
+                self.report()
+                time.sleep(1)
 
         except errors.QuitWorker:
             logging.debug(f"{self.name}: received shutdown signal")
-
-        self.report_metrics()
-        client.close()
 
     def shutdown(self):
         """Defines dirstream shutdown."""
         logging.debug(f"{self.name}: shutdown handler received")
         raise errors.QuitWorker()
 
-    def report_metrics(self):
-        """Reports file send metrics."""
-        if time.time() >= self.report_at:
-            logging.info(f"{self.name}: sent {self.sent} files")
-            self.sent = 0
-            self.report_at = time.time() + self.report_frequency
+    def delete_file(self, path):
+        """Deletes files."""
+        try:
+            os.remove(path)
+
+        except OSError:
+            logging.error(f"{self.name}: failed to delete"
+                          f" file {path} (OSError)")
+        except PermissionError:
+            logging.error(f"{self.name}: failed to delete"
+                          f" file {path} (PermissionError)")
+
+    def report(self):
+        """Reports worker data."""
+        logging.debug(f"{self.name}: sent {self.sent} files from {self.directory}")
+        self.sent = 0
+
+    def send_file(self, path):
+        """Sends files to configured Strelka cluster."""
+        filename = path.split("/")[-1]
+        filename = filename.replace("%2F", "/")
+
+        metadata = {}
+        flavors = []
+        if (self.source is not None and
+            self.meta_separator in filename):
+            if self.source == "bro":
+                (metadata,
+                 flavors) = lib.parse_bro_metadata(filename,
+                                                   self.meta_separator)
+
+        try:
+            with open(path, "rb") as open_file:
+                file_request = lib.request_to_protobuf(file=open_file.read(),
+                                                       filename=filename,
+                                                       source=self.hostname,
+                                                       flavors=flavors,
+                                                       metadata=metadata)
+                result = self.client.send(file_request,
+                                          timeout=self.timeout)
+                if not result:
+                    logging.debug(f"{self.name}: failed to send"
+                                  f" file {filename}")
+                else:
+                    self.sent += 1
+
+        except IOError:
+            logging.error(f"{self.name}: failed to open"
+                          f" file {path} (IOError)")
 
 
 run = 1
@@ -224,62 +200,40 @@ def main():
     logging.info(f"main: using dirstream configuration {dirstream_cfg}")
 
     dirstream_cfg = conf.parse_yaml(path=dirstream_cfg, section="dirstream")
-    directory_cfg = dirstream_cfg.get("directory", {})
-    network_cfg = dirstream_cfg.get("network", {})
     processes_cfg = dirstream_cfg.get("processes", {})
-    directory = directory_cfg.get("directory")
     shutdown_timeout = processes_cfg.get("shutdown_timeout", 10)
-    worker_count = processes_cfg.get("worker_count", 1)
+    workers_cfg = dirstream_cfg.get("workers", [])
 
-    worker_processes = []
+    worker_processes = {}
 
-    if not os.path.isdir(directory):
-        sys.exit(f"main: directory {directory} does not exist")
-
-    manager = multiprocessing.Manager()
-    intake_queue = manager.Queue()
-    inotify = inotify_simple.INotify()
-    watch_flags = inotify_simple.flags.CLOSE_WRITE
-    inotify.add_watch(directory, watch_flags)
-
-    for _ in range(worker_count):
-        worker_process = Worker(intake_queue, directory_cfg, network_cfg)
+    for worker_cfg in workers_cfg:
+        worker_process = DirWorker(worker_cfg)
         worker_process.start()
-        worker_processes.append(worker_process)
-
-    with os.scandir(directory) as sd:
-        for entry in sd:
-            if not entry.name.startswith(".") and entry.is_file():
-                file_path = os.path.join(directory, entry.name)
-                intake_queue.put(file_path)
+        worker_processes[worker_process] = worker_cfg
 
     while run:
-        for process in list(worker_processes):
+        for process in list(worker_processes.keys()):
             if not process.is_alive():
                 process.join()
-                worker_processes.remove(process)
-                worker_process = Worker(intake_queue,
-                                        directory_cfg,
-                                        network_cfg)
+                worker_cfg = worker_processes.pop(process)
+                worker_process = DirWorker(worker_cfg)
                 worker_process.start()
-                worker_processes.append(worker_process)
-
-        for evt in inotify.read(timeout=100, read_delay=500):
-            file_path = os.path.join(directory, evt.name)
-            intake_queue.put(file_path)
+                worker_processes[worker_process] = worker_cfg
+        time.sleep(5)
 
     logging.info("main: starting shutdown of running child processes"
                  f" (using timeout value {shutdown_timeout})")
+
     try:
         with interruptingcow.timeout(shutdown_timeout,
                                      exception=errors.QuitDirStream):
-            utils.signal_children(worker_processes, signal.SIGUSR1)
+            utils.signal_children(list(worker_processes.keys()), signal.SIGUSR1)
             logging.debug("main: finished shutdown of running"
                           " child processes")
     except errors.QuitDirStream:
         logging.debug("main: starting forcible shutdown of running"
                       " child processes")
-        utils.signal_children(worker_processes, signal.SIGKILL)
+        utils.signal_children(list(worker_processes.keys()), signal.SIGKILL)
     logging.info("main: finished")
 
 
