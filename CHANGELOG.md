@@ -1,6 +1,11 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2018-12-10
+### Changed
+- strelka_dirstream.py switched from using inotify to directory polling (Josh Liburdi)
+- strelka_dirstream.py supports monitoring multiple directories (Josh Liburdi)
+
 ## 2018-11-27
 ### Added
 - New scanner ScanFalconSandbox can send files to CrowdStrike's Falcon Sandbox (Kristin Dahl)
