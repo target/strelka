@@ -30,6 +30,37 @@ from shared import utils
 
 class DirWorker(multiprocessing.Process):
     """Class that defines workers that poll a directory and send files to Strelka.
+
+    Attributes:
+        directory: Directory to send files from. Defaults to None.
+        source: Application that writes files to the directory, used to
+            control metadata parsing functionality.
+        meta_separator: Unique string used to separate pieces of metadata in a
+            filename, used to parse metadata and send it along with the file
+            to the cluster. Defaults to "S^E^P".
+        file_mtime_delta; Delta (in seconds) that must pass since a file was
+            last modified before it is sent to the cluster. Defaults to 5 seconds.
+        delete_files: Boolean that determines if files should be deleted after
+            they are sent to the cluster. Defaults to False.
+        broker: Network address plus network port of the broker.
+            Defaults to "127.0.0.1:5558".
+        timeout: Amount of time (in seconds) to wait for a file to be
+            successfully sent to the broker. Defaults to 10 seconds.
+        use_green: Boolean that determines if PyZMQ green should be used.
+            This can increase performance at the risk of message loss.
+            Defaults to True.
+        broker_public_key: Location of the broker Curve public key
+            certificate. If set to None, then Curve encryption is not enabled.
+            Defaults to None. Must be enabled if the broker is confgured to
+            use Curve encryption.
+        client_secret_key: Location of the client Curve secret key
+            certificate. If set to None, then Curve encryption is not enabled.
+            Defaults to None. Must be enabled if the broker is confgured to
+            use Curve encryption.
+        hostname: Hostname of the server running dirstream.
+
+     Args:
+        worker_cfg: Dictionary containing unparsed dirstream worker configuration.
     """
     def __init__(self, worker_cfg):
         super().__init__()
@@ -77,7 +108,9 @@ class DirWorker(multiprocessing.Process):
                                 self.send_file(path)
                                 if self.delete_files:
                                     self.delete_file(path)
-                self.report()
+                logging.debug(f"{self.name}: sent {self.sent} files"
+                              f" from {self.directory}")
+                self.sent = 0
                 time.sleep(1)
 
         except errors.QuitWorker:
@@ -99,11 +132,6 @@ class DirWorker(multiprocessing.Process):
         except PermissionError:
             logging.error(f"{self.name}: failed to delete"
                           f" file {path} (PermissionError)")
-
-    def report(self):
-        """Reports worker data."""
-        logging.debug(f"{self.name}: sent {self.sent} files from {self.directory}")
-        self.sent = 0
 
     def send_file(self, path):
         """Sends files to configured Strelka cluster."""

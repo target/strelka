@@ -476,12 +476,12 @@ The "processes" section controls the processes launched by the utility. The conf
 
 The "workers" section controls directory settings and network settings for each worker that sends files to the Strelka cluster. This section is a list; adding multiple directory/network settings makes it so multiple directories can be monitored at once.
 The configuration options are:
-* "directory": directory that files are sent from
+* "directory": directory that files are sent from (defaults to None)
 * "source": application that writes files to the directory, used to control metadata parsing functionality (defaults to None)
-* "meta_separator": unique string used to separate pieces of metadata in a filename, used to parse metadata and send it along with the file to the cluster (defaults to S^E^P)
+* "meta_separator": unique string used to separate pieces of metadata in a filename, used to parse metadata and send it along with the file to the cluster (defaults to "S^E^P")
 * "file_mtime_delta": delta (in seconds) that must pass since a file was last modified before it is sent to the cluster (defaults to 5 seconds)
 * "delete_files": boolean that determines if files should be deleted after they are sent to the cluster (defaults to False)
-* "broker": network address and network port of the broker (defaults to 127.0.0.1:5558)
+* "broker": network address and network port of the broker (defaults to "127.0.0.1:5558")
 * "timeout": amount of time (in seconds) to wait for a file to be successfully sent to the broker (defaults to 10)
 * "use_green": boolean that determines if PyZMQ green should be used (this can increase performance at the risk of message loss, defaults to True)
 * "broker_public_key": location of the broker Curve public key certificate (enables Curve encryption, must be used if the broker has Curve enabled)
