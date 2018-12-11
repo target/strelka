@@ -5,6 +5,7 @@ Changes to the project will be tracked in this file via the date of change.
 ### Changed
 - strelka_dirstream.py switched from using inotify to directory polling (Josh Liburdi)
 - strelka_dirstream.py supports monitoring multiple directories (Josh Liburdi)
+- extract-strelka.bro will temporarily disable file extraction when the extraction directory reaches a maximum threshold (Josh Liburdi)
 
 ## 2018-11-27
 ### Added
