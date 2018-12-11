@@ -1,3 +1,5 @@
+# Exec framework is used to check whether file extraction should happen
+@load base/utils/exec
 # Redef to extract files based on traffic `source` and `mime_type`
 const mime_table: table[string] of set[string] = {
     ["FTP_DATA"] =  set("application/x-dosexec"),
@@ -9,8 +11,14 @@ const mime_table: table[string] of set[string] = {
 const filename_re: pattern = /(\.dll|\.exe)$/ &redef;
 # Redef to extract files of undetermined `mime_type` based on traffic `source`
 const unknown_mime_source: set[string] = set("FTP_DATA", "HTTP", "SMB", "SMTP") &redef;
-# Redef to change the separator used in extracted filenames. This must match the separator used in `stream_directory.py` for metadata extraction to work correctly.
+# Redef to change the separator used in extracted filenames (this must match the separator used in `strelka_dirstream.py` for metadata extraction to work correctly)
 const meta_separator: string = "S^E^P" &redef;
+# Redef to change how often the `count_fe_directory` event runs
+const directory_count_interval = 2mins &redef;
+# Redef to change the threshold that toggles file extraction
+const directory_count_threshold = 50000 &redef;
+# Global that controls if file extraction happens
+global allow_extraction = T;
 
 # Sequentially builds filename based on `metadata` and `separator`
 function compose_filename(filename: string, metadata: vector of string, separator: string): string
@@ -21,45 +29,41 @@ function compose_filename(filename: string, metadata: vector of string, separato
     }
 
 # Performs file extraction for each identified file
+# Files have metadata embedded in their filename
 function do_extraction(f: fa_file, meta: fa_metadata, c: connection)
     {
-    # Filenames begin with random numbers to ensure there are no filename clashes
     local filename = fmt("%s%s%s%s", rand(99), rand(99), rand(99), meta_separator);
-
-    # If `meta.mime_type` exists, then it is added to the `filename`
-    # Otherwise, insert an empty string
+    filename = compose_filename(filename, vector(f$source, c$uid, f$id, cat(c$id$orig_h), cat(c$id$resp_h)), meta_separator);
     if ( meta?$mime_type )
-        filename = compose_filename(filename, vector(f$source, c$uid, f$id, cat(c$id$orig_h), cat(c$id$resp_h), meta$mime_type), meta_separator);
-    else
-        filename = compose_filename(filename, vector(f$source, c$uid, f$id, cat(c$id$orig_h), cat(c$id$resp_h), ""), meta_separator);
-
-    # If the traffic source is SMTP, then use `c.smtp.subject` as metadata
-    # Otherwise, insert an empty string
-    if ( f$source == "SMTP" && c?$smtp )
-        {
-        if  ( c$smtp?$subject )
-            filename = compose_filename(filename, vector(c$smtp$subject), meta_separator);
-        else
-            filename = compose_filename(filename, vector(""), meta_separator);
-        }
-    # If the traffic source is HTTP, then use `c.http.host` as metadata
-    # Otherwise, insert an empty string
-    else if ( f$source == "HTTP" && c?$http )
-        {
-        if ( c$http?$host )
-            filename = compose_filename(filename, vector(c$http$host), meta_separator);
-        else
-            filename = compose_filename(filename, vector(""), meta_separator);
-        }
-    # If the traffic source is not handled, then insert an empty string
+        filename = compose_filename(filename, vector(meta$mime_type), meta_separator);
     else
         filename = compose_filename(filename, vector(""), meta_separator);
-
-    # "/" is an invalid filename character and will always be present in `meta.mime_type`
-    # Linux can only handle filenames up to 255 characters
-    filename = gsub(filename, /\//, "%2F")[:255];
-    # Begin file extraction
+    filename = gsub(filename, /\//, "%2F");
     Files::add_analyzer(f, Files::ANALYZER_EXTRACT, [$extract_filename=filename]);
+    }
+
+# Performs a check on the extraction directory to determine if file extraction should be temporarily disabled
+event count_fe_directory()
+  {
+  when ( local result = Exec::run([$cmd=fmt("ls %s | wc -l", FileExtract::prefix)]) )
+      {
+      if ( result?$stdout )
+          {
+          local file_count = to_count(result$stdout[0]);
+          if ( file_count >= directory_count_threshold )
+              allow_extraction = F;
+          else
+              allow_extraction = T;
+          }
+      }
+
+  schedule directory_count_interval { count_fe_directory() };
+  }
+
+# Immediately check the length of the file extraction directory when Bro starts
+event bro_init()
+    {
+    schedule 0secs { count_fe_directory() };
     }
 
 # Identifies files to process for extraction
@@ -68,10 +72,12 @@ event file_sniff(f: fa_file, meta: fa_metadata)
     if ( ! f?$conns )
         return;
 
+    if ( ! allow_extraction )
+        return;
+
     for ( conn in f$conns )
         {
         local c = f$conns[conn];
-
         if ( c?$uid )
             {
             # Extract file if it meets the `mime_type` and `source` criteria in `mime_table`
