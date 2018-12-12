@@ -331,8 +331,8 @@ The "processes" section controls the processes launched by the daemon. The confi
 
 The "network" section controls network connectivity. The configuration options are:
 * "broker": network address of the broker (defaults to 127.0.0.1)
-* "request_port": network port used by clients to send file requests to the broker (defaults to 5558)
-* "task_port": network port used by workers to receive tasks from the broker (defaults to 5559)
+* "request_socket_port": network port used by clients to send file requests to the broker (defaults to 5558)
+* "task_socket_port": network port used by workers to receive tasks from the broker (defaults to 5559)
 
 The "broker" section controls settings related to the broker process. The configuration options are:
 * "poller_timeout": amount of time (in milliseconds) that the broker polls for client requests and worker statuses (defaults to 1000 milliseconds)
@@ -342,6 +342,8 @@ The "broker" section controls settings related to the broker process. The config
 * "prune_delta": delta (in seconds) that must pass since a worker last checked in with the broker before it is considered dead and is pruned (defaults to 10 seconds)
 
 The "workers" section controls settings related to worker processes. The configuration options are:
+* "task_socket_reconnect": amount of time (in milliseconds) that the task socket will attempt to reconnect in the event of TCP disconnection, this will have additional jitter applied (defaults to 100ms plus jitter)
+* "task_socket_reconnect_max": maximum amount of time (in milliseconds) that the task socket will attempt to reconnect in the event of TCP disconnection, this will have additional jitter applied (defaults to 4000ms plus jitter)
 * "poller_timeout": amount of time (in milliseconds) that workers poll for file tasks (defaults to 1000 milliseconds)
 * "file_max": number of files a worker will process before shutting down (defaults to 10000)
 * "time_to_live": amount of time (in minutes) that a worker will run before shutting down (defaults to 30 minutes)

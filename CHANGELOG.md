@@ -1,6 +1,13 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2018-12-12
+### Added
+- Options for manually setting ZeroMQ TCP reconnections on the task socket (between broker and workers)
+### Changed
+- "request_port" option renamed to "request_socket_port"
+- "task_port" option renamed to "task_socket_port"
+
 ## 2018-12-10
 ### Changed
 - strelka_dirstream.py switched from using inotify to directory polling (Josh Liburdi)

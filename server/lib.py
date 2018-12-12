@@ -48,9 +48,9 @@ class Broker(multiprocessing.Process):
         worker_pool: Ordered Dictionary that stores running workers. Brokers
             are configured to prune shutdown/dead workers from the pool on
             a schedule.
-        request_port: Network port that clients send file requests over.
+        request_socket_port: Network port that clients send file requests over.
             Defaults to 5558.
-        task_port: Network port that workers receive file tasks over.
+        task_socket_port: Network port that workers receive file tasks over.
             Defaults to 5559.
         poller_timeout: Amount of time (in milliseconds) that the broker polls
             for client requests and worker statuses. Defaults to
@@ -77,14 +77,14 @@ class Broker(multiprocessing.Process):
         self.worker_pool = collections.OrderedDict()
 
     @property
-    def request_port(self):
-        request_port = self.network_cfg.get("request_port", 5558)
-        return request_port
+    def request_socket_port(self):
+        request_socket_port = self.network_cfg.get("request_socket_port", 5558)
+        return request_socket_port
 
     @property
-    def task_port(self):
-        task_port = self.network_cfg.get("task_port", 5559)
-        return task_port
+    def task_socket_port(self):
+        task_socket_port = self.network_cfg.get("task_socket_port", 5559)
+        return task_socket_port
 
     @property
     def poller_timeout(self):
@@ -214,7 +214,7 @@ class Broker(multiprocessing.Process):
 
         self.task_socket = context.socket(zmq.ROUTER)
         self.task_socket.identity = b"broker_self.task_socket"
-        self.task_socket.bind(f"tcp://*:{self.task_port}")
+        self.task_socket.bind(f"tcp://*:{self.task_socket_port}")
         self.worker_poller = zmq.Poller()
         self.worker_poller.register(self.task_socket, zmq.POLLIN)
 
@@ -228,7 +228,7 @@ class Broker(multiprocessing.Process):
             self.request_socket.curve_server = True  # must come before bind
             logging.info(f"{self.name}: Curve enabled")
 
-        self.request_socket.bind(f"tcp://*:{self.request_port}")
+        self.request_socket.bind(f"tcp://*:{self.request_socket_port}")
         self.client_worker_poller = zmq.Poller()
         self.client_worker_poller.register(self.request_socket, zmq.POLLIN)
         self.client_worker_poller.register(self.task_socket, zmq.POLLIN)
@@ -351,8 +351,16 @@ class Worker(multiprocessing.Process):
             and log filename.
         server: Hostname of the server running the worker process.
         broker: Network address of the broker. Defaults to 127.0.0.1.
-        task_port: Network port that workers receive file tasks over.
+        task_socket_port: Network port that workers receive file tasks over.
             Defaults to 5559.
+        task_socket_reconnect: Amount of time (in milliseconds) that the task
+            socket will attempt to reconnect in the event of TCP disconnection.
+            This will have additional jitter applied (0-100ms).
+            Defaults to 100ms (plus jitter).
+        task_socket_reconnect_max: Maximum amount of time (in milliseconds)
+            that the task socket will attempt to reconnect in the event of TCP
+            disconnection. This will have additional jitter applied (0-1000ms).
+            Defaults to 4000ms (plus jitter).
         poller_timeout: Amount of time (in milliseconds) that workers poll
             for tasks. Defaults to 1000 milliseconds.
         file_max: Number of files a worker will process before shutting down.
@@ -384,8 +392,16 @@ class Worker(multiprocessing.Process):
         return self.network_cfg.get("broker", "127.0.0.1")
 
     @property
-    def task_port(self):
-        return self.network_cfg.get("task_port", 5559)
+    def task_socket_port(self):
+        return self.network_cfg.get("task_socket_port", 5559)
+
+    @property
+    def task_socket_reconnect(self):
+        return self.network_cfg.get("task_socket_reconnect", 100 + random.randint(0, 100))
+
+    @property
+    def task_socket_reconnect_max(self):
+        return self.network_cfg.get("task_socket_reconnect_max", 4000 + random.randint(0, 1000))
 
     @property
     def poller_timeout(self):
@@ -519,7 +535,9 @@ class Worker(multiprocessing.Process):
         context = zmq.Context()
         self.task_socket = context.socket(zmq.DEALER)
         self.task_socket.setsockopt(zmq.IDENTITY, self.identity)
-        self.task_socket.connect(f"tcp://{self.broker}:{self.task_port}")
+        self.task_socket.setsockopt(zmq.RECONNECT_IVL, self.task_socket_reconnect)
+        self.task_socket.setsockopt(zmq.RECONNECT_IVL_MAX, self.task_socket_reconnect_max)
+        self.task_socket.connect(f"tcp://{self.broker}:{self.task_socket_port}")
         self.task_poller = zmq.Poller()
         self.task_poller.register(self.task_socket, zmq.POLLIN)
 
