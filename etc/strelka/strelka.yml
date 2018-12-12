@@ -16,8 +16,8 @@ daemon:
 
   network:
     broker: '127.0.0.1'
-    request_port: 5558
-    task_port: 5559
+    request_socket_port: 5558
+    task_socket_port: 5559
 
   broker:
     poller_timeout: 1000
@@ -27,6 +27,8 @@ daemon:
     prune_delta: 10
 
   workers:
+    task_socket_reconnect: 100
+    task_socket_reconnect_max: 4000
     poller_timeout: 1000
     file_max: 10000
     time_to_live: 30
@@ -291,12 +293,6 @@ scan:
         options:
           extract_text: False
           limit: 2000
-    'ScanPhp':
-      - positive:
-          flavors:
-            - 'text/x-php'
-            - 'php_file'
-        priority: 5
     'ScanPe':
       - positive:
           flavors:
@@ -308,6 +304,12 @@ scan:
           flavors:
             - 'application/pgp-keys'
             - 'pgp_file'
+        priority: 5
+    'ScanPhp':
+      - positive:
+          flavors:
+            - 'text/x-php'
+            - 'php_file'
         priority: 5
     'ScanPkcs7':
       - positive:
