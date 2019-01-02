@@ -387,7 +387,7 @@ The "distribution" section controls how files are distributed through the system
 * "scanner_timeout": amount of time (in seconds) that a scanner can spend scanning a file (defaults to 600 seconds / 10 minutes, can be overridden per-scanner)
 * "maximum_depth": maximum depth that child files will be processed by scanners
 * "taste_mime_db": location of the MIME database used to taste files (defaults to None, system default)
-* "taste_yara_rules": location of the YARA file that contains rules used to taste files (defaults to etc/strelka/taste.yara)
+* "taste_yara_rules": location of the directory of YARA files that contains rules used to taste files (defaults to etc/strelka/taste/)
 
 The "scanners" section controls which scanners are assigned to each file; each scanner is assigned by mapping flavors, filenames, and sources from this configuration to the file. "scanners" must always be a dictionary where the key is the scanner name (e.g. `ScanZip`) and the value is a list of dictionaries containing values for mappings, scanner priority, and scanner options.
 
