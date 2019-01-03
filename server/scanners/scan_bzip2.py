@@ -24,5 +24,7 @@ class ScanBzip2(objects.StrelkaScanner):
                                                    source=self.scanner_name)
                     self.children.append(child_fo)
 
+                except EOFError:
+                    file_object.flags.append(f"{self.scanner_name}::eof_error")
                 except OSError:
                     file_object.flags.append(f"{self.scanner_name}::os_error")
