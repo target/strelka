@@ -71,7 +71,7 @@ scan:
     scanner_timeout: 600
     maximum_depth: 15
     taste_mime_db: null
-    taste_yara_rules: 'etc/strelka/taste.yara'
+    taste_yara_rules: 'etc/strelka/taste/'
 
   scanners:
     'ScanBatch':

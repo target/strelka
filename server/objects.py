@@ -6,6 +6,7 @@ import string
 import time
 import uuid
 import zlib
+import os
 
 from boltons import iterutils
 import boto3
@@ -17,6 +18,7 @@ import magic
 import requests
 import swiftclient
 import yara
+import glob
 
 from server import strelka_pb2
 from shared import conf
@@ -377,16 +379,26 @@ class StrelkaFile(object):
         the reliability of YARA matching.
 
         Args:
-            yara_file: Location of the YARA file that contains rules used
-                to taste files.
+            taste_yara_rules: Location of the directory of YARA files that contains
+                rules used to taste files.
         """
         try:
             global compiled_yara
             if compiled_yara is None:
                 distro_cfg = conf.scan_cfg.get("distribution", {})
-                taste_yara_file = distro_cfg.get("taste_yara_rules",
-                                                 "etc/strelka/taste.yara")
-                compiled_yara = yara.compile(taste_yara_file)
+                taste_yara_dir = distro_cfg.get("taste_yara_rules",
+                                                "etc/strelka/taste/")
+
+                if os.path.isdir(taste_yara_dir):
+                    yara_filepaths = {}
+                    globbed_yara_paths = glob.iglob(f"{taste_yara_dir}/**/*.yar*", recursive=True)
+                    for (idx, entry) in enumerate(globbed_yara_paths):
+                        yara_filepaths[f"namespace_{idx}"] = entry
+                    compiled_yara = yara.compile(filepaths=yara_filepaths)
+
+                else:
+                    compiled_yara = yara.compile(filepath=taste_yara_dir)
+
             encoded_whitespace = string.whitespace.encode()
             stripped_data = self._data.lstrip(encoded_whitespace)
             yara_matches = compiled_yara.match(data=stripped_data)
@@ -394,8 +406,8 @@ class StrelkaFile(object):
 
         except (yara.Error, yara.TimeoutError) as YaraError:
             self.flags.append("StrelkaFile::yara_scan_error")
-            logging.exception("Exception while tasting with YARA file"
-                              f" {yara_file} (see traceback below)")
+            logging.exception("Exception while tasting with YARA directory"
+                              f" {taste_yara_dir} (see traceback below)")
 
 
 class StrelkaScanner(object):
