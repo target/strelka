@@ -1,12 +1,16 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2019-01-03
+### Changed
+- taste_yara now loads files from directories, not a static file (Kristin Dahl)
+
 ## 2018-12-12
 ### Added
-- Options for manually setting ZeroMQ TCP reconnections on the task socket (between broker and workers)
+- Options for manually setting ZeroMQ TCP reconnections on the task socket (between broker and workers) (Josh Liburdi)
 ### Changed
-- "request_port" option renamed to "request_socket_port"
-- "task_port" option renamed to "task_socket_port"
+- "request_port" option renamed to "request_socket_port" (Josh Liburdi)
+- "task_port" option renamed to "task_socket_port" (Josh Liburdi)
 
 ## 2018-12-10
 ### Changed
