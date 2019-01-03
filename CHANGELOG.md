@@ -2,6 +2,8 @@
 Changes to the project will be tracked in this file via the date of change.
 
 ## 2019-01-03
+### Added
+- EOF error flag to ScanBzip2 (Josh Liburdi)
 ### Changed
 - taste_yara now loads files from directories, not a static file (Kristin Dahl)
 
