@@ -4,6 +4,8 @@ from server import objects
 from server import distribution
 from shared import conf
 import sys
+import os
+import json
 
 CONF_PATH = "etc/strelka/strelka.yml"
 
@@ -25,6 +27,9 @@ def main():
                 external_metadata=[])
         scan_result = {"results": []}
         distribution.distribute(file_object, scan_result)
-        print(scan_result)
+        print(json.dumps(scan_result))
+
+if __name__ == "__main__":
+    main()
 
 
