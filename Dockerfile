@@ -37,44 +37,7 @@ RUN apt-get -qq update && \
     upx \
     jq && \
 # Install Python packages
-    pip3 install \
-    beautifulsoup4 \
-    boltons \
-    boto3 \
-    gevent \
-    google-cloud-storage \
-    html5lib \
-    inflection \
-    inotify_simple \
-    interruptingcow \
-    jsbeautifier \
-    libarchive-c \
-    lxml \
-    git+https://github.com/aaronst/macholibre.git \
-    olefile \
-    oletools \
-    pdfminer.six \
-    pefile \
-    pgpdump3 \
-    protobuf \
-    pyelftools \
-    pygments \
-    pyjsparser \
-    pylzma \
-    git+https://github.com/jshlbrd/pyopenssl.git \
-    python-docx \
-    git+https://github.com/jshlbrd/python-entropy.git \
-    python-keystoneclient \
-    python-magic \
-    python-swiftclient \
-    pyyaml \
-    pyzmq \
-    rarfile \
-    requests \
-    rpmfile \
-    schedule \
-    ssdeep \
-    tnefparse && \
+    pip3 install -r /opt/strelka/requirements.txt && \
 # Install YARA
     cd /tmp/ && \
     curl -OL https://github.com/VirusTotal/yara/archive/v$YARA_VERSION.tar.gz && \
