@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2019-01-16
+### Changed
+- pip packages now installed via requirements.txt file(s) (infosec-intern)
+
 ## 2019-01-03
 ### Added
 - EOF error flag to ScanBzip2 (Josh Liburdi)
