@@ -111,7 +111,7 @@ The recommended operating system for Strelka is Ubuntu 18.04 LTS (Bionic Beaver)
 
 2. Install pip3 packages
     ```sh
-    pip3 install beautifulsoup4 boltons boto3 gevent google-cloud-storage html5lib inflection interruptingcow jsbeautifier libarchive-c lxml git+https://github.com/aaronst/macholibre.git olefile oletools pdfminer.six pefile pgpdump3 protobuf pyelftools pygments pyjsparser pylzma git+https://github.com/jshlbrd/pyopenssl.git python-docx git+https://github.com/jshlbrd/python-entropy.git python-keystoneclient python-magic python-swiftclient pyyaml pyzmq rarfile requests rpmfile schedule ssdeep tnefparse
+    pip3 install -r requirements.txt
     ```
 
 3. Install YARA
@@ -128,10 +128,10 @@ The recommended operating system for Strelka is Ubuntu 18.04 LTS (Bionic Beaver)
 
 4. Install yara-python
   ```sh
-  curl -OL https://github.com/VirusTotal/yara-python/archive/v3.8.1.tar.gz  
-  tar -zxvf v3.8.1.tar.gz  
-  cd yara-python-3.8.1/  
-  python3 setup.py build --dynamic-linking  
+  curl -OL https://github.com/VirusTotal/yara-python/archive/v3.8.1.tar.gz
+  tar -zxvf v3.8.1.tar.gz
+  cd yara-python-3.8.1/
+  python3 setup.py build --dynamic-linking
   python3 setup.py install
   ```
 
