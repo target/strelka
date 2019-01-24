@@ -42,6 +42,10 @@ class DirWorker(multiprocessing.Process):
             last modified before it is sent to the cluster. Defaults to 5 seconds.
         delete_files: Boolean that determines if files should be deleted after
             they are sent to the cluster. Defaults to False.
+        archive_files: Boolean that determines if files should be archived after
+            they are sent to the cluster. Defaults to False.
+        archive_directory: Directory to move files to once they are scanned.
+            Defaults to None.
         broker: Network address plus network port of the broker.
             Defaults to "127.0.0.1:5558".
         timeout: Amount of time (in seconds) to wait for a file to be
@@ -71,6 +75,8 @@ class DirWorker(multiprocessing.Process):
         self.meta_separator = directory_cfg.get("meta_separator", "S^E^P")
         self.file_mtime_delta = directory_cfg.get("file_mtime_delta", 5)
         self.delete_files = directory_cfg.get("delete_files", False)
+        self.archive_files = directory_cfg.get("archive_files", False)
+        self.archive_directory = directory_cfg.get("archive_directory", None)
         self.broker = network_cfg.get("broker", "127.0.0.1:5558")
         self.timeout = network_cfg.get("timeout", 10)
         self.use_green = network_cfg.get("use_green", True)
@@ -108,6 +114,8 @@ class DirWorker(multiprocessing.Process):
                                 self.send_file(path)
                                 if self.delete_files:
                                     self.delete_file(path)
+                                if self.archive_files:
+                                    self.archive_file(path)
                 logging.debug(f"{self.name}: sent {self.sent} files"
                               f" from {self.directory}")
                 self.sent = 0
@@ -131,6 +139,18 @@ class DirWorker(multiprocessing.Process):
                           f" file {path} (OSError)")
         except PermissionError:
             logging.error(f"{self.name}: failed to delete"
+                          f" file {path} (PermissionError)")
+
+    def archive_file(self, path):
+        """Archives files."""
+        try:
+            os.rename(src=path, dst=f"{self.archive_directory}/{path.split('/')[-1]}")
+
+        except OSError:
+            logging.error(f"{self.name}: failed to move"
+                          f" file {path} dest {self.archive_directory}/{path.split('/')[-1]} (OSError)")
+        except PermissionError:
+            logging.error(f"{self.name}: failed to move"
                           f" file {path} (PermissionError)")
 
     def send_file(self, path):
