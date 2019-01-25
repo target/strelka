@@ -282,9 +282,15 @@ rule email_file
     strings:
         $a = "\x0aReceived:"
         $b = "\x0AReturn-Path:"
+        $c = "\x0aMessage-ID:"
+        $d = "\x0aReply-To:"
+        $e = "\x0aX-Mailer:"
     condition:
         $a in (0..2048) or
-        $b in (0..2048)
+        $b in (0..2048) or
+        $c in (0..2048) or
+        $d in (0..2048) or
+        $e in (0..2048)
 }
 
 rule tnef_file
