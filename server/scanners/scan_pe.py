@@ -173,18 +173,15 @@ class ScanPe(objects.StrelkaScanner):
                     file_object.flags.append(f"{self.scanner_name}::empty_signature")
 
             if hasattr(pe, "FileInfo"):
-                self.metadata.setdefault("versionInfo", {})
-                for l in pe.FileInfo:
-                    if not isinstance(l, list):
-                        l = [l]
-                    for i in l:
-                        if i.Key.decode() == "StringFileInfo":
-                            for j in i.StringTable:
-                                for k, v in j.entries.items():
-                                    info_name = k.decode()
-                                    info_value = v.decode()
-                                    if info_name not in self.metadata["versionInfo"]:
-                                        self.metadata["versionInfo"][info_name] = info_value
+                self.metadata.setdefault("versionInfo", [])
+                for structure in pe.FileInfo:
+                    for fileinfo in structure:
+                        if fileinfo.Key.decode() == "StringFileInfo":
+                            for block in fileinfo.StringTable:
+                                for name, value in block.entries.items():
+                                    fixedinfo = {"string-name": name.decode(), "value": value.decode()}
+                                    if fixedinfo not in self.metadata["versionInfo"]:
+                                        self.metadata["versionInfo"].append(fixedinfo)
             else:
                 file_object.flags.append(f"{self.scanner_name}::no_version_info")
 
