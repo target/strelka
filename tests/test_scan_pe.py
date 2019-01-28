@@ -1,5 +1,6 @@
 from pathlib import Path
 import unittest
+from urllib.request import urlretrieve
 
 from server.objects import StrelkaFile
 from server.scanners import scan_pe
@@ -9,123 +10,94 @@ class ScanPeTests(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         ''' Initialize tests '''
-        self.test_binary = Path(__file__).parent.joinpath("test_files", "test_binary.exe")
-        self.chrome = Path(__file__).parent.joinpath("test_files", "ChromeSetup.exe")
+        self.putty = Path(__file__).parent.joinpath("test_files", "putty.exe")
         self.source = "ScanPeTests"
+        dl_link = "https://the.earth.li/~sgtatham/putty/0.70/w32/putty.exe"
+        urlretrieve(dl_link, filename=str(self.putty))
 
     def setUp(self):
-        ''' Each test gets a new scanner '''
+        ''' Each test gets a new scan '''
         self.options = {}
         self.scanner = scan_pe.ScanPe()
         self.scanner.children = []
         self.scanner.metadata = {}
+        self.file_object = StrelkaFile(
+            data=self.putty.read_bytes(),
+            filename=self.putty.name,
+            source=self.source
+        )
+        self.scanner.scan(self.file_object, self.options)
 
     @classmethod
     def tearDownClass(self):
         ''' Clean things up '''
-        pass
+        self.putty.unlink()
 
     def tearDown(self):
         ''' Clean up each test '''
         pass
 
+    @unittest.skip("Need a PE file to test")
     def test_debug(self):
-        file_object = StrelkaFile(
-            data=self.chrome.read_bytes(),
-            filename=self.chrome.name,
-            source=self.source
-        )
-        self.scanner.scan(file_object, self.options)
         self.assertIn("rsds", self.scanner.metadata, "Debug section not scanned")
-        self.assertEqual(self.scanner.metadata["rsds"]["guid"], b"185388e5-378c-f84c-918fa31a1228f84c", "Wrong GUID")
-        self.assertEqual(self.scanner.metadata["rsds"]["age"], 1, "Wrong age")
-        self.assertEqual(self.scanner.metadata["rsds"]["pdb"], b"mi_exe_stub.pdb", "Wrong PDB string")
+        self.assertEqual(self.scanner.metadata["rsds"]["guid"], None, "Wrong GUID")
+        self.assertEqual(self.scanner.metadata["rsds"]["age"], None, "Wrong age")
+        self.assertEqual(self.scanner.metadata["rsds"]["pdb"], None, "Wrong PDB string")
 
-    def test_no_debug(self):
-        file_object = StrelkaFile(
-            data=self.test_binary.read_bytes(),
-            filename=self.test_binary.name,
-            source=self.source
-        )
-        self.scanner.scan(file_object, self.options)
+    def test_debug_none(self):
         self.assertNotIn("rsds", self.scanner.metadata, "Debug section identified when one does not exist")
 
     @unittest.skip("Need a DLL to test")
     def test_exports(self):
         pass
 
-    def test_no_exports(self):
-        file_object = StrelkaFile(
-            data=self.test_binary.read_bytes(),
-            filename=self.test_binary.name,
-            source=self.source
-        )
-        self.scanner.scan(file_object, self.options)
+    def test_exports_none(self):
         self.assertIn("exportFunctions", self.scanner.metadata, "Export functions not scanned")
         self.assertListEqual(self.scanner.metadata["exportFunctions"], [], "Export functions identified when none exist")
 
     def test_imphash(self):
-        file_object = StrelkaFile(
-            data=self.test_binary.read_bytes(),
-            filename=self.test_binary.name,
-            source=self.source
-        )
-        self.scanner.scan(file_object, self.options)
         self.assertIn("imphash", self.scanner.metadata, "Imphash not calculated")
-        self.assertEqual(self.scanner.metadata["imphash"], "1e2002a1b2a216e0a2480e2c29f9d102", "Wrong imphash")
+        self.assertEqual(self.scanner.metadata["imphash"], "63e5ceb1f07221fa9448d107ccf4ab5f", "Wrong imphash")
 
     def test_imports(self):
-        file_object = StrelkaFile(
-            data=self.test_binary.read_bytes(),
-            filename=self.test_binary.name,
-            source=self.source
-        )
-        self.scanner.scan(file_object, self.options)
         self.assertIn("imports", self.scanner.metadata, "Import DLLs not scanned")
-        self.assertListEqual(self.scanner.metadata["imports"], [b"KERNEL32.dll"], "Wrong import DLL identified")
+        import_dlls = self.scanner.metadata["imports"]
+        expected = [b"GDI32.dll", b"USER32.dll", b"COMDLG32.dll", b"SHELL32.dll", b"ole32.dll", b"IMM32.dll", b"ADVAPI32.dll", b"KERNEL32.dll"]
+        self.assertListEqual(sorted(expected), sorted(import_dlls), "Wrong imported DLLs identified")
         self.assertIn("importFunctions", self.scanner.metadata, "Import functions not scanned")
-        self.assertEqual(len(self.scanner.metadata["importFunctions"]), 1, "Wrong number of imports identified")
-        imported = self.scanner.metadata["importFunctions"][0]
-        # too many to check each one
-        self.assertEqual(len(imported["functions"]), 66, "Wrong number of import functions extracted")
+        self.assertEqual(len(self.scanner.metadata["importFunctions"]), 8, "Wrong number of imports identified")
+        import_functions = [len(i["functions"]) for i in self.scanner.metadata["importFunctions"]]
+        expected = [46, 112, 4, 1, 3, 5, 17, 127]
+        self.assertListEqual(sorted(expected), sorted(import_functions), "Wrong number of imported functions identified")
 
     def test_file_header(self):
-        file_object = StrelkaFile(
-            data=self.test_binary.read_bytes(),
-            filename=self.test_binary.name,
-            source=self.source
-        )
-        self.scanner.scan(file_object, self.options)
         self.assertEqual(self.scanner.metadata["machine"]["id"], 332, "Wrong machine id")
         self.assertEqual(self.scanner.metadata["machine"]["type"], "IMAGE_FILE_MACHINE_I386", "Wrong machine type")
-        self.assertEqual(self.scanner.metadata["timestamp"], "2019-01-24T16:00:36", "Wrong timestamp")
-        image_characteristics = [
+        self.assertEqual(self.scanner.metadata["timestamp"], "1970-01-01T00:00:00", "Wrong timestamp")
+        expected = [
             "IMAGE_FILE_EXECUTABLE_IMAGE",
             "IMAGE_FILE_32BIT_MACHINE"
         ]
-        self.assertListEqual(self.scanner.metadata["imageCharacteristics"], image_characteristics, "Image characteristics were not properly extracted")
-        dll_characteristics = [
+        ic = self.scanner.metadata["imageCharacteristics"]
+        self.assertListEqual(sorted(expected), sorted(ic), "Image characteristics were not properly extracted")
+        expected = [
             "IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE",
+            "IMAGE_DLLCHARACTERISTICS_NO_BIND",
             "IMAGE_DLLCHARACTERISTICS_NX_COMPAT",
             "IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE"
         ]
-        self.assertListEqual(self.scanner.metadata["dllCharacteristics"], dll_characteristics, "DLL characteristics were not properly extracted")
+        dc = self.scanner.metadata["dllCharacteristics"]
+        self.assertListEqual(sorted(expected), sorted(dc), "DLL characteristics were not properly extracted")
 
     def test_optional_header(self):
-        file_object = StrelkaFile(
-            data=self.test_binary.read_bytes(),
-            filename=self.test_binary.name,
-            source=self.source
-        )
-        self.scanner.scan(file_object, self.options)
         self.assertIn("entryPoint", self.scanner.metadata, "entryPoint not scanned")
-        self.assertEqual(self.scanner.metadata["entryPoint"], 4833, "Wrong entrypoint")
+        self.assertEqual(self.scanner.metadata["entryPoint"], 622550, "Wrong entrypoint")
         self.assertIn("imageMagic", self.scanner.metadata, "imageMagic not scanned")
         self.assertEqual(self.scanner.metadata["imageMagic"], "32_BIT", "Wrong magic")
         self.assertIn("imageBase", self.scanner.metadata, "imageBase not scanned")
         self.assertEqual(self.scanner.metadata["imageBase"], 4194304, "Wrong image base")
         self.assertIn("subsystem", self.scanner.metadata, "subsystem not scanned")
-        self.assertEqual(self.scanner.metadata["subsystem"], "IMAGE_SUBSYSTEM_WINDOWS_CUI", "Wrong subsystem")
+        self.assertEqual(self.scanner.metadata["subsystem"], "IMAGE_SUBSYSTEM_WINDOWS_GUI", "Wrong subsystem")
         self.assertIn("stackReserveSize", self.scanner.metadata, "stackReserveSize not scanned")
         self.assertEqual(self.scanner.metadata["stackReserveSize"], 1048576, "Wrong stack reserve size")
         self.assertIn("stackCommitSize", self.scanner.metadata, "stackCommitSize not scanned")
@@ -136,108 +108,77 @@ class ScanPeTests(unittest.TestCase):
         self.assertEqual(self.scanner.metadata["heapCommitSize"], 4096, "Wrong heap commit size")
 
     def test_resources(self):
-        file_object = StrelkaFile(
-            data=self.chrome.read_bytes(),
-            filename=self.chrome.name,
-            source=self.source
-        )
-        self.scanner.scan(file_object, self.options)
         self.assertIn("resources", self.scanner.metadata, "Resources were not scanned")
-        # too many to check each one
-        self.assertEqual(len(self.scanner.metadata["resources"]), 66, "Wrong number of resources extracted")
+        self.assertEqual(len(self.scanner.metadata["resources"]), 20, "Wrong number of resources extracted")
+        # too many to check each one attribute - only do a few of them
+        for resource in self.scanner.metadata["resources"]:
+            self.assertEqual(resource["id"], 1033, "Wrong resource id")
+            self.assertEqual(resource["name"], "IMAGE_RESOURCE_DATA_ENTRY", "Wrong resource name")
+            self.assertEqual(resource["subLanguage"], "SUBLANG_ENGLISH_US", "Wrong resource language")
 
-    def test_no_resources(self):
-        file_object = StrelkaFile(
-            data=self.test_binary.read_bytes(),
-            filename=self.test_binary.name,
-            source=self.source
-        )
-        self.scanner.scan(file_object, self.options)
+    @unittest.skip("Need a PE file to test")
+    def test_resources_none(self):
         self.assertIn("resources", self.scanner.metadata, "Resources were not scanned")
         self.assertListEqual(self.scanner.metadata["resources"], [], "Wrong number of resources extracted")
-        self.assertIn(f"{self.scanner.scanner_name}::no_resources", file_object.flags, "Flag not properly applied")
+        self.assertIn(f"{self.scanner.scanner_name}::no_resources", self.file_object.flags, "Flag not properly applied")
 
     def test_sections(self):
-        file_object = StrelkaFile(
-            data=self.test_binary.read_bytes(),
-            filename=self.test_binary.name,
-            source=self.source
-        )
-        self.scanner.scan(file_object, self.options)
         self.assertIn("sections", self.scanner.metadata, "Sections were not scanned")
-        self.assertEqual(self.scanner.metadata["total"]["sections"], 4, "Wrong number of sections extracted")
-        self.assertEqual(self.scanner.metadata["total"]["sections"], len(self.scanner.metadata["sections"]), "Section list length and total counted sections do not match")
-        section_names = [i["name"] for i in self.scanner.metadata["sections"]]
-        self.assertListEqual(sorted([".text", ".rdata", ".data", ".reloc"]), sorted(section_names), "Wrong section name")
-        for i in self.scanner.metadata["sections"]:
-            self.assertEqual("IMAGE_SECTION_HEADER", i["structure"], "Section structure should be of type 'IMAGE_SECTION_HEADER'")
+        sections = self.scanner.metadata["sections"]
+        self.assertEqual(self.scanner.metadata["total"]["sections"], 10, "Wrong number of sections extracted")
+        self.assertEqual(self.scanner.metadata["total"]["sections"], len(sections), "Section list length and total counted sections do not match")
+        section_names = [i["name"] for i in sections]
+        expected = [".00cfg", ".rdata", ".bss", ".data", ".gfids", ".rsrc", ".text", ".xdata", ".idata", ".reloc"]
+        self.assertListEqual(sorted(expected), sorted(section_names), "Wrong section name")
+        for section in sections:
+            self.assertEqual("IMAGE_SECTION_HEADER", section["structure"], "Section structure should be of type 'IMAGE_SECTION_HEADER'")
 
     def test_signature(self):
-        file_object = StrelkaFile(
-            data=self.chrome.read_bytes(),
-            filename=self.chrome.name,
-            source=self.source
-        )
-        self.scanner.scan(file_object, self.options)
         child_names = [c.filename for c in self.scanner.children]
         self.assertIn(f"{self.scanner.scanner_name}::digital_signature", child_names, "Digital signature not extracted")
-        self.assertIn(f"{self.scanner.scanner_name}::signed", file_object.flags, "Flag not properly applied")
+        self.assertIn(f"{self.scanner.scanner_name}::signed", self.file_object.flags, "Flag not properly applied")
 
-    @unittest.skip("Need a PE file with an empty digital signature to test")
-    def test_signature(self):
-        pass
+    @unittest.skip("Need a PE file to test")
+    def test_signature_empty(self):
+        self.assertIn(f"{self.scanner.scanner_name}::empty_signature", self.file_object.flags, "Flag not properly applied")
 
-    def test_no_signature(self):
-        file_object = StrelkaFile(
-            data=self.test_binary.read_bytes(),
-            filename=self.test_binary.name,
-            source=self.source
-        )
-        self.scanner.scan(file_object, self.options)
-        self.assertNotIn(f"{self.scanner.scanner_name}::empty_signature", file_object.flags, "Flag not properly applied")
-        self.assertNotIn(f"{self.scanner.scanner_name}::digital_signature", file_object.flags, "Flag not properly applied")
+    @unittest.skip("Need a PE file to test")
+    def test_signature_none(self):
+        self.assertNotIn(f"{self.scanner.scanner_name}::empty_signature", self.file_object.flags, "Flag not properly applied")
+        self.assertNotIn(f"{self.scanner.scanner_name}::signed", self.file_object.flags, "Flag not properly applied")
 
     def test_version_info(self):
-        file_object = StrelkaFile(
-            data=self.chrome.read_bytes(),
-            filename=self.chrome.name,
-            source=self.source
-        )
-        self.scanner.scan(file_object, self.options)
         self.assertIn("versionInfo", self.scanner.metadata, "Version info was not scanned")
-        self.assertEqual(self.scanner.metadata["versionInfo"]["CompanyName"], "Google Inc.", "Wrong CompanyName")
-        self.assertEqual(self.scanner.metadata["versionInfo"]["FileDescription"], "Google Update Setup", "Wrong FileDescription")
-        self.assertEqual(self.scanner.metadata["versionInfo"]["FileVersion"], "1.3.33.23", "Wrong FileVersion")
-        self.assertEqual(self.scanner.metadata["versionInfo"]["InternalName"], "Google Update Setup", "Wrong InternalName")
-        self.assertEqual(self.scanner.metadata["versionInfo"]["LegalCopyright"], "Copyright 2007-2010 Google Inc.", "Wrong LegalCopyright")
-        self.assertEqual(self.scanner.metadata["versionInfo"]["OriginalFilename"], "GoogleUpdateSetup.exe", "Wrong OriginalFilename")
-        self.assertEqual(self.scanner.metadata["versionInfo"]["ProductName"], "Google Update", "Wrong ProductName")
-        self.assertEqual(self.scanner.metadata["versionInfo"]["ProductVersion"], "1.3.33.23", "Wrong ProductVersion")
-        self.assertEqual(self.scanner.metadata["versionInfo"]["LanguageId"], "en", "Wrong LanguageId")
+        # only these entries should exist
+        # the test will fail if more or less entries are extracted
+        expected = {
+            "CompanyName": "Simon Tatham",
+            "ProductName": "PuTTY suite",
+            "FileDescription": "SSH, Telnet and Rlogin client",
+            "InternalName": "PuTTY",
+            "OriginalFilename": "PuTTY",
+            "FileVersion": "Release 0.70",
+            "ProductVersion": "Release 0.70",
+            "LegalCopyright": "Copyright \u00a9 1997-2017 Simon Tatham."
+        }
+        version_info = {}
+        for entry in self.scanner.metadata["versionInfo"]:
+            version_info[entry["string-name"]] = entry["value"]
+        self.assertDictEqual(expected, version_info, "Version info not properly extracted")
 
-    def test_no_version_info(self):
-        file_object = StrelkaFile(
-            data=self.test_binary.read_bytes(),
-            filename=self.test_binary.name,
-            source=self.source
-        )
-        self.scanner.scan(file_object, self.options)
-        self.assertNotIn("versionInfo", self.scanner.metadata, "Version info identified when none exist")
-        self.assertIn(f"{self.scanner.scanner_name}::no_version_info", file_object.flags, "Flag not properly applied")
+    @unittest.skip("Need a PE file to test")
+    def test_version_info_none(self):
+        self.assertIn("versionInfo", self.scanner.metadata, "Version info was not scanned")
+        self.assertListEqual([], self.scanner.metadata, "Version info included when none exist")
+        self.assertIn(f"{self.scanner.scanner_name}::no_version_info", self.file_object.flags, "Flag not properly applied")
 
     @unittest.skip("Need a PE file to test")
     def test_warnings(self):
         pass
 
-    def test_no_warnings(self):
-        file_object = StrelkaFile(
-            data=self.test_binary.read_bytes(),
-            filename=self.test_binary.name,
-            source=self.source
-        )
-        self.scanner.scan(file_object, self.options)
+    def test_warnings_none(self):
         self.assertIn("warnings", self.scanner.metadata, "PE warnings not scanned")
-        self.assertListEqual(self.scanner.metadata["warnings"], [], "PE warnings included when none exist")
+        self.assertListEqual([], self.scanner.metadata["warnings"], "PE warnings included when none exist")
 
 
 if __name__ == "__main__":
