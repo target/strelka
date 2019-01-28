@@ -179,7 +179,7 @@ class ScanPe(objects.StrelkaScanner):
                         if fileinfo.Key.decode() == "StringFileInfo":
                             for block in fileinfo.StringTable:
                                 for name, value in block.entries.items():
-                                    fixedinfo = {"string-name": name.decode(), "value": value.decode()}
+                                    fixedinfo = {"name": name.decode(), "value": value.decode()}
                                     if fixedinfo not in self.metadata["versionInfo"]:
                                         self.metadata["versionInfo"].append(fixedinfo)
             else:
