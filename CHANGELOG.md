@@ -1,6 +1,14 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2019-01-28
+### Added
+- Added version info to ScanPe (infosec-intern)
+
+## 2019-01-26
+### Changed
+- Expanded identification of email files (David J. Bianco)
+
 ## 2019-01-16
 ### Changed
 - pip packages now installed via requirements.txt file(s) (infosec-intern)
