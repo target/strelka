@@ -142,7 +142,7 @@ class DirWorker(multiprocessing.Process):
                           f" file {path} (PermissionError)")
 
     def move_file(self, path):
-        """Archives files."""
+        """moves files."""
         try:
             os.rename(src=path, dst=f"{self.move_directory}/{path.split('/')[-1]}")
 
