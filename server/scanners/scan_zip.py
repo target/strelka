@@ -1,6 +1,7 @@
 import io
 import zipfile
 import zlib
+import os
 
 from server import objects
 
@@ -14,12 +15,29 @@ class ScanZip(objects.StrelkaScanner):
         password_file: Location of passwords file for zip archives.
             Defaults to etc/strelka/passwords.txt.
     """
+    def init(self):
+        self.rainbow_table = None
+    
     def scan(self, file_object, options):
         file_limit = options.get("limit", 1000)
         password_file = options.get("password_file", "etc/strelka/passwords.txt")
-        gotpwds = False
-        rainbowTable = []
+
         self.metadata["total"] = {"files": 0, "extracted": 0}
+
+        try:
+            if self.rainbow_table is None:
+                if os.path.isfile(password_file):
+                    pwds = []
+
+                    with open(password_file, 'r+') as f:
+                        for line in f:
+                            pwds.append(bytes(line.strip(), 'utf-8'))
+                    self.rainbow_table = pwds
+                else:
+                    self.rainbow_table = []
+
+        except IOError:
+            file_object.flags.append(f"{self.scanner_name}::file_read_error")
 
         with io.BytesIO(file_object.data) as zip_object:
             try:
@@ -36,15 +54,7 @@ class ScanZip(objects.StrelkaScanner):
 
                                 if zinfo.flag_bits & 0x1: # File is encrypted
 
-                                    # Read password file - just once per archive
-                                    if not gotpwds:
-                                        with open(password_file, 'r+') as f:
-                                            for line in f:
-                                                rainbowTable.append(bytes(line.strip(), 'utf-8'))
-                                            f.close()
-                                        gotpwds = True
-
-                                    for pwd in rainbowTable:
+                                    for pwd in self.rainbow_table:
                                         try:
                                             child_file = zip_file_.read(name, pwd)
                                             
