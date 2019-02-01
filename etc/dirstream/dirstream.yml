@@ -17,6 +17,8 @@ dirstream:
         meta_separator: "S^E^P"
         file_mtime_delta: 5
         delete_files: False
+        move_files: False
+        move_directory: "/samples/processed/"
       network:
         broker: "127.0.0.1:5558"
         timeout: 10
