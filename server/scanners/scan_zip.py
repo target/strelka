@@ -11,10 +11,14 @@ class ScanZip(objects.StrelkaScanner):
     Options:
         limit: Maximum number of files to extract.
             Defaults to 1000.
+        password_file: Location of passwords file for zip archives.
+            Defaults to etc/strelka/passwords.txt.
     """
     def scan(self, file_object, options):
         file_limit = options.get("limit", 1000)
-
+        password_file = options.get("password_file", "etc/strelka/passwords.txt")
+        gotpwds = False
+        rainbowTable = []
         self.metadata["total"] = {"files": 0, "extracted": 0}
 
         with io.BytesIO(file_object.data) as zip_object:
@@ -28,7 +32,29 @@ class ScanZip(objects.StrelkaScanner):
                                 break
 
                             try:
-                                child_file = zip_file_.read(name)
+                                zinfo = zip_file_.getinfo(name)
+
+                                if zinfo.flag_bits & 0x1: # File is encrypted
+
+                                    # Read password file - just once per archive
+                                    if not gotpwds:
+                                        with open(password_file, 'r+') as f:
+                                            for line in f:
+                                                rainbowTable.append(bytes(line.strip(), 'utf-8'))
+                                            f.close()
+                                        gotpwds = True
+
+                                    for pwd in rainbowTable:
+                                        try:
+                                            child_file = zip_file_.read(name, pwd)
+                                            
+                                            if child_file is not None:
+                                                break
+                                        except RuntimeError:
+                                            pass
+                                else:
+                                    child_file = zip_file_.read(name)
+
                                 child_filename = f"{self.scanner_name}::{name}"
                                 child_fo = objects.StrelkaFile(data=child_file,
                                                                filename=child_filename,
