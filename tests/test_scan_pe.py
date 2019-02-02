@@ -163,7 +163,7 @@ class ScanPeTests(unittest.TestCase):
         }
         version_info = {}
         for entry in self.scanner.metadata["versionInfo"]:
-            version_info[entry["string-name"]] = entry["value"]
+            version_info[entry["name"]] = entry["value"]
         self.assertDictEqual(expected, version_info, "Version info not properly extracted")
 
     @unittest.skip("Need a PE file to test")
