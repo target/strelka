@@ -7,7 +7,7 @@ Changes to the project will be tracked in this file via the date of change.
 
 ## 2019-02-01
 ### Added
-- strelka_dirstream.py now supporst moving files after upload (zachsis)
+- strelka_dirstream.py now supports moving files after upload (zachsis)
 
 ## 2019-01-28
 ### Added
