@@ -1,6 +1,14 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2019-02-04
+### Added
+- Unit tests for ScanPe added (infosec-intern)
+
+## 2019-02-01
+### Added
+- strelka_dirstream.py now supporst moving files after upload (zachsis)
+
 ## 2019-01-28
 ### Added
 - Added version info to ScanPe (infosec-intern)
