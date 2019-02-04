@@ -45,6 +45,7 @@ class ScanZip(objects.StrelkaScanner):
                                 break
 
                             try:
+                                child_file = None
                                 zinfo = zip_file_.getinfo(name)
 
                                 if zinfo.flag_bits & 0x1 and self.rainbow_table: # File is encrypted
@@ -64,17 +65,18 @@ class ScanZip(objects.StrelkaScanner):
                                 else:
                                     child_file = zip_file_.read(name)
 
-                                child_filename = f"{self.scanner_name}::{name}"
-                                child_fo = objects.StrelkaFile(data=child_file,
-                                                               filename=child_filename,
-                                                               depth=file_object.depth + 1,
-                                                               parent_uid=file_object.uid,
-                                                               root_uid=file_object.root_uid,
-                                                               parent_hash=file_object.hash,
-                                                               root_hash=file_object.root_hash,
-                                                               source=self.scanner_name)
-                                self.children.append(child_fo)
-                                self.metadata["total"]["extracted"] += 1
+                                if child_file is not None:
+                                    child_filename = f"{self.scanner_name}::{name}"
+                                    child_fo = objects.StrelkaFile(data=child_file,
+                                                                filename=child_filename,
+                                                                depth=file_object.depth + 1,
+                                                                parent_uid=file_object.uid,
+                                                                root_uid=file_object.root_uid,
+                                                                parent_hash=file_object.hash,
+                                                                root_hash=file_object.root_hash,
+                                                                source=self.scanner_name)
+                                    self.children.append(child_fo)
+                                    self.metadata["total"]["extracted"] += 1
 
                             except NotImplementedError:
                                 file_object.flags.append(f"{self.scanner_name}::unsupported_compression")
