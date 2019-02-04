@@ -16,7 +16,7 @@ class ScanZip(objects.StrelkaScanner):
             Defaults to etc/strelka/passwords.txt.
     """
     def init(self):
-        self.rainbow_table = None
+        self.rainbow_table = []
     
     def scan(self, file_object, options):
         file_limit = options.get("limit", 1000)
@@ -25,16 +25,11 @@ class ScanZip(objects.StrelkaScanner):
         self.metadata["total"] = {"files": 0, "extracted": 0}
 
         try:
-            if self.rainbow_table is None:
+            if not self.rainbow_table:
                 if os.path.isfile(password_file):
-                    pwds = []
-
                     with open(password_file, 'r+') as f:
                         for line in f:
-                            pwds.append(bytes(line.strip(), 'utf-8'))
-                    self.rainbow_table = pwds
-                else:
-                    self.rainbow_table = []
+                            self.rainbow_table.append(bytes(line.strip(), 'utf-8'))
 
         except IOError:
             file_object.flags.append(f"{self.scanner_name}::file_read_error")
@@ -52,16 +47,20 @@ class ScanZip(objects.StrelkaScanner):
                             try:
                                 zinfo = zip_file_.getinfo(name)
 
-                                if zinfo.flag_bits & 0x1: # File is encrypted
-
+                                if zinfo.flag_bits & 0x1 and self.rainbow_table: # File is encrypted
+                                    
                                     for pwd in self.rainbow_table:
                                         try:
                                             child_file = zip_file_.read(name, pwd)
                                             
                                             if child_file is not None:
+                                                file_object.flags.append(f"{self.scanner_name}::encrypted_archive_file")
                                                 break
                                         except RuntimeError:
                                             pass
+                                elif zinfo.flag_bits & 0x1 and not self.rainbow_table: # File is encrypted, no passwords
+                                    file_object.flags.append(f"{self.scanner_name}::no_archive_passwords")
+                                    return
                                 else:
                                     child_file = zip_file_.read(name)
 
