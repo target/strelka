@@ -12,6 +12,7 @@ Bro script `etc/bro/extract-strelka.bro`
 
 import argparse
 import functools
+import glob
 import logging
 import multiprocessing
 import os
@@ -33,6 +34,7 @@ class DirWorker(multiprocessing.Process):
 
     Attributes:
         directory: Directory to send files from. Defaults to None.
+        recursive: Recursively scan directories. Defaults to False.
         source: Application that writes files to the directory, used to
             control metadata parsing functionality.
         meta_separator: Unique string used to separate pieces of metadata in a
@@ -66,11 +68,13 @@ class DirWorker(multiprocessing.Process):
      Args:
         worker_cfg: Dictionary containing unparsed dirstream worker configuration.
     """
+
     def __init__(self, worker_cfg):
         super().__init__()
         directory_cfg = worker_cfg.get("directory", {})
         network_cfg = worker_cfg.get("network", {})
         self.directory = directory_cfg.get("directory", None)
+        self.recursive = directory_cfg.get("recursive", False)
         self.source = directory_cfg.get("source", None)
         self.meta_separator = directory_cfg.get("meta_separator", "S^E^P")
         self.file_mtime_delta = directory_cfg.get("file_mtime_delta", 5)
@@ -104,20 +108,24 @@ class DirWorker(multiprocessing.Process):
         try:
             while 1:
                 current_time = time.time()
-                with os.scandir(self.directory) as sd:
-                    for entry in sd:
-                        if not entry.name.startswith(".") and entry.is_file():
-                            file_mtime = entry.stat().st_mtime
-                            mtime_delta = current_time - file_mtime
-                            if mtime_delta >= self.file_mtime_delta:
-                                path = os.path.join(self.directory, entry.name)
-                                self.send_file(path)
-                                if self.delete_files:
-                                    self.delete_file(path)
-                                if self.move_files:
-                                    self.move_file(path)
-                logging.debug(f"{self.name}: sent {self.sent} files"
-                              f" from {self.directory}")
+                iglobpath = f"{self.directory}/*"
+                if self.recursive:
+                    iglobpath = f"{self.directory}/**/*"
+                globbed_paths = glob.iglob(pathname=iglobpath, recursive=self.recursive)
+                for (idx, entry) in enumerate(globbed_paths):
+                    if os.path.isfile(entry):
+                        file_mtime = os.stat(path=entry).st_mtime
+                        mtime_delta = current_time - file_mtime
+                        if mtime_delta >= self.file_mtime_delta:
+                            self.send_file(entry)
+                            if self.delete_files:
+                                self.delete_file(entry)
+                            if self.move_files:
+                                self.move_file(entry)
+                            logging.debug(f"{self.name}: Sent file {entry}")
+                if self.sent != 0:
+                    logging.debug(f"{self.name}: Total files sent {self.sent}"
+                                  f" from {self.directory}")
                 self.sent = 0
                 time.sleep(1)
 
@@ -161,7 +169,7 @@ class DirWorker(multiprocessing.Process):
         metadata = {}
         flavors = []
         if (self.source is not None and
-            self.meta_separator in filename):
+                self.meta_separator in filename):
             if self.source == "bro":
                 (metadata,
                  flavors) = lib.parse_bro_metadata(filename,

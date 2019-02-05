@@ -13,6 +13,7 @@ dirstream:
   workers:
     - directory:
         directory: "/samples/"
+        recursive: True
         source: null
         meta_separator: "S^E^P"
         file_mtime_delta: 5
