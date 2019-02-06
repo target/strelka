@@ -124,7 +124,7 @@ class DirWorker(multiprocessing.Process):
                                 self.move_file(entry)
                             logging.debug(f"{self.name}: Sent file {entry}")
                 if self.sent != 0:
-                    logging.debug(f"{self.name}: Total files sent {self.sent}"
+                    logging.debug(f"{self.name}: Total files sent: {self.sent}"
                                   f" from {self.directory}")
                 self.sent = 0
                 time.sleep(1)
