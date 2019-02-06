@@ -112,7 +112,7 @@ class DirWorker(multiprocessing.Process):
                 if self.recursive:
                     iglobpath = f"{self.directory}/**/*"
                 globbed_paths = glob.iglob(pathname=iglobpath, recursive=self.recursive)
-                for (entry) in enumerate(globbed_paths):
+                for _, entry in enumerate(globbed_paths):
                     if os.path.isfile(entry):
                         file_mtime = os.stat(path=entry).st_mtime
                         mtime_delta = current_time - file_mtime
