@@ -485,7 +485,7 @@ The configuration options are:
 * "file_mtime_delta": delta (in seconds) that must pass since a file was last modified before it is sent to the cluster (defaults to 5 seconds)
 * "delete_files": boolean that determines if files should be deleted after they are sent to the cluster (defaults to False)
 * "move_files": boolean that determines if files should be moved to a different directory after being processed. move_directory must be specified for this to work (defaults to False)
-* "move_directory": directory that files are moved to once processed (Defaults to None)
+* "move_directory": directory that files are moved to once processed (defaults to None)
 * "broker": network address and network port of the broker (defaults to "127.0.0.1:5558")
 * "timeout": amount of time (in seconds) to wait for a file to be successfully sent to the broker (defaults to 10)
 * "use_green": boolean that determines if PyZMQ green should be used (this can increase performance at the risk of message loss, defaults to True)
