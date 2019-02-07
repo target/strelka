@@ -441,3 +441,4 @@ scan:
         priority: 5
         options:
           limit: 1000
+          password_file: 'etc/strelka/passwords.txt'
