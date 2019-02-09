@@ -2,10 +2,10 @@ import pygments
 from pygments import formatters
 from pygments import lexers
 
-from server import objects
+from server import lib
 
 
-class ScanVb(objects.StrelkaScanner):
+class ScanVb(lib.StrelkaScanner):
     """Collects metadata from Visual Basic script files.
 
     Attributes:

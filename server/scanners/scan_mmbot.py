@@ -2,21 +2,21 @@ import json
 
 import zmq
 
-from server import objects
+from server import lib
 
 
-class ScanMmbot(objects.StrelkaScanner):
-    """Collects Visual Basic results from a server running mmbotd.
+class ScanMmbot(lib.StrelkaScanner):
+    """Collects Visual Basic results from a lib running mmbotd.
 
     Options:
-        server: Network address and network port of the mmbotd server.
+        lib: Network address and network port of the mmbotd lib.
             Defaults to 127.0.0.1:33907.
         timeout: Amount of time (in milliseconds) to wait for a response
-            from the server.
+            from the lib.
             Defaults to 10000 milliseconds.
     """
     def scan(self, file_object, options):
-        server = options.get("server", "127.0.0.1:33907")
+        lib = options.get("server", "127.0.0.1:33907")
         timeout = options.get("timeout", 10000)
 
         context = zmq.Context()

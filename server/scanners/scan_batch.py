@@ -2,10 +2,10 @@ import pygments
 from pygments import formatters
 from pygments import lexers
 
-from server import objects
+from server import lib
 
 
-class ScanBatch(objects.StrelkaScanner):
+class ScanBatch(lib.StrelkaScanner):
     """Collects metadata from batch script files.
 
     Pygments is used as a lexer and the tokenized data is appended as metadata.

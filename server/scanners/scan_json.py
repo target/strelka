@@ -1,9 +1,9 @@
 import json
 
-from server import objects
+from server import lib
 
 
-class ScanJson(objects.StrelkaScanner):
+class ScanJson(lib.StrelkaScanner):
     """Collects keys from JSON files."""
     def scan(self, file_object, options):
         self.metadata.setdefault("keys", [])

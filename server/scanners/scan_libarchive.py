@@ -1,9 +1,9 @@
 import libarchive
 
-from server import objects
+from server import lib
 
 
-class ScanLibarchive(objects.StrelkaScanner):
+class ScanLibarchive(lib.StrelkaScanner):
     """Extracts files from libarchive-compatible archives.
 
     Options:
@@ -28,14 +28,14 @@ class ScanLibarchive(objects.StrelkaScanner):
                             child_filename = f"{self.scanner_name}::{entry.pathname}"
                         else:
                             child_filename = f"{self.scanner_name}::size_{len(child_file)}"
-                        child_fo = objects.StrelkaFile(data=child_file,
-                                                       filename=child_filename,
-                                                       depth=file_object.depth + 1,
-                                                       parent_uid=file_object.uid,
-                                                       root_uid=file_object.root_uid,
-                                                       parent_hash=file_object.hash,
-                                                       root_hash=file_object.root_hash,
-                                                       source=self.scanner_name)
+                        child_fo = lib.StrelkaFile(data=child_file,
+                                                   filename=child_filename,
+                                                   depth=file_object.depth + 1,
+                                                   parent_uid=file_object.uid,
+                                                   root_uid=file_object.root_uid,
+                                                   parent_hash=file_object.hash,
+                                                   root_hash=file_object.root_hash,
+                                                   source=self.scanner_name)
                         self.children.append(child_fo)
                         self.metadata["total"]["extracted"] += 1
 

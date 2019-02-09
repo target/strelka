@@ -1,664 +1,339 @@
-"""Defines classes that are used to create server utilities."""
-import collections
 from datetime import datetime
-import functools
-import gzip
+import glob
+import hashlib
 import json
 import logging
-import multiprocessing
 import os
-import random
-import shutil
-import signal
-import socket
-import time
+import re
+import string
+import uuid
 
 from boltons import iterutils
+import grpc
 import inflection
-import schedule
-import zmq
-from zmq import auth
-from zmq.auth import thread
+import magic
+import yara
 
-from shared import conf
-from server import distribution
-from server import objects
-from shared import errors
-from shared import utils
+from etc import conf
+
+compiled_magic = None
+compiled_yara = None
+scanner_cache = {}
 
 
-class Broker(multiprocessing.Process):
-    """Defines a Strelka broker.
+class StrelkaFile(object):
+    def __init__(self, data=b'', filename='', source='',
+                 depth=0, parent_hash='', root_hash='',
+                 parent_uid='', root_uid=''):
+        self.data = data
+        self.filename = filename
+        self.source = source
+        self.depth = depth
+        self.uid = uuid.uuid4()
+        self.parent_uid = parent_uid
+        self.root_uid = root_uid
+        self.parent_hash = parent_hash
+        self.root_hash = root_hash
+        if not self.root_uid and self.depth == 0:
+            self.root_uid = self.uid
 
-    Brokers are intermediary server processes that control routing between
-    clients and workers. All settings are derived from the strelka.yml
-    configuration file. Brokers can optionally be set to encrypt and
-    authenticate connections from clients.
+        self.flags = []
+        self.flavors = {}
+        self.metadata = {}
+        self.scanner_list = []
 
-    Attributes:
-        daemon_cfg: Dictionary containing the parsed "daemon" section
-            from strelka.yml.
-        network_cfg: Dictionary containing the parsed "network" sub-section
-            from strelka.yml.
-        broker_cfg: Dictionary containing the parsed "broker" sub-section
-            from strelka.yml.
-        curve_authenticator: ZMQ Curve authenticator. Used to authenticate
-            client connections to the Broker if Curve encryption is enabled.
-            Defaults to None.
-        worker_pool: Ordered Dictionary that stores running workers. Brokers
-            are configured to prune shutdown/dead workers from the pool on
-            a schedule.
-        request_socket_port: Network port that clients send file requests over.
-            Defaults to 5558.
-        task_socket_port: Network port that workers receive file tasks over.
-            Defaults to 5559.
-        poller_timeout: Amount of time (in milliseconds) that the broker polls
-            for client requests and worker statuses. Defaults to
-            1000 milliseconds.
-        broker_secret_key: Location of the broker Curve secret key
-            certificate. If set to None, then Curve encryption is not enabled.
-            Defaults to None.
-        client_public_keys: Location of the directory of Curve client public
-            key certificates. If set to None, then Curve encryption and/or
-            authentcation is not enabled. Defaults to auth.CURVE_ALLOW_ANY,
-            which allows any client to authenticate. Requires broker_secret_key
-            to be set.
-        prune_frequency: Frequency (in seconds) at which the broker prunes
-            dead workers. Defaults to 5 seconds.
-        prune_delta: Delta (in seconds) that must pass since a worker last
-            checked in before it is considered dead and is pruned. Defaults to
-            10 seconds.
-    """
-    def __init__(self, daemon_cfg):
-        super().__init__()
-        self.network_cfg = daemon_cfg.get("network", {})
-        self.broker_cfg = daemon_cfg.get("broker", {})
-        self.curve_authenticator = None
-        self.worker_pool = collections.OrderedDict()
+    def append_data(self, data):
+        self.data += data
 
-    @property
-    def request_socket_port(self):
-        request_socket_port = self.network_cfg.get("request_socket_port", 5558)
-        return request_socket_port
+    def append_metadata(self, metadata):
+        self.metadata = {**self.metadata, **ensure_utf8(metadata)}
 
-    @property
-    def task_socket_port(self):
-        task_socket_port = self.network_cfg.get("task_socket_port", 5559)
-        return task_socket_port
+    def append_flavors(self, flavors):
+        self.flavors = {**self.flavors, **ensure_utf8(flavors)}
 
-    @property
-    def poller_timeout(self):
-        poller_timeout = self.broker_cfg.get("poller_timeout", 1000)
-        return poller_timeout
+    def calculate_hash(self):
+        self.hash = hashlib.sha256(self.data).hexdigest()
+        if not self.root_hash and self.depth == 0:
+            self.root_hash = self.hash
 
-    @property
-    def broker_secret_key(self):
-        broker_secret_key = self.broker_cfg.get("broker_secret_key", None)
-        return broker_secret_key
+    def ensure_data(self):
+        self.data = ensure_bytes(self.data)
 
-    @property
-    def client_public_keys(self):
-        client_public_keys = self.broker_cfg.get("client_public_keys",
-                                                 auth.CURVE_ALLOW_ANY)
-        return client_public_keys
+    def update_filename(self, filename):
+        self.filename = filename
 
-    @property
-    def prune_frequency(self):
-        prune_frequency = self.broker_cfg.get("prune_frequency", 5)
-        return prune_frequency
+    def update_source(self, source):
+        self.source = source
 
-    @property
-    def prune_delta(self):
-        prune_delta = self.broker_cfg.get("prune_delta", 10)
-        return prune_delta
+    def update_ext_flavors(self, ext_flavors):
+        self.append_flavors({'external': ext_flavors})
 
-    def run(self):
-        """Defines main broker process.
+    def update_ext_metadata(self, ext_metadata):
+        self.append_metadata({'externalMetadata': ext_metadata})
 
-        By default, the broker is designed to setup ZMQ sockets for clients
-        and workers, poll for messages from clients and/or workers, and
-        distribute client file requests as file tasks to workers. Clients
-        only send file requests to the broker. Workers only send status
-        messages to the broker (`\x00` means "worker is alive and ready for
-        new tasks", `\x10` means "worker is dead/shutdown"). Dead workers are
-        pruned from the worker pool on a defined schedule.
-
-        This method can be overriden to create custom brokers.
-        """
-        logging.info(f"{self.name}: starting up")
-        signal.signal(signal.SIGUSR1,
-                      functools.partial(utils.shutdown_handler, self))
-        self.setup_zmq()
-        self.set_prune_at()
-
+    def taste_mime(self):
         try:
-            while 1:
-                logging.debug(f"{self.name}: available worker count:"
-                              f" {len(self.worker_pool.keys())}")
+            global compiled_magic
+            if compiled_magic is None:
+                taste_mime_db = conf.scan_cfg.get('taste_mime_db')
+                compiled_magic = magic.Magic(magic_file=taste_mime_db,
+                                             mime=True)
+            mime_type = compiled_magic.from_buffer(self.data)
+            self.append_flavors({'mime': [mime_type]})
 
-                if self.worker_pool:
-                    sockets = dict(self.client_worker_poller.poll(self.poller_timeout))
+        except magic.MagicException:
+            self.flags.append('StrelkaFile::magic_exception')
+            logging.exception(f'Exception while tasting with magic'
+                              ' (see traceback below)')
+
+    def taste_yara(self):
+        try:
+            global compiled_yara
+            if compiled_yara is None:
+                taste_yara_dir = conf.scan_cfg.get('taste_yara_rules')
+                if os.path.isdir(taste_yara_dir):
+                    yara_filepaths = {}
+                    globbed_yara_paths = glob.iglob(f'{taste_yara_dir}/**/*.yar*', recursive=True)
+                    for (idx, entry) in enumerate(globbed_yara_paths):
+                        yara_filepaths[f'namespace_{idx}'] = entry
+                    compiled_yara = yara.compile(filepaths=yara_filepaths)
                 else:
-                    sockets = dict(self.worker_poller.poll(self.poller_timeout))
+                    compiled_yara = yara.compile(filepath=taste_yara_dir)
 
-                if sockets.get(self.request_socket) == zmq.POLLIN:
-                    msg = self.request_socket.recv_multipart()
-                    worker_identity = self.worker_pool.popitem(last=False)[0]
-                    self.task_socket.send_multipart([worker_identity, b"",
-                                                     worker_identity, b""]
-                                                    + msg)
+            encoded_whitespace = string.whitespace.encode()
+            stripped_data = self.data.lstrip(encoded_whitespace)
+            yara_matches = compiled_yara.match(data=stripped_data)
+            self.append_flavors({'yara': [match.rule for match in yara_matches]})
 
-                if sockets.get(self.task_socket) == zmq.POLLIN:
-                    msg = self.task_socket.recv_multipart()
-                    worker_identity = msg[0]
-                    worker_status = msg[2]
+        except (yara.Error, yara.TimeoutError) as YaraError:
+            self.flags.append('StrelkaFile::yara_scan_error')
+            logging.exception('Exception while tasting with YARA directory'
+                              f' {taste_yara_dir} (see traceback below)')
 
-                    if worker_status == b"\x00":
-                        self.worker_pool[worker_identity] = time.time()
-                    elif worker_status == b"\x10":
-                        if worker_identity in self.worker_pool:
-                            del self.worker_pool[worker_identity]
-                self.prune_workers()
 
-        except errors.QuitBroker:
-            logging.debug(f"{self.name}: received shutdown signal")
+class StrelkaScanner(object):
+    def __init__(self):
+        self.scanner_name = self.__class__.__name__
+        metadata_key = self.scanner_name.replace('Scan', '', 1) + 'Metadata'
+        self.metadata_key = inflection.camelize(metadata_key, False)
+        self.init()
+
+    def init(self):
+        pass
+
+    def close(self):
+        pass
+
+    def close_wrapper(self):
+        try:
+            self.close()
+
         except Exception:
-            logging.exception(f"{self.name}: exception in main loop"
-                              " (see traceback below)")
-        logging.info(f"{self.name}: shutdown")
+            logging.exception(f'{self.scanner_name}: exception while closing'
+                              '(see traceback below)')
 
-    def shutdown(self):
-        """Defines broker shutdown."""
-        logging.debug(f"{self.name}: shutdown handler received")
-        if self.curve_authenticator is not None:
-            self.curve_authenticator.stop()
-        raise errors.QuitBroker()
+    def scan(self,
+             file_object,
+             options):
+        pass
 
-    def prune_workers(self):
-        """Prunes dead workers from pool.
+    def scan_wrapper(self,
+                     file_object,
+                     options,
+                     context):
+        if not context.is_active():
+            context.abort(grpc.StatusCode.CANCELLED, 'Cancelled')
 
-        This method prunes dead workers from the worker pool. A dead worker is
-        any worker that has not checked in with status `\x00` within the
-        prune delta time.
-        """
-        prune_time = time.time()
-        if prune_time >= self.prune_at:
-            logging.debug(f"{self.name}: beginning prune")
-            for (key, value) in dict(self.worker_pool).items():
-                if (self.prune_at - value) >= self.prune_delta:
-                    del self.worker_pool[key]
-                    logging.debug(f"{self.name}: pruned worker"
-                                  f" {key.decode()}")
-            self.set_prune_at()
-
-    def set_prune_at(self):
-        """Updates the prune workers schedule."""
-        self.prune_at = time.time() + self.prune_frequency
-
-    def setup_zmq(self):
-        """Establishes ZMQ sockets and pollers.
-
-        This method creates ZMQ sockets for clients and workers to connect to
-        and creates ZMQ pollers for the broker to read client and worker
-        messages on. The client socket uses PUSH/PULL for uni-directional
-        communication and the worker socket uses ROUTER/DEALER for
-        bi-directional communication. Curve encryption and authentication
-        is enabled here.
-        """
-        context = zmq.Context()
-        if self.broker_secret_key and self.client_public_keys:
-            self.curve_authenticator = thread.ThreadAuthenticator(context)
-            self.curve_authenticator.start()
-            self.curve_authenticator.configure_curve(domain="*",
-                                                     location=self.client_public_keys)
-
-        self.task_socket = context.socket(zmq.ROUTER)
-        self.task_socket.identity = b"broker_self.task_socket"
-        self.task_socket.bind(f"tcp://*:{self.task_socket_port}")
-        self.worker_poller = zmq.Poller()
-        self.worker_poller.register(self.task_socket, zmq.POLLIN)
-
-        self.request_socket = context.socket(zmq.PULL)
-        self.request_socket.identity = b"broker_self.request_socket"
-        if self.curve_authenticator is not None:
-            (server_public,
-             server_secret) = auth.load_certificate(self.broker_secret_key)
-            self.request_socket.curve_secretkey = server_secret
-            self.request_socket.curve_publickey = server_public
-            self.request_socket.curve_server = True  # must come before bind
-            logging.info(f"{self.name}: Curve enabled")
-
-        self.request_socket.bind(f"tcp://*:{self.request_socket_port}")
-        self.client_worker_poller = zmq.Poller()
-        self.client_worker_poller.register(self.request_socket, zmq.POLLIN)
-        self.client_worker_poller.register(self.task_socket, zmq.POLLIN)
-
-
-class LogRotate(multiprocessing.Process):
-    """Defines a Strelka log rotation process.
-
-    Log rotation processes can be used on worker servers to compress and
-    delete Strelka scan result logs.
-
-    Attributes:
-        daemon_cfg: Dictionary containing the parsed "daemon" section
-            from strelka.yml.
-        logrotate_cfg: Dictionary containing the parsed "logrotate"
-            sub-section from strelka.yml.
-        directory: Directory to run log rotation on. Defaults to
-            /var/log/strelka/.
-        compression_delta: Delta (in minutes) that must pass since a log file
-            was last modified before it is compressed. Defaults to 15 minutes.
-        deletion_delta: Delta (in minutes) that must pass since a compressed
-            log file was last modified before it is deleted. Defaults to
-            360 minutes / 6 hours.
-    """
-    def __init__(self, daemon_cfg):
-        super().__init__()
-        self.logrotate_cfg = daemon_cfg.get("logrotate", {})
-
-    @property
-    def directory(self):
-        directory = self.logrotate_cfg.get("directory", "/var/log/strelka/")
-        return directory
-
-    @property
-    def compression_delta(self):
-        compression_delta = self.logrotate_cfg.get("compression_delta", 15)
-        return compression_delta * 60
-
-    @property
-    def deletion_delta(self):
-        deletion_delta = self.logrotate_cfg.get("deletion_delta", 6 * 60)
-        return deletion_delta * 60
-
-    def run(self):
-        """Defines main log rotation process.
-
-        By default, log rotation is designed to gzip compress scan result
-        log files.
-
-        This method can be overriden to create custom log rotation processes.
-        """
-        logging.info(f"{self.name}: starting up")
-        signal.signal(signal.SIGUSR1,
-                      functools.partial(utils.shutdown_handler, self))
+        self.metadata = {}
+        self.children = []
 
         try:
-            schedule.every(30).seconds.do(self.gzip_rotate,
-                                          self.directory,
-                                          self.compression_delta,
-                                          self.deletion_delta)
+            self.scan(file_object, options)
 
-            while 1:
-                schedule.run_pending()
-                time.sleep(1)
-
-        except errors.QuitLogRotate:
-            logging.debug(f"{self.name}: received shutdown signal")
         except Exception:
-            logging.exception(f"{self.name}: exception in main loop"
-                              " (see traceback below)")
-        logging.info(f"{self.name}: shutdown")
+            logging.exception(f'{self.scanner_name}: exception while scanning'
+                              f' file with hash {file_object.hash} and uid'
+                              f' {file_object.uid} (see traceback below)')
 
-    def shutdown(self):
-        """Defines log rotation shutdown."""
-        logging.debug(f"{self.name}: shutdown handler received")
-        raise errors.QuitLogRotate()
-
-    def gzip_rotate(self, directory, compression_delta, deletion_delta):
-        """Rotates and deletes files.
-
-        This method performs scan result log compression (gzip) and deletion
-        based on user-defined deltas.
-        """
-        current_time = time.time()
-        with os.scandir(directory) as sd:
-            for entry in sd:
-                if not entry.name.startswith(".") and entry.is_file():
-                    file = os.path.join(directory, entry.name)
-                    file_mod_time = os.path.getmtime(file)
-                    file_delta = current_time - file_mod_time
-                    if file.endswith(".gz"):
-                        if file_delta >= deletion_delta:
-                            os.remove(file)
-                            logging.debug(f"{self.name}: deleted file {file}")
-                    else:
-                        if file_delta >= compression_delta:
-                            with open(file, "rb") as log_in:
-                                with gzip.open(f"{file}.gz", "wb") as gz_out:
-                                    shutil.copyfileobj(log_in, gz_out)
-                            os.remove(file)
-                            logging.debug(f"{self.name}: compressed"
-                                          f" file {file}")
+        file_object.append_metadata({self.metadata_key: self.metadata})
+        return self.children
 
 
-class Worker(multiprocessing.Process):
-    """Defines a Strelka worker.
+def ensure_bytes(value):
+    if isinstance(value, bytearray):
+        return bytes(value)
+    elif isinstance(value, str):
+        return value.encode('utf-8')
+    return value
 
-    Workers process file tasks assigned by brokers. All settings are derived
-    from the strelka.yml configuration file.
 
-    Attributes:
-        strelka_cfg: Path to the strelka.yml file.
-        daemon_cfg: Dictionary containing the parsed "daemon" section
-            from strelka.yml.
-        network_cfg: Dictionary containing the parsed "network" sub-section
-            from strelka.yml.
-        workers_cfg: Dictionary containing the parsed "workers" sub-section
-            from strelka.yml.
-        identity: Identity of the worker. Used as the ZMQ routing address
-            and log filename.
-        server: Hostname of the server running the worker process.
-        broker: Network address of the broker. Defaults to 127.0.0.1.
-        task_socket_port: Network port that workers receive file tasks over.
-            Defaults to 5559.
-        task_socket_reconnect: Amount of time (in milliseconds) that the task
-            socket will attempt to reconnect in the event of TCP disconnection.
-            This will have additional jitter applied (0-100ms).
-            Defaults to 100ms (plus jitter).
-        task_socket_reconnect_max: Maximum amount of time (in milliseconds)
-            that the task socket will attempt to reconnect in the event of TCP
-            disconnection. This will have additional jitter applied (0-1000ms).
-            Defaults to 4000ms (plus jitter).
-        poller_timeout: Amount of time (in milliseconds) that workers poll
-            for tasks. Defaults to 1000 milliseconds.
-        file_max: Number of files a worker will process before shutting down.
-            Defaults to 10000.
-        time_to_live: Amount of time (in minutes) that a worker will run
-            before shutting down. Defaults to 30 minutes.
-        heartbeat_frequency: Frequency (in seconds) at which a worker sends a
-            heartbeat to the broker if it has not received any file tasks.
-            Defaults to 10 seconds.
-        log_file: Location where worker scan results are logged to. Defaults
-            to /var/log/strelka/<identity>.log.
-        log_field_case: Field case ("camel" or "snake") of the scan result log
-            file data. Defaults to camel.
-        log_bundle_events: Boolean that determines if scan results should be
-            bundled in single event as an array or in multiple events.
-            Defaults to True.
-    """
-    def __init__(self, strelka_cfg, daemon_cfg):
-        super().__init__()
-        self.strelka_cfg = strelka_cfg
-        self.network_cfg = daemon_cfg.get("network", {})
-        self.workers_cfg = daemon_cfg.get("workers", {})
-        self.identity = b"%05X-%05X" % (random.randint(0, 0x100000),
-                                        random.randint(0, 0x100000))
-        self.server = socket.gethostname()
+def ensure_utf8(value):
+    def visit(path, key, value):
+        if isinstance(value, (bytes, bytearray)):
+            value = str(value, encoding='UTF-8', errors='replace')
+        elif isinstance(value, uuid.UUID):
+            value = str(value)
+        return key, value
 
-    @property
-    def broker(self):
-        return self.network_cfg.get("broker", "127.0.0.1")
+    return iterutils.remap(value, visit=visit)
 
-    @property
-    def task_socket_port(self):
-        return self.network_cfg.get("task_socket_port", 5559)
 
-    @property
-    def task_socket_reconnect(self):
-        return self.network_cfg.get("task_socket_reconnect", 100 + random.randint(0, 100))
+def normalize_whitespace(text):
+    if isinstance(text, bytes):
+        text = re.sub(br'\s+', b' ', text)
+        text = re.sub(br'(^\s+|\s+$)', b'', text)
+    elif isinstance(text, str):
+        text = re.sub(r'\s+', ' ', text)
+        text = re.sub(r'(^\s+|\s+$)', '', text)
+    return text
 
-    @property
-    def task_socket_reconnect_max(self):
-        return self.network_cfg.get("task_socket_reconnect_max", 4000 + random.randint(0, 1000))
 
-    @property
-    def poller_timeout(self):
-        return self.workers_cfg.get("poller_timeout", 1000)
+def distribute(file_object, scan_result, context):
+    if not context.is_active():
+        context.abort(grpc.StatusCode.CANCELLED, 'Cancelled')
 
-    @property
-    def file_max(self):
-        return self.workers_cfg.get("file_max", 10000)
+    file_object.ensure_data()
+    file_object.calculate_hash()
+    file_object.taste_mime()
+    file_object.taste_yara()
+    scanner_cfg = conf.scan_cfg.get('scanners', [])
+    merged_flavors = (file_object.flavors.get('external', []) +
+                      file_object.flavors.get('mime', []) +
+                      file_object.flavors.get('yara', []))
+    scanner_list = []
+    for scanner_name in scanner_cfg:
+        scanner_mappings = scanner_cfg.get(scanner_name, {})
+        assigned_scanner = assign_scanner(scanner_name,
+                                          scanner_mappings,
+                                          merged_flavors,
+                                          file_object.filename,
+                                          file_object.source)
+        if assigned_scanner is not None:
+            scanner_list.append(assigned_scanner)
+            file_object.scanner_list.append(scanner_name)
 
-    @property
-    def time_to_live(self):
-        return self.workers_cfg.get("time_to_live", 30) * 60
+    scanner_list.sort(key=lambda k: k.get('priority', 5), reverse=True)
+    maximum_depth = conf.scan_cfg.get('maximum_depth')
+    if file_object.depth <= maximum_depth:
+        children = []
+        for scanner in scanner_list:
+            try:
+                scanner_name = scanner['scanner_name']
+                und_scanner_name = inflection.underscore(scanner_name)
+                scanner_import = f'server.scanners.{und_scanner_name}'
+                module = __import__(scanner_import,
+                                    fromlist=[und_scanner_name])
+                if und_scanner_name not in scanner_cache:
+                    if hasattr(module, scanner_name):
+                        scanner_cache[und_scanner_name] = getattr(module,
+                                                                  scanner_name)()
+                scanner_options = scanner.get('options', {})
+                scanner_plugin = scanner_cache[und_scanner_name]
+                file_children = scanner_plugin.scan_wrapper(file_object,
+                                                            scanner_options,
+                                                            context)
+                children.extend(file_children)
 
-    @property
-    def heartbeat_frequency(self):
-        return self.workers_cfg.get("heartbeat_frequency", 10)
+            except ModuleNotFoundError:
+                logging.exception(f'scanner {scanner_name} not found')
 
-    @property
-    def log_file(self):
-        log_directory = self.workers_cfg.get("log_directory",
-                                             "/var/log/strelka/")
-        return os.path.join(log_directory, f"{self.identity.decode()}.log")
+        unique_flags = list(dict.fromkeys(file_object.flags))
+        result_output = {'flags': ensure_utf8(unique_flags),
+                         'flavors': file_object.flavors,
+                         **file_object.metadata}
+        scan_result['results'].append(result_output)
 
-    @property
-    def log_field_case(self):
-        return self.workers_cfg.get("log_field_case", "camel")
+        for child in children:
+            distribute(child, scan_result, context)
 
-    @property
-    def log_bundle_events(self):
-        return self.workers_cfg.get("log_bundle_events", True)
+    else:
+        logging.info(f'file with hash {file_object.hash} (root hash'
+                     f' {file_object.root_hash}) exceeded maximum depth')
 
-    def run(self):
-        """Defines main worker process.
 
-        By default, the worker is designed to poll for file tasks from the
-        broker, distribute the files to scanners, and write the scan results
-        to disk. The worker self-manages its life based on how long it has
-        lived and how many files it has scanned; on planned or unplanned
-        shutdown, the worker notifies the broker it should no longer receive
-        file tasks (status `\x10`). If the worker does not receive a file task
-        within the configured delta, then it will send a heartbeat to the
-        broker notifying it that the worker is still alive and ready to
-        receive tasks (`\x00`).
+def assign_scanner(scanner, mappings, flavors, filename, source):
+    for mapping in mappings:
+        negatives = mapping.get('negative', {})
+        positives = mapping.get('positive', {})
+        neg_flavors = negatives.get('flavors', [])
+        neg_filename = negatives.get('filename', None)
+        neg_source = negatives.get('source', None)
+        pos_flavors = positives.get('flavors', [])
+        pos_filename = positives.get('filename', None)
+        pos_source = positives.get('source', None)
+        assigned_scanner = {'scanner_name': scanner,
+                            'priority': mapping.get('priority', 5),
+                            'options': mapping.get('options', {})}
 
-        This method can be overriden to create custom workers.
-        """
-        logging.info(f"{self.name} ({self.identity.decode()}): starting up")
-        signal.signal(signal.SIGUSR1,
-                      functools.partial(utils.shutdown_handler, self))
-        conf.parse_yaml(path=self.strelka_cfg, section="remote")
-        conf.parse_yaml(path=self.strelka_cfg, section="scan")
-        self.setup_zmq()
+        for neg_flavor in neg_flavors:
+            if neg_flavor in flavors:
+                return None
+        if neg_filename is not None:
+            if re.search(neg_filename, filename) is not None:
+                return None
+        if neg_source is not None:
+            if re.search(neg_source, source) is not None:
+                return None
+        for pos_flavor in pos_flavors:
+            if pos_flavor == '*' or pos_flavor in flavors:
+                return assigned_scanner
+        if pos_filename is not None:
+            if re.search(pos_filename, filename) is not None:
+                return assigned_scanner
+        if pos_source is not None:
+            if re.search(pos_source, source) is not None:
+                return assigned_scanner
+    return None
 
-        try:
-            counter = 0
-            worker_start_time = time.time()
-            worker_expire_time = worker_start_time + random.randint(1, 60)
-            self.send_ready_status()
-            logging.debug(f"{self.name} ({self.identity.decode()}):"
-                          " sent ready status")
-            self.set_heartbeat_at()
 
-            while 1:
-                if counter >= self.file_max:
-                    break
-                if (time.time() - worker_expire_time) >= self.time_to_live:
-                    break
+def close_server():
+    global compiled_magic
+    global compiled_yara
+    compiled_magic = None
+    compiled_yara = None
+    for (scanner_name, scanner_pointer) in list(scanner_cache.items()):
+        scanner_pointer.close_wrapper()
+        scanner_cache.pop(scanner_name)
+        logging.debug(f'closed scanner {inflection.camelize(scanner_name)}')
 
-                tasks = dict(self.task_poller.poll(self.poller_timeout))
-                if tasks.get(self.task_socket) == zmq.POLLIN:
-                    task = self.task_socket.recv_multipart()
-                    worker_identity = task[1]
-                    if worker_identity != self.identity:
-                        logging.error(f"{self.name}"
-                                      f" ({self.identity.decode()}): routing"
-                                      " error, received task destined for"
-                                      f" {worker_identity.decode()}")
 
-                    if len(task) == 4:
-                        file_task = task[-1]
-                        scan_result = self.distribute_task(file_task)
-                        self.log_to_disk(scan_result)
-                        counter += 1
-                    else:
-                        logging.error(f"{self.name}"
-                                      f" ({self.identity.decode()}): received"
-                                      " invalid task")
+def remap_scan_result(scan_result, field_case):
+    empty_lambda = lambda p, k, v: v != '' and v != [] and v != {}
 
-                    self.send_ready_status()
-                    logging.debug(f"{self.name} ({self.identity.decode()}):"
-                                  " sent ready status")
-                    self.set_heartbeat_at()
+    def snake(path, key, value):
+        if not isinstance(key, int):
+            return (inflection.underscore(key), value)
+        return (key, value)
 
-                elif time.time() >= self.heartbeat_at:
-                    self.send_ready_status()
-                    logging.debug(f"{self.name} ({self.identity.decode()}):"
-                                  " sent heartbeat")
-                    self.set_heartbeat_at()
+    if field_case == 'snake':
+        remapped = iterutils.remap(scan_result, empty_lambda)
+        return iterutils.remap(remapped, visit=snake)
+    return iterutils.remap(scan_result, empty_lambda)
 
-        except errors.QuitWorker:
-            logging.debug(f"{self.name} ({self.identity.decode()}): received"
-                          " shutdown signal")
-        except Exception:
-            logging.exception(f"{self.name} ({self.identity.decode()}):"
-                              " exception in main loop (see traceback below)")
 
-        self.send_shutdown_status()
-        logging.debug(f"{self.name} ({self.identity.decode()}): sent"
-                      " shutdown status")
-        time.sleep(1)
-        distribution.close_scanners()
-        logging.info(f"{self.name} ({self.identity.decode()}): shutdown"
-                     f" after scanning {counter} file(s) and"
-                     f" {time.time() - worker_start_time} seconds")
+def format_nonbundled_events(scan_result, field_case):
+    results = scan_result.pop('results')
+    individual_result = scan_result
+    for result in results:
+        yield json.dumps(remap_scan_result({**individual_result,
+                                            **result}, field_case))
 
-    def shutdown(self):
-        """Defines worker shutdown."""
-        logging.debug(f"{self.name} ({self.identity.decode()}): shutdown"
-                      " handler received")
-        raise errors.QuitWorker()
 
-    def setup_zmq(self):
-        """Establishes ZMQ socket and poller.
+def format_bundled_event(scan_result, field_case):
+    return json.dumps(remap_scan_result(scan_result, field_case))
 
-        This method creates a ZMQ socket that connects to the broker and
-        creates a ZMQ poller to read broker messages on. The DEALER socket
-        will automatically reconnect to the broker in case of disconnection.
-        """
-        logging.debug(f"{self.name} ({self.identity.decode()}): connecting"
-                      " to broker")
-        context = zmq.Context()
-        self.task_socket = context.socket(zmq.DEALER)
-        self.task_socket.setsockopt(zmq.IDENTITY, self.identity)
-        self.task_socket.setsockopt(zmq.RECONNECT_IVL, self.task_socket_reconnect)
-        self.task_socket.setsockopt(zmq.RECONNECT_IVL_MAX, self.task_socket_reconnect_max)
-        self.task_socket.connect(f"tcp://{self.broker}:{self.task_socket_port}")
-        self.task_poller = zmq.Poller()
-        self.task_poller.register(self.task_socket, zmq.POLLIN)
 
-    def set_heartbeat_at(self):
-        """Updates the heartbeat schedule."""
-        self.heartbeat_at = time.time() + self.heartbeat_frequency
+def init_scan_result(server):
+    scan_result = {'startTime': datetime.utcnow(),
+                   'server': server,
+                   'results': []}
+    return scan_result
 
-    def send_reply(self, reply):
-        """Sends statuses to the broker.
 
-        Args:
-            reply: Message to send to the broker.
-        """
-        tracker = self.task_socket.send_multipart(reply,
-                                                  copy=False,
-                                                  track=True)
-        while not tracker.done:
-            time.sleep(0.1)
-
-    def send_ready_status(self):
-        """Sends ready status to the broker."""
-        self.send_reply([b"", b"\x00"])
-
-    def send_shutdown_status(self):
-        """Sends shutdown status to the broker."""
-        self.send_reply([b"", b"\x10"])
-
-    def distribute_task(self, file_task):
-        """Distributes file task and returns scan result.
-
-        This method distributes a file task to scanners and returns the scan
-        result. Logging is selectively disabled and enabled to ignore log
-        messages from packages used by the scanners. Scan results are
-        initialized with a variety of default fields.
-
-        Args:
-            file_task: File task sent by the broker.
-        """
-        file_object = objects.protobuf_to_file_object(file_task)
-        scan_start_time = datetime.utcnow()
-        scan_start_time_iso = scan_start_time.isoformat(timespec="seconds")
-        scan_result = {"startTime": scan_start_time_iso,
-                       "finishTime": None,
-                       "elapsedTime": None,
-                       "server": self.server,
-                       "worker": self.identity.decode(),
-                       "results": []}
-        distribution.distribute(file_object, scan_result)
-        scan_finish_time = datetime.utcnow()
-        scan_finish_time_iso = scan_finish_time.isoformat(timespec="seconds")
-        scan_result["finishTime"] = scan_finish_time_iso
-        scan_elapsed_time = (scan_finish_time - scan_start_time).total_seconds()
-        scan_result["elapsedTime"] = scan_elapsed_time
-        return scan_result
-
-    def log_to_disk(self, scan_result):
-        """Logs scan result to disk.
-
-        Args:
-            scan_result: Scan result to log to disk.
-        """
-        with open(self.log_file, "a") as log_file:
-            if self.log_bundle_events:
-                bundled_event = self.format_bundled_event(scan_result)
-                log_file.write(f"{bundled_event}\n")
-            else:
-                for event in self.format_nonbundled_events(scan_result):
-                    log_file.write(f"{event}\n")
-
-    def remap_scan_result(self, scan_result):
-        """Remaps scan result.
-
-        This method takes a scan result and returns the scan result with
-        empty values (strings, lists, and dictionaries) removed and the keys
-        formatted according to log_field_case.
-
-        Args:
-            scan_result: Scan result to be remapped and formatted.
-
-        Returns:
-            Remapped and formatted scan result.
-        """
-        empty_lambda = lambda p, k, v: v != "" and v != [] and v != {}
-
-        def snake(path, key, value):
-            if not isinstance(key, int):
-                return (inflection.underscore(key), value)
-            return (key, value)
-
-        if self.log_field_case == "snake":
-            remapped = iterutils.remap(scan_result, empty_lambda)
-            return iterutils.remap(remapped, visit=snake)
-        return iterutils.remap(scan_result, empty_lambda)
-
-    def format_nonbundled_events(self, scan_result):
-        """Formats scan result as nonbundled, JSON events.
-
-        This method takes a scan result and formats it as a generator of
-        individual JSON entries.
-
-        Args:
-            scan_result: Scan result to format.
-
-        Yields:
-            JSON formatted scan result entries.
-        """
-        results = scan_result.pop("results")
-        individual_result = scan_result
-        for result in results:
-            yield json.dumps(self.remap_scan_result({**individual_result,
-                                                     **result}))
-
-    def format_bundled_event(self, scan_result):
-        """Formats scan result as JSON event.
-
-        This method takes a scan result and formats it as a JSON entry.
-
-        Args:
-            scan_result: Scan result to format.
-
-        Returns:
-            JSON formatted scan result entry.
-        """
-        return json.dumps(self.remap_scan_result(scan_result))
+def finish_scan_result(scan_result):
+    finish_time = datetime.utcnow()
+    elapsed_time = (finish_time - scan_result['startTime']).total_seconds()
+    scan_result['startTime'] = scan_result['startTime'].isoformat(timespec='seconds')
+    scan_result['finishTime'] = finish_time.isoformat(timespec='seconds')
+    scan_result['elapsedTime'] = elapsed_time
+    return scan_result

@@ -1,10 +1,10 @@
 import hashlib
 import ssdeep
 
-from server import objects
+from server import lib
 
 
-class ScanHash(objects.StrelkaScanner):
+class ScanHash(lib.StrelkaScanner):
     """Calculates file hash values."""
     def scan(self, file_object, options):
         self.metadata["md5"] = hashlib.md5(file_object.data).hexdigest()

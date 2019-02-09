@@ -2,10 +2,10 @@ import tempfile
 
 import macholibre
 
-from server import objects
+from server import lib
 
 
-class ScanMacho(objects.StrelkaScanner):
+class ScanMacho(lib.StrelkaScanner):
     """Collects metadata from Mach-O files.
 
     Options:

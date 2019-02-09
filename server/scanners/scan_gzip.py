@@ -1,10 +1,10 @@
 import gzip
 import io
 
-from server import objects
+from server import lib
 
 
-class ScanGzip(objects.StrelkaScanner):
+class ScanGzip(lib.StrelkaScanner):
     """Decompresses gzip files."""
     def scan(self, file_object, options):
         with io.BytesIO(file_object.data) as gzip_object:
@@ -13,12 +13,12 @@ class ScanGzip(objects.StrelkaScanner):
                 decompressed_size = len(decompressed_file)
                 self.metadata["decompressedSize"] = decompressed_size
                 child_filename = f"{self.scanner_name}::size_{decompressed_size}"
-                child_fo = objects.StrelkaFile(data=decompressed_file,
-                                               filename=child_filename,
-                                               depth=file_object.depth + 1,
-                                               parent_uid=file_object.uid,
-                                               root_uid=file_object.root_uid,
-                                               parent_hash=file_object.hash,
-                                               root_hash=file_object.root_hash,
-                                               source=self.scanner_name)
+                child_fo = lib.StrelkaFile(data=decompressed_file,
+                                           filename=child_filename,
+                                           depth=file_object.depth + 1,
+                                           parent_uid=file_object.uid,
+                                           root_uid=file_object.root_uid,
+                                           parent_hash=file_object.hash,
+                                           root_hash=file_object.root_hash,
+                                           source=self.scanner_name)
                 self.children.append(child_fo)

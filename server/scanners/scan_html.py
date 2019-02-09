@@ -1,9 +1,9 @@
 import bs4
 
-from server import objects
+from server import lib
 
 
-class ScanHtml(objects.StrelkaScanner):
+class ScanHtml(lib.StrelkaScanner):
     """Collects metadata and extracts embedded scripts from HTML files.
 
     Options:
@@ -20,7 +20,7 @@ class ScanHtml(objects.StrelkaScanner):
             soup = bs4.BeautifulSoup(file_object.data, parser)
 
             if soup.title:
-                normalized_title = objects.normalize_whitespace(soup.title.text)
+                normalized_title = lib.normalize_whitespace(soup.title.text)
                 self.metadata["title"] = normalized_title
 
             hyperlinks = []
@@ -29,8 +29,7 @@ class ScanHtml(objects.StrelkaScanner):
             self.metadata.setdefault("hyperlinks", [])
             for hyperlink in hyperlinks:
                 link = hyperlink.get("href") or hyperlink.get("src")
-                if (link is not None and
-                    link not in self.metadata["hyperlinks"]):
+                if link is not None and link not in self.metadata["hyperlinks"]:
                     self.metadata["hyperlinks"].append(link)
 
             forms = soup.find_all("form")
@@ -117,15 +116,15 @@ class ScanHtml(objects.StrelkaScanner):
 
                 if script.text:
                     child_filename = f"{self.scanner_name}::script_{index}"
-                    child_fo = objects.StrelkaFile(data=script.text,
-                                                   filename=child_filename,
-                                                   depth=file_object.depth + 1,
-                                                   parent_uid=file_object.uid,
-                                                   root_uid=file_object.root_uid,
-                                                   parent_hash=file_object.hash,
-                                                   root_hash=file_object.root_hash,
-                                                   source=self.scanner_name,
-                                                   external_flavors=script_flavors)
+                    child_fo = lib.StrelkaFile(data=script.text,
+                                               filename=child_filename,
+                                               depth=file_object.depth + 1,
+                                               parent_uid=file_object.uid,
+                                               root_uid=file_object.root_uid,
+                                               parent_hash=file_object.hash,
+                                               root_hash=file_object.root_hash,
+                                               source=self.scanner_name)
+                    child_fo.update_ext_flavors(script_flavors)
                     self.children.append(child_fo)
                     self.metadata["total"]["extracted"] += 1
 

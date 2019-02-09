@@ -20,7 +20,6 @@ RUN apt-get -qq update && \
     git \
     libtool \
     make \
-    protobuf-compiler \
     python3-dev \
     python3-pip \
     python3-wheel \
@@ -70,7 +69,6 @@ RUN apt-get -qq update && \
     git \
     libtool \
     make \
-    protobuf-compiler \
     python3-dev \
     python3-pip \
     python3-wheel && \

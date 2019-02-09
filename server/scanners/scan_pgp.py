@@ -6,10 +6,10 @@ from pgpdump.packet import TrustPacket
 from pgpdump.packet import UserAttributePacket
 from pgpdump.packet import UserIDPacket
 
-from server import objects
+from server import lib
 
 
-class ScanPgp(objects.StrelkaScanner):
+class ScanPgp(lib.StrelkaScanner):
     """Collects metadata from PGP files."""
     def scan(self, file_object, options):
         self.metadata["total"] = {"publicKeys": 0,

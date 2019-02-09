@@ -1,7 +1,7 @@
 import io
 import rarfile
 
-from server import objects
+from server import lib
 
 HOST_OS_MAPPING = {
     0: "RAR_OS_MSDOS",
@@ -13,7 +13,7 @@ HOST_OS_MAPPING = {
 }
 
 
-class ScanRar(objects.StrelkaScanner):
+class ScanRar(lib.StrelkaScanner):
     """Extracts files from RAR archives.
 
     Options:
@@ -39,15 +39,15 @@ class ScanRar(objects.StrelkaScanner):
                         if not child_info.needs_password():
                             rar_metadata = {"scanRarHostOs": HOST_OS_MAPPING[child_info.host_os]}
                             child_filename = f"{self.scanner_name}::{child_info.filename}"
-                            child_fo = objects.StrelkaFile(data=child_file,
-                                                           filename=child_filename,
-                                                           depth=file_object.depth + 1,
-                                                           parent_uid=file_object.uid,
-                                                           root_uid=file_object.root_uid,
-                                                           parent_hash=file_object.hash,
-                                                           root_hash=file_object.root_hash,
-                                                           source=self.scanner_name,
-                                                           external_metadata=rar_metadata)
+                            child_fo = lib.StrelkaFile(data=child_file,
+                                                       filename=child_filename,
+                                                       depth=file_object.depth + 1,
+                                                       parent_uid=file_object.uid,
+                                                       root_uid=file_object.root_uid,
+                                                       parent_hash=file_object.hash,
+                                                       root_hash=file_object.root_hash,
+                                                       source=self.scanner_name)
+                            child_fo.update_ext_metadata(rar_metadata)
                             self.children.append(child_fo)
                             self.metadata["total"]["extracted"] += 1
                         else:

@@ -1,7 +1,7 @@
-from server import objects
+from server import lib
 
 
-class ScanJarManifest(objects.StrelkaScanner):
+class ScanJarManifest(lib.StrelkaScanner):
     """Collects metadata from JAR manifest files."""
     def scan(self, file_object, options):
         manifest = b"\n".join(file_object.data.splitlines()).rstrip(b"\n")

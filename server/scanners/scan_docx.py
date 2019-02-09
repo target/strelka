@@ -2,10 +2,10 @@ import io
 
 import docx
 
-from server import objects
+from server import lib
 
 
-class ScanDocx(objects.StrelkaScanner):
+class ScanDocx(lib.StrelkaScanner):
     """Collects metadata and extracts text from docx files.
 
     Options:
@@ -55,12 +55,12 @@ class ScanDocx(objects.StrelkaScanner):
                 for paragraph in docx_file.paragraphs:
                     docx_text.append(paragraph.text)
                 child_filename = f"{self.scanner_name}::text"
-                child_fo = objects.StrelkaFile(data="".join(docx_text),
-                                               filename=child_filename,
-                                               depth=file_object.depth + 1,
-                                               parent_uid=file_object.uid,
-                                               root_uid=file_object.root_uid,
-                                               parent_hash=file_object.hash,
-                                               root_hash=file_object.root_hash,
-                                               source=self.scanner_name)
+                child_fo = lib.StrelkaFile(data="".join(docx_text),
+                                           filename=child_filename,
+                                           depth=file_object.depth + 1,
+                                           parent_uid=file_object.uid,
+                                           root_uid=file_object.root_uid,
+                                           parent_hash=file_object.hash,
+                                           root_hash=file_object.root_hash,
+                                           source=self.scanner_name)
                 self.children.append(child_fo)

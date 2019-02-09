@@ -1,9 +1,9 @@
 import re
 
-from server import objects
+from server import lib
 
 
-class ScanStrings(objects.StrelkaScanner):
+class ScanStrings(lib.StrelkaScanner):
     """Collects strings from files.
 
     Collects strings from files (similar to the output of the Unix "strings"

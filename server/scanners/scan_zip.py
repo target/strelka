@@ -1,12 +1,12 @@
 import io
+import os
 import zipfile
 import zlib
-import os
 
-from server import objects
+from server import lib
 
 
-class ScanZip(objects.StrelkaScanner):
+class ScanZip(lib.StrelkaScanner):
     """Extracts files from ZIP archives.
 
     Options:
@@ -17,7 +17,7 @@ class ScanZip(objects.StrelkaScanner):
     """
     def init(self):
         self.rainbow_table = []
-    
+
     def scan(self, file_object, options):
         file_limit = options.get("limit", 1000)
         password_file = options.get("password_file", "etc/strelka/passwords.txt")
@@ -48,18 +48,17 @@ class ScanZip(objects.StrelkaScanner):
                                 child_file = None
                                 zinfo = zip_file_.getinfo(name)
 
-                                if zinfo.flag_bits & 0x1 and self.rainbow_table: # File is encrypted
-                                    
+                                if zinfo.flag_bits & 0x1 and self.rainbow_table:  # File is encrypted
                                     for pwd in self.rainbow_table:
                                         try:
                                             child_file = zip_file_.read(name, pwd)
-                                            
+
                                             if child_file is not None:
                                                 file_object.flags.append(f"{self.scanner_name}::encrypted_archive_file")
                                                 break
                                         except RuntimeError:
                                             pass
-                                elif zinfo.flag_bits & 0x1 and not self.rainbow_table: # File is encrypted, no passwords
+                                elif zinfo.flag_bits & 0x1 and not self.rainbow_table:  # File is encrypted, no passwords
                                     file_object.flags.append(f"{self.scanner_name}::no_archive_passwords")
                                     return
                                 else:
@@ -67,14 +66,14 @@ class ScanZip(objects.StrelkaScanner):
 
                                 if child_file is not None:
                                     child_filename = f"{self.scanner_name}::{name}"
-                                    child_fo = objects.StrelkaFile(data=child_file,
-                                                                filename=child_filename,
-                                                                depth=file_object.depth + 1,
-                                                                parent_uid=file_object.uid,
-                                                                root_uid=file_object.root_uid,
-                                                                parent_hash=file_object.hash,
-                                                                root_hash=file_object.root_hash,
-                                                                source=self.scanner_name)
+                                    child_fo = lib.StrelkaFile(data=child_file,
+                                                               filename=child_filename,
+                                                               depth=file_object.depth + 1,
+                                                               parent_uid=file_object.uid,
+                                                               root_uid=file_object.root_uid,
+                                                               parent_hash=file_object.hash,
+                                                               root_hash=file_object.root_hash,
+                                                               source=self.scanner_name)
                                     self.children.append(child_fo)
                                     self.metadata["total"]["extracted"] += 1
 

@@ -3,10 +3,10 @@ import re
 import olefile
 import oletools
 
-from server import objects
+from server import lib
 
 
-class ScanOle(objects.StrelkaScanner):
+class ScanOle(lib.StrelkaScanner):
     """Extracts files from OLECF files."""
     def scan(self, file_object, options):
         self.metadata["total"] = {"streams": 0, "extracted": 0}
@@ -27,22 +27,22 @@ class ScanOle(objects.StrelkaScanner):
                         child_filename = child_filename + f"_{str(native_stream.filename)}"
                     else:
                         child_filename = child_filename + "_native_data"
-                    child_fo = objects.StrelkaFile(data=native_stream.data,
-                                                   filename=child_filename,
-                                                   depth=file_object.depth + 1,
-                                                   parent_uid=file_object.uid,
-                                                   root_uid=file_object.root_uid,
-                                                   parent_hash=file_object.hash,
-                                                   root_hash=file_object.root_hash,
-                                                   source=self.scanner_name)
+                    child_fo = lib.StrelkaFile(data=native_stream.data,
+                                               filename=child_filename,
+                                               depth=file_object.depth + 1,
+                                               parent_uid=file_object.uid,
+                                               root_uid=file_object.root_uid,
+                                               parent_hash=file_object.hash,
+                                               root_hash=file_object.root_hash,
+                                               source=self.scanner_name)
                 else:
-                    child_fo = objects.StrelkaFile(data=child_file,
-                                                   filename=child_filename,
-                                                   depth=file_object.depth + 1,
-                                                   root_uid=file_object.root_uid,
-                                                   parent_hash=file_object.hash,
-                                                   root_hash=file_object.root_hash,
-                                                   source=self.scanner_name)
+                    child_fo = lib.StrelkaFile(data=child_file,
+                                               filename=child_filename,
+                                               depth=file_object.depth + 1,
+                                               root_uid=file_object.root_uid,
+                                               parent_hash=file_object.hash,
+                                               root_hash=file_object.root_hash,
+                                               source=self.scanner_name)
                 self.children.append(child_fo)
                 self.metadata["total"]["extracted"] += 1
             ole.close()

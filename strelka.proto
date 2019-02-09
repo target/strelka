@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+service Strelka {
+  rpc StreamFile(stream DataRequest) returns (Response) {}
+
+  rpc SendFile(DataRequest) returns (Response) {}
+
+  rpc SendLocation(LocationRequest) returns (Response) {}
+}
+
+message DataRequest {
+  bytes data = 1;
+  string filename = 2;
+  string source = 3;
+  repeated string flavors = 4;
+  map<string, string> metadata = 5;
+}
+
+message LocationRequest {
+  map<string, string> location = 1;
+  string filename = 2;
+  string source = 3;
+  repeated string flavors = 4;
+  map<string, string> metadata = 5;
+}
+
+message Response {
+  float elapsed = 1;
+}

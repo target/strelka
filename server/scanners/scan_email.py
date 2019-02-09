@@ -1,9 +1,9 @@
 import email
 
-from server import objects
+from server import lib
 
 
-class ScanEmail(objects.StrelkaScanner):
+class ScanEmail(lib.StrelkaScanner):
     """Collects metadata and extract files from email messages."""
     def scan(self, file_object, options):
         self.metadata["total"] = {"parts": 0, "extracted": 0}
@@ -11,7 +11,7 @@ class ScanEmail(objects.StrelkaScanner):
 
         self.metadata.setdefault("headers", [])
         for (key, value) in message.items():
-            normalized_value = objects.normalize_whitespace(value.strip())
+            normalized_value = lib.normalize_whitespace(value.strip())
             header_entry = {"header": key, "value": normalized_value}
             if header_entry not in self.metadata["headers"]:
                 self.metadata["headers"].append(header_entry)
@@ -28,14 +28,14 @@ class ScanEmail(objects.StrelkaScanner):
                 else:
                     child_filename = f"{self.scanner_name}::part_{index}"
 
-                child_fo = objects.StrelkaFile(data=child_file,
-                                               filename=child_filename,
-                                               depth=file_object.depth + 1,
-                                               parent_uid=file_object.uid,
-                                               root_uid=file_object.root_uid,
-                                               parent_hash=file_object.hash,
-                                               root_hash=file_object.root_hash,
-                                               source=self.scanner_name,
-                                               external_flavors=[part.get_content_type()])
+                child_fo = lib.StrelkaFile(data=child_file,
+                                           filename=child_filename,
+                                           depth=file_object.depth + 1,
+                                           parent_uid=file_object.uid,
+                                           root_uid=file_object.root_uid,
+                                           parent_hash=file_object.hash,
+                                           root_hash=file_object.root_hash,
+                                           source=self.scanner_name)
+                child_fo.update_ext_flavors([part.get_content_type()])
                 self.children.append(child_fo)
                 self.metadata["total"]["extracted"] += 1

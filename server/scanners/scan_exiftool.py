@@ -2,10 +2,10 @@ import json
 import subprocess
 import tempfile
 
-from server import objects
+from server import lib
 
 
-class ScanExiftool(objects.StrelkaScanner):
+class ScanExiftool(lib.StrelkaScanner):
     """Collects metadata parsed by Exiftool.
 
     Options:

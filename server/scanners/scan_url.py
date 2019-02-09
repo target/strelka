@@ -1,9 +1,9 @@
 import re
 
-from server import objects
+from server import lib
 
 
-class ScanUrl(objects.StrelkaScanner):
+class ScanUrl(lib.StrelkaScanner):
     """Collects URLs from files.
 
     Uses regular expressions (regex) to parse URLs from file data. Multiple
@@ -35,7 +35,7 @@ class ScanUrl(objects.StrelkaScanner):
         else:
             url_regex = self.regexes["default"]
 
-        normalized_data = objects.normalize_whitespace(file_object.data)
+        normalized_data = lib.normalize_whitespace(file_object.data)
         self.metadata.setdefault("urls", [])
         urls = url_regex.findall(normalized_data)
         for url in urls:

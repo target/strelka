@@ -1,10 +1,10 @@
 import subprocess
 import tempfile
 
-from server import objects
+from server import lib
 
 
-class ScanAntiword(objects.StrelkaScanner):
+class ScanAntiword(lib.StrelkaScanner):
     """Extracts text from MS Word document files.
 
     Options:
@@ -25,12 +25,12 @@ class ScanAntiword(objects.StrelkaScanner):
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.DEVNULL).communicate()
             if stdout:
-                child_fo = objects.StrelkaFile(data=stdout,
-                                               filename=f"{self.scanner_name}::text",
-                                               depth=file_object.depth + 1,
-                                               parent_uid=file_object.uid,
-                                               root_uid=file_object.root_uid,
-                                               parent_hash=file_object.hash,
-                                               root_hash=file_object.root_hash,
-                                               source=self.scanner_name)
+                child_fo = lib.StrelkaFile(data=stdout,
+                                           filename=f"{self.scanner_name}::text",
+                                           depth=file_object.depth + 1,
+                                           parent_uid=file_object.uid,
+                                           root_uid=file_object.root_uid,
+                                           parent_hash=file_object.hash,
+                                           root_hash=file_object.root_hash,
+                                           source=self.scanner_name)
                 self.children.append(child_fo)

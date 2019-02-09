@@ -3,10 +3,10 @@ import os
 
 import yara
 
-from server import objects
+from server import lib
 
 
-class ScanYara(objects.StrelkaScanner):
+class ScanYara(lib.StrelkaScanner):
     """Scans files with YARA.
 
     Attributes:

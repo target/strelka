@@ -1,9 +1,9 @@
 from lxml import etree
 
-from server import objects
+from server import lib
 
 
-class ScanXml(objects.StrelkaScanner):
+class ScanXml(lib.StrelkaScanner):
     """Collects metadata and extracts embedded files from XML files.
 
     Options:
@@ -78,14 +78,14 @@ class ScanXml(objects.StrelkaScanner):
                     elif (xml_args["extract_tags"] and
                           tag in xml_args["extract_tags"]):
                         child_filename = f"{self.scanner_name}::{tag}"
-                        child_fo = objects.StrelkaFile(data=text,
-                                                       filename=child_filename,
-                                                       depth=file_object.depth + 1,
-                                                       parent_uid=file_object.uid,
-                                                       root_uid=file_object.root_uid,
-                                                       parent_hash=file_object.hash,
-                                                       root_hash=file_object.root_hash,
-                                                       source=self.scanner_name)
+                        child_fo = lib.StrelkaFile(data=text,
+                                                   filename=child_filename,
+                                                   depth=file_object.depth + 1,
+                                                   parent_uid=file_object.uid,
+                                                   root_uid=file_object.root_uid,
+                                                   parent_hash=file_object.hash,
+                                                   root_hash=file_object.root_hash,
+                                                   source=self.scanner_name)
                         self.children.append(child_fo)
                         self.metadata["total"]["extracted"] += 1
 

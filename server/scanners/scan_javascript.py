@@ -1,10 +1,10 @@
 import jsbeautifier
 import pyjsparser
 
-from server import objects
+from server import lib
 
 
-class ScanJavascript(objects.StrelkaScanner):
+class ScanJavascript(lib.StrelkaScanner):
     """Collects metadata from JavaScript files.
 
     Options:
@@ -55,8 +55,7 @@ class ScanJavascript(objects.StrelkaScanner):
             if type == "Literal":
                 regex_pattern = input.get("regex", {}).get("pattern", "")
                 value = input.get("value")
-                if (regex_pattern and
-                    regex_pattern not in self.metadata["literals"]):
+                if regex_pattern and regex_pattern not in self.metadata["literals"]:
                     self.metadata["literals"].append(regex_pattern)
                 elif value is not None:
                     if not isinstance(value, str):
@@ -65,16 +64,14 @@ class ScanJavascript(objects.StrelkaScanner):
                         self.metadata["literals"].append(value)
             elif type == "FunctionDeclaration":
                 function_name = input.get("id", {}).get("name", "")
-                if (function_name and
-                    function_name not in self.metadata["functions"]):
+                if function_name and function_name not in self.metadata["functions"]:
                     self.metadata["functions"].append(function_name)
             elif type == "VariableDeclaration":
                 declarations = input.get("declarations")
                 if declarations is not None:
                     for declaration in declarations:
                         variable_name = declaration.get("id", {}).get("name", "")
-                        if (variable_name and
-                            variable_name not in self.metadata["variables"]):
+                        if variable_name and variable_name not in self.metadata["variables"]:
                             self.metadata["variables"].append(variable_name)
 
             for v in input.values():

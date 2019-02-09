@@ -2,11 +2,11 @@ import urllib3
 import os
 import requests
 from requests.auth import HTTPBasicAuth
-from server import objects
+from server import lib
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-class ScanFalconSandbox(objects.StrelkaScanner):
+class ScanFalconSandbox(lib.StrelkaScanner):
     """Sends files to Falcon Sandbox.
 
     Attributes:
@@ -17,7 +17,7 @@ class ScanFalconSandbox(objects.StrelkaScanner):
         api_secret: API secret key used for authenticating to Falcon Sandbox. This is loaded
             from the scanner options or the environment variable
             "FS_API_SECKEY".
-        server: URL of the Falcon Sandbox API inteface.
+        lib: URL of the Falcon Sandbox API inteface.
         auth_check: Boolean that determines if the username and password were
             previously checked. This ensures that the username and password
             are only checked once per worker.

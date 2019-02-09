@@ -2,10 +2,10 @@ from datetime import datetime
 
 from OpenSSL import crypto
 
-from server import objects
+from server import lib
 
 
-class ScanX509(objects.StrelkaScanner):
+class ScanX509(lib.StrelkaScanner):
     """Collects metadata from x509 and CRL files.
 
     x509 extensions require cleanup and may be improperly formatted.

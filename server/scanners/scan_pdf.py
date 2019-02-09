@@ -10,10 +10,10 @@ from pdfminer import pdfparser
 from pdfminer import pdftypes
 from pdfminer import psparser
 
-from server import objects
+from server import lib
 
 
-class ScanPdf(objects.StrelkaScanner):
+class ScanPdf(lib.StrelkaScanner):
     """Collects metadata and extracts files from PDF files.
 
     Options:
@@ -52,8 +52,7 @@ class ScanPdf(objects.StrelkaScanner):
                                     try:
                                         if key == "A":
                                             uri = value.get("URI")
-                                            if (uri is not None and
-                                                uri not in self.metadata["annotatedUris"]):
+                                            if uri is not None and uri not in self.metadata["annotatedUris"]:
                                                     self.metadata["annotatedUris"].append(uri)
 
                                     except AttributeError:
@@ -64,14 +63,14 @@ class ScanPdf(objects.StrelkaScanner):
                             if isinstance(object, pdftypes.PDFStream):
                                 try:
                                     child_filename = f"{self.scanner_name}::object_{object_id}"
-                                    child_fo = objects.StrelkaFile(data=object.get_data(),
-                                                                   filename=child_filename,
-                                                                   depth=file_object.depth + 1,
-                                                                   parent_uid=file_object.uid,
-                                                                   root_uid=file_object.root_uid,
-                                                                   parent_hash=file_object.hash,
-                                                                   root_hash=file_object.root_hash,
-                                                                   source=self.scanner_name)
+                                    child_fo = lib.StrelkaFile(data=object.get_data(),
+                                                               filename=child_filename,
+                                                               depth=file_object.depth + 1,
+                                                               parent_uid=file_object.uid,
+                                                               root_uid=file_object.root_uid,
+                                                               parent_hash=file_object.hash,
+                                                               root_hash=file_object.root_hash,
+                                                               source=self.scanner_name)
                                     if object_id not in extracted_objects:
                                         self.children.append(child_fo)
                                         extracted_objects.add(object_id)
@@ -111,14 +110,14 @@ class ScanPdf(objects.StrelkaScanner):
 
                     pdf_object_text = retstr.getvalue()
                     child_filename = f"{self.scanner_name}::text"
-                    child_fo = objects.StrelkaFile(data=pdf_object_text,
-                                                   filename=child_filename,
-                                                   depth=file_object.depth + 1,
-                                                   parent_uid=file_object.uid,
-                                                   root_uid=file_object.root_uid,
-                                                   parent_hash=file_object.hash,
-                                                   root_hash=file_object.root_hash,
-                                                   source=self.scanner_name)
+                    child_fo = lib.StrelkaFile(data=pdf_object_text,
+                                               filename=child_filename,
+                                               depth=file_object.depth + 1,
+                                               parent_uid=file_object.uid,
+                                               root_uid=file_object.root_uid,
+                                               parent_hash=file_object.hash,
+                                               root_hash=file_object.root_hash,
+                                               source=self.scanner_name)
                     self.children.append(child_fo)
                     file_object.flags.append(f"{self.scanner_name}::extracted_text")
                     device.close()

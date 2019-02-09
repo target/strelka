@@ -5,7 +5,7 @@ import struct
 
 import pefile
 
-from server import objects
+from server import lib
 
 IMAGE_MAGIC_LOOKUP = {
     0x10b: "32_BIT",
@@ -14,7 +14,7 @@ IMAGE_MAGIC_LOOKUP = {
 }
 
 
-class ScanPe(objects.StrelkaScanner):
+class ScanPe(lib.StrelkaScanner):
     """Collects metadata from PE files."""
     def scan(self, file_object, options):
         self.metadata["total"] = {"sections": 0}
@@ -59,9 +59,7 @@ class ScanPe(objects.StrelkaScanner):
             if export_symbols is not None:
                 for symbols in export_symbols:
                     name = symbols.get("Name")
-                    if (name is not None and
-                        isinstance(name, bytes) and
-                        name not in self.metadata["exportFunctions"]):
+                    if name is not None and isinstance(name, bytes) and name not in self.metadata["exportFunctions"]:
                         self.metadata["exportFunctions"].append(name)
 
             import_cache = {}
@@ -160,14 +158,14 @@ class ScanPe(objects.StrelkaScanner):
                 if len(signature_data) > 0:
                     file_object.flags.append(f"{self.scanner_name}::signed")
                     child_filename = f"{self.scanner_name}::digital_signature"
-                    child_fo = objects.StrelkaFile(data=signature_data,
-                                                   filename=child_filename,
-                                                   depth=file_object.depth + 1,
-                                                   parent_uid=file_object.uid,
-                                                   root_uid=file_object.root_uid,
-                                                   parent_hash=file_object.hash,
-                                                   root_hash=file_object.root_hash,
-                                                   source=self.scanner_name)
+                    child_fo = lib.StrelkaFile(data=signature_data,
+                                               filename=child_filename,
+                                               depth=file_object.depth + 1,
+                                               parent_uid=file_object.uid,
+                                               root_uid=file_object.root_uid,
+                                               parent_hash=file_object.hash,
+                                               root_hash=file_object.root_hash,
+                                               source=self.scanner_name)
                     self.children.append(child_fo)
                 else:
                     file_object.flags.append(f"{self.scanner_name}::empty_signature")

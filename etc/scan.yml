@@ -1,79 +1,8 @@
-############################ Strelka Configuration #############################
+maximum_depth: 15
+taste_mime_db: null
+taste_yara_rules: '/etc/strelka/taste/'
 
-# This file is the default configuration for running strelka.py. All options in
-# this configuration file are required (though all may not be used). Details
-# regarding the settings in this configuration can be reviewed in the Strelka
-# README.
-
-#========================== Daemon Configuration ==============================#
-daemon:
-  processes:
-    run_broker: True
-    run_workers: True
-    run_logrotate: True
-    worker_count: 4
-    shutdown_timeout: 45
-
-  network:
-    broker: '127.0.0.1'
-    request_socket_port: 5558
-    task_socket_port: 5559
-
-  broker:
-    poller_timeout: 1000
-    broker_secret_key: null
-    client_public_keys: null
-    prune_frequency: 5
-    prune_delta: 10
-
-  workers:
-    task_socket_reconnect: 100
-    task_socket_reconnect_max: 4000
-    poller_timeout: 1000
-    file_max: 10000
-    time_to_live: 30
-    heartbeat_frequency: 10
-    log_directory: '/var/log/strelka/'
-    log_field_case: 'camel'
-    log_bundle_events: True
-
-  logrotate:
-    directory: '/var/log/strelka/'
-    compression_delta: 15
-    deletion_delta: 360
-
-#=========================== Remote Configuration =============================#
-remote:
-  remote_timeout: 30
-  remote_retries: 3
-  google_application_credentials: null
-  aws_access_key_id: null
-  aws_secret_access_key: null
-  aws_default_region: null
-  st_auth_version: 3
-  os_auth_url: null
-  os_username: null
-  os_password: null
-  os_cert: null
-  os_cacert: null
-  os_user_domain_name: null
-  os_project_name: null
-  os_project_domain_name: null
-  http_basic_user: null
-  http_basic_pass: null
-  http_verify: False
-
-#========================== Scan Configuration ================================#
-scan:
-  distribution:
-    close_timeout: 30
-    distribution_timeout: 1800
-    scanner_timeout: 600
-    maximum_depth: 15
-    taste_mime_db: null
-    taste_yara_rules: 'etc/strelka/taste/'
-
-  scanners:
+scanners:
     'ScanBatch':
       - positive:
           flavors:
@@ -441,4 +370,4 @@ scan:
         priority: 5
         options:
           limit: 1000
-          password_file: 'etc/strelka/passwords.txt'
+          password_file: '/etc/strelka/passwords.txt'

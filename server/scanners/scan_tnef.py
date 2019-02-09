@@ -1,9 +1,9 @@
 import tnefparse
 
-from server import objects
+from server import lib
 
 
-class ScanTnef(objects.StrelkaScanner):
+class ScanTnef(lib.StrelkaScanner):
     """Collects metadata and extract files from TNEF files."""
     def scan(self, file_object, options):
         self.metadata["total"] = {"attachments": 0, "extracted": 0}
@@ -32,25 +32,25 @@ class ScanTnef(objects.StrelkaScanner):
             self.metadata["total"]["attachments"] = len(tnef_attachments)
             for attachment in tnef_attachments:
                 child_filename = f"{self.scanner_name}::{attachment.name.decode()}"
-                child_fo = objects.StrelkaFile(data=attachment.data,
-                                               filename=child_filename,
-                                               depth=file_object.depth + 1,
-                                               parent_uid=file_object.uid,
-                                               root_uid=file_object.root_uid,
-                                               parent_hash=file_object.hash,
-                                               root_hash=file_object.root_hash,
-                                               source=self.scanner_name)
+                child_fo = lib.StrelkaFile(data=attachment.data,
+                                           filename=child_filename,
+                                           depth=file_object.depth + 1,
+                                           parent_uid=file_object.uid,
+                                           root_uid=file_object.root_uid,
+                                           parent_hash=file_object.hash,
+                                           root_hash=file_object.root_hash,
+                                           source=self.scanner_name)
                 self.children.append(child_fo)
                 self.metadata["total"]["extracted"] += 1
 
         tnef_html = getattr(tnef, "htmlbody", None)
         if tnef_html is not None:
-            child_fo = objects.StrelkaFile(data=tnef_html.data,
-                                   filename=f"{self.scanner_name}::htmlbody",
-                                   depth=file_object.depth + 1,
-                                   parent_uid=file_object.uid,
-                                   root_uid=file_object.root_uid,
-                                   parent_hash=file_object.hash,
-                                   root_hash=file_object.root_hash,
-                                   source=self.scanner_name)
+            child_fo = lib.StrelkaFile(data=tnef_html.data,
+                                       filename=f"{self.scanner_name}::htmlbody",
+                                       depth=file_object.depth + 1,
+                                       parent_uid=file_object.uid,
+                                       root_uid=file_object.root_uid,
+                                       parent_hash=file_object.hash,
+                                       root_hash=file_object.root_hash,
+                                       source=self.scanner_name)
             self.children.append(child_fo)

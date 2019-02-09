@@ -1,7 +1,7 @@
-from server import objects
+from server import lib
 
 
-class ScanHeader(objects.StrelkaScanner):
+class ScanHeader(lib.StrelkaScanner):
     """Collects file header.
 
     Options:

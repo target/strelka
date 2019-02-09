@@ -3,10 +3,10 @@ import tempfile
 
 import rpmfile
 
-from server import objects
+from server import lib
 
 
-class ScanRpm(objects.StrelkaScanner):
+class ScanRpm(lib.StrelkaScanner):
     """Collects metadata and extracts files from RPM files.
 
     Options:
@@ -74,14 +74,14 @@ class ScanRpm(objects.StrelkaScanner):
                         elif key == "url":
                             self.metadata["url"] = value
 
-                    child_fo = objects.StrelkaFile(data=child_file,
-                                                   filename=child_filename,
-                                                   depth=file_object.depth + 1,
-                                                   parent_uid=file_object.uid,
-                                                   root_uid=file_object.root_uid,
-                                                   parent_hash=file_object.hash,
-                                                   root_hash=file_object.root_hash,
-                                                   source=self.scanner_name)
+                    child_fo = lib.StrelkaFile(data=child_file,
+                                               filename=child_filename,
+                                               depth=file_object.depth + 1,
+                                               parent_uid=file_object.uid,
+                                               root_uid=file_object.root_uid,
+                                               parent_hash=file_object.hash,
+                                               root_hash=file_object.root_hash,
+                                               source=self.scanner_name)
                     self.children.append(child_fo)
 
             except ValueError:

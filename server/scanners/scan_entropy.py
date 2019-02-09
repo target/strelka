@@ -1,9 +1,9 @@
 import entropy
 
-from server import objects
+from server import lib
 
 
-class ScanEntropy(objects.StrelkaScanner):
+class ScanEntropy(lib.StrelkaScanner):
     """Calculates entropy of files."""
     def scan(self, file_object, options):
         self.metadata["entropy"] = entropy.shannon_entropy(file_object.data)

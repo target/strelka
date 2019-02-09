@@ -1,9 +1,9 @@
 from oletools import olevba3
 
-from server import objects
+from server import lib
 
 
-class ScanVba(objects.StrelkaScanner):
+class ScanVba(lib.StrelkaScanner):
     """Extracts and analyzes VBA from document files.
 
     Options:
@@ -22,14 +22,14 @@ class ScanVba(objects.StrelkaScanner):
                 self.metadata["total"]["files"] = len(extract_macros)
                 for (filename, stream_path, vba_filename, vba_code) in extract_macros:
                     child_filename = f"{self.scanner_name}::{vba_filename}"
-                    child_fo = objects.StrelkaFile(data=vba_code,
-                                                   filename=child_filename,
-                                                   depth=file_object.depth + 1,
-                                                   parent_uid=file_object.uid,
-                                                   root_uid=file_object.root_uid,
-                                                   parent_hash=file_object.hash,
-                                                   root_hash=file_object.root_hash,
-                                                   source=self.scanner_name)
+                    child_fo = lib.StrelkaFile(data=vba_code,
+                                               filename=child_filename,
+                                               depth=file_object.depth + 1,
+                                               parent_uid=file_object.uid,
+                                               root_uid=file_object.root_uid,
+                                               parent_hash=file_object.hash,
+                                               root_hash=file_object.root_hash,
+                                               source=self.scanner_name)
                     self.children.append(child_fo)
                     self.metadata["total"]["extracted"] += 1
 

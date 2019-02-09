@@ -2,10 +2,10 @@ import os
 import subprocess
 import tempfile
 
-from server import objects
+from server import lib
 
 
-class ScanUpx(objects.StrelkaScanner):
+class ScanUpx(lib.StrelkaScanner):
     """Decompresses UPX packed files.
 
     Options:
@@ -32,14 +32,14 @@ class ScanUpx(objects.StrelkaScanner):
                     upx_size = len(upx_file)
                     if upx_size > file_object.size:
                         child_filename = f"{self.scanner_name}::size_{upx_size}"
-                        child_fo = objects.StrelkaFile(data=upx_file,
-                                                       filename=child_filename,
-                                                       depth=file_object.depth + 1,
-                                                       parent_uid=file_object.uid,
-                                                       root_uid=file_object.root_uid,
-                                                       parent_hash=file_object.hash,
-                                                       root_hash=file_object.root_hash,
-                                                       source=self.scanner_name)
+                        child_fo = lib.StrelkaFile(data=upx_file,
+                                                   filename=child_filename,
+                                                   depth=file_object.depth + 1,
+                                                   parent_uid=file_object.uid,
+                                                   root_uid=file_object.root_uid,
+                                                   parent_hash=file_object.hash,
+                                                   root_hash=file_object.root_hash,
+                                                   source=self.scanner_name)
                         self.children.append(child_fo)
                 os.remove(upx_filename)
             else:

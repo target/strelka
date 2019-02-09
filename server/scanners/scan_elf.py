@@ -6,10 +6,10 @@ from elftools.elf import dynamic
 from elftools.elf import elffile
 from elftools.elf import sections
 
-from server import objects
+from server import lib
 
 
-class ScanElf(objects.StrelkaScanner):
+class ScanElf(lib.StrelkaScanner):
     """Collects metadata from ELF files."""
     def scan(self, file_object, options):
         with io.BytesIO(file_object.data) as elf_object:
