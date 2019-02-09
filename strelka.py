@@ -71,7 +71,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
         fin_time = time.time() - req_time
         return strelka_pb2.Response(elapsed=fin_time)
 
-    def UnaryFile(self, request, context):
+    def SendFile(self, request, context):
         '''Handles unary gRPC file requests.'''
         self.refresh_scan_cfg()
 
