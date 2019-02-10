@@ -55,7 +55,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
             if request.filename:
                 file_object.update_filename(request.filename)
             if request.source:
-                file_object.update_filename(request.source)
+                file_object.update_source(request.source)
             if request.flavors:
                 file_object.update_ext_flavors([flavor for flavor in request.flavors])
             if request.metadata:
@@ -80,7 +80,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
         if request.filename:
             file_object.update_filename(request.filename)
         if request.source:
-            file_object.update_filename(request.source)
+            file_object.update_source(request.source)
         if request.flavors:
             file_object.update_ext_flavors([flavor for flavor in request.flavors])
         if request.metadata:
