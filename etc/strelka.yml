@@ -1,7 +1,8 @@
-address: '[::]:8443'
-log_directory: '/var/log/strelka/'
-log_field_case: 'camel'
-log_bundle_events: True
-log_size: 100000000
-refresh: 900
+addresses:
+  - '[::]:8443'
+logging_cfg: '/etc/strelka/logging.yml'
 scan_cfg: '/etc/strelka/scan.yml'
+scan_reload: 900
+bundle_events: True
+directory: '/var/log/strelka/'
+field_case: 'camel'

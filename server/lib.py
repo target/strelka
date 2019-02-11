@@ -45,11 +45,11 @@ class StrelkaFile(object):
     def append_data(self, data):
         self.data += data
 
-    def append_metadata(self, metadata):
-        self.metadata = {**self.metadata, **ensure_utf8(metadata)}
-
     def append_flavors(self, flavors):
         self.flavors = {**self.flavors, **ensure_utf8(flavors)}
+
+    def append_metadata(self, metadata):
+        self.metadata = {**self.metadata, **ensure_utf8(metadata)}
 
     def calculate_hash(self):
         self.hash = hashlib.sha256(self.data).hexdigest()
@@ -286,7 +286,7 @@ def assign_scanner(scanner, mappings, flavors, filename, source):
     return None
 
 
-def close_server():
+def reset_server():
     global compiled_magic
     global compiled_yara
     compiled_magic = None
@@ -294,7 +294,6 @@ def close_server():
     for (scanner_name, scanner_pointer) in list(scanner_cache.items()):
         scanner_pointer.close_wrapper()
         scanner_cache.pop(scanner_name)
-        logging.debug(f'closed scanner {inflection.camelize(scanner_name)}')
 
 
 def remap_scan_result(scan_result, field_case):
@@ -311,26 +310,24 @@ def remap_scan_result(scan_result, field_case):
     return iterutils.remap(scan_result, empty_lambda)
 
 
-def format_nonbundled_events(scan_result, field_case):
+def split_scan_result(scan_result):
     results = scan_result.pop('results')
     individual_result = scan_result
     for result in results:
-        yield json.dumps(remap_scan_result({**individual_result,
-                                            **result}, field_case))
+        yield {**individual_result, **result}
 
 
 def format_bundled_event(scan_result, field_case):
     return json.dumps(remap_scan_result(scan_result, field_case))
 
 
-def init_scan_result(server):
+def init_scan_result():
     scan_result = {'startTime': datetime.utcnow(),
-                   'server': server,
                    'results': []}
     return scan_result
 
 
-def finish_scan_result(scan_result):
+def fin_scan_result(scan_result):
     finish_time = datetime.utcnow()
     elapsed_time = (finish_time - scan_result['startTime']).total_seconds()
     scan_result['startTime'] = scan_result['startTime'].isoformat(timespec='seconds')

@@ -52,9 +52,6 @@ RUN apt-get -qq update && \
     cd yara-python-$YARA_PYTHON_VERSION/ && \
     python3 setup.py build --dynamic-linking && \
     python3 setup.py install && \
-# Compile protobuf
-    cd /opt/strelka/server/ && \
-    protoc --python_out=. strelka.proto && \
 # Install Strelka
     cd /opt/strelka/ && \
     python3 setup.py -q build && \

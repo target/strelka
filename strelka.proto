@@ -14,6 +14,7 @@ message DataRequest {
   string source = 3;
   repeated string flavors = 4;
   map<string, string> metadata = 5;
+  bool log_result = 6;
 }
 
 message LocationRequest {
@@ -22,8 +23,10 @@ message LocationRequest {
   string source = 3;
   repeated string flavors = 4;
   map<string, string> metadata = 5;
+  bool log_result = 6;
 }
 
 message Response {
   float elapsed = 1;
+  string result = 2;
 }

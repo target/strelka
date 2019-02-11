@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 import argparse
 from concurrent import futures
+import json
 import logging
 import logging.config
-from logging.handlers import RotatingFileHandler
+import multiprocessing
 import os
 import signal
-import socket
 import sys
 import time
+import uuid
+import yaml
 
 import grpc
 
@@ -17,38 +19,59 @@ from server import lib
 import strelka_pb2
 import strelka_pb2_grpc
 
+DEFAULTS = {
+    'addresses': ['[::]:8443'],
+    'strelka_cfg': '/etc/strelka/strelka.yml',
+    'logging_cfg': '/etc/strelka/logging.yml',
+    'scan_cfg': '/etc/strelka/scan.yml',
+    'scan_reload': 900,
+    'bundle_events': True,
+    'directory': '/var/log/strelka/',
+    'field_case': 'camel',
+}
+
 run = 1
 
-DEFAULT_CONFIGS = {
-    'dev_strelka_cfg': 'etc/strelka.yml',
-    'sys_strelka_cfg': '/etc/strelka/strelka.yml',
-    'dev_logging_ini': 'etc/pylogging.ini',
-    'sys_logging_ini': '/etc/strelka/pylogging.ini'
-}
+
+class StrelkaWrapper(multiprocessing.Process):
+    def __init__(self, address):
+        super().__init__()
+        self.address = address
+
+    def run(self):
+        server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
+        servicer = StrelkaServicer()
+        strelka_pb2_grpc.add_StrelkaServicer_to_server(servicer, server)
+        server.add_insecure_port(self.address)
+        server.start()
+        while 1:
+            time.sleep(1)
 
 
 class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
     def __init__(self):
-        conf.load_scan(conf.strelka_cfg.get('scan_cfg'))
-        self.reload_scan = time.time() + conf.strelka_cfg.get('refresh')
-        self.log_file = os.path.join(conf.strelka_cfg.get('log_directory'), 'strelka.log')
-        self.field_case = conf.strelka_cfg.get('log_field_case')
-        self.bundle_events = conf.strelka_cfg.get('log_bundle_events')
-        self.server = socket.gethostname()
-        self.logger = logging.getLogger('Strelka log')
+        self.server_id = str(uuid.uuid4()).upper()[:8]
+        self.log_file = os.path.join(conf.strelka_cfg.get('directory',
+                                                          DEFAULTS['directory']),
+                                     f'{self.server_id}.log')
+        self.field_case = conf.strelka_cfg.get('field_case',
+                                               DEFAULTS['field_case'])
+        self.bundle_events = conf.strelka_cfg.get('bundle_events',
+                                                  DEFAULTS['bundle_events'])
+        self.logger = logging.getLogger('strelka.log_scan')
         self.logger.propagate = False
-        self.logger.setLevel(logging.INFO)
-        handler = RotatingFileHandler(self.log_file,
-                                      maxBytes=conf.strelka_cfg.get('log_size'),
-                                      backupCount=5)
+        handler = logging.handlers.WatchedFileHandler(self.log_file, delay=True)
         self.logger.addHandler(handler)
+        logging.debug(f'Server {self.server_id}: initialized')
 
     def StreamFile(self, request_iterator, context):
-        '''Handles streamed gRPC file requests.'''
-        self.refresh_scan_cfg()
+        """Handles streamed gRPC file requests."""
+        init_time = time.time()
 
-        req_time = time.time()
+        self.load_cfg()
         file_object = lib.StrelkaFile()
+
+        log_scan = False
         for request in request_iterator:
             if request.data:
                 file_object.append_data(request.data)
@@ -57,117 +80,135 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
             if request.source:
                 file_object.update_source(request.source)
             if request.flavors:
-                file_object.update_ext_flavors([flavor for flavor in request.flavors])
+                file_object.update_ext_flavors([flavor
+                                                for flavor in request.flavors])
             if request.metadata:
-                file_object.update_ext_metadata({key: value for (key, value) in request.metadata.items()})
+                file_object.update_ext_metadata({key: value
+                                                for (key, value) in request.metadata.items()})
+            if request.log_scan:
+                log_scan = request.log_scan
 
-        scan_result = lib.init_scan_result(self.server)
+        scan_result = lib.init_scan_result()
         lib.distribute(file_object, scan_result, context)
-        scan_result = lib.finish_scan_result(scan_result)
-        formatted_event = lib.format_bundled_event(scan_result,
-                                                   'camel')
-        self.logger.info(formatted_event)
+        scan_result = lib.fin_scan_result(scan_result)
+        remapped_scan_result = lib.remap_scan_result(scan_result,
+                                                     self.field_case)
 
-        fin_time = time.time() - req_time
-        return strelka_pb2.Response(elapsed=fin_time)
+        if log_scan:
+            if self.bundle_events:
+                self.logger.info(json.dumps(remapped_scan_result))
+            else:
+                for event in lib.split_scan_result(remapped_scan_result.copy()):
+                    self.logger.info(json.dumps(event))
+
+        fin_time = time.time() - init_time
+        return strelka_pb2.Response(elapsed=fin_time,
+                                    result=json.dumps(remapped_scan_result))
 
     def SendFile(self, request, context):
-        '''Handles unary gRPC file requests.'''
-        self.refresh_scan_cfg()
+        """Handles unary gRPC file requests."""
+        init_time = time.time()
 
-        req_time = time.time()
-        file_object = lib.StrelkaFile(request.data)
+        self.load_cfg()
+        file_object = lib.StrelkaFile(data=request.data)
+
+        log_scan = False
         if request.filename:
             file_object.update_filename(request.filename)
         if request.source:
             file_object.update_source(request.source)
         if request.flavors:
-            file_object.update_ext_flavors([flavor for flavor in request.flavors])
+            file_object.update_ext_flavors([flavor
+                                            for flavor in request.flavors])
         if request.metadata:
-            file_object.update_ext_metadata({key: value for (key, value) in request.metadata.items()})
+            file_object.update_ext_metadata({key: value
+                                            for (key, value) in request.metadata.items()})
+        if request.log_scan:
+            log_scan = request.log_scan
 
-        scan_result = lib.init_scan_result(self.server)
+        scan_result = lib.init_scan_result()
         lib.distribute(file_object, scan_result, context)
-        scan_result = lib.finish_scan_result(scan_result)
-        formatted_event = lib.format_bundled_event(scan_result,
-                                                   'camel')
-        self.logger.info(formatted_event)
+        scan_result = lib.fin_scan_result(scan_result)
+        remapped_scan_result = lib.remap_scan_result(scan_result,
+                                                     self.field_case)
 
-        fin_time = time.time() - req_time
-        return strelka_pb2.Response(elapsed=fin_time)
+        if log_scan:
+            if self.bundle_events:
+                self.logger.info(json.dumps(remapped_scan_result))
+            else:
+                for event in lib.split_scan_result(remapped_scan_result.copy()):
+                    self.logger.info(json.dumps(event))
 
-    def refresh_scan_cfg(self):
-        if self.reload_scan <= time.time():
-            lib.close_server()
-            conf.load_scan(conf.strelka_cfg.get('scan_cfg'))
-            self.reload_scan = time.time() + conf.strelka_cfg.get('refresh')
+        fin_time = time.time() - init_time
+        return strelka_pb2.Response(elapsed=fin_time,
+                                    result=json.dumps(remapped_scan_result))
+
+    def load_cfg(self):
+        if not conf.scan_cfg or self.reload <= time.time():
+            lib.reset_server()
+            conf.load_scan(conf.strelka_cfg.get('scan_cfg',
+                                                DEFAULTS['scan_cfg']))
+            self.reload = time.time() + conf.strelka_cfg.get('scan_reload',
+                                                             DEFAULTS['scan_reload'])
+            logging.debug(f'Server {self.server_id}: scan settings loaded')
 
 
 def main():
     def shutdown(signum, frame):
-        '''Signal handler for shutting down main.'''
-        logging.debug('shutdown triggered')
         global run
         run = 0
 
     signal.signal(signal.SIGTERM, shutdown)
     signal.signal(signal.SIGINT, shutdown)
 
-    parser = argparse.ArgumentParser(prog='strelka_grpc.py',
-                                     description='runs Strelka via gRPC.',
+    parser = argparse.ArgumentParser(prog='strelka.py',
+                                     description='runs Strelka server',
                                      usage='%(prog)s [options]')
-    parser.add_argument('-d', '--debug',
-                        action='store_true',
-                        default=False,
-                        dest='debug',
-                        help='enable debug messages to the console')
     parser.add_argument('-c', '--strelka-config',
                         action='store',
                         dest='strelka_cfg',
                         help='path to strelka configuration file')
-    parser.add_argument('-l', '--logging-ini',
-                        action='store',
-                        dest='logging_ini',
-                        help='path to python logging configuration file')
     args = parser.parse_args()
 
-    logging_ini = None
-    if args.logging_ini:
-        if not os.path.exists(args.logging_ini):
-            sys.exit(f'logging configuration {args.logging_ini} does not exist')
-        logging_ini = args.logging_ini
-    elif os.path.exists(DEFAULT_CONFIGS['sys_logging_ini']):
-        logging_ini = DEFAULT_CONFIGS['sys_logging_ini']
-    elif os.path.exists(DEFAULT_CONFIGS['dev_logging_ini']):
-        logging_ini = DEFAULT_CONFIGS['dev_logging_ini']
-
-    if logging_ini is None:
-        sys.exit('no logging configuration found')
-    logging.config.fileConfig(logging_ini)
-
-    strelka_cfg = None
+    strelka_cfg = ''
     if args.strelka_cfg:
         if not os.path.exists(args.strelka_cfg):
             sys.exit(f'strelka configuration {args.strelka_cfg} does not exist')
         strelka_cfg = args.strelka_cfg
-    elif os.path.exists(DEFAULT_CONFIGS['sys_strelka_cfg']):
-        strelka_cfg = DEFAULT_CONFIGS['sys_strelka_cfg']
-    elif os.path.exists(DEFAULT_CONFIGS['dev_strelka_cfg']):
-        strelka_cfg = DEFAULT_CONFIGS['dev_strelka_cfg']
+    elif os.path.exists(DEFAULTS['strelka_cfg']):
+        strelka_cfg = DEFAULTS['strelka_cfg']
 
-    if strelka_cfg is None:
+    if not strelka_cfg:
         sys.exit('no strelka configuration found')
-    logging.info(f'using strelka configuration {strelka_cfg}')
     conf.load_strelka(strelka_cfg)
 
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
-    servicer = StrelkaServicer()
-    strelka_pb2_grpc.add_StrelkaServicer_to_server(servicer, server)
-    server.add_insecure_port(conf.strelka_cfg.get('address'))
-    server.start()
+    logging_cfg = conf.strelka_cfg.get('logging_cfg', DEFAULTS['logging_cfg'])
+    with open(logging_cfg, 'r') as f:
+        logging.config.dictConfig(yaml.safe_load(f.read()))
+    logging.info(f'using strelka configuration {strelka_cfg}')
+
+    proc_map = {}
+    addresses = conf.strelka_cfg.get('addresses', DEFAULTS['addresses'])
+    for addr in addresses:
+        new_proc = StrelkaWrapper(addr)
+        new_proc.start()
+        proc_map[addr] = new_proc
+
     while run:
+        for (addr, proc) in list(proc_map.items()):
+            if not proc.is_alive():
+                proc.join()
+                del proc_map[addr]
+                new_proc = StrelkaWrapper(addr)
+                new_proc.start()
+                proc_map[addr] = new_proc
         time.sleep(5)
-    server.stop(0)
+
+    logging.info('shutting down')
+    for (addr, proc) in proc_map.items():
+        if proc.is_alive():
+            os.kill(proc.pid, signal.SIGKILL)
+        proc.join()
 
 
 if __name__ == '__main__':
