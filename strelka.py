@@ -110,9 +110,11 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
         init_time = time.time()
 
         self.load_cfg()
-        file_object = lib.StrelkaFile(data=request.data)
+        file_object = lib.StrelkaFile()
 
         log_scan = False
+        if request.data:
+            file_object.append_data(request.data)
         if request.filename:
             file_object.update_filename(request.filename)
         if request.source:
@@ -125,6 +127,57 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
                                             for (key, value) in request.metadata.items()})
         if request.log_scan:
             log_scan = request.log_scan
+
+        scan_result = lib.init_scan_result()
+        lib.distribute(file_object, scan_result, context)
+        scan_result = lib.fin_scan_result(scan_result)
+        remapped_scan_result = lib.remap_scan_result(scan_result,
+                                                     self.field_case)
+
+        if log_scan:
+            if self.bundle_events:
+                self.logger.info(json.dumps(remapped_scan_result))
+            else:
+                for event in lib.split_scan_result(remapped_scan_result.copy()):
+                    self.logger.info(json.dumps(event))
+
+        fin_time = time.time() - init_time
+        return strelka_pb2.Response(elapsed=fin_time,
+                                    result=json.dumps(remapped_scan_result))
+
+    def SendLocation(self, request, context):
+        init_time = time.time()
+
+        self.load_cfg()
+        file_object = lib.StrelkaFile()
+
+        log_scan = False
+        if request.location:
+            location = {key:
+                        value for (key, value) in request.location.items()}
+        if request.filename:
+            file_object.update_filename(request.filename)
+        if request.source:
+            file_object.update_source(request.source)
+        if request.flavors:
+            file_object.update_ext_flavors([flavor
+                                            for flavor in request.flavors])
+        if request.metadata:
+            file_object.update_ext_metadata({key: value
+                                            for (key, value) in request.metadata.items()})
+        if request.log_scan:
+            log_scan = request.log_scan
+
+        location_type = location.get('type')
+        if location_type == 'amazon':
+            pass
+        elif location_type == 'google':
+            pass
+        elif location_type == 'swift':
+            pass
+        elif location_type == 'http':
+            data = lib.retrieve_from_http(location)
+            file_object.append_data(data)
 
         scan_result = lib.init_scan_result()
         lib.distribute(file_object, scan_result, context)

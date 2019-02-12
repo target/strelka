@@ -9,13 +9,20 @@ import string
 import uuid
 
 from boltons import iterutils
+import boto3
+from google.cloud.storage import Client
 import grpc
 import inflection
 import magic
+import requests
+import swiftclient
 import yara
 
 from etc import conf
 
+client_amazon = None
+client_google = None
+client_openstack = None
 compiled_magic = None
 compiled_yara = None
 scanner_cache = {}
@@ -334,3 +341,57 @@ def fin_scan_result(scan_result):
     scan_result['finishTime'] = finish_time.isoformat(timespec='seconds')
     scan_result['elapsedTime'] = elapsed_time
     return scan_result
+
+
+def retrieve_from_amazon(location):
+    global client_amazon
+    if client_amazon is None:
+        client_amazon = boto3.client("s3",
+                                     aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
+                                     aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'))
+    return client_amazon.get_object(Bucket=location.get('bucket'), Key=location.get('object'))['Body'].read()
+
+
+def retrieve_from_google(location):
+    global client_google
+    if client_google is None:
+        client_google = Client.from_service_account_json(os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'))
+    return client_google.get_bucket(location.get('bucket')).get_blob(location.get('object')).download_as_string()
+
+
+def retrieve_from_http(location):
+    try:
+        response = requests.get(location.get('object'),
+                                allow_redirects=True,
+                                stream=True,
+                                auth=(os.environ.get('HTTP_BASIC_USER'),
+                                      os.environ.get('HTTP_BASIC_PASS')),
+                                timeout=os.environ.get('HTTP_TIMEOUT'),
+                                verify=os.environ.get('HTTP_VERIFY'))
+        if response.status_code == 200:
+            return response.raw.read()
+        elif response.status_code:
+            return b""
+    except requests.exceptions.ConnectTimeout:
+        logging.exception(f'Exception while retrieving file with HTTP'
+                          ' (see traceback below)')
+
+
+def retrieve_from_openstack(location):
+    global client_openstack
+    if client_openstack is None:
+        client_openstack = swiftclient.Connection(auth_version=os.environ.get('ST_AUTH_VERSION'),
+                                                  authurl=os.environ.get('ST_AUTH_URL'),
+                                                  user=os.environ.get('OS_USERNAME'),
+                                                  key=os.environ.get('OS_PASSWORD'),
+                                                  cert=os.environ.get('OS_CERT'),
+                                                  cacert=os.environ.get('OS_CACERT'))
+        os_options = {"user_domain_name": os.environ.get('OS_USER_DOMAIN_NAME'),
+                      "project_domain_name": os.environ.get('OS_PROJECT_DOMAIN_NAME'),
+                      "project_name": os.environ.get("OS_PROJECT_NAME")}
+        if not all(value is None for value in os_options.values()):
+            client_openstack.os_options = os_options
+    (response_headers,
+     object_data) = client_openstack.get_object(location.get('bucket'),
+                                                location.get('object'))
+    return object_data
