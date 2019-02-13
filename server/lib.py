@@ -9,13 +9,13 @@ import string
 import uuid
 
 from boltons import iterutils
-import boto3
-from google.cloud.storage import Client
+# import boto3
+# from google.cloud.storage import Client
 import grpc
 import inflection
 import magic
-import requests
-import swiftclient
+# import requests
+# import swiftclient
 import yara
 
 from etc import conf

@@ -9,24 +9,27 @@ service Strelka {
 }
 
 message DataRequest {
-  bytes data = 1;
-  string filename = 2;
-  string source = 3;
-  repeated string flavors = 4;
-  map<string, string> metadata = 5;
-  bool log_scan = 6;
+  string uid = 1;
+  bytes data = 2;
+  string filename = 3;
+  string source = 4;
+  repeated string flavors = 5;
+  map<string, string> metadata = 6;
+  bool log_scan = 7;
 }
 
 message LocationRequest {
-  map<string, string> location = 1;
-  string filename = 2;
-  string source = 3;
-  repeated string flavors = 4;
-  map<string, string> metadata = 5;
-  bool log_scan = 6;
+  string uid = 1;
+  map<string, string> location = 2;
+  string filename = 3;
+  string source = 4;
+  repeated string flavors = 5;
+  map<string, string> metadata = 6;
+  bool log_scan = 7;
 }
 
 message Response {
-  float elapsed = 1;
-  string result = 2;
+  string uid = 1;
+  float elapsed = 2;
+  string result = 3;
 }

@@ -71,8 +71,11 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
         self.load_cfg()
         file_object = lib.StrelkaFile()
 
+        request_uid = ''
         log_scan = False
         for request in request_iterator:
+            if request.uid:
+                request_uid = request.uid
             if request.data:
                 file_object.append_data(request.data)
             if request.filename:
@@ -102,7 +105,8 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
                     self.logger.info(json.dumps(event))
 
         fin_time = time.time() - init_time
-        return strelka_pb2.Response(elapsed=fin_time,
+        return strelka_pb2.Response(uid=request_uid,
+                                    elapsed=fin_time,
                                     result=json.dumps(remapped_scan_result))
 
     def SendFile(self, request, context):
@@ -112,7 +116,10 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
         self.load_cfg()
         file_object = lib.StrelkaFile()
 
+        request_uid = ''
         log_scan = False
+        if request.uid:
+            request_uid = request.uid
         if request.data:
             file_object.append_data(request.data)
         if request.filename:
@@ -142,7 +149,8 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
                     self.logger.info(json.dumps(event))
 
         fin_time = time.time() - init_time
-        return strelka_pb2.Response(elapsed=fin_time,
+        return strelka_pb2.Response(uid=request_uid,
+                                    elapsed=fin_time,
                                     result=json.dumps(remapped_scan_result))
 
     def SendLocation(self, request, context):
@@ -151,6 +159,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
         self.load_cfg()
         file_object = lib.StrelkaFile()
 
+        request_uid = ''
         log_scan = False
         if request.location:
             location = {key:
@@ -193,7 +202,8 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
                     self.logger.info(json.dumps(event))
 
         fin_time = time.time() - init_time
-        return strelka_pb2.Response(elapsed=fin_time,
+        return strelka_pb2.Response(uid=request_uid,
+                                    elapsed=fin_time,
                                     result=json.dumps(remapped_scan_result))
 
     def load_cfg(self):
