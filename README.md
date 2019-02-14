@@ -479,10 +479,13 @@ The "processes" section controls the processes launched by the utility. The conf
 The "workers" section controls directory settings and network settings for each worker that sends files to the Strelka cluster. This section is a list; adding multiple directory/network settings makes it so multiple directories can be monitored at once.
 The configuration options are:
 * "directory": directory that files are sent from (defaults to None)
+* "recursive": boolean that enables/disables recursively scanning for files defined in "directory" (defaults to False)
 * "source": application that writes files to the directory, used to control metadata parsing functionality (defaults to None)
 * "meta_separator": unique string used to separate pieces of metadata in a filename, used to parse metadata and send it along with the file to the cluster (defaults to "S^E^P")
 * "file_mtime_delta": delta (in seconds) that must pass since a file was last modified before it is sent to the cluster (defaults to 5 seconds)
 * "delete_files": boolean that determines if files should be deleted after they are sent to the cluster (defaults to False)
+* "move_files": boolean that determines if files should be moved to a different directory after being processed. move_directory must be specified for this to work (defaults to False)
+* "move_directory": directory that files are moved to once processed (defaults to None)
 * "broker": network address and network port of the broker (defaults to "127.0.0.1:5558")
 * "timeout": amount of time (in seconds) to wait for a file to be successfully sent to the broker (defaults to 10)
 * "use_green": boolean that determines if PyZMQ green should be used (this can increase performance at the risk of message loss, defaults to True)
