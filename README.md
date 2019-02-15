@@ -9,8 +9,9 @@ Strelka differs from its sibling projects in a few significant ways:
 * Built-in scan result logging and log management (compatible with Filebeat/ElasticStack, Splunk, etc.)
 
 [![Target’s CFC-Open-Source Slack](https://cfc-slack-inv.herokuapp.com/badge.svg?colorA=155799&colorB=159953)](https://cfc-slack-inv.herokuapp.com/)
+* [Target's CFC Slack Room](https://cfc-open-source.slack.com)
 
-### Read the documentation
+### [Read the documentation](https://target.github.io/strelka)
 #### [Documentation](https://target.github.io/strelka)
 
 ## Contributing

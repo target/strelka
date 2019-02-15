@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2019-02-14
+### Added
+- strelka_dirstream.py now supports recursive directory scanning (zachsis)
+
 ## 2019-02-07
 ### Added
 - ScanZip now supports decryption via password bruteforcing (Kristin Dahl)
