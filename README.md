@@ -11,8 +11,8 @@ Strelka differs from its sibling projects in a few significant ways:
 [![Target’s CFC-Open-Source Slack](https://cfc-slack-inv.herokuapp.com/badge.svg?colorA=155799&colorB=159953)](https://cfc-slack-inv.herokuapp.com/)
 * [Target's CFC Slack Room](https://cfc-open-source.slack.com)
 
-### [Read the documentation](https://target.github.io/strelka)
-#### [Documentation](https://target.github.io/strelka)
+### [Read the documentation](https://target.github.io/strelka/)
+* [Documentation](https://target.github.io/strelka/)
 
 ## Contributing
 Guidelines for contributing can be found [here](https://github.com/target/strelka/blob/master/CONTRIBUTING.md).
