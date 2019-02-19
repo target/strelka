@@ -166,6 +166,8 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
 
         request_uid = ''
         log_scan = False
+        if request.uid:
+            request_uid = request.uid
         if request.location:
             location = {key:
                         value for (key, value) in request.location.items()}
