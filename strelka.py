@@ -21,9 +21,11 @@ import strelka_pb2_grpc
 
 DEFAULTS = {
     'addresses': ['[::]:8443'],
-    'strelka_cfg': '/etc/strelka/strelka.yml',
-    'logging_cfg': '/etc/strelka/logging.yml',
-    'scan_cfg': '/etc/strelka/scan.yml',
+    'strelka_cfg': '/etc/strelka/strelka.yaml',
+    'logging_cfg': '/etc/strelka/logging.yaml',
+    'scan_cfg': '/etc/strelka/scan.yaml',
+    'max_rpcs': 4,
+    'max_workers': 1,
     'scan_reload': 900,
     'bundle_events': True,
     'directory': '/var/log/strelka/',
@@ -34,12 +36,15 @@ run = 1
 
 
 class StrelkaWrapper(multiprocessing.Process):
-    def __init__(self, address):
+    def __init__(self, address, rpcs, workers):
         super().__init__()
         self.address = address
+        self.rpcs = rpcs
+        self.workers = workers
 
     def run(self):
-        server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
+        server = grpc.server(futures.ThreadPoolExecutor(max_workers=self.workers),
+                             maximum_concurrent_rpcs=self.rpcs)
         servicer = StrelkaServicer()
         strelka_pb2_grpc.add_StrelkaServicer_to_server(servicer, server)
         server.add_insecure_port(self.address)
@@ -252,8 +257,11 @@ def main():
 
     proc_map = {}
     addresses = conf.strelka_cfg.get('addresses', DEFAULTS['addresses'])
+    max_rpcs = conf.strelka_cfg.get('max_rpcs', DEFAULTS['max_rpcs'])
+    max_workers = conf.strelka_cfg.get('max_workers', DEFAULTS['max_workers'])
+
     for addr in addresses:
-        new_proc = StrelkaWrapper(addr)
+        new_proc = StrelkaWrapper(addr, max_rpcs, max_workers)
         new_proc.start()
         proc_map[addr] = new_proc
 
@@ -262,7 +270,7 @@ def main():
             if not proc.is_alive():
                 proc.join()
                 del proc_map[addr]
-                new_proc = StrelkaWrapper(addr)
+                new_proc = StrelkaWrapper(addr, max_rpcs, max_workers)
                 new_proc.start()
                 proc_map[addr] = new_proc
         time.sleep(5)

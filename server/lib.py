@@ -14,7 +14,7 @@ from boltons import iterutils
 import grpc
 import inflection
 import magic
-# import requests
+import requests
 # import swiftclient
 import yara
 
