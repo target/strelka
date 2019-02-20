@@ -729,7 +729,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanHeader | Collects file header | "length" -- number of header characters to log as metadata (defaults to 50) |
 | ScanHtml | Collects metadata and extracts embedded files from HTML files | "parser" -- sets the HTML parser used during scanning (defaults to "html.parser") |
 | ScanJarManifest | Collects metadata from JAR manifest files | N/A |
-| ScanJavascript | Collects metadata from Javascript files | "beautify" -- deobfuscates JavaScript before parsing (defaults to True) |
+| ScanJavascript | Collects metadata from Javascript files | "beautify" -- beautifies JavaScript before parsing (defaults to True) |
 | ScanJpeg | Extracts data embedded in JPEG files | N/A |
 | ScanJson | Collects keys from JSON files | N/A |
 | ScanLibarchive | Extracts files from libarchive-compatible archives. | "limit" -- maximum number of files to extract (defaults to 1000) |
