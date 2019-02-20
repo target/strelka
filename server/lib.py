@@ -29,9 +29,26 @@ scanner_cache = {}
 
 
 class StrelkaFile(object):
+    """Defines a Strelka file object.
+
+    Attributes:
+        data: Byte string that contains the file content.
+        filename: String that contains the name of the file.
+        source: String that describes where the file originated.
+        depth: Int that represents how deep the file was embedded.
+        parent_hash: SHA256 hash of the parent file.
+        root_hash: SHA256 hash of the root file.
+        parent_uid: UUID of the parent file.
+        root_uid: UUID of the root file.
+        flags: List of flags appended during scanning.
+        flavors: Dictionary of flavors identified during scanning.
+        metadata: Dictionary of metadata appended during scanning.
+        scanner_list: List of scanners assigned to the file during distribution.
+    """
     def __init__(self, data=b'', filename='', source='',
                  depth=0, parent_hash='', root_hash='',
                  parent_uid='', root_uid=''):
+        """Inits file object."""
         self.data = data
         self.filename = filename
         self.source = source
@@ -50,35 +67,52 @@ class StrelkaFile(object):
         self.scanner_list = []
 
     def append_data(self, data):
+        """Appends data."""
         self.data += data
 
     def append_flavors(self, flavors):
+        """Appends flavors."""
         self.flavors = {**self.flavors, **ensure_utf8(flavors)}
 
     def append_metadata(self, metadata):
+        """Appends metadata."""
         self.metadata = {**self.metadata, **ensure_utf8(metadata)}
 
     def calculate_hash(self):
+        """Computes SHA256 hash."""
         self.hash = hashlib.sha256(self.data).hexdigest()
         if not self.root_hash and self.depth == 0:
             self.root_hash = self.hash
 
     def ensure_data(self):
+        """Ensures data is byte string."""
         self.data = ensure_bytes(self.data)
 
     def update_filename(self, filename):
+        """Updates filename."""
         self.filename = filename
 
     def update_source(self, source):
+        """Updates source."""
         self.source = source
 
     def update_ext_flavors(self, ext_flavors):
+        """Updates external flavors."""
         self.append_flavors({'external': ext_flavors})
 
     def update_ext_metadata(self, ext_metadata):
+        """Updates external metadata."""
         self.append_metadata({'externalMetadata': ext_metadata})
 
     def taste_mime(self):
+        """Tastes file data with libmagic.
+
+        Tastes file data with libmagic and appends the MIME type as a flavor.
+        MIME database is configurable via 'scan.yaml'.
+
+        Raises:
+            MagicException: Unknown magic error.
+        """
         try:
             global compiled_magic
             if compiled_magic is None:
@@ -90,22 +124,34 @@ class StrelkaFile(object):
 
         except magic.MagicException:
             self.flags.append('StrelkaFile::magic_exception')
-            logging.exception(f'Exception while tasting with magic'
-                              ' (see traceback below)')
+            logging.exception('Exception while tasting with magic'
+                              f' ({taste_mime_db}) (see traceback below)')
 
     def taste_yara(self):
+        """Tastes file data with YARA.
+
+        Tastes file data with YARA and appends the matches as a flavor.
+        Whitespace is stripped from the leftside of the file data to increase
+        the reliability of YARA matching. YARA rules are configurable via
+        'scan.yaml' and may be applied as either a single file or a directory
+        of rules.
+
+        Raises:
+            YaraError: Unknown YARA error or YARA timeout.
+        """
         try:
             global compiled_yara
             if compiled_yara is None:
-                taste_yara_dir = conf.scan_cfg.get('taste_yara_rules')
-                if os.path.isdir(taste_yara_dir):
+                taste_yara_rules = conf.scan_cfg.get('taste_yara_rules')
+                if os.path.isdir(taste_yara_rules):
                     yara_filepaths = {}
-                    globbed_yara_paths = glob.iglob(f'{taste_yara_dir}/**/*.yar*', recursive=True)
+                    globbed_yara_paths = glob.iglob(f'{taste_yara_rules}/**/*.yar*',
+                                                    recursive=True)
                     for (idx, entry) in enumerate(globbed_yara_paths):
                         yara_filepaths[f'namespace_{idx}'] = entry
                     compiled_yara = yara.compile(filepaths=yara_filepaths)
                 else:
-                    compiled_yara = yara.compile(filepath=taste_yara_dir)
+                    compiled_yara = yara.compile(filepath=taste_yara_rules)
 
             encoded_whitespace = string.whitespace.encode()
             stripped_data = self.data.lstrip(encoded_whitespace)
@@ -114,24 +160,45 @@ class StrelkaFile(object):
 
         except (yara.Error, yara.TimeoutError) as YaraError:
             self.flags.append('StrelkaFile::yara_scan_error')
-            logging.exception('Exception while tasting with YARA directory'
-                              f' {taste_yara_dir} (see traceback below)')
+            logging.exception('Exception while tasting with YARA'
+                              f' ({taste_yara_rules}) (see traceback below)')
 
 
 class StrelkaScanner(object):
+    """Defines a Strelka scanner.
+
+    Each scanner inherits this class and overrides methods (close and scan)
+    within the class to perform scanning functions.
+
+    Attributes:
+        scanner_name: String that contains the scanner class name.
+            This is referenced in flags and child filenames.
+        metadata_key: String that contains the scanner's metadata key.
+            This is used to identify the scanner metadata in scan results.
+        metadata: Dictionary where scanner metadata is stored.
+        children: List where scanner child files are stored.
+    """
     def __init__(self):
+        """Inits scanner with scanner name and metadata key."""
         self.scanner_name = self.__class__.__name__
         metadata_key = self.scanner_name.replace('Scan', '', 1) + 'Metadata'
         self.metadata_key = inflection.camelize(metadata_key, False)
         self.init()
 
     def init(self):
+        """Overrideable init."""
         pass
 
     def close(self):
+        """Overrideable close."""
         pass
 
     def close_wrapper(self):
+        """Calls close method with error handling.
+
+        Raises:
+            Exception: Unknown exception occurred.
+        """
         try:
             self.close()
 
@@ -142,12 +209,35 @@ class StrelkaScanner(object):
     def scan(self,
              file_object,
              options):
+        """Overrideable scan method.
+
+        Args:
+            file_object: StrelkaFile to be scanned.
+            options: Options to be applied during scan.
+        """
         pass
 
     def scan_wrapper(self,
                      file_object,
                      options,
                      context):
+        """Sets up scan attributes and calls scan method.
+
+        Scanning code is wrapped in try/except to handle error handling.
+        The file object is always appended with metadata regardless of whether
+        the scanner completed successfully or hit an exception. This method
+        always returns the list of children. If the gRPC context is no longer
+        active, then the scan() is not called.
+
+        Args:
+            file_object: StrelkaFile to be scanned.
+            options: Options to be applied during scan.
+            context: gRPC context for the remote procedure call.
+        Returns:
+            Children files (whether they exist or not).
+        Raises:
+            Exception: Unknown exception occurred.
+        """
         if not context.is_active():
             context.abort(grpc.StatusCode.CANCELLED, 'Cancelled')
 
@@ -167,6 +257,15 @@ class StrelkaScanner(object):
 
 
 def ensure_bytes(value):
+    """Converts bytearray and string to bytes.
+
+    This method is used on every file object to ensure the data is always bytes.
+
+    Args:
+        value: Value (bytearray or string) to be converted to bytes.
+    Returns:
+        Bytes representation of value.
+    """
     if isinstance(value, bytearray):
         return bytes(value)
     elif isinstance(value, str):
@@ -175,6 +274,17 @@ def ensure_bytes(value):
 
 
 def ensure_utf8(value):
+    """Recursively converts bytes, bytearrays, and UUIDs to strings.
+
+    Scanners may output data that contains bytes, bytearrays, or UUIDs and
+    these types need to be converted to strings to be encoded as JSON.
+
+    Args:
+        value: Value that needs values (bytes, bytearrays, or UUIDs) recursively
+            converted to UTF-8 encoded strings.
+    Returns:
+        A UTF-8 encoded string representation of value.
+    """
     def visit(path, key, value):
         if isinstance(value, (bytes, bytearray)):
             value = str(value, encoding='UTF-8', errors='replace')
@@ -186,6 +296,18 @@ def ensure_utf8(value):
 
 
 def normalize_whitespace(text):
+    """Normalizes whitespace in text.
+
+    Scanners that parse text generally need whitespace normalized, otherwise
+    metadata parsed from the text may be unreliable. This function normalizes
+    whitespace characters to a single space.
+
+    Args:
+        text: Text that needs whitespace normalized.
+    Returns:
+        Text with whitespace normalized.
+    """
+
     if isinstance(text, bytes):
         text = re.sub(br'\s+', b' ', text)
         text = re.sub(br'(^\s+|\s+$)', b'', text)
@@ -196,6 +318,23 @@ def normalize_whitespace(text):
 
 
 def distribute(file_object, scan_result, context):
+    """Distributes a file through scanners.
+
+    This method defines how files are assigned scanners:
+        1. File data is normalized to bytes.
+        2. File hash is computed.
+        3. File flavors are tasted via MIME and YARA.
+        4. Scanner mapping from scan configuration is applied to flavors.
+        5. File is recursively sent to the mapped scanners.
+
+    An inactive gRPC context will interrupt this method.
+
+    Args:
+        file_object: StrelkaFile to be scanned.
+        scan_result: Dictionary that scan results are appended to.
+        context: gRPC context for the remote procedure call.
+    """
+
     if not context.is_active():
         context.abort(grpc.StatusCode.CANCELLED, 'Cancelled')
 
@@ -259,6 +398,24 @@ def distribute(file_object, scan_result, context):
 
 
 def assign_scanner(scanner, mappings, flavors, filename, source):
+    """Assigns scanners based on mappings and file data.
+
+    Performs the task of assigning scanners based on the scan configuration
+    mappings and file flavors, filename, and source. Assignment supports
+    positive and negative matching: scanners are assigned if any positive
+    categories are matched and no negative categories are matched. Flavors are
+    literal matches, filename and source matches uses regular expressions.
+
+    Args:
+        scanner: Name of the scanner to be assigned.
+        mappings: List of dictionaries that contain values used to assign
+            the scanner.
+        flavors: List of file flavors to use during scanner assignment.
+        filename: Filename to use during scanner assignment.
+        source: File source to use during scanner assignment.
+    Returns:
+        Dictionary containing the assigned scanner or None.
+    """
     for mapping in mappings:
         negatives = mapping.get('negative', {})
         positives = mapping.get('positive', {})
@@ -294,6 +451,7 @@ def assign_scanner(scanner, mappings, flavors, filename, source):
 
 
 def reset_server():
+    """Resets server configuration."""
     global compiled_magic
     global compiled_yara
     compiled_magic = None
@@ -303,7 +461,20 @@ def reset_server():
         scanner_cache.pop(scanner_name)
 
 
-def remap_scan_result(scan_result, field_case):
+def format_result(scan_result, case='camel', bundle=True):
+    """Formats scan result.
+
+    Takes a scan result and returns it as a JSON-formatted string with empty
+    values (strings, lists, and dictionaries) removed, the keys formatted
+    according to case, and the results stored in a singular, large list or
+    as a list of individual results.
+
+    Args:
+        scan_result: Scan result to be remapped and formatted.
+        case: Format (camel or snake) of the dictionary keys.
+    Returns:
+        JSON-formatted string or list of JSON-formatted strings.
+    """
     empty_lambda = lambda p, k, v: v != '' and v != [] and v != {}
 
     def snake(path, key, value):
@@ -311,30 +482,30 @@ def remap_scan_result(scan_result, field_case):
             return (inflection.underscore(key), value)
         return (key, value)
 
-    if field_case == 'snake':
+    if case == 'snake':
         remapped = iterutils.remap(scan_result, empty_lambda)
-        return iterutils.remap(remapped, visit=snake)
-    return iterutils.remap(scan_result, empty_lambda)
+        result = iterutils.remap(remapped, visit=snake)
+    else:  # default case is 'camel'
+        result = iterutils.remap(scan_result, empty_lambda)
 
-
-def split_scan_result(scan_result):
-    results = scan_result.pop('results')
-    individual_result = scan_result
-    for result in results:
-        yield {**individual_result, **result}
-
-
-def format_bundled_event(scan_result, field_case):
-    return json.dumps(remap_scan_result(scan_result, field_case))
+    if not bundle:
+        result_list = []
+        results = result.pop('results')
+        for r in results:
+            result_list.append(json.dumps({**result, **r}))
+        return result_list
+    return json.dumps(result)
 
 
 def init_scan_result():
+    """Inits a scan result."""
     scan_result = {'startTime': datetime.utcnow(),
                    'results': []}
     return scan_result
 
 
 def fin_scan_result(scan_result):
+    """Finishes a scan result."""
     finish_time = datetime.utcnow()
     elapsed_time = (finish_time - scan_result['startTime']).total_seconds()
     scan_result['startTime'] = scan_result['startTime'].isoformat(timespec='seconds')
@@ -343,7 +514,15 @@ def fin_scan_result(scan_result):
     return scan_result
 
 
-def retrieve_from_amazon(location):
+def retrieve_from_amazon(location):  # untested in gRPC migration
+    """Retrieves file from Amazon AWS.
+
+    Args:
+        location: Location of AWS object.
+
+    Returns:
+        AWS object data.
+    """
     global client_amazon
     if client_amazon is None:
         client_amazon = boto3.client("s3",
@@ -352,7 +531,15 @@ def retrieve_from_amazon(location):
     return client_amazon.get_object(Bucket=location.get('bucket'), Key=location.get('object'))['Body'].read()
 
 
-def retrieve_from_google(location):
+def retrieve_from_google(location):  # untested in gRPC migration
+    """Retrieves file from Google GCP.
+
+    Args:
+        location: Location of GCP object.
+
+    Returns:
+        GCP object data.
+    """
     global client_google
     if client_google is None:
         client_google = Client.from_service_account_json(os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'))
@@ -360,6 +547,14 @@ def retrieve_from_google(location):
 
 
 def retrieve_from_http(location):
+    """Retrieves file from HTTP.
+
+    Args:
+        location: Location of HTTP object.
+
+    Returns:
+        HTTP response data.
+    """
     try:
         response = requests.get(location.get('object'),
                                 allow_redirects=True,
@@ -377,7 +572,15 @@ def retrieve_from_http(location):
                           ' (see traceback below)')
 
 
-def retrieve_from_openstack(location):
+def retrieve_from_openstack(location):  # untested in gRPC migration
+    """Retrieves file from OpenStack Swift.
+
+    Args:
+        location: Location of Swift object.
+
+    Returns:
+        Swift object data.
+    """
     global client_openstack
     if client_openstack is None:
         client_openstack = swiftclient.Connection(auth_version=os.environ.get('ST_AUTH_VERSION'),

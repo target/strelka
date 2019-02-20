@@ -3,6 +3,4 @@ addresses:
 logging_cfg: '/etc/strelka/logging.yaml'
 scan_cfg: '/etc/strelka/scan.yaml'
 scan_reload: 900
-bundle_events: True
 directory: '/var/log/strelka/'
-field_case: 'camel'
