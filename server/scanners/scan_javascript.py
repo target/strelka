@@ -8,7 +8,7 @@ class ScanJavascript(objects.StrelkaScanner):
     """Collects metadata from JavaScript files.
 
     Options:
-        beautify: Boolean that determines if JavaScript should be deobfuscated.
+        beautify: Boolean that determines if JavaScript should be beautified.
             Defaults to True.
     """
     def scan(self, file_object, options):
@@ -17,12 +17,20 @@ class ScanJavascript(objects.StrelkaScanner):
         self.metadata.setdefault("literals", [])
         self.metadata.setdefault("functions", [])
         self.metadata.setdefault("variables", [])
+        self.metadata["beautified"] = False
+        js = None
 
         try:
             if beautify:
                 js = jsbeautifier.beautify(file_object.data.decode())
-            else:
-                js = file_object.data.decode()
+                self.metadata["beautified"] = True
+        except:  # noqa
+            file_object.flags.append(f"{self.scanner_name}::beautify_exception")
+
+        if js is None:
+            js = file_object.data.decode()
+
+        try:
             parser = pyjsparser.PyJsParser()
             parsed = parser.parse(js)
             self._javascript_recursion(self, parsed)
