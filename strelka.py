@@ -24,7 +24,7 @@ DEFAULTS = {
     'strelka_cfg': '/etc/strelka/strelka.yaml',
     'logging_cfg': '/etc/strelka/logging.yaml',
     'scan_cfg': '/etc/strelka/scan.yaml',
-    'max_rpcs': 4,
+    'max_rpcs': None,
     'max_workers': 1,
     'scan_reload': 900,
     'bundle_events': True,
