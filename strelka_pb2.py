@@ -19,10 +19,62 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\rstrelka.proto\"\xcc\x01\n\x0b\x44\x61taRequest\x12\x0b\n\x03uid\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x12\x10\n\x08\x66ilename\x18\x03 \x01(\t\x12\x0e\n\x06source\x18\x04 \x01(\t\x12\x0f\n\x07\x66lavors\x18\x05 \x03(\t\x12,\n\x08metadata\x18\x06 \x03(\x0b\x32\x1a.DataRequest.MetadataEntry\x12\x10\n\x08log_scan\x18\x07 \x01(\x08\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xa9\x02\n\x0fLocationRequest\x12\x0b\n\x03uid\x18\x01 \x01(\t\x12\x30\n\x08location\x18\x02 \x03(\x0b\x32\x1e.LocationRequest.LocationEntry\x12\x10\n\x08\x66ilename\x18\x03 \x01(\t\x12\x0e\n\x06source\x18\x04 \x01(\t\x12\x0f\n\x07\x66lavors\x18\x05 \x03(\t\x12\x30\n\x08metadata\x18\x06 \x03(\x0b\x32\x1e.LocationRequest.MetadataEntry\x12\x10\n\x08log_scan\x18\x07 \x01(\x08\x1a/\n\rLocationEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"8\n\x08Response\x12\x0b\n\x03uid\x18\x01 \x01(\t\x12\x0f\n\x07\x65lapsed\x18\x02 \x01(\x02\x12\x0e\n\x06result\x18\x03 \x01(\t2\x8a\x01\n\x07Strelka\x12)\n\nStreamFile\x12\x0c.DataRequest\x1a\t.Response\"\x00(\x01\x12%\n\x08SendFile\x12\x0c.DataRequest\x1a\t.Response\"\x00\x12-\n\x0cSendLocation\x12\x10.LocationRequest\x1a\t.Response\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\rstrelka.proto\"L\n\rResultRequest\x12\x0e\n\x06\x62undle\x18\x01 \x01(\x08\x12\x0c\n\x04\x63\x61se\x18\x02 \x01(\t\x12\x10\n\x08retrieve\x18\x03 \x01(\x08\x12\x0b\n\x03log\x18\x04 \x01(\x08\"\xda\x01\n\x0b\x44\x61taRequest\x12\x0b\n\x03uid\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x12\x10\n\x08\x66ilename\x18\x03 \x01(\t\x12\x0e\n\x06source\x18\x04 \x01(\t\x12\x0f\n\x07\x66lavors\x18\x05 \x03(\t\x12,\n\x08metadata\x18\x06 \x03(\x0b\x32\x1a.DataRequest.MetadataEntry\x12\x1e\n\x06result\x18\x07 \x01(\x0b\x32\x0e.ResultRequest\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xb7\x02\n\x0fLocationRequest\x12\x0b\n\x03uid\x18\x01 \x01(\t\x12\x30\n\x08location\x18\x02 \x03(\x0b\x32\x1e.LocationRequest.LocationEntry\x12\x10\n\x08\x66ilename\x18\x03 \x01(\t\x12\x0e\n\x06source\x18\x04 \x01(\t\x12\x0f\n\x07\x66lavors\x18\x05 \x03(\t\x12\x30\n\x08metadata\x18\x06 \x03(\x0b\x32\x1e.LocationRequest.MetadataEntry\x12\x1e\n\x06result\x18\x07 \x01(\x0b\x32\x0e.ResultRequest\x1a/\n\rLocationEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"8\n\x08Response\x12\x0b\n\x03uid\x18\x01 \x01(\t\x12\x0f\n\x07\x65lapsed\x18\x02 \x01(\x02\x12\x0e\n\x06result\x18\x03 \x03(\t2\x8a\x01\n\x07Strelka\x12)\n\nStreamFile\x12\x0c.DataRequest\x1a\t.Response\"\x00(\x01\x12%\n\x08SendFile\x12\x0c.DataRequest\x1a\t.Response\"\x00\x12-\n\x0cSendLocation\x12\x10.LocationRequest\x1a\t.Response\"\x00\x62\x06proto3')
 )
 
 
+
+
+_RESULTREQUEST = _descriptor.Descriptor(
+  name='ResultRequest',
+  full_name='ResultRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='bundle', full_name='ResultRequest.bundle', index=0,
+      number=1, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='case', full_name='ResultRequest.case', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='retrieve', full_name='ResultRequest.retrieve', index=2,
+      number=3, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='log', full_name='ResultRequest.log', index=3,
+      number=4, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=17,
+  serialized_end=93,
+)
 
 
 _DATAREQUEST_METADATAENTRY = _descriptor.Descriptor(
@@ -58,8 +110,8 @@ _DATAREQUEST_METADATAENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=175,
-  serialized_end=222,
+  serialized_start=267,
+  serialized_end=314,
 )
 
 _DATAREQUEST = _descriptor.Descriptor(
@@ -112,9 +164,9 @@ _DATAREQUEST = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='log_scan', full_name='DataRequest.log_scan', index=6,
-      number=7, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
+      name='result', full_name='DataRequest.result', index=6,
+      number=7, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -130,8 +182,8 @@ _DATAREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=18,
-  serialized_end=222,
+  serialized_start=96,
+  serialized_end=314,
 )
 
 
@@ -168,8 +220,8 @@ _LOCATIONREQUEST_LOCATIONENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=426,
-  serialized_end=473,
+  serialized_start=532,
+  serialized_end=579,
 )
 
 _LOCATIONREQUEST_METADATAENTRY = _descriptor.Descriptor(
@@ -205,8 +257,8 @@ _LOCATIONREQUEST_METADATAENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=175,
-  serialized_end=222,
+  serialized_start=267,
+  serialized_end=314,
 )
 
 _LOCATIONREQUEST = _descriptor.Descriptor(
@@ -259,9 +311,9 @@ _LOCATIONREQUEST = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='log_scan', full_name='LocationRequest.log_scan', index=6,
-      number=7, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
+      name='result', full_name='LocationRequest.result', index=6,
+      number=7, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -277,8 +329,8 @@ _LOCATIONREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=225,
-  serialized_end=522,
+  serialized_start=317,
+  serialized_end=628,
 )
 
 
@@ -305,8 +357,8 @@ _RESPONSE = _descriptor.Descriptor(
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='result', full_name='Response.result', index=2,
-      number=3, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      number=3, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -322,20 +374,30 @@ _RESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=524,
-  serialized_end=580,
+  serialized_start=630,
+  serialized_end=686,
 )
 
 _DATAREQUEST_METADATAENTRY.containing_type = _DATAREQUEST
 _DATAREQUEST.fields_by_name['metadata'].message_type = _DATAREQUEST_METADATAENTRY
+_DATAREQUEST.fields_by_name['result'].message_type = _RESULTREQUEST
 _LOCATIONREQUEST_LOCATIONENTRY.containing_type = _LOCATIONREQUEST
 _LOCATIONREQUEST_METADATAENTRY.containing_type = _LOCATIONREQUEST
 _LOCATIONREQUEST.fields_by_name['location'].message_type = _LOCATIONREQUEST_LOCATIONENTRY
 _LOCATIONREQUEST.fields_by_name['metadata'].message_type = _LOCATIONREQUEST_METADATAENTRY
+_LOCATIONREQUEST.fields_by_name['result'].message_type = _RESULTREQUEST
+DESCRIPTOR.message_types_by_name['ResultRequest'] = _RESULTREQUEST
 DESCRIPTOR.message_types_by_name['DataRequest'] = _DATAREQUEST
 DESCRIPTOR.message_types_by_name['LocationRequest'] = _LOCATIONREQUEST
 DESCRIPTOR.message_types_by_name['Response'] = _RESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
+
+ResultRequest = _reflection.GeneratedProtocolMessageType('ResultRequest', (_message.Message,), dict(
+  DESCRIPTOR = _RESULTREQUEST,
+  __module__ = 'strelka_pb2'
+  # @@protoc_insertion_point(class_scope:ResultRequest)
+  ))
+_sym_db.RegisterMessage(ResultRequest)
 
 DataRequest = _reflection.GeneratedProtocolMessageType('DataRequest', (_message.Message,), dict(
 
@@ -393,8 +455,8 @@ _STRELKA = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=583,
-  serialized_end=721,
+  serialized_start=689,
+  serialized_end=827,
   methods=[
   _descriptor.MethodDescriptor(
     name='StreamFile',

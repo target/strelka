@@ -8,6 +8,13 @@ service Strelka {
   rpc SendLocation(LocationRequest) returns (Response) {}
 }
 
+message ResultRequest {
+  bool bundle = 1;
+  string case = 2;
+  bool retrieve = 3;
+  bool log = 4;
+}
+
 message DataRequest {
   string uid = 1;
   bytes data = 2;
@@ -15,7 +22,7 @@ message DataRequest {
   string source = 4;
   repeated string flavors = 5;
   map<string, string> metadata = 6;
-  bool log_scan = 7;
+  ResultRequest result = 7;
 }
 
 message LocationRequest {
@@ -25,11 +32,11 @@ message LocationRequest {
   string source = 4;
   repeated string flavors = 5;
   map<string, string> metadata = 6;
-  bool log_scan = 7;
+  ResultRequest result = 7;
 }
 
 message Response {
   string uid = 1;
   float elapsed = 2;
-  string result = 3;
+  repeated string result = 3;
 }
