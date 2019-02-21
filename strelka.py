@@ -93,50 +93,51 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
         file_object = lib.StrelkaFile()
 
         uid = ''
-        bundle = False
-        case = 'camel'
-        log = False
-        retrieve = False
+        fmt_bundle = False
+        fmt_case = 'camel'
+        evt_respond = False
+        evt_write = False
 
         for request in request_iterator:
-            if request.uid:
-                uid = request.uid
             if request.data:
                 file_object.append_data(request.data)
-            if request.filename:
-                file_object.update_filename(request.filename)
-            if request.source:
-                file_object.update_source(request.source)
-            if request.flavors:
+            if request.metadata.uid:
+                uid = request.uid
+            if request.metadata.filename:
+                file_object.update_filename(request.metadata.filename)
+            if request.metadata.source:
+                file_object.update_source(request.metadata.source)
+            if request.metadata.flavors:
                 file_object.update_ext_flavors([flavor
-                                                for flavor in request.flavors])
-            if request.metadata:
+                                                for flavor in request.metadata.flavors])
+            if request.metadata.metadata:
                 file_object.update_ext_metadata({key: value
-                                                for (key, value) in request.metadata.items()})
-            if request.result:
-                bundle = request.result.bundle
-                case = request.result.case
-                log = request.result.log
-                retrieve = request.result.retrieve
+                                                for (key, value) in request.metadata.metadata.items()})
+            if request.format:
+                fmt_bundle = request.format.bundle
+                fmt_case = request.format.case
+            if request.event:
+                evt_respond = request.event.respond
+                evt_write = request.event.write
 
         scan_result = lib.init_scan_result()
         lib.distribute(file_object, scan_result, context)
         scan_result = lib.fin_scan_result(scan_result)
-        formatted_result = lib.format_result(scan_result, case, bundle)
+        evt = lib.result_to_evt(scan_result, fmt_bundle, fmt_case)
         response = strelka_pb2.Response(uid=uid)
 
-        if log:
-            if isinstance(formatted_result, list):
-                for result in formatted_result:
+        if evt_write:
+            if isinstance(evt, list):
+                for result in evt:
                     self.logger.info(result)
             else:
-                self.logger.info(result)
+                self.logger.info(evt)
 
-        if retrieve:
-            if isinstance(formatted_result, list):
-                response.result.extend(formatted_result)
+        if evt_respond:
+            if isinstance(evt, list):
+                response.events.extend(evt)
             else:
-                response.result.append(formatted_result)
+                response.events.append(evt)
 
         response.elapsed = time.time() - init_time
         return response
@@ -149,49 +150,50 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
         file_object = lib.StrelkaFile()
 
         uid = ''
-        bundle = False
-        case = 'camel'
-        log = False
-        retrieve = False
+        fmt_bundle = False
+        fmt_case = 'camel'
+        evt_respond = False
+        evt_write = False
 
-        if request.uid:
-            uid = request.uid
         if request.data:
             file_object.append_data(request.data)
-        if request.filename:
-            file_object.update_filename(request.filename)
-        if request.source:
-            file_object.update_source(request.source)
-        if request.flavors:
+        if request.metadata.uid:
+            uid = request.uid
+        if request.metadata.filename:
+            file_object.update_filename(request.metadata.filename)
+        if request.metadata.source:
+            file_object.update_source(request.metadata.source)
+        if request.metadata.flavors:
             file_object.update_ext_flavors([flavor
-                                            for flavor in request.flavors])
-        if request.metadata:
+                                            for flavor in request.metadata.flavors])
+        if request.metadata.metadata:
             file_object.update_ext_metadata({key: value
-                                            for (key, value) in request.metadata.items()})
-        if request.result:
-            bundle = request.result.bundle
-            case = request.result.case
-            log = request.result.log
-            retrieve = request.result.retrieve
+                                            for (key, value) in request.metadata.metadata.items()})
+        if request.format:
+            fmt_bundle = request.format.bundle
+            fmt_case = request.format.case
+        if request.event:
+            evt_respond = request.event.respond
+            evt_write = request.event.write
 
         scan_result = lib.init_scan_result()
         lib.distribute(file_object, scan_result, context)
         scan_result = lib.fin_scan_result(scan_result)
-        formatted_result = lib.format_result(scan_result, case, bundle)
+        evt = lib.result_to_evt(scan_result, fmt_bundle, fmt_case)
         response = strelka_pb2.Response(uid=uid)
 
-        if log:
-            if isinstance(formatted_result, list):
-                for result in formatted_result:
-                    self.logger.info(result)
+        if evt_write:
+            if isinstance(evt, list):
+                for e in evt:
+                    self.logger.info(e)
             else:
-                self.logger.info(result)
+                self.logger.info(evt)
 
-        if retrieve:
-            if isinstance(formatted_result, list):
-                response.result.extend(formatted_result)
+        if evt_respond:
+            if isinstance(evt, list):
+                response.result.extend(evt)
             else:
-                response.result.append(formatted_result)
+                response.result.append(evt)
 
         response.elapsed = time.time() - init_time
         return response
@@ -204,31 +206,32 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
         file_object = lib.StrelkaFile()
 
         uid = ''
-        bundle = False
-        case = 'camel'
-        log = False
-        retrieve = False
+        fmt_bundle = False
+        fmt_case = 'camel'
+        evt_respond = False
+        evt_write = False
 
-        if request.uid:
-            uid = request.uid
         if request.location:
             location = {key:
                         value for (key, value) in request.location.items()}
-        if request.filename:
-            file_object.update_filename(request.filename)
-        if request.source:
-            file_object.update_source(request.source)
-        if request.flavors:
+        if request.metadata.uid:
+            uid = request.uid
+        if request.metadata.filename:
+            file_object.update_filename(request.metadata.filename)
+        if request.metadata.source:
+            file_object.update_source(request.metadata.source)
+        if request.metadata.flavors:
             file_object.update_ext_flavors([flavor
-                                            for flavor in request.flavors])
-        if request.metadata:
+                                            for flavor in request.metadata.flavors])
+        if request.metadata.metadata:
             file_object.update_ext_metadata({key: value
-                                            for (key, value) in request.metadata.items()})
-        if request.result:
-            bundle = request.result.bundle
-            case = request.result.case
-            log = request.result.log
-            retrieve = request.result.retrieve
+                                            for (key, value) in request.metadata.metadata.items()})
+        if request.format:
+            fmt_bundle = request.format.bundle
+            fmt_case = request.format.case
+        if request.event:
+            evt_respond = request.event.respond
+            evt_write = request.event.write
 
         location_type = location.get('type')
         if location_type == 'amazon':
@@ -244,21 +247,21 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
         scan_result = lib.init_scan_result()
         lib.distribute(file_object, scan_result, context)
         scan_result = lib.fin_scan_result(scan_result)
-        formatted_result = lib.format_result(scan_result, case, bundle)
+        evt = lib.result_to_evt(scan_result, fmt_bundle, fmt_case)
         response = strelka_pb2.Response(uid=uid)
 
-        if log:
-            if isinstance(formatted_result, list):
-                for result in formatted_result:
+        if evt_write:
+            if isinstance(evt, list):
+                for result in evt:
                     self.logger.info(result)
             else:
-                self.logger.info(result)
+                self.logger.info(evt)
 
-        if retrieve:
-            if isinstance(formatted_result, list):
-                response.result.extend(formatted_result)
+        if evt_respond:
+            if isinstance(evt, list):
+                response.result.extend(evt)
             else:
-                response.result.append(formatted_result)
+                response.result.append(evt)
 
         response.elapsed = time.time() - init_time
         return response

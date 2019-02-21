@@ -461,8 +461,8 @@ def reset_server():
         scanner_cache.pop(scanner_name)
 
 
-def format_result(scan_result, case='camel', bundle=True):
-    """Formats scan result.
+def result_to_evt(scan_result, bundle=True, case='camel'):
+    """Transforms scan result into JSON events.
 
     Takes a scan result and returns it as a JSON-formatted string with empty
     values (strings, lists, and dictionaries) removed, the keys formatted

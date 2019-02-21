@@ -8,35 +8,40 @@ service Strelka {
   rpc SendLocation(LocationRequest) returns (Response) {}
 }
 
-message ResultRequest {
+message Format {
   bool bundle = 1;
   string case = 2;
-  bool retrieve = 3;
-  bool log = 4;
+}
+
+message Event {
+  bool respond = 1;
+  bool write = 2;
+}
+
+message Metadata {
+  string uid = 1;
+  string filename = 2;
+  string source = 3;
+  repeated string flavors = 4;
+  map<string, string> metadata = 5;
 }
 
 message DataRequest {
-  string uid = 1;
-  bytes data = 2;
-  string filename = 3;
-  string source = 4;
-  repeated string flavors = 5;
-  map<string, string> metadata = 6;
-  ResultRequest result = 7;
+  bytes data = 1;
+  Metadata metadata = 2;
+  Format format = 7;
+  Event event = 8;
 }
 
 message LocationRequest {
-  string uid = 1;
-  map<string, string> location = 2;
-  string filename = 3;
-  string source = 4;
-  repeated string flavors = 5;
-  map<string, string> metadata = 6;
-  ResultRequest result = 7;
+  map<string, string> location = 1;
+  Metadata metadata = 2;
+  Format format = 3;
+  Event event = 4;
 }
 
 message Response {
   string uid = 1;
   float elapsed = 2;
-  repeated string result = 3;
+  repeated string events = 3;
 }
