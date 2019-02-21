@@ -29,8 +29,8 @@ message Metadata {
 message DataRequest {
   bytes data = 1;
   Metadata metadata = 2;
-  Format format = 7;
-  Event event = 8;
+  Format format = 3;
+  Event event = 4;
 }
 
 message LocationRequest {
