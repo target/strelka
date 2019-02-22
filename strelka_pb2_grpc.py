@@ -14,19 +14,19 @@ class StrelkaStub(object):
     Args:
       channel: A grpc.Channel.
     """
-    self.StreamFile = channel.stream_unary(
-        '/Strelka/StreamFile',
-        request_serializer=strelka__pb2.DataRequest.SerializeToString,
+    self.StreamData = channel.stream_unary(
+        '/Strelka/StreamData',
+        request_serializer=strelka__pb2.Data.SerializeToString,
         response_deserializer=strelka__pb2.Response.FromString,
         )
-    self.SendFile = channel.unary_unary(
-        '/Strelka/SendFile',
-        request_serializer=strelka__pb2.DataRequest.SerializeToString,
+    self.SendData = channel.unary_unary(
+        '/Strelka/SendData',
+        request_serializer=strelka__pb2.Data.SerializeToString,
         response_deserializer=strelka__pb2.Response.FromString,
         )
     self.SendLocation = channel.unary_unary(
         '/Strelka/SendLocation',
-        request_serializer=strelka__pb2.LocationRequest.SerializeToString,
+        request_serializer=strelka__pb2.Location.SerializeToString,
         response_deserializer=strelka__pb2.Response.FromString,
         )
 
@@ -35,14 +35,14 @@ class StrelkaServicer(object):
   # missing associated documentation comment in .proto file
   pass
 
-  def StreamFile(self, request_iterator, context):
+  def StreamData(self, request_iterator, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def SendFile(self, request, context):
+  def SendData(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -59,19 +59,19 @@ class StrelkaServicer(object):
 
 def add_StrelkaServicer_to_server(servicer, server):
   rpc_method_handlers = {
-      'StreamFile': grpc.stream_unary_rpc_method_handler(
-          servicer.StreamFile,
-          request_deserializer=strelka__pb2.DataRequest.FromString,
+      'StreamData': grpc.stream_unary_rpc_method_handler(
+          servicer.StreamData,
+          request_deserializer=strelka__pb2.Data.FromString,
           response_serializer=strelka__pb2.Response.SerializeToString,
       ),
-      'SendFile': grpc.unary_unary_rpc_method_handler(
-          servicer.SendFile,
-          request_deserializer=strelka__pb2.DataRequest.FromString,
+      'SendData': grpc.unary_unary_rpc_method_handler(
+          servicer.SendData,
+          request_deserializer=strelka__pb2.Data.FromString,
           response_serializer=strelka__pb2.Response.SerializeToString,
       ),
       'SendLocation': grpc.unary_unary_rpc_method_handler(
           servicer.SendLocation,
-          request_deserializer=strelka__pb2.LocationRequest.FromString,
+          request_deserializer=strelka__pb2.Location.FromString,
           response_serializer=strelka__pb2.Response.SerializeToString,
       ),
   }

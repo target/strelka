@@ -1,43 +1,45 @@
 syntax = "proto3";
 
 service Strelka {
-  rpc StreamFile(stream DataRequest) returns (Response) {}
+  rpc StreamData(stream Data) returns (Response) {}
 
-  rpc SendFile(DataRequest) returns (Response) {}
+  rpc SendData(Data) returns (Response) {}
 
-  rpc SendLocation(LocationRequest) returns (Response) {}
+  rpc SendLocation(Location) returns (Response) {}
 }
 
-message Format {
-  bool bundle = 1;
-  string case = 2;
-}
-
-message Event {
-  bool respond = 1;
-  bool write = 2;
-}
-
-message Metadata {
+// contains request details related to the RPC
+message Request {
   string uid = 1;
-  string filename = 2;
+  string client = 2;
   string source = 3;
+}
+
+// contains metadata related to the Data or Location
+message Metadata {
+  string filename = 2;
   repeated string flavors = 4;
   map<string, string> metadata = 5;
 }
 
-message DataRequest {
-  bytes data = 1;
-  Metadata metadata = 2;
-  Format format = 3;
-  Event event = 4;
+// contains parameters that enable event retrieval for the client
+message Retrieve {
+  bool bundle = 1;
+  string case = 2;
 }
 
-message LocationRequest {
+message Data {
+  bytes data = 1;
+  Request request = 2;
+  Metadata metadata = 3;
+  Retrieve retrieve = 4;
+}
+
+message Location {
   map<string, string> location = 1;
-  Metadata metadata = 2;
-  Format format = 3;
-  Event event = 4;
+  Request request = 2;
+  Metadata metadata = 3;
+  Retrieve retrieve = 4;
 }
 
 message Response {
