@@ -27,7 +27,7 @@ DEFAULTS = {
     'max_rpcs': None,
     'max_workers': 1,
     'scan_reload': 900,
-    'directory': '/var/log/strelka/',
+    'event_log': {},
 }
 
 run = 1
@@ -68,132 +68,132 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
     def __init__(self):
         """Inits Strelka gRPC servicer.
 
+        StrelkaServicer supports unary Data requests, streamed Data requests, and
+        unary Location requests. Clients have the option to request the retrieval
+        of file events and the server has the option to log all file events
+        to local disk.
+
         Args:
             server_id: UUID assigned to the server process.
-            log_file: String that determines where server-side scan results
-                are written (if specified by client).
-                Defaults to '/var/log/strelka/{server_id}.log'.
-            logger: FileHandler for writing scan results to disk.
+            logger: FileHandler for writing file events to the server.
+            bundle: Bundle configuration for events written to the server.
+            case: Case configuration for events written to the server.
         """
         self.server_id = str(uuid.uuid4()).upper()[:8]
-        self.log_file = os.path.join(conf.strelka_cfg.get('directory',
-                                                          DEFAULTS['directory']),
-                                     f'{self.server_id}.log')
-        self.logger = logging.getLogger('strelka.log_scan')
-        self.logger.propagate = False
-        handler = logging.handlers.WatchedFileHandler(self.log_file, delay=True)
-        self.logger.addHandler(handler)
+        self.logger = None
         logging.debug(f'Server {self.server_id}: initialized')
 
-    def StreamFile(self, request_iterator, context):
+        evt_log = conf.strelka_cfg.get('event_log', DEFAULTS['event_log'])
+        if evt_log:
+            self.logger = logging.getLogger(self.server_id)
+            self.logger.propagate = False
+            log_file = os.path.join(evt_log.get('directory',
+                                                '/var/log/strelka/'),
+                                    f'{self.server_id}.log')
+            handler = logging.handlers.WatchedFileHandler(log_file, delay=True)
+            self.logger.addHandler(handler)
+            self.bundle = evt_log.get('bundle', True)
+            self.case = evt_log.get('case', 'camel')
+
+    def StreamData(self, request_iterator, context):
         """Handles streamed gRPC file requests."""
         init_time = time.time()
 
         self.load_cfg()
         file_object = lib.StrelkaFile()
 
-        uid = ''
-        fmt_bundle = False
-        fmt_case = 'camel'
-        evt_respond = False
-        evt_write = False
-
+        cli_req = {}
+        cli_bundle = None
+        cli_case = None
         for request in request_iterator:
             if request.data:
                 file_object.append_data(request.data)
-            if request.metadata.uid:
-                uid = request.uid
+            if request.request:
+                cli_req = {'uid': request.request.uid,
+                           'client': request.request.client,
+                           'source': request.request.source}
             if request.metadata.filename:
                 file_object.update_filename(request.metadata.filename)
-            if request.metadata.source:
-                file_object.update_source(request.metadata.source)
             if request.metadata.flavors:
                 file_object.update_ext_flavors([flavor
                                                 for flavor in request.metadata.flavors])
             if request.metadata.metadata:
                 file_object.update_ext_metadata({key: value
                                                 for (key, value) in request.metadata.metadata.items()})
-            if request.format:
-                fmt_bundle = request.format.bundle
-                fmt_case = request.format.case
-            if request.event:
-                evt_respond = request.event.respond
-                evt_write = request.event.write
+            if request.retrieve:
+                cli_bundle = request.retrieve.bundle
+                cli_case = request.retrieve.case
 
-        scan_result = lib.init_scan_result()
+        response = strelka_pb2.Response(uid=cli_req['uid'])
+        scan_result = lib.init_scan_result(cli_req)
         lib.distribute(file_object, scan_result, context)
         scan_result = lib.fin_scan_result(scan_result)
-        evt = lib.result_to_evt(scan_result, fmt_bundle, fmt_case)
-        response = strelka_pb2.Response(uid=uid)
 
-        if evt_write:
-            if isinstance(evt, list):
-                for result in evt:
-                    self.logger.info(result)
+        if self.logger is not None:
+            srv_evt = lib.result_to_evt(scan_result, self.bundle, self.case)
+            if isinstance(srv_evt, list):
+                for e in srv_evt:
+                    self.logger.info(e)
             else:
-                self.logger.info(evt)
+                self.logger.info(srv_evt)
 
-        if evt_respond:
-            if isinstance(evt, list):
-                response.events.extend(evt)
+        if cli_bundle is not None and cli_case is not None:
+            cli_evt = lib.result_to_evt(scan_result, cli_bundle, cli_case)
+            if isinstance(cli_evt, list):
+                response.events.extend(cli_evt)
             else:
-                response.events.append(evt)
+                response.events.append(cli_evt)
 
         response.elapsed = time.time() - init_time
         return response
 
-    def SendFile(self, request, context):
+    def SendData(self, request, context):
         """Handles unary gRPC file requests."""
         init_time = time.time()
 
         self.load_cfg()
         file_object = lib.StrelkaFile()
 
-        uid = ''
-        fmt_bundle = False
-        fmt_case = 'camel'
-        evt_respond = False
-        evt_write = False
-
+        cli_req = {}
+        cli_bundle = None
+        cli_case = None
         if request.data:
             file_object.append_data(request.data)
-        if request.metadata.uid:
-            uid = request.uid
+        if request.request:
+            cli_req = {'uid': request.request.uid,
+                       'client': request.request.client,
+                       'source': request.request.source}
         if request.metadata.filename:
             file_object.update_filename(request.metadata.filename)
-        if request.metadata.source:
-            file_object.update_source(request.metadata.source)
         if request.metadata.flavors:
             file_object.update_ext_flavors([flavor
                                             for flavor in request.metadata.flavors])
         if request.metadata.metadata:
             file_object.update_ext_metadata({key: value
                                             for (key, value) in request.metadata.metadata.items()})
-        if request.format:
-            fmt_bundle = request.format.bundle
-            fmt_case = request.format.case
-        if request.event:
-            evt_respond = request.event.respond
-            evt_write = request.event.write
+        if request.retrieve:
+            cli_bundle = request.retrieve.bundle
+            cli_case = request.retrieve.case
 
-        scan_result = lib.init_scan_result()
+        response = strelka_pb2.Response(uid=cli_req['uid'])
+        scan_result = lib.init_scan_result(cli_req)
         lib.distribute(file_object, scan_result, context)
         scan_result = lib.fin_scan_result(scan_result)
-        evt = lib.result_to_evt(scan_result, fmt_bundle, fmt_case)
-        response = strelka_pb2.Response(uid=uid)
 
-        if evt_write:
-            if isinstance(evt, list):
-                for e in evt:
+        if self.logger is not None:
+            srv_evt = lib.result_to_evt(scan_result, self.bundle, self.case)
+            if isinstance(srv_evt, list):
+                for e in srv_evt:
                     self.logger.info(e)
             else:
-                self.logger.info(evt)
+                self.logger.info(srv_evt)
 
-        if evt_respond:
-            if isinstance(evt, list):
-                response.result.extend(evt)
+        if cli_bundle is not None and cli_case is not None:
+            cli_evt = lib.result_to_evt(scan_result, cli_bundle, cli_case)
+            if isinstance(cli_evt, list):
+                response.events.extend(cli_evt)
             else:
-                response.result.append(evt)
+                response.events.append(cli_evt)
 
         response.elapsed = time.time() - init_time
         return response
@@ -205,33 +205,27 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
         self.load_cfg()
         file_object = lib.StrelkaFile()
 
-        uid = ''
-        fmt_bundle = False
-        fmt_case = 'camel'
-        evt_respond = False
-        evt_write = False
-
+        cli_req = {}
+        cli_bundle = None
+        cli_case = None
         if request.location:
             location = {key:
                         value for (key, value) in request.location.items()}
-        if request.metadata.uid:
-            uid = request.uid
+        if request.request:
+            cli_req = {'uid': request.request.uid,
+                       'client': request.request.client,
+                       'source': request.request.source}
         if request.metadata.filename:
             file_object.update_filename(request.metadata.filename)
-        if request.metadata.source:
-            file_object.update_source(request.metadata.source)
         if request.metadata.flavors:
             file_object.update_ext_flavors([flavor
                                             for flavor in request.metadata.flavors])
         if request.metadata.metadata:
             file_object.update_ext_metadata({key: value
                                             for (key, value) in request.metadata.metadata.items()})
-        if request.format:
-            fmt_bundle = request.format.bundle
-            fmt_case = request.format.case
-        if request.event:
-            evt_respond = request.event.respond
-            evt_write = request.event.write
+        if request.retrieve:
+            cli_bundle = request.retrieve.bundle
+            cli_case = request.retrieve.case
 
         location_type = location.get('type')
         if location_type == 'amazon':
@@ -244,24 +238,25 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
             data = lib.retrieve_from_http(location)
             file_object.append_data(data)
 
-        scan_result = lib.init_scan_result()
+        response = strelka_pb2.Response(uid=cli_req['uid'])
+        scan_result = lib.init_scan_result(cli_req)
         lib.distribute(file_object, scan_result, context)
         scan_result = lib.fin_scan_result(scan_result)
-        evt = lib.result_to_evt(scan_result, fmt_bundle, fmt_case)
-        response = strelka_pb2.Response(uid=uid)
 
-        if evt_write:
-            if isinstance(evt, list):
-                for result in evt:
-                    self.logger.info(result)
+        if self.logger is not None:
+            srv_evt = lib.result_to_evt(scan_result, self.bundle, self.case)
+            if isinstance(srv_evt, list):
+                for e in srv_evt:
+                    self.logger.info(e)
             else:
-                self.logger.info(evt)
+                self.logger.info(srv_evt)
 
-        if evt_respond:
-            if isinstance(evt, list):
-                response.result.extend(evt)
+        if cli_bundle is not None and cli_case is not None:
+            cli_evt = lib.result_to_evt(scan_result, cli_bundle, cli_case)
+            if isinstance(cli_evt, list):
+                response.events.extend(cli_evt)
             else:
-                response.result.append(evt)
+                response.events.append(cli_evt)
 
         response.elapsed = time.time() - init_time
         return response

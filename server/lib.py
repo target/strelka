@@ -78,7 +78,7 @@ class StrelkaFile(object):
         """Appends metadata."""
         self.metadata = {**self.metadata, **ensure_utf8(metadata)}
 
-    def calculate_hash(self):
+    def compute_hash(self):
         """Computes SHA256 hash."""
         self.hash = hashlib.sha256(self.data).hexdigest()
         if not self.root_hash and self.depth == 0:
@@ -91,10 +91,6 @@ class StrelkaFile(object):
     def update_filename(self, filename):
         """Updates filename."""
         self.filename = filename
-
-    def update_source(self, source):
-        """Updates source."""
-        self.source = source
 
     def update_ext_flavors(self, ext_flavors):
         """Updates external flavors."""
@@ -339,7 +335,7 @@ def distribute(file_object, scan_result, context):
         context.abort(grpc.StatusCode.CANCELLED, 'Cancelled')
 
     file_object.ensure_data()
-    file_object.calculate_hash()
+    file_object.compute_hash()
     file_object.taste_mime()
     file_object.taste_yara()
     scanner_cfg = conf.scan_cfg.get('scanners', [])
@@ -492,15 +488,16 @@ def result_to_evt(scan_result, bundle=True, case='camel'):
         result_list = []
         results = result.pop('results')
         for r in results:
-            result_list.append(json.dumps({**result, **r}))
+            result_list.append(json.dumps({**r, **result}))
         return result_list
     return json.dumps(result)
 
 
-def init_scan_result():
+def init_scan_result(cli_req):
     """Inits a scan result."""
-    scan_result = {'startTime': datetime.utcnow(),
-                   'results': []}
+    scan_result = {'results': [],
+                   'request': cli_req,
+                   'startTime': datetime.utcnow()}
     return scan_result
 
 
