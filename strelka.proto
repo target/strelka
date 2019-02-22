@@ -17,9 +17,9 @@ message Request {
 
 // contains metadata related to the Data or Location
 message Metadata {
-  string filename = 2;
-  repeated string flavors = 4;
-  map<string, string> metadata = 5;
+  string filename = 1;
+  repeated string flavors = 2;
+  map<string, string> metadata = 3;
 }
 
 // contains parameters that enable event retrieval for the client
