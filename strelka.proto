@@ -1,11 +1,9 @@
 syntax = "proto3";
 
 service Strelka {
-  rpc StreamData(stream Data) returns (Response) {}
+  rpc StreamData(stream ScanData) returns (ScanResult) {}
 
-  rpc SendData(Data) returns (Response) {}
-
-  rpc SendLocation(Location) returns (Response) {}
+  rpc SendLocation(ScanLocation) returns (ScanResult) {}
 }
 
 // contains request details related to the RPC
@@ -28,22 +26,21 @@ message Retrieve {
   string case = 2;
 }
 
-message Data {
-  bytes data = 1;
-  Request request = 2;
-  Metadata metadata = 3;
+message ScanData {
+  bytes data = 1; // required
+  Metadata metadata = 2;
+  Request request = 3;
   Retrieve retrieve = 4;
 }
 
-message Location {
-  map<string, string> location = 1;
-  Request request = 2;
-  Metadata metadata = 3;
+message ScanLocation {
+  map<string, string> location = 1;  // required
+  Metadata metadata = 2;
+  Request request = 3;
   Retrieve retrieve = 4;
 }
 
-message Response {
+message ScanResult {
   string uid = 1;
-  float elapsed = 2;
-  repeated string events = 3;
+  repeated string events = 2;
 }

@@ -45,19 +45,21 @@ class StrelkaFile(object):
         metadata: Dictionary of metadata appended during scanning.
         scanner_list: List of scanners assigned to the file during distribution.
     """
-    def __init__(self, data=b'', filename='', source='',
-                 depth=0, parent_hash='', root_hash='',
-                 parent_uid='', root_uid=''):
+    def __init__(self, data=b'', depth=0,
+                 filename='', source='',
+                 hash='', parent_hash='', root_hash='',
+                 uid=uuid.uuid4(), parent_uid='', root_uid=''):
         """Inits file object."""
         self.data = data
+        self.depth = depth
         self.filename = filename
         self.source = source
-        self.depth = depth
-        self.uid = uuid.uuid4()
-        self.parent_uid = parent_uid
-        self.root_uid = root_uid
+        self.hash = hash
         self.parent_hash = parent_hash
         self.root_hash = root_hash
+        self.uid = uid
+        self.parent_uid = parent_uid
+        self.root_uid = root_uid
         if not self.root_uid and self.depth == 0:
             self.root_uid = self.uid
 
@@ -66,45 +68,54 @@ class StrelkaFile(object):
         self.metadata = {}
         self.scanner_list = []
 
-    def append_data(self, data):
-        """Appends data."""
-        self.data += data
-
-    def append_flavors(self, flavors):
-        """Appends flavors."""
-        self.flavors = {**self.flavors, **ensure_utf8(flavors)}
-
-    def append_metadata(self, metadata):
-        """Appends metadata."""
-        self.metadata = {**self.metadata, **ensure_utf8(metadata)}
-
-    def compute_hash(self):
-        """Computes SHA256 hash."""
-        self.hash = hashlib.sha256(self.data).hexdigest()
-        if not self.root_hash and self.depth == 0:
-            self.root_hash = self.hash
-
-    def ensure_data(self):
-        """Ensures data is byte string."""
+    def format_data(self):
+        """Ensures data is always a byte string."""
         self.data = ensure_bytes(self.data)
 
-    def update_filename(self, filename):
-        """Updates filename."""
-        self.filename = filename
+    def calc_hash(self):
+        """Calculates SHA256 hash of data."""
+        self.hash = hashlib.sha256(self.data).hexdigest()
 
-    def update_ext_flavors(self, ext_flavors):
-        """Updates external flavors."""
-        self.append_flavors({'external': ext_flavors})
+    def add_flavors(self, flavors):
+        """Merges object flavors with new flavors.
 
-    def update_ext_metadata(self, ext_metadata):
-        """Updates external metadata."""
-        self.append_metadata({'externalMetadata': ext_metadata})
+        In cases where flavors and self.flavors share duplicate keys, metadata
+        will overwrite the duplicate value."""
+        self.flavors = {**self.flavors, **ensure_utf8(flavors)}
+
+    def add_ext_flavors(self, ext_flavors):
+        """Convenience method for external flavors.
+
+        Calling this method more than once on the same object will overwrite
+        previously written external flavors."""
+        self.add_flavors({'external': ext_flavors})
+
+    def add_metadata(self, metadata):
+        """Merges object metadata with new metadata.
+
+        In cases where metadata and self.metadata share duplicate keys, metadata
+        will overwrite the duplicate value."""
+        self.metadata = {**self.metadata, **ensure_utf8(metadata)}
+
+    def add_ext_metadata(self, ext_metadata):
+        """Convenience method for external metadata.
+
+        Calling this method will overwrite
+        previously written external metadata."""
+        self.add_metadata({'externalMetadata': ext_metadata})
+
+    def add_scanner_list(self, scanner_list):
+        """Convenience method for scanner list.
+
+        Calling this method will overwrite an existing scanner list."""
+        self.scanner_list = scanner_list
 
     def taste_mime(self):
         """Tastes file data with libmagic.
 
         Tastes file data with libmagic and appends the MIME type as a flavor.
-        MIME database is configurable via 'scan.yaml'.
+        MIME database is configurable via 'scan.yaml'. Method should only be
+        called after data is fully written to.
 
         Raises:
             MagicException: Unknown magic error.
@@ -116,7 +127,7 @@ class StrelkaFile(object):
                 compiled_magic = magic.Magic(magic_file=taste_mime_db,
                                              mime=True)
             mime_type = compiled_magic.from_buffer(self.data)
-            self.append_flavors({'mime': [mime_type]})
+            self.add_flavors({'mime': [mime_type]})
 
         except magic.MagicException:
             self.flags.append('StrelkaFile::magic_exception')
@@ -130,7 +141,7 @@ class StrelkaFile(object):
         Whitespace is stripped from the leftside of the file data to increase
         the reliability of YARA matching. YARA rules are configurable via
         'scan.yaml' and may be applied as either a single file or a directory
-        of rules.
+        of rules. Method should only be called after data is fully written to.
 
         Raises:
             YaraError: Unknown YARA error or YARA timeout.
@@ -152,7 +163,7 @@ class StrelkaFile(object):
             encoded_whitespace = string.whitespace.encode()
             stripped_data = self.data.lstrip(encoded_whitespace)
             yara_matches = compiled_yara.match(data=stripped_data)
-            self.append_flavors({'yara': [match.rule for match in yara_matches]})
+            self.add_flavors({'yara': [match.rule for match in yara_matches]})
 
         except (yara.Error, yara.TimeoutError) as YaraError:
             self.flags.append('StrelkaFile::yara_scan_error')
@@ -248,7 +259,7 @@ class StrelkaScanner(object):
                               f' file with hash {file_object.hash} and uid'
                               f' {file_object.uid} (see traceback below)')
 
-        file_object.append_metadata({self.metadata_key: self.metadata})
+        file_object.add_metadata({self.metadata_key: self.metadata})
         return self.children
 
 
@@ -334,8 +345,11 @@ def distribute(file_object, scan_result, context):
     if not context.is_active():
         context.abort(grpc.StatusCode.CANCELLED, 'Cancelled')
 
-    file_object.ensure_data()
-    file_object.compute_hash()
+    file_object.format_data()
+    file_object.calc_hash()
+    if file_object.depth == 0:
+        file_object.root_hash = file_object.hash
+        file_object.root_uid = file_object.uid
     file_object.taste_mime()
     file_object.taste_yara()
     scanner_cfg = conf.scan_cfg.get('scanners', [])
@@ -460,16 +474,15 @@ def reset_server():
 def result_to_evt(scan_result, bundle=True, case='camel'):
     """Transforms scan result into JSON events.
 
-    Takes a scan result and returns it as a JSON-formatted string with empty
-    values (strings, lists, and dictionaries) removed, the keys formatted
-    according to case, and the results stored in a singular, large list or
-    as a list of individual results.
+    Takes a scan result and returns it as a JSON-formatted list of strings with
+    empty values (strings, lists, and dictionaries) removed, the keys formatted
+    according to case, and the results arranged according to bundle.
 
     Args:
         scan_result: Scan result to be remapped and formatted.
         case: Format (camel or snake) of the dictionary keys.
     Returns:
-        JSON-formatted string or list of JSON-formatted strings.
+        List of JSON-formatted "event" strings.
     """
     empty_lambda = lambda p, k, v: v != '' and v != [] and v != {}
 
@@ -490,7 +503,7 @@ def result_to_evt(scan_result, bundle=True, case='camel'):
         for r in results:
             result_list.append(json.dumps({**r, **result}))
         return result_list
-    return json.dumps(result)
+    return [json.dumps(result)]
 
 
 def init_scan_result(cli_req):

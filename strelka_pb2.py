@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\rstrelka.proto\"6\n\x07Request\x12\x0b\n\x03uid\x18\x01 \x01(\t\x12\x0e\n\x06\x63lient\x18\x02 \x01(\t\x12\x0e\n\x06source\x18\x03 \x01(\t\"\x89\x01\n\x08Metadata\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\x12\x0f\n\x07\x66lavors\x18\x04 \x03(\t\x12)\n\x08metadata\x18\x05 \x03(\x0b\x32\x17.Metadata.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"(\n\x08Retrieve\x12\x0e\n\x06\x62undle\x18\x01 \x01(\x08\x12\x0c\n\x04\x63\x61se\x18\x02 \x01(\t\"i\n\x04\x44\x61ta\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\x12\x19\n\x07request\x18\x02 \x01(\x0b\x32\x08.Request\x12\x1b\n\x08metadata\x18\x03 \x01(\x0b\x32\t.Metadata\x12\x1b\n\x08retrieve\x18\x04 \x01(\x0b\x32\t.Retrieve\"\xbb\x01\n\x08Location\x12)\n\x08location\x18\x01 \x03(\x0b\x32\x17.Location.LocationEntry\x12\x19\n\x07request\x18\x02 \x01(\x0b\x32\x08.Request\x12\x1b\n\x08metadata\x18\x03 \x01(\x0b\x32\t.Metadata\x12\x1b\n\x08retrieve\x18\x04 \x01(\x0b\x32\t.Retrieve\x1a/\n\rLocationEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"8\n\x08Response\x12\x0b\n\x03uid\x18\x01 \x01(\t\x12\x0f\n\x07\x65lapsed\x18\x02 \x01(\x02\x12\x0e\n\x06\x65vents\x18\x03 \x03(\t2u\n\x07Strelka\x12\"\n\nStreamData\x12\x05.Data\x1a\t.Response\"\x00(\x01\x12\x1e\n\x08SendData\x12\x05.Data\x1a\t.Response\"\x00\x12&\n\x0cSendLocation\x12\t.Location\x1a\t.Response\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\rstrelka.proto\"6\n\x07Request\x12\x0b\n\x03uid\x18\x01 \x01(\t\x12\x0e\n\x06\x63lient\x18\x02 \x01(\t\x12\x0e\n\x06source\x18\x03 \x01(\t\"\x89\x01\n\x08Metadata\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x0f\n\x07\x66lavors\x18\x02 \x03(\t\x12)\n\x08metadata\x18\x03 \x03(\x0b\x32\x17.Metadata.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"(\n\x08Retrieve\x12\x0e\n\x06\x62undle\x18\x01 \x01(\x08\x12\x0c\n\x04\x63\x61se\x18\x02 \x01(\t\"m\n\x08ScanData\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\x12\x1b\n\x08metadata\x18\x02 \x01(\x0b\x32\t.Metadata\x12\x19\n\x07request\x18\x03 \x01(\x0b\x32\x08.Request\x12\x1b\n\x08retrieve\x18\x04 \x01(\x0b\x32\t.Retrieve\"\xc3\x01\n\x0cScanLocation\x12-\n\x08location\x18\x01 \x03(\x0b\x32\x1b.ScanLocation.LocationEntry\x12\x1b\n\x08metadata\x18\x02 \x01(\x0b\x32\t.Metadata\x12\x19\n\x07request\x18\x03 \x01(\x0b\x32\x08.Request\x12\x1b\n\x08retrieve\x18\x04 \x01(\x0b\x32\t.Retrieve\x1a/\n\rLocationEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\")\n\nScanResult\x12\x0b\n\x03uid\x18\x01 \x01(\t\x12\x0e\n\x06\x65vents\x18\x02 \x03(\t2a\n\x07Strelka\x12(\n\nStreamData\x12\t.ScanData\x1a\x0b.ScanResult\"\x00(\x01\x12,\n\x0cSendLocation\x12\r.ScanLocation\x1a\x0b.ScanResult\"\x00\x62\x06proto3')
 )
 
 
@@ -116,21 +116,21 @@ _METADATA = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='filename', full_name='Metadata.filename', index=0,
-      number=2, type=9, cpp_type=9, label=1,
+      number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='flavors', full_name='Metadata.flavors', index=1,
-      number=4, type=9, cpp_type=9, label=3,
+      number=2, type=9, cpp_type=9, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='metadata', full_name='Metadata.metadata', index=2,
-      number=5, type=11, cpp_type=10, label=3,
+      number=3, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -190,36 +190,36 @@ _RETRIEVE = _descriptor.Descriptor(
 )
 
 
-_DATA = _descriptor.Descriptor(
-  name='Data',
-  full_name='Data',
+_SCANDATA = _descriptor.Descriptor(
+  name='ScanData',
+  full_name='ScanData',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='data', full_name='Data.data', index=0,
+      name='data', full_name='ScanData.data', index=0,
       number=1, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='request', full_name='Data.request', index=1,
+      name='metadata', full_name='ScanData.metadata', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='metadata', full_name='Data.metadata', index=2,
+      name='request', full_name='ScanData.request', index=2,
       number=3, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='retrieve', full_name='Data.retrieve', index=3,
+      name='retrieve', full_name='ScanData.retrieve', index=3,
       number=4, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -238,26 +238,26 @@ _DATA = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=255,
-  serialized_end=360,
+  serialized_end=364,
 )
 
 
-_LOCATION_LOCATIONENTRY = _descriptor.Descriptor(
+_SCANLOCATION_LOCATIONENTRY = _descriptor.Descriptor(
   name='LocationEntry',
-  full_name='Location.LocationEntry',
+  full_name='ScanLocation.LocationEntry',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='key', full_name='Location.LocationEntry.key', index=0,
+      name='key', full_name='ScanLocation.LocationEntry.key', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='value', full_name='Location.LocationEntry.value', index=1,
+      name='value', full_name='ScanLocation.LocationEntry.value', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -275,40 +275,40 @@ _LOCATION_LOCATIONENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=503,
-  serialized_end=550,
+  serialized_start=515,
+  serialized_end=562,
 )
 
-_LOCATION = _descriptor.Descriptor(
-  name='Location',
-  full_name='Location',
+_SCANLOCATION = _descriptor.Descriptor(
+  name='ScanLocation',
+  full_name='ScanLocation',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='location', full_name='Location.location', index=0,
+      name='location', full_name='ScanLocation.location', index=0,
       number=1, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='request', full_name='Location.request', index=1,
+      name='metadata', full_name='ScanLocation.metadata', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='metadata', full_name='Location.metadata', index=2,
+      name='request', full_name='ScanLocation.request', index=2,
       number=3, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='retrieve', full_name='Location.retrieve', index=3,
+      name='retrieve', full_name='ScanLocation.retrieve', index=3,
       number=4, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -317,7 +317,7 @@ _LOCATION = _descriptor.Descriptor(
   ],
   extensions=[
   ],
-  nested_types=[_LOCATION_LOCATIONENTRY, ],
+  nested_types=[_SCANLOCATION_LOCATIONENTRY, ],
   enum_types=[
   ],
   serialized_options=None,
@@ -326,35 +326,28 @@ _LOCATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=363,
-  serialized_end=550,
+  serialized_start=367,
+  serialized_end=562,
 )
 
 
-_RESPONSE = _descriptor.Descriptor(
-  name='Response',
-  full_name='Response',
+_SCANRESULT = _descriptor.Descriptor(
+  name='ScanResult',
+  full_name='ScanResult',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='uid', full_name='Response.uid', index=0,
+      name='uid', full_name='ScanResult.uid', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='elapsed', full_name='Response.elapsed', index=1,
-      number=2, type=2, cpp_type=6, label=1,
-      has_default_value=False, default_value=float(0),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='events', full_name='Response.events', index=2,
-      number=3, type=9, cpp_type=9, label=3,
+      name='events', full_name='ScanResult.events', index=1,
+      number=2, type=9, cpp_type=9, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -371,26 +364,26 @@ _RESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=552,
-  serialized_end=608,
+  serialized_start=564,
+  serialized_end=605,
 )
 
 _METADATA_METADATAENTRY.containing_type = _METADATA
 _METADATA.fields_by_name['metadata'].message_type = _METADATA_METADATAENTRY
-_DATA.fields_by_name['request'].message_type = _REQUEST
-_DATA.fields_by_name['metadata'].message_type = _METADATA
-_DATA.fields_by_name['retrieve'].message_type = _RETRIEVE
-_LOCATION_LOCATIONENTRY.containing_type = _LOCATION
-_LOCATION.fields_by_name['location'].message_type = _LOCATION_LOCATIONENTRY
-_LOCATION.fields_by_name['request'].message_type = _REQUEST
-_LOCATION.fields_by_name['metadata'].message_type = _METADATA
-_LOCATION.fields_by_name['retrieve'].message_type = _RETRIEVE
+_SCANDATA.fields_by_name['metadata'].message_type = _METADATA
+_SCANDATA.fields_by_name['request'].message_type = _REQUEST
+_SCANDATA.fields_by_name['retrieve'].message_type = _RETRIEVE
+_SCANLOCATION_LOCATIONENTRY.containing_type = _SCANLOCATION
+_SCANLOCATION.fields_by_name['location'].message_type = _SCANLOCATION_LOCATIONENTRY
+_SCANLOCATION.fields_by_name['metadata'].message_type = _METADATA
+_SCANLOCATION.fields_by_name['request'].message_type = _REQUEST
+_SCANLOCATION.fields_by_name['retrieve'].message_type = _RETRIEVE
 DESCRIPTOR.message_types_by_name['Request'] = _REQUEST
 DESCRIPTOR.message_types_by_name['Metadata'] = _METADATA
 DESCRIPTOR.message_types_by_name['Retrieve'] = _RETRIEVE
-DESCRIPTOR.message_types_by_name['Data'] = _DATA
-DESCRIPTOR.message_types_by_name['Location'] = _LOCATION
-DESCRIPTOR.message_types_by_name['Response'] = _RESPONSE
+DESCRIPTOR.message_types_by_name['ScanData'] = _SCANDATA
+DESCRIPTOR.message_types_by_name['ScanLocation'] = _SCANLOCATION
+DESCRIPTOR.message_types_by_name['ScanResult'] = _SCANRESULT
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Request = _reflection.GeneratedProtocolMessageType('Request', (_message.Message,), dict(
@@ -422,38 +415,38 @@ Retrieve = _reflection.GeneratedProtocolMessageType('Retrieve', (_message.Messag
   ))
 _sym_db.RegisterMessage(Retrieve)
 
-Data = _reflection.GeneratedProtocolMessageType('Data', (_message.Message,), dict(
-  DESCRIPTOR = _DATA,
+ScanData = _reflection.GeneratedProtocolMessageType('ScanData', (_message.Message,), dict(
+  DESCRIPTOR = _SCANDATA,
   __module__ = 'strelka_pb2'
-  # @@protoc_insertion_point(class_scope:Data)
+  # @@protoc_insertion_point(class_scope:ScanData)
   ))
-_sym_db.RegisterMessage(Data)
+_sym_db.RegisterMessage(ScanData)
 
-Location = _reflection.GeneratedProtocolMessageType('Location', (_message.Message,), dict(
+ScanLocation = _reflection.GeneratedProtocolMessageType('ScanLocation', (_message.Message,), dict(
 
   LocationEntry = _reflection.GeneratedProtocolMessageType('LocationEntry', (_message.Message,), dict(
-    DESCRIPTOR = _LOCATION_LOCATIONENTRY,
+    DESCRIPTOR = _SCANLOCATION_LOCATIONENTRY,
     __module__ = 'strelka_pb2'
-    # @@protoc_insertion_point(class_scope:Location.LocationEntry)
+    # @@protoc_insertion_point(class_scope:ScanLocation.LocationEntry)
     ))
   ,
-  DESCRIPTOR = _LOCATION,
+  DESCRIPTOR = _SCANLOCATION,
   __module__ = 'strelka_pb2'
-  # @@protoc_insertion_point(class_scope:Location)
+  # @@protoc_insertion_point(class_scope:ScanLocation)
   ))
-_sym_db.RegisterMessage(Location)
-_sym_db.RegisterMessage(Location.LocationEntry)
+_sym_db.RegisterMessage(ScanLocation)
+_sym_db.RegisterMessage(ScanLocation.LocationEntry)
 
-Response = _reflection.GeneratedProtocolMessageType('Response', (_message.Message,), dict(
-  DESCRIPTOR = _RESPONSE,
+ScanResult = _reflection.GeneratedProtocolMessageType('ScanResult', (_message.Message,), dict(
+  DESCRIPTOR = _SCANRESULT,
   __module__ = 'strelka_pb2'
-  # @@protoc_insertion_point(class_scope:Response)
+  # @@protoc_insertion_point(class_scope:ScanResult)
   ))
-_sym_db.RegisterMessage(Response)
+_sym_db.RegisterMessage(ScanResult)
 
 
 _METADATA_METADATAENTRY._options = None
-_LOCATION_LOCATIONENTRY._options = None
+_SCANLOCATION_LOCATIONENTRY._options = None
 
 _STRELKA = _descriptor.ServiceDescriptor(
   name='Strelka',
@@ -461,34 +454,25 @@ _STRELKA = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=610,
-  serialized_end=727,
+  serialized_start=607,
+  serialized_end=704,
   methods=[
   _descriptor.MethodDescriptor(
     name='StreamData',
     full_name='Strelka.StreamData',
     index=0,
     containing_service=None,
-    input_type=_DATA,
-    output_type=_RESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='SendData',
-    full_name='Strelka.SendData',
-    index=1,
-    containing_service=None,
-    input_type=_DATA,
-    output_type=_RESPONSE,
+    input_type=_SCANDATA,
+    output_type=_SCANRESULT,
     serialized_options=None,
   ),
   _descriptor.MethodDescriptor(
     name='SendLocation',
     full_name='Strelka.SendLocation',
-    index=2,
+    index=1,
     containing_service=None,
-    input_type=_LOCATION,
-    output_type=_RESPONSE,
+    input_type=_SCANLOCATION,
+    output_type=_SCANRESULT,
     serialized_options=None,
   ),
 ])

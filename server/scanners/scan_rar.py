@@ -47,7 +47,7 @@ class ScanRar(lib.StrelkaScanner):
                                                        parent_hash=file_object.hash,
                                                        root_hash=file_object.root_hash,
                                                        source=self.scanner_name)
-                            child_fo.update_ext_metadata(rar_metadata)
+                            child_fo.add_ext_metadata(rar_metadata)
                             self.children.append(child_fo)
                             self.metadata["total"]["extracted"] += 1
                         else:

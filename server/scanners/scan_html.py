@@ -124,7 +124,7 @@ class ScanHtml(lib.StrelkaScanner):
                                                parent_hash=file_object.hash,
                                                root_hash=file_object.root_hash,
                                                source=self.scanner_name)
-                    child_fo.update_ext_flavors(script_flavors)
+                    child_fo.add_ext_flavors(script_flavors)
                     self.children.append(child_fo)
                     self.metadata["total"]["extracted"] += 1
 

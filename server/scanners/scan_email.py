@@ -36,6 +36,6 @@ class ScanEmail(lib.StrelkaScanner):
                                            parent_hash=file_object.hash,
                                            root_hash=file_object.root_hash,
                                            source=self.scanner_name)
-                child_fo.update_ext_flavors([part.get_content_type()])
+                child_fo.add_ext_flavors([part.get_content_type()])
                 self.children.append(child_fo)
                 self.metadata["total"]["extracted"] += 1
