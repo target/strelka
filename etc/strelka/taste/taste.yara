@@ -359,6 +359,26 @@ rule mz_file
         uint16(0) == 0x5A4D
 }
 
+rule base64pe_file 
+{
+    meta:
+        description = "base64 encoded PE binary"
+        type = "executable"
+    strings:
+        $header01 = "TVqQAAMAAAAEAAAA"
+        $header02 = "TVpQAAIAAAAEAA8A"
+        $header03 = "TVoAAAAAAAAAAAAA"
+        $header04 = "TVpBUlVIieVIgewg"
+        $header05 = "TVqAAAEAAAAEABAA"
+        $header06 = "TVroAAAAAFtSRVWJ"
+        $header07 = "TVqQAAMABAAAAAAA"
+        $header08 = "TVpBUlVIieVIgewgAAAA"
+        $header09 = "kJCQkE1aQVJVSInlSIHsIAAAA"
+        $thisprogram = "pcyBwcm9ncm"
+    condition:
+        any of them
+}
+
 // Image Files
 
 rule bmp_file

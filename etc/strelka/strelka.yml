@@ -442,3 +442,8 @@ scan:
         options:
           limit: 1000
           password_file: 'etc/strelka/passwords.txt'
+    'ScanBase64Pe':
+      - positive:
+          flavors:
+            - 'base64pe_file'
+        priority: 5
