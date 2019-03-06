@@ -36,6 +36,7 @@ daemon:
     log_directory: '/var/log/strelka/'
     log_field_case: 'camel'
     log_bundle_events: True
+    log_timestamp_utc: True
 
   logrotate:
     directory: '/var/log/strelka/'
