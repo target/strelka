@@ -280,11 +280,11 @@ rule email_file
     meta:
         type = "email"
     strings:
-        $a = "\x0aReceived:"
-        $b = "\x0AReturn-Path:"
-        $c = "\x0aMessage-ID:"
-        $d = "\x0aReply-To:"
-        $e = "\x0aX-Mailer:"
+        $a = "\x0aReceived:" nocase fullword
+        $b = "\x0AReturn-Path:" nocase fullword
+        $c = "\x0aMessage-ID:" nocase fullword
+        $d = "\x0aReply-To:" nocase fullword
+        $e = "\x0aX-Mailer:" nocase fullword
     condition:
         $a in (0..2048) or
         $b in (0..2048) or
