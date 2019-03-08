@@ -153,7 +153,7 @@ def main():
                                       conf.defaults['logging_cfg'])
     with open(logging_cfg, 'r') as f:
         logging.config.dictConfig(yaml.safe_load(f.read()))
-    logging.info(f'using strelka configuration {server_cfg}')
+    logging.info(f'using server configuration {server_cfg}')
 
     address = conf.server_cfg.get('address',
                                   conf.defaults['address'])
@@ -163,11 +163,11 @@ def main():
                                    conf.defaults['max_rpcs'])
     processes = conf.server_cfg.get('processes',
                                     conf.defaults['processes'])
-    maxtasks = conf.server_cfg.get('maxtasks',
-                                   conf.defaults['maxtasks'])
+    max_tasks = conf.server_cfg.get('max_tasks',
+                                    conf.defaults['max_tasks'])
 
     pool = pebble.ProcessPool(max_workers=processes,
-                              max_tasks=maxtasks)
+                              max_tasks=max_tasks)
     executor = futures.ThreadPoolExecutor(max_workers=processes)
     server = grpc.server(executor,
                          maximum_concurrent_rpcs=max_rpcs)
