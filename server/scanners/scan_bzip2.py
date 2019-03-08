@@ -12,8 +12,8 @@ class ScanBzip2(lib.StrelkaScanner):
                 try:
                     decompressed_file = bzip2_file.read()
                     decompressed_size = len(decompressed_file)
-                    child_filename = f"{self.scanner_name}::size_{decompressed_size}"
-                    self.metadata["decompressedSize"] = decompressed_size
+                    child_filename = f'{self.scanner_name}::size_{decompressed_size}'
+                    self.metadata['decompressedSize'] = decompressed_size
                     child_fo = lib.StrelkaFile(data=decompressed_file,
                                                filename=child_filename,
                                                depth=file_object.depth + 1,
@@ -25,6 +25,6 @@ class ScanBzip2(lib.StrelkaScanner):
                     self.children.append(child_fo)
 
                 except EOFError:
-                    file_object.flags.append(f"{self.scanner_name}::eof_error")
+                    file_object.flags.append(f'{self.scanner_name}::eof_error')
                 except OSError:
-                    file_object.flags.append(f"{self.scanner_name}::os_error")
+                    file_object.flags.append(f'{self.scanner_name}::os_error')

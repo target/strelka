@@ -13,10 +13,10 @@ class ScanFalconSandbox(lib.StrelkaScanner):
 
         api_key: API key used for authenticating to Falcon Sandbox. This is loaded
             from the scanner options or the environment variable
-            "FS_API_KEY".
+            'FS_API_KEY'.
         api_secret: API secret key used for authenticating to Falcon Sandbox. This is loaded
             from the scanner options or the environment variable
-            "FS_API_SECKEY".
+            'FS_API_SECKEY'.
         lib: URL of the Falcon Sandbox API inteface.
         auth_check: Boolean that determines if the username and password were
             previously checked. This ensures that the username and password
@@ -64,37 +64,37 @@ class ScanFalconSandbox(lib.StrelkaScanner):
                                      headers={'User-agent': 'VxApi CLI Connector'},
                                      auth=(HTTPBasicAuth(self.api_key, self.api_secret)))
 
-            if response.status_code == 200 and response.json()["response_code"] == 0:
-                sha256 = response.json()["response"]["sha256"] # Successfully submitted file
-                self.metadata["sha256"] = sha256
+            if response.status_code == 200 and response.json()['response_code'] == 0:
+                sha256 = response.json()['response']['sha256'] # Successfully submitted file
+                self.metadata['sha256'] = sha256
 
-            elif response.status_code == 200 and response.json()["response_code"] == -1:
-                file_object.flags.append(f"{self.scanner_name}::duplicate_submission") # Submission Failed - duplicate
+            elif response.status_code == 200 and response.json()['response_code'] == -1:
+                file_object.flags.append(f'{self.scanner_name}::duplicate_submission') # Submission Failed - duplicate
 
             else:
-                file_object.flags.append(f"{self.scanner_name}::upload_failed") # Upload Failed
+                file_object.flags.append(f'{self.scanner_name}::upload_failed') # Upload Failed
 
         except requests.exceptions.ConnectTimeout:
-            file_object.flags.append(f"{self.scanner_name}::connect_timeout")
+            file_object.flags.append(f'{self.scanner_name}::connect_timeout')
 
         return
 
 
     def scan(self, file_object, options):
-        self.depth = options.get("depth", 0)
+        self.depth = options.get('depth', 0)
 
         if file_object.depth > self.depth:
-            file_object.flags.append(f"{self.scanner_name}::file_depth_exceeded")
+            file_object.flags.append(f'{self.scanner_name}::file_depth_exceeded')
             return
 
-        self.server = options.get("server", '')
-        self.priority = options.get("priority", 3)
-        self.timeout = options.get("timeout", 60)
-        self.envID = options.get("envID", [100])
+        self.server = options.get('server', '')
+        self.priority = options.get('priority', 3)
+        self.timeout = options.get('timeout', 60)
+        self.envID = options.get('envID', [100])
 
         if not self.auth_check:
-            self.api_key = options.get("api_key", None) or os.environ.get("FS_API_KEY")
-            self.api_secret = options.get("api_secret", None) or os.environ.get("FS_API_SECKEY")
+            self.api_key = options.get('api_key', None) or os.environ.get('FS_API_KEY')
+            self.api_secret = options.get('api_secret', None) or os.environ.get('FS_API_SECKEY')
             self.auth_check = True
 
         # Allow submission to multiple environments (e.g. 32-bit and 64-bit)

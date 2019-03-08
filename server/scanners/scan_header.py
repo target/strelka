@@ -9,8 +9,8 @@ class ScanHeader(lib.StrelkaScanner):
             Defaults to 50.
     """
     def scan(self, file_object, options):
-        length = options.get("length", 50)
+        length = options.get('length', 50)
 
         header = file_object.data[:length]
         if header:
-            self.metadata["header"] = header
+            self.metadata['header'] = header

@@ -1,11 +1,15 @@
 from datetime import datetime
 import glob
 import hashlib
+import importlib
 import json
 import logging
+import multiprocessing
 import os
 import re
 import string
+import threading
+import time
 import uuid
 
 from boltons import iterutils
@@ -13,6 +17,7 @@ from boltons import iterutils
 # from google.cloud.storage import Client
 import grpc
 import inflection
+import interruptingcow
 import magic
 import requests
 # import swiftclient
@@ -26,6 +31,16 @@ client_openstack = None
 compiled_magic = None
 compiled_yara = None
 scanner_cache = {}
+
+
+class DistributionTimeout(Exception):
+    """Raised when file distribution times out."""
+    pass
+
+
+class ScannerTimeout(Exception):
+    """Raised when a scanner times out."""
+    pass
 
 
 class StrelkaFile(object):
@@ -60,9 +75,6 @@ class StrelkaFile(object):
         self.uid = uid
         self.parent_uid = parent_uid
         self.root_uid = root_uid
-        if not self.root_uid and self.depth == 0:
-            self.root_uid = self.uid
-
         self.flags = []
         self.flavors = {}
         self.metadata = {}
@@ -70,24 +82,28 @@ class StrelkaFile(object):
 
     def format_data(self):
         """Ensures data is always a byte string."""
-        self.data = ensure_bytes(self.data)
+        if isinstance(self.data, bytearray):
+            self.data = bytes(self.data)
+        elif isinstance(self.data, str):
+            self.data = self.data.encode('utf-8')
 
-    def calc_hash(self):
+    def calculate_hash(self):
         """Calculates SHA256 hash of data."""
         self.hash = hashlib.sha256(self.data).hexdigest()
 
     def add_flavors(self, flavors):
         """Merges object flavors with new flavors.
 
-        In cases where flavors and self.flavors share duplicate keys, metadata
-        will overwrite the duplicate value."""
+        In cases where flavors and self.flavors share duplicate keys, flavors
+        will overwrite the duplicate value.
+        """
         self.flavors = {**self.flavors, **ensure_utf8(flavors)}
 
     def add_ext_flavors(self, ext_flavors):
         """Convenience method for external flavors.
 
-        Calling this method more than once on the same object will overwrite
-        previously written external flavors."""
+        Calling this method will overwrite previously written external flavors.
+        """
         self.add_flavors({'external': ext_flavors})
 
     def add_metadata(self, metadata):
@@ -100,15 +116,9 @@ class StrelkaFile(object):
     def add_ext_metadata(self, ext_metadata):
         """Convenience method for external metadata.
 
-        Calling this method will overwrite
-        previously written external metadata."""
+        Calling this method will overwrite previously written external metadata.
+        """
         self.add_metadata({'externalMetadata': ext_metadata})
-
-    def add_scanner_list(self, scanner_list):
-        """Convenience method for scanner list.
-
-        Calling this method will overwrite an existing scanner list."""
-        self.scanner_list = scanner_list
 
     def taste_mime(self):
         """Tastes file data with libmagic.
@@ -174,7 +184,7 @@ class StrelkaFile(object):
 class StrelkaScanner(object):
     """Defines a Strelka scanner.
 
-    Each scanner inherits this class and overrides methods (close and scan)
+    Each scanner inherits this class and overrides methods (init and scan)
     within the class to perform scanning functions.
 
     Attributes:
@@ -182,6 +192,10 @@ class StrelkaScanner(object):
             This is referenced in flags and child filenames.
         metadata_key: String that contains the scanner's metadata key.
             This is used to identify the scanner metadata in scan results.
+        scanner_timeout: Amount of time (in seconds) that a scanner can spend
+            scanning a file. Can be overridden on a per-scanner basis
+            (see scan_wrapper).
+            Defaults to 600 seconds / 5 minutes.
         metadata: Dictionary where scanner metadata is stored.
         children: List where scanner child files are stored.
     """
@@ -190,28 +204,12 @@ class StrelkaScanner(object):
         self.scanner_name = self.__class__.__name__
         metadata_key = self.scanner_name.replace('Scan', '', 1) + 'Metadata'
         self.metadata_key = inflection.camelize(metadata_key, False)
+        self.scanner_timeout = conf.scan_cfg.get('scanner_timeout', 300)
         self.init()
 
     def init(self):
         """Overrideable init."""
         pass
-
-    def close(self):
-        """Overrideable close."""
-        pass
-
-    def close_wrapper(self):
-        """Calls close method with error handling.
-
-        Raises:
-            Exception: Unknown exception occurred.
-        """
-        try:
-            self.close()
-
-        except Exception:
-            logging.exception(f'{self.scanner_name}: exception while closing'
-                              '(see traceback below)')
 
     def scan(self,
              file_object,
@@ -226,34 +224,36 @@ class StrelkaScanner(object):
 
     def scan_wrapper(self,
                      file_object,
-                     options,
-                     context):
+                     options):
         """Sets up scan attributes and calls scan method.
 
         Scanning code is wrapped in try/except to handle error handling.
         The file object is always appended with metadata regardless of whether
         the scanner completed successfully or hit an exception. This method
-        always returns the list of children. If the gRPC context is no longer
-        active, then the scan() is not called.
+        always returns the list of children.
 
         Args:
             file_object: StrelkaFile to be scanned.
             options: Options to be applied during scan.
-            context: gRPC context for the remote procedure call.
         Returns:
             Children files (whether they exist or not).
         Raises:
             Exception: Unknown exception occurred.
         """
-        if not context.is_active():
-            context.abort(grpc.StatusCode.CANCELLED, 'Cancelled')
-
         self.metadata = {}
         self.children = []
+        self.scanner_timeout = options.get('scanner_timeout',
+                                           self.scanner_timeout)
 
         try:
-            self.scan(file_object, options)
+            with interruptingcow.timeout(self.scanner_timeout,
+                                         ScannerTimeout):
+                self.scan(file_object, options)
 
+        except DistributionTimeout:
+            raise
+        except ScannerTimeout:
+            file_object.flags.append(f'{self.scanner_name}::timed_out')
         except Exception:
             logging.exception(f'{self.scanner_name}: exception while scanning'
                               f' file with hash {file_object.hash} and uid'
@@ -261,23 +261,6 @@ class StrelkaScanner(object):
 
         file_object.add_metadata({self.metadata_key: self.metadata})
         return self.children
-
-
-def ensure_bytes(value):
-    """Converts bytearray and string to bytes.
-
-    This method is used on every file object to ensure the data is always bytes.
-
-    Args:
-        value: Value (bytearray or string) to be converted to bytes.
-    Returns:
-        Bytes representation of value.
-    """
-    if isinstance(value, bytearray):
-        return bytes(value)
-    elif isinstance(value, str):
-        return value.encode('utf-8')
-    return value
 
 
 def ensure_utf8(value):
@@ -324,29 +307,102 @@ def normalize_whitespace(text):
     return text
 
 
-def distribute(file_object, scan_result, context):
+def schedule_data(file_object, cli_request, tmp_file):
+    """Processes request from StreamData.
+
+    This function is called by the gRPC servicer and kicks off a file data scan.
+    Data from the temporary file is stored in the file object then removed from
+    disk. File object is recursively sent through the distribution function and
+    resulting scan results are sent back to the gRPC servicer.
+
+    Args:
+        file_object: StrelkaFile to be scanned.
+        cli_request: Dictionary containing client request metadata.
+        tmp_file: Location of the tmp_file to be loaded as data.
+    """
+    if not conf.scan_cfg:
+        conf.load_scan(conf.server_cfg.get('scan_cfg'))
+        logging.info(f'{multiprocessing.current_process().name}: loaded scan cfg')
+
+    # terrible, awful hack to get interruptingcow to play nicely in a subprocess
+    if threading.current_thread().name != 'MainThread':
+        threading.current_thread().name = 'MainThread'
+
+    with open(tmp_file, 'rb') as f:
+        file_object.data = f.read()
+    os.remove(tmp_file)
+
+    scan_result = {'request': cli_request, 'results': []}
+    start_time = datetime.utcnow()
+    distribute(file_object, scan_result)
+    finish_time = datetime.utcnow()
+    elapsed_time = (finish_time - start_time).total_seconds()
+    scan_result['startTime'] = start_time.isoformat(timespec='seconds')
+    scan_result['finishTime'] = finish_time.isoformat(timespec='seconds')
+    scan_result['elapsedTime'] = elapsed_time
+
+    return scan_result
+
+
+def schedule_location(file_object, cli_request, location):
+    """Processes request from SendLocation.
+
+    This function is called by the gRPC servicer and kicks off a file location
+    scan. The location is retrieved and data is stored in the file object. The
+    file object is recursively sent through the distribution function and
+    resulting scan results are sent back to the gRPC servicer.
+
+    Args:
+        file_object: StrelkaFile to be scanned.
+        cli_request: Dictionary containing client request metadata.
+        location: Location of the data to be retrieved.
+    """
+    if not conf.scan_cfg:
+        conf.load_scan(conf.server_cfg.get('scan_cfg'))
+        logging.info(f'{multiprocessing.current_process().name}: loaded scan cfg')
+
+    # terrible, awful hack to get interruptingcow to play nicely in a subprocess
+    if threading.current_thread().name != 'MainThread':
+        threading.current_thread().name = 'MainThread'
+
+    location_type = location.get('type')
+    if location_type == 'amazon':
+        pass  # not currently supported
+    elif location_type == 'google':
+        pass  # not currently supported
+    elif location_type == 'swift':
+        pass  # not currently supported
+    elif location_type == 'http':
+        file_object.data = retrieve_from_http(location)
+
+    scan_result = {'request': cli_request, 'results': []}
+    start_time = datetime.utcnow()
+    distribute(file_object, scan_result)
+    finish_time = datetime.utcnow()
+    elapsed_time = (finish_time - start_time).total_seconds()
+    scan_result['startTime'] = start_time.isoformat(timespec='seconds')
+    scan_result['finishTime'] = finish_time.isoformat(timespec='seconds')
+    scan_result['elapsedTime'] = elapsed_time
+
+    return scan_result
+
+
+def distribute(file_object, scan_result):
     """Distributes a file through scanners.
 
     This method defines how files are assigned scanners:
-        1. File data is normalized to bytes.
-        2. File hash is computed.
+        1. File data is formatted to bytes.
+        2. File hash is calculated and roots assigned.
         3. File flavors are tasted via MIME and YARA.
         4. Scanner mapping from scan configuration is applied to flavors.
         5. File is recursively sent to the mapped scanners.
 
-    An inactive gRPC context will interrupt this method.
-
     Args:
         file_object: StrelkaFile to be scanned.
         scan_result: Dictionary that scan results are appended to.
-        context: gRPC context for the remote procedure call.
     """
-
-    if not context.is_active():
-        context.abort(grpc.StatusCode.CANCELLED, 'Cancelled')
-
     file_object.format_data()
-    file_object.calc_hash()
+    file_object.calculate_hash()
     if file_object.depth == 0:
         file_object.root_hash = file_object.hash
         file_object.root_uid = file_object.uid
@@ -372,35 +428,40 @@ def distribute(file_object, scan_result, context):
     maximum_depth = conf.scan_cfg.get('maximum_depth')
     if file_object.depth <= maximum_depth:
         children = []
-        for scanner in scanner_list:
-            try:
-                scanner_name = scanner['scanner_name']
-                und_scanner_name = inflection.underscore(scanner_name)
-                scanner_import = f'server.scanners.{und_scanner_name}'
-                module = __import__(scanner_import,
-                                    fromlist=[und_scanner_name])
-                if und_scanner_name not in scanner_cache:
-                    if hasattr(module, scanner_name):
-                        scanner_cache[und_scanner_name] = getattr(module,
-                                                                  scanner_name)()
-                scanner_options = scanner.get('options', {})
-                scanner_plugin = scanner_cache[und_scanner_name]
-                file_children = scanner_plugin.scan_wrapper(file_object,
-                                                            scanner_options,
-                                                            context)
-                children.extend(file_children)
 
-            except ModuleNotFoundError:
-                logging.exception(f'scanner {scanner_name} not found')
+        try:
+            with interruptingcow.timeout(conf.scan_cfg.get('distribution_timeout', 600),
+                                         exception=DistributionTimeout):
+                for scanner in scanner_list:
+                    try:
+                        scanner_name = scanner['scanner_name']
+                        und_scanner_name = inflection.underscore(scanner_name)
+                        scanner_import = f'server.scanners.{und_scanner_name}'
+                        module = importlib.import_module(scanner_import)
+                        if und_scanner_name not in scanner_cache:
+                            scanner_cache[und_scanner_name] = getattr(module,
+                                                                      scanner_name)()
+                        scanner_options = scanner.get('options', {})
+                        scanner_plugin = scanner_cache[und_scanner_name]
+                        file_children = scanner_plugin.scan_wrapper(file_object,
+                                                                    scanner_options)
+                        children.extend(file_children)
 
-        unique_flags = list(dict.fromkeys(file_object.flags))
-        result_output = {'flags': ensure_utf8(unique_flags),
-                         'flavors': file_object.flavors,
-                         **file_object.metadata}
-        scan_result['results'].append(result_output)
+                    except ModuleNotFoundError:
+                        logging.exception(f'scanner {scanner_name} not found')
+
+                unique_flags = list(dict.fromkeys(file_object.flags))
+                result_output = {'flags': ensure_utf8(unique_flags),
+                                 'flavors': file_object.flavors,
+                                 **file_object.metadata}
+                scan_result['results'].append(result_output)
+
+        except DistributionTimeout:
+            logging.exception(f'file with hash {file_object.hash} (uid'
+                              f' {file_object.uid}) timed out')
 
         for child in children:
-            distribute(child, scan_result, context)
+            distribute(child, scan_result)
 
     else:
         logging.info(f'file with hash {file_object.hash} (root hash'
@@ -460,18 +521,7 @@ def assign_scanner(scanner, mappings, flavors, filename, source):
     return None
 
 
-def reset_server():
-    """Resets server configuration."""
-    global compiled_magic
-    global compiled_yara
-    compiled_magic = None
-    compiled_yara = None
-    for (scanner_name, scanner_pointer) in list(scanner_cache.items()):
-        scanner_pointer.close_wrapper()
-        scanner_cache.pop(scanner_name)
-
-
-def result_to_evt(scan_result, bundle=True, case='camel'):
+def result_to_evt(scan_result, bundle=False, case='snake'):
     """Transforms scan result into JSON events.
 
     Takes a scan result and returns it as a JSON-formatted list of strings with
@@ -482,7 +532,7 @@ def result_to_evt(scan_result, bundle=True, case='camel'):
         scan_result: Scan result to be remapped and formatted.
         case: Format (camel or snake) of the dictionary keys.
     Returns:
-        List of JSON-formatted "event" strings.
+        List of JSON-formatted 'event' strings.
     """
     empty_lambda = lambda p, k, v: v != '' and v != [] and v != {}
 
@@ -506,24 +556,6 @@ def result_to_evt(scan_result, bundle=True, case='camel'):
     return [json.dumps(result)]
 
 
-def init_scan_result(cli_req):
-    """Inits a scan result."""
-    scan_result = {'results': [],
-                   'request': cli_req,
-                   'startTime': datetime.utcnow()}
-    return scan_result
-
-
-def fin_scan_result(scan_result):
-    """Finishes a scan result."""
-    finish_time = datetime.utcnow()
-    elapsed_time = (finish_time - scan_result['startTime']).total_seconds()
-    scan_result['startTime'] = scan_result['startTime'].isoformat(timespec='seconds')
-    scan_result['finishTime'] = finish_time.isoformat(timespec='seconds')
-    scan_result['elapsedTime'] = elapsed_time
-    return scan_result
-
-
 def retrieve_from_amazon(location):  # untested in gRPC migration
     """Retrieves file from Amazon AWS.
 
@@ -535,7 +567,7 @@ def retrieve_from_amazon(location):  # untested in gRPC migration
     """
     global client_amazon
     if client_amazon is None:
-        client_amazon = boto3.client("s3",
+        client_amazon = boto3.client('s3',
                                      aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
                                      aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'))
     return client_amazon.get_object(Bucket=location.get('bucket'), Key=location.get('object'))['Body'].read()
@@ -576,7 +608,7 @@ def retrieve_from_http(location):
         if response.status_code == 200:
             return response.raw.read()
         elif response.status_code:
-            return b""
+            return b''
     except requests.exceptions.ConnectTimeout:
         logging.exception(f'Exception while retrieving file with HTTP'
                           ' (see traceback below)')
@@ -599,9 +631,9 @@ def retrieve_from_openstack(location):  # untested in gRPC migration
                                                   key=os.environ.get('OS_PASSWORD'),
                                                   cert=os.environ.get('OS_CERT'),
                                                   cacert=os.environ.get('OS_CACERT'))
-        os_options = {"user_domain_name": os.environ.get('OS_USER_DOMAIN_NAME'),
-                      "project_domain_name": os.environ.get('OS_PROJECT_DOMAIN_NAME'),
-                      "project_name": os.environ.get("OS_PROJECT_NAME")}
+        os_options = {'user_domain_name': os.environ.get('OS_USER_DOMAIN_NAME'),
+                      'project_domain_name': os.environ.get('OS_PROJECT_DOMAIN_NAME'),
+                      'project_name': os.environ.get('OS_PROJECT_NAME')}
         if not all(value is None for value in os_options.values()):
             client_openstack.os_options = os_options
     (response_headers,

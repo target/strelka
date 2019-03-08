@@ -19,10 +19,10 @@ class ScanZip(lib.StrelkaScanner):
         self.rainbow_table = []
 
     def scan(self, file_object, options):
-        file_limit = options.get("limit", 1000)
-        password_file = options.get("password_file", "etc/strelka/passwords.txt")
+        file_limit = options.get('limit', 1000)
+        password_file = options.get('password_file', 'etc/strelka/passwords.txt')
 
-        self.metadata["total"] = {"files": 0, "extracted": 0}
+        self.metadata['total'] = {'files': 0, 'extracted': 0}
 
         try:
             if not self.rainbow_table:
@@ -32,16 +32,16 @@ class ScanZip(lib.StrelkaScanner):
                             self.rainbow_table.append(bytes(line.strip(), 'utf-8'))
 
         except IOError:
-            file_object.flags.append(f"{self.scanner_name}::file_read_error")
+            file_object.flags.append(f'{self.scanner_name}::file_read_error')
 
         with io.BytesIO(file_object.data) as zip_object:
             try:
                 with zipfile.ZipFile(zip_object) as zip_file_:
                     name_list = zip_file_.namelist()
-                    self.metadata["total"]["files"] = len(name_list)
+                    self.metadata['total']['files'] = len(name_list)
                     for name in name_list:
-                        if not name.endswith("/"):
-                            if self.metadata["total"]["extracted"] >= file_limit:
+                        if not name.endswith('/'):
+                            if self.metadata['total']['extracted'] >= file_limit:
                                 break
 
                             try:
@@ -54,18 +54,18 @@ class ScanZip(lib.StrelkaScanner):
                                             child_file = zip_file_.read(name, pwd)
 
                                             if child_file is not None:
-                                                file_object.flags.append(f"{self.scanner_name}::encrypted_archive_file")
+                                                file_object.flags.append(f'{self.scanner_name}::encrypted_archive_file')
                                                 break
                                         except RuntimeError:
                                             pass
                                 elif zinfo.flag_bits & 0x1 and not self.rainbow_table:  # File is encrypted, no passwords
-                                    file_object.flags.append(f"{self.scanner_name}::no_archive_passwords")
+                                    file_object.flags.append(f'{self.scanner_name}::no_archive_passwords')
                                     return
                                 else:
                                     child_file = zip_file_.read(name)
 
                                 if child_file is not None:
-                                    child_filename = f"{self.scanner_name}::{name}"
+                                    child_filename = f'{self.scanner_name}::{name}'
                                     child_fo = lib.StrelkaFile(data=child_file,
                                                                filename=child_filename,
                                                                depth=file_object.depth + 1,
@@ -75,16 +75,16 @@ class ScanZip(lib.StrelkaScanner):
                                                                root_hash=file_object.root_hash,
                                                                source=self.scanner_name)
                                     self.children.append(child_fo)
-                                    self.metadata["total"]["extracted"] += 1
+                                    self.metadata['total']['extracted'] += 1
 
                             except NotImplementedError:
-                                file_object.flags.append(f"{self.scanner_name}::unsupported_compression")
+                                file_object.flags.append(f'{self.scanner_name}::unsupported_compression')
                             except RuntimeError:
-                                file_object.flags.append(f"{self.scanner_name}::runtime_error")
+                                file_object.flags.append(f'{self.scanner_name}::runtime_error')
                             except ValueError:
-                                file_object.flags.append(f"{self.scanner_name}::value_error")
+                                file_object.flags.append(f'{self.scanner_name}::value_error')
                             except zlib.error:
-                                file_object.flags.append(f"{self.scanner_name}::zlib_error")
+                                file_object.flags.append(f'{self.scanner_name}::zlib_error')
 
             except zipfile.BadZipFile:
-                file_object.flags.append(f"{self.scanner_name}::bad_zip_file")
+                file_object.flags.append(f'{self.scanner_name}::bad_zip_file')

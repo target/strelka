@@ -14,48 +14,48 @@ class ScanDocx(lib.StrelkaScanner):
             Defaults to False.
     """
     def scan(self, file_object, options):
-        extract_text = options.get("extract_text", False)
+        extract_text = options.get('extract_text', False)
 
         with io.BytesIO(file_object.data) as docx_object:
             docx_file = docx.Document(docx_object)
             core_properties = docx_file.core_properties
             if core_properties.author is not None:
-                self.metadata["author"] = core_properties.author
+                self.metadata['author'] = core_properties.author
             if core_properties.category is not None:
-                self.metadata["category"] = core_properties.category
+                self.metadata['category'] = core_properties.category
             if core_properties.comments is not None:
-                self.metadata["comments"] = core_properties.comments
+                self.metadata['comments'] = core_properties.comments
             if core_properties.content_status is not None:
-                self.metadata["contentStatus"] = core_properties.content_status
+                self.metadata['contentStatus'] = core_properties.content_status
             if core_properties.created is not None:
-                self.metadata["created"] = core_properties.created.isoformat(timespec="seconds")
+                self.metadata['created'] = core_properties.created.isoformat(timespec='seconds')
             if core_properties.identifier is not None:
-                self.metadata["identifier"] = core_properties.identifier
+                self.metadata['identifier'] = core_properties.identifier
             if core_properties.keywords is not None:
-                self.metadata["keywords"] = core_properties.keywords
+                self.metadata['keywords'] = core_properties.keywords
             if core_properties.language is not None:
-                self.metadata["language"] = core_properties.language
+                self.metadata['language'] = core_properties.language
             if core_properties.last_modified_by is not None:
-                self.metadata["lastModifiedBy"] = core_properties.last_modified_by
+                self.metadata['lastModifiedBy'] = core_properties.last_modified_by
             if core_properties.last_printed is not None:
-                self.metadata["lastPrinted"] = core_properties.last_printed.isoformat(timespec="seconds")
+                self.metadata['lastPrinted'] = core_properties.last_printed.isoformat(timespec='seconds')
             if core_properties.modified is not None:
-                self.metadata["modified"] = core_properties.modified.isoformat(timespec="seconds")
+                self.metadata['modified'] = core_properties.modified.isoformat(timespec='seconds')
             if core_properties.revision is not None:
-                self.metadata["revision"] = core_properties.revision
+                self.metadata['revision'] = core_properties.revision
             if core_properties.subject is not None:
-                self.metadata["subject"] = core_properties.subject
+                self.metadata['subject'] = core_properties.subject
             if core_properties.title is not None:
-                self.metadata["title"] = core_properties.title
+                self.metadata['title'] = core_properties.title
             if core_properties.version is not None:
-                self.metadata["version"] = core_properties.version
+                self.metadata['version'] = core_properties.version
 
             if extract_text:
                 docx_text = []
                 for paragraph in docx_file.paragraphs:
                     docx_text.append(paragraph.text)
-                child_filename = f"{self.scanner_name}::text"
-                child_fo = lib.StrelkaFile(data="".join(docx_text),
+                child_filename = f'{self.scanner_name}::text'
+                child_fo = lib.StrelkaFile(data=''.join(docx_text),
                                            filename=child_filename,
                                            depth=file_object.depth + 1,
                                            parent_uid=file_object.uid,

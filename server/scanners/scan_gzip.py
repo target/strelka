@@ -11,8 +11,8 @@ class ScanGzip(lib.StrelkaScanner):
             with gzip.GzipFile(fileobj=gzip_object) as gzip_file:
                 decompressed_file = gzip_file.read()
                 decompressed_size = len(decompressed_file)
-                self.metadata["decompressedSize"] = decompressed_size
-                child_filename = f"{self.scanner_name}::size_{decompressed_size}"
+                self.metadata['decompressedSize'] = decompressed_size
+                child_filename = f'{self.scanner_name}::size_{decompressed_size}'
                 child_fo = lib.StrelkaFile(data=decompressed_file,
                                            filename=child_filename,
                                            depth=file_object.depth + 1,

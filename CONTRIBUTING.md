@@ -53,7 +53,7 @@ Python code should attempt to adhere as closely to [PEP8](https://www.python.org
   ```
   * tempfile
   ```py
-  with tempfile.NamedTemporaryFile(dir=tempfile_directory) as strelka_file:
+  with tempfile.NamedTemporaryFile(dir=tmp_directory) as strelka_file:
       strelka_filename = strelka_file.name
       strelka_file.write(file_object.data)
       strelka_file.flush()

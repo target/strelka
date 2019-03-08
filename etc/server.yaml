@@ -1,0 +1,11 @@
+logging_cfg: '/etc/strelka/logging.yaml'
+scan_cfg: '/etc/strelka/scan.yaml'
+address: '[::]:8443'
+# shutdown:  # defaults to 30
+# max_rpcs:  # defaults to None
+# processes:  # defaults to number of system cores
+# maxtasks:  # defaults to 500
+# tmp_directory: # defaults to '/tmp/'
+# srv_path:  # defaults to '/var/log/strelka/strelka.log'
+# srv_bundle:  # defaults to False
+# srv_case:  # defaults to 'snake'

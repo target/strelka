@@ -1,9 +1,0 @@
-addresses:
-  - '[::]:8443'
-logging_cfg: '/etc/strelka/logging.yaml'
-scan_cfg: '/etc/strelka/scan.yaml'
-scan_reload: 900
-event_log:
-  directory: '/var/log/strelka/'
-  bundle: True
-  case: 'camel'

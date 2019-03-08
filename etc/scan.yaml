@@ -1,3 +1,5 @@
+distribution_timeout: 600
+scanner_timeout: 300
 maximum_depth: 15
 taste_mime_db: null
 taste_yara_rules: '/etc/strelka/taste/'
@@ -93,7 +95,7 @@ scanners:
             - 'wmv_file'
         priority: 5
         options:
-          tempfile_directory: '/dev/shm/'
+          tmp_directory: '/dev/shm/'
     'ScanGif':
       - positive:
           flavors:
@@ -190,7 +192,7 @@ scanners:
             - 'macho_file'
         priority: 5
         options:
-          tempfile_directory: '/dev/shm/'
+          tmp_directory: '/dev/shm/'
     'ScanOcr':
       - positive:
           flavors:
@@ -205,7 +207,7 @@ scanners:
         priority: 5
         options:
           extract_text: False
-          tempfile_directory: '/dev/shm/'
+          tmp_directory: '/dev/shm/'
     'ScanOle':
       - positive:
           flavors:
@@ -260,7 +262,7 @@ scanners:
             - 'rpm_file'
         priority: 5
         options:
-          tempfile_directory: '/dev/shm/'
+          tmp_directory: '/dev/shm/'
     'ScanRtf':
       - positive:
           flavors:
@@ -302,7 +304,7 @@ scanners:
             - 'upx_file'
         priority: 5
         options:
-          tempfile_directory: '/dev/shm/'
+          tmp_directory: '/dev/shm/'
     'ScanUrl':
       - negative:
           flavors:

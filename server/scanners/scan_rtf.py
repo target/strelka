@@ -11,16 +11,16 @@ class ScanRtf(lib.StrelkaScanner):
             Defaults to 1000.
     """
     def scan(self, file_object, options):
-        file_limit = options.get("limit", 1000)
+        file_limit = options.get('limit', 1000)
 
-        self.metadata["total"] = {"objects": 0, "extracted": 0}
+        self.metadata['total'] = {'objects': 0, 'extracted': 0}
 
         rtf = rtfobj.RtfObjParser(file_object.data)
         rtf.parse()
-        self.metadata["total"]["objects"] = len(rtf.objects)
+        self.metadata['total']['objects'] = len(rtf.objects)
 
         for object in rtf.objects:
-            if self.metadata["total"]["extracted"] >= file_limit:
+            if self.metadata['total']['extracted'] >= file_limit:
                 break
 
             index = rtf.server.index(object)
@@ -28,13 +28,13 @@ class ScanRtf(lib.StrelkaScanner):
             child_filename = None
             if object.is_package:
                 child_file = object.olepkgdata
-                child_filename = f"{self.scanner_name}::{object.filename}"
+                child_filename = f'{self.scanner_name}::{object.filename}'
             elif object.is_ole:
                 child_file = object.oledata
-                child_filename = f"{self.scanner_name}::object_{index}"
+                child_filename = f'{self.scanner_name}::object_{index}'
             else:
                 child_file = object.rawdata
-                child_filename = f"{self.scanner_name}:object_{index}"
+                child_filename = f'{self.scanner_name}:object_{index}'
 
             child_fo = lib.StrelkaFile(data=child_file,
                                        filename=child_filename,
@@ -45,4 +45,4 @@ class ScanRtf(lib.StrelkaScanner):
                                        root_hash=file_object.root_hash,
                                        source=self.scanner_name)
             self.children.append(child_fo)
-            self.metadata["total"]["extracted"] += 1
+            self.metadata['total']['extracted'] += 1

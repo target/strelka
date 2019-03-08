@@ -13,8 +13,8 @@ class ScanLzma(lib.StrelkaScanner):
                     try:
                         decompressed_file = lzma_file.read()
                         decompressed_size = len(decompressed_file)
-                        self.metadata["decompressedSize"] = decompressed_size
-                        child_filename = f"{self.scanner_name}::size_{decompressed_size}"
+                        self.metadata['decompressedSize'] = decompressed_size
+                        child_filename = f'{self.scanner_name}::size_{decompressed_size}'
                         child_fo = lib.StrelkaFile(data=decompressed_file,
                                                    filename=child_filename,
                                                    depth=file_object.depth + 1,
@@ -26,7 +26,7 @@ class ScanLzma(lib.StrelkaScanner):
                         self.children.append(child_fo)
 
                     except EOFError:
-                        file_object.flags.append(f"{self.scanner_name}::eof_error")
+                        file_object.flags.append(f'{self.scanner_name}::eof_error')
 
         except lzma.LZMAError:
-            file_object.flags.append(f"{self.scanner_name}::lzma_error")
+            file_object.flags.append(f'{self.scanner_name}::lzma_error')

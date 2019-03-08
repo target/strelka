@@ -1,0 +1,48 @@
+admin:
+  access_log_path: /tmp/admin_access.log
+  address:
+    socket_address: { address: 0.0.0.0, port_value: 9901 }
+
+static_resources:
+  listeners:
+  - name: strelka_proxy
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 8443 }
+    filter_chains:
+    - filters:
+      - name: envoy.http_connection_manager
+        config:
+          stat_prefix: ingress_http
+          stream_idle_timeout: 1800s
+          codec_type: AUTO
+          route_config:
+            name: strelka_route
+            virtual_hosts:
+            - name: strelka_service
+              domains: ["*"]
+              routes:
+              - match: { prefix: "/" }
+                route: { cluster: strelka_scan, timeout: { seconds: 0 } }
+          http_filters:
+          - name: envoy.router
+
+      # tls_context:
+      #   common_tls_context:
+      #       alpn_protocols: "h2"
+      #       tls_certificates:
+      #       - certificate_chain: { filename: "/etc/envoy/envoy.crt" }
+      #         private_key: { filename: "/etc/envoy/envoy.key" }
+
+  clusters:
+  - name: strelka_scan
+    connect_timeout: 5s
+    type: static
+    lb_policy: LEAST_REQUEST
+    http2_protocol_options: { }
+    hosts: [ {socket_address: {address: 1.2.3.4, port_value: 8443}} ]
+    health_checks:
+      - timeout: 1s
+        interval: 60s
+        unhealthy_threshold: 1
+        healthy_threshold: 1
+        tcp_health_check: { }

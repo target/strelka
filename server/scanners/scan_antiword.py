@@ -8,25 +8,25 @@ class ScanAntiword(lib.StrelkaScanner):
     """Extracts text from MS Word document files.
 
     Options:
-        tempfile_directory: Location where tempfile writes temporary files.
-            Defaults to "/tmp/".
+        tmp_directory: Location where tempfile writes temporary files.
+            Defaults to '/tmp/'.
     """
     def scan(self, file_object, options):
-        tempfile_directory = options.get("tempfile_directory", "/tmp/")
+        tmp_directory = options.get('tmp_directory', '/tmp/')
 
-        with tempfile.NamedTemporaryFile(dir=tempfile_directory) as strelka_file:
+        with tempfile.NamedTemporaryFile(dir=tmp_directory) as strelka_file:
             strelka_filename = strelka_file.name
             strelka_file.write(file_object.data)
             strelka_file.flush()
 
             (stdout,
-             stderr) = subprocess.Popen(["antiword",
+             stderr) = subprocess.Popen(['antiword',
                                          strelka_filename],
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.DEVNULL).communicate()
             if stdout:
                 child_fo = lib.StrelkaFile(data=stdout,
-                                           filename=f"{self.scanner_name}::text",
+                                           filename=f'{self.scanner_name}::text',
                                            depth=file_object.depth + 1,
                                            parent_uid=file_object.uid,
                                            root_uid=file_object.root_uid,
