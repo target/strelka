@@ -594,9 +594,9 @@ class Worker(multiprocessing.Process):
                        "results": []}
         distribution.distribute(file_object, scan_result)
         if self.log_timestamp_utc:
-            scan_start_time = datetime.utcnow()
+            scan_finish_time = datetime.utcnow()
         else:
-            scan_start_time = datetime.now()
+            scan_finish_time = datetime.now()
         scan_finish_time_iso = scan_finish_time.isoformat(timespec="seconds")
         scan_result["finishTime"] = scan_finish_time_iso
         scan_elapsed_time = (scan_finish_time - scan_start_time).total_seconds()
