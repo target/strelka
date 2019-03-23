@@ -433,6 +433,10 @@ class Worker(multiprocessing.Process):
     def log_bundle_events(self):
         return self.workers_cfg.get("log_bundle_events", True)
 
+    @property
+    def log_timestamp_utc(self):
+        return self.workers_cfg.get("log_timestamp_utc", True)
+
     def run(self):
         """Defines main worker process.
 
@@ -577,7 +581,10 @@ class Worker(multiprocessing.Process):
             file_task: File task sent by the broker.
         """
         file_object = objects.protobuf_to_file_object(file_task)
-        scan_start_time = datetime.utcnow()
+        if self.log_timestamp_utc:
+            scan_start_time = datetime.utcnow()
+        else:
+            scan_start_time = datetime.now()
         scan_start_time_iso = scan_start_time.isoformat(timespec="seconds")
         scan_result = {"startTime": scan_start_time_iso,
                        "finishTime": None,
@@ -586,7 +593,10 @@ class Worker(multiprocessing.Process):
                        "worker": self.identity.decode(),
                        "results": []}
         distribution.distribute(file_object, scan_result)
-        scan_finish_time = datetime.utcnow()
+        if self.log_timestamp_utc:
+            scan_finish_time = datetime.utcnow()
+        else:
+            scan_finish_time = datetime.now()
         scan_finish_time_iso = scan_finish_time.isoformat(timespec="seconds")
         scan_result["finishTime"] = scan_finish_time_iso
         scan_elapsed_time = (scan_finish_time - scan_start_time).total_seconds()
