@@ -1,6 +1,15 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+# 2019-03-23
+### Added
+- Scan event start and finish timestamps now support UTC and local time (ufomorme)
+
+## 2019-03-08
+### Changed
+- Improved YARA tasting signature for email files (DavidJBianco)
+- Fixed install path for taste directory (jshlbrd)
+
 ## 2019-02-19
 ### Added
 - "beautified" field (bool) to ScanJavascript (jshlbrd)
