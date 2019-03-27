@@ -3,6 +3,8 @@ FROM ubuntu:18.04
 
 LABEL maintainer "Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 ARG YARA_VERSION=3.8.1
 ARG YARA_PYTHON_VERSION=3.8.1
 
@@ -35,9 +37,14 @@ RUN apt-get -qq update && \
     tesseract-ocr \
     unrar \
     upx \
-    jq && \
+    jq
+# Install optional packages and set time zone
+RUN apt-get install -y software-properties-common apt-utils locales tzdata \
+    && echo "UTC" > /etc/timezone \
+    && ln -fs /usr/share/zoneinfo/UTC /etc/localtime \
+    && dpkg-reconfigure -f noninteractive tzdata
 # Install Python packages
-    pip3 install -r /opt/strelka/requirements.txt && \
+RUN  pip3 install -r /opt/strelka/requirements.txt && \
 # Install YARA
     cd /tmp/ && \
     curl -OL https://github.com/VirusTotal/yara/archive/v$YARA_VERSION.tar.gz && \
