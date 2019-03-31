@@ -13,12 +13,12 @@ COPY . /opt/strelka/
 
 # Update packages
 RUN apt-get -qq update && \
-    apt-get install --no-install-recommends -qq \
 # Install optional packages and set time zone
     apt-get install -y software-properties-common apt-utils locales tzdata && \
     echo "UTC" > /etc/timezone && \
     ln -fs /usr/share/zoneinfo/UTC /etc/localtime && \
     dpkg-reconfigure -f noninteractive tzdata && \
+    apt-get install --no-install-recommends -qq \
 # Install build packages
     automake \
     build-essential \
