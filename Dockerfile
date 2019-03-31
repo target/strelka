@@ -14,6 +14,11 @@ COPY . /opt/strelka/
 # Update packages
 RUN apt-get -qq update && \
     apt-get install --no-install-recommends -qq \
+# Install optional packages and set time zone
+    apt-get install -y software-properties-common apt-utils locales tzdata && \
+    echo "UTC" > /etc/timezone && \
+    ln -fs /usr/share/zoneinfo/UTC /etc/localtime && \
+    dpkg-reconfigure -f noninteractive tzdata && \
 # Install build packages
     automake \
     build-essential \
@@ -37,14 +42,9 @@ RUN apt-get -qq update && \
     tesseract-ocr \
     unrar \
     upx \
-    jq
-# Install optional packages and set time zone
-RUN apt-get install -y software-properties-common apt-utils locales tzdata \
-    && echo "UTC" > /etc/timezone \
-    && ln -fs /usr/share/zoneinfo/UTC /etc/localtime \
-    && dpkg-reconfigure -f noninteractive tzdata
+    jq && \
 # Install Python packages
-RUN  pip3 install -r /opt/strelka/requirements.txt && \
+    pip3 install -r /opt/strelka/requirements.txt && \
 # Install YARA
     cd /tmp/ && \
     curl -OL https://github.com/VirusTotal/yara/archive/v$YARA_VERSION.tar.gz && \
