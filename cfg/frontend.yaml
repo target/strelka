@@ -1,0 +1,8 @@
+logging_cfg: '/usr/local/etc/strelka/logging.yaml'
+grpc_address: '[::]:57314'
+shutdown: 30
+max_rpcs: 100
+threads: 4
+redis_host: 'strelka_redis'
+srv_case: 'camel'
+srv_path: '/var/log/strelka/strelka.log'

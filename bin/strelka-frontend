@@ -1,0 +1,218 @@
+#!/usr/bin/env python3
+"""
+strelka-frontend
+
+Command line utility for running Strelka frontend server components.
+"""
+import argparse
+from concurrent import futures
+import datetime
+import json
+import logging.config
+import os
+import math
+import signal
+import sys
+import time
+import uuid
+
+from boltons import iterutils
+import inflection
+import grpc
+import redis
+import yaml
+
+from strelka.proto import strelka_pb2
+from strelka.proto import strelka_pb2_grpc
+
+
+def remap_evt(result, case='camel'):
+    def camel(path, key, value):
+        if not isinstance(key, int):
+            return (inflection.camelize(key, False), value)
+        return (key, value)
+
+    def pascal(path, key, value):
+        if not isinstance(key, int):
+            return (inflection.camelize(key, True), value)
+        return (key, value)
+
+    def snake(path, key, value):
+        if not isinstance(key, int):
+            return (inflection.underscore(key), value)
+        return (key, value)
+
+    remapped = iterutils.remap(
+        result,
+        lambda p, k, v: v != '' and v != [] and v != {} and v is not None,
+    )
+
+    if case == 'camel':
+        return iterutils.remap(remapped, visit=camel)
+    elif case == 'pascal':
+        return iterutils.remap(remapped, visit=pascal)
+    if case == 'snake':
+        return iterutils.remap(remapped, visit=snake)
+    else:
+        return remapped
+
+
+class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
+    def __init__(self, redis_host, case, path):
+        # file data
+        self.r0 = redis.StrictRedis(host=redis_host, port=6379, db=0)
+        # task queue, status/result data
+        self.r1 = redis.StrictRedis(host=redis_host, port=6379, db=1)
+
+        self.case = case
+        self.logger = logging.getLogger('strelka')
+        self.logger.propagate = False
+        self.logger.addHandler(
+            logging.handlers.WatchedFileHandler(
+                path,
+                delay=True,
+            )
+        )
+
+    def StreamData(self, request_iterator, context):
+        timestamp = datetime.datetime.utcnow().isoformat()
+        root = uuid.uuid4().hex
+        task = {
+            'root': root,
+            'expire': math.ceil(context.time_remaining()),
+            'flavors': [],
+        }
+
+        cli_case = ''
+        cli_metadata = {}
+        cli_request = {}
+        for request in request_iterator:
+            p = self.r0.pipeline()
+            p.append(root, request.data)
+            p.expire(root, task['expire'])
+            p.execute()
+
+            if not cli_request and request.request:
+                cli_request['uid'] = request.request.uid or root
+                cli_request['client'] = request.request.client
+                cli_request['source'] = request.request.source
+            if 'filename' not in cli_request and request.filename:
+                cli_request['filename'] = request.filename
+            if not task['flavors'] and request.metadata.flavors:
+                task['flavors'] = [f for f in request.metadata.flavors]
+            if cli_metadata and request.metadata.metadata:
+                cli_metadata = {key: value
+                                for (key, value) in request.metadata.metadata.items()}
+            if not cli_case and request.retrieve.case:
+                cli_case = request.retrieve.case
+
+        p = self.r1.pipeline()
+        p.setex(f'{root}:alive', task['expire'], '1')
+        p.rpush('queue', json.dumps(task))
+        p.execute()
+
+        base_evt = {
+            'time': timestamp,
+            'request': {**cli_request, 'metadata': cli_metadata},
+        }
+
+        resp = strelka_pb2.ScanResult()
+        try:
+            while context.is_active():
+                status = self.r1.get(f'{root}:complete')
+                if status is not None:
+                    results = self.r1.lrange(f'{root}:results', 0, -1)
+                    for r in results:
+                        evt = {
+                            **base_evt,
+                            **json.loads(r),
+                        }
+
+                        cli_evt = remap_evt(evt, cli_case)
+                        resp.events.append(json.dumps(cli_evt))
+                        srv_evt = remap_evt(evt, self.case)
+                        self.logger.info(json.dumps(srv_evt))
+                    break
+                time.sleep(0.1)
+
+        finally:
+            self.r1.delete(f'{root}:alive')
+            return resp
+
+
+run = 1
+
+
+def main():
+    def handler(sig, frame):
+        global run
+        run = 0
+
+    signal.signal(signal.SIGTERM, handler)
+    signal.signal(signal.SIGINT, handler)
+
+    parser = argparse.ArgumentParser(prog='strelka-frontend',
+                                     description='runs Strelka gRPC frontend',
+                                     usage='%(prog)s [options]')
+    parser.add_argument('-c', '--frontend-config',
+                        action='store',
+                        dest='frontend_cfg_path',
+                        help='path to frontend configuration file')
+    args = parser.parse_args()
+
+    frontend_cfg_path = ''
+    if args.frontend_cfg_path:
+        if not os.path.exists(args.frontend_cfg_path):
+            sys.exit(f'sysexit: frontend configuration {args.frontend_cfg_path} does not exist')
+        frontend_cfg_path = args.frontend_cfg_path
+    elif os.path.exists('/usr/local/etc/strelka/frontend.yaml'):
+        frontend_cfg_path = '/usr/local/etc/strelka/frontend.yaml'
+    else:
+        sys.exit('sysexit: no frontend configuration found')
+
+    with open(frontend_cfg_path) as f:
+        frontend_cfg = yaml.safe_load(f.read())
+
+    log_cfg_path = frontend_cfg.get('logging_cfg')
+    with open(log_cfg_path) as f:
+        logging.config.dictConfig(yaml.safe_load(f.read()))
+    logging.info(f'using frontend configuration {frontend_cfg_path}')
+
+    grpc_addr = frontend_cfg.get('grpc_address')
+    shutdown = frontend_cfg.get('shutdown')
+    max_rpcs = frontend_cfg.get('max_rpcs')
+    threads = frontend_cfg.get('threads')
+    redis_host = frontend_cfg.get('redis_host')
+    srv_case = frontend_cfg.get('srv_case')
+    srv_path = frontend_cfg.get('srv_path')
+
+    try:
+        red = redis.StrictRedis(host=redis_host, port=6379, db=0)
+        if red.ping():
+            logging.debug('verified redis-server is up')
+    except Exception:
+        sys.exit('sysexit: redis-server is down')
+
+    executor = futures.ThreadPoolExecutor(max_workers=threads)
+    server = grpc.server(
+        executor,
+        maximum_concurrent_rpcs=max_rpcs,
+    )
+    strelka_pb2_grpc.add_StrelkaServicer_to_server(
+        StrelkaServicer(redis_host, srv_case, srv_path),
+        server,
+    )
+    server.add_insecure_port(grpc_addr)
+    server.start()
+    while run:
+        time.sleep(1)
+
+    logging.info('shutdown process initiated')
+    stop = server.stop(shutdown)
+    logging.debug('stopping gRPC server')
+    stop.wait()
+    logging.info('finished')
+
+
+if __name__ == '__main__':
+    main()

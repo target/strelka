@@ -8,6 +8,6 @@ setuptools.setup(
     description='strelka: scanning files at scale with python and gRPC(?)',
     license='Apache 2.0',
     packages=setuptools.find_packages(),
-    data_files=[('/usr/local/etc/strelka', ['cfg/frontend.yaml', 'cfg/backend.yaml', 'cfg/logging.yaml', 'cfg/passwords.txt']), ('/usr/local/etc/strelka/taste/', ['cfg/taste/taste.yara'])],
-    scripts=['bin/strelka-frontend', 'bin/strelka-backend', 'bin/mmrpc']
+    data_files=[('/usr/local/etc/strelka', ['cfg/frontend.yaml', 'cfg/logging.yaml'])],
+    scripts=['bin/strelka-frontend']
 )

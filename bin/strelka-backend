@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""
+strelka-backend
+
+Command line utility for running Strelka backend server components.
+"""
+import argparse
+import logging.config
+import os
+import signal
+import sys
+import time
+
+import redis
+import yaml
+
+from strelka import errors
+from strelka import core
+
+
+def signal_children(processes, signum):
+    """Sends signal to child processes.
+
+    Args:
+        processes: Processes to send signal to.
+        signum: Signal to send to processes.
+    """
+    for process in processes:
+        if process.is_alive():
+            os.kill(process.pid, signum)
+        process.join()
+        logging.debug(f'{process.name}: shutdown (signal {signum})')
+
+
+run = 1
+
+
+def main():
+    def handler(sig, frame):
+        global run
+        run = 0
+
+    signal.signal(signal.SIGTERM, handler)
+    signal.signal(signal.SIGINT, handler)
+
+    parser = argparse.ArgumentParser(prog='strelka-worker',
+                                     description='runs Strelka workers',
+                                     usage='%(prog)s [options]')
+    parser.add_argument('-c', '--worker-config',
+                        action='store',
+                        dest='backend_cfg_path',
+                        help='path to server configuration file')
+    args = parser.parse_args()
+
+    backend_cfg_path = ''
+    if args.backend_cfg_path:
+        if not os.path.exists(args.backend_cfg_path):
+            sys.exit(f'sysexit: backend configuration {args.backend_cfg_path} does not exist')
+        backend_cfg_path = args.backend_cfg_path
+    elif os.path.exists('/usr/local/etc/strelka/backend.yaml'):
+        backend_cfg_path = '/usr/local/etc/strelka/backend.yaml'
+    else:
+        sys.exit('sysexit: no backend configuration found')
+
+    with open(backend_cfg_path) as f:
+        backend_cfg = yaml.safe_load(f.read())
+
+    log_cfg_path = backend_cfg.get('processes').get('logging_cfg')
+    with open(log_cfg_path) as f:
+        logging.config.dictConfig(yaml.safe_load(f.read()))
+    logging.info(f'using backend configuration {backend_cfg_path}')
+
+    workers = backend_cfg.get('processes').get('workers')
+    shutdown = backend_cfg.get('processes').get('shutdown')
+    redis_host = backend_cfg.get('processes').get('redis_host')
+
+    try:
+        if redis.StrictRedis(host=redis_host, port=6379, db=0).ping():
+            logging.debug('verified redis-server is up')
+    except Exception:
+        sys.exit('sysexit: redis-server is down')
+
+    procs = []
+    for _ in range(workers):
+        p = core.Worker(backend_cfg_path)
+        p.start()
+        procs.append(p)
+
+    while run:
+        for p in list(procs):
+            if not p.is_alive():
+                p.join()
+                procs.remove(p)
+                p = core.Worker(backend_cfg_path)
+                p.start()
+                procs.append(p)
+        time.sleep(1)
+
+    logging.info('shutdown process initiated')
+    logging.debug('stopping workers')
+    try:
+        with interruptingcow.timeout(shutdown,
+                                     exception=errors.QuitStrelka):
+            logging.debug('starting shutdown of running workers')
+            signal_children(procs, signal.SIGUSR1)
+            logging.debug('finished shutdown of running workers')
+    except errors.QuitStrelka:
+        logging.debug('starting forcible shutdown of running workers')
+        signal_children(procs, signal.SIGKILL)
+        logging.debug('finished forcible shutdown of running workers')
+    logging.info('finished')
+
+
+if __name__ == '__main__':
+    main()

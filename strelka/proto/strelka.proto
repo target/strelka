@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+service Strelka {
+  rpc StreamData(stream ScanData) returns (ScanResult) {}
+
+  rpc SendLocation(ScanLocation) returns (ScanResult) {}
+}
+
+// contains request details related to the RPC
+message Request {
+  string uid = 1;
+  string client = 2;
+  string source = 3;
+}
+
+// contains metadata related to the Data or Location
+message Metadata {
+  repeated string flavors = 1;
+  map<string, string> metadata = 2;
+}
+
+// contains parameters that control event retrieval for the client
+message Retrieve {
+  string case = 1;
+}
+
+message ScanData {
+  bytes data = 1; // required
+  string filename = 2; // required
+  Metadata metadata = 3;
+  Request request = 4;
+  Retrieve retrieve = 5;
+}
+
+message ScanLocation {
+  map<string, string> location = 1;  // required
+  Metadata metadata = 2;
+  Request request = 3;
+  Retrieve retrieve = 4;
+}
+
+message ScanResult {
+  string uid = 1;
+  repeated string events = 2;
+}

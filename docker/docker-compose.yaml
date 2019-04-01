@@ -1,0 +1,44 @@
+version: '2'
+
+networks:
+  strelka_net:
+
+services:
+    frontend:
+        image: "strelka-frontend:latest"
+        container_name: strelka_frontend
+        command: strelka-frontend
+        ports:
+            - "57314:57314"  # match the port in frontend.yaml
+        networks:
+          - strelka_net
+        # volumes:
+            # - /path/to/your/configs/:/usr/local/etc/strelka/
+        restart: on-failure
+        depends_on:
+              - redis
+    backend:
+        image: "strelka-backend:latest"
+        container_name: strelka_backend
+        command: strelka-backend
+        networks:
+          - strelka_net
+        # volumes:
+            # - /path/to/your/configs/:/usr/local/etc/strelka/
+        restart: on-failure
+        depends_on:
+              - redis
+    mmrpc:
+        image: "strelka-mmrpc:latest"
+        container_name: strelka_mmrpc
+        command: strelka-mmrpc -t 4 -a [::]:33907
+        networks:
+          - strelka_net
+    redis:
+        image: "redis:alpine"
+        container_name: strelka_redis
+        command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
+        networks:
+          - strelka_net
+        # volumes:
+            # - /path/to/your/config:/usr/local/etc/redis/r‌​edis.conf
