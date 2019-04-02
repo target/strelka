@@ -17,14 +17,14 @@ RUN apt-get -qq update && \
     python3-setuptools \
     python3-wheel && \
 # Install Python packages
-    pip3 install -r /usr/local/src/strelka/docker/strelka-mmrpc/requirements.txt && \
+    pip3 install -r /usr/local/src/strelka/docker/mmrpc/requirements.txt && \
 # Compile protobuf
     cd /usr/local/src/strelka/ && \
     python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. strelka/proto/strelka.proto && \
     python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. strelka/proto/mmbot.proto && \
 # Install Strelka
     cd /usr/local/src/strelka/ && \
-    mv docker/strelka-mmrpc/setup.py /usr/local/src/strelka/ && \
+    mv docker/mmrpc/setup.py /usr/local/src/strelka/ && \
     python3 setup.py -q build && \
     python3 setup.py -q install && \
     python3 setup.py -q clean --all && \

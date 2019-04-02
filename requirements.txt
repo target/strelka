@@ -15,7 +15,6 @@ pdfminer.six==20181108
 pefile==2018.8.8
 pgpdump3==1.5.2
 pyelftools==0.25
-pyjsparser==2.5.2
 pylzma==0.5.0
 pygments==2.3.1
 git+https://github.com/jshlbrd/pyopenssl.git
