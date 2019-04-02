@@ -13,7 +13,7 @@ static_resources:
       - name: envoy.http_connection_manager
         config:
           stat_prefix: ingress_http
-          stream_idle_timeout: 1800s
+          stream_idle_timeout: 0s
           codec_type: AUTO
           route_config:
             name: strelka_route
@@ -39,7 +39,7 @@ static_resources:
     type: static
     lb_policy: LEAST_REQUEST
     http2_protocol_options: { }
-    hosts: [ {socket_address: {address: 1.2.3.4, port_value: 8443}} ]
+    # hosts: [ {socket_address: {address: 1.2.3.4, port_value: 57314}} ]
     health_checks:
       - timeout: 1s
         interval: 60s
