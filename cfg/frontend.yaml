@@ -11,8 +11,8 @@ gatekeeper:
     host: 'strelka_gatekeeper'
     port: 6379
     expire: 3600
-taskkeeper:
-    host: 'strelka_taskkeeper'
+jobkeeper:
+    host: 'strelka_jobkeeper'
     port: 6379
 evt_log:
     case: 'camel'

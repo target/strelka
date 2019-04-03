@@ -60,7 +60,7 @@ def remap_evt(result, case='camel'):
 
 
 class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
-    def __init__(self, filekeeper, gatekeeper, taskkeeper, evt_log):
+    def __init__(self, filekeeper, gatekeeper, jobkeeper, evt_log):
         # filekeeper redis
         self.fk = redis.StrictRedis(
             host=filekeeper.get('host'),
@@ -74,10 +74,10 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
             db=0,
         )
         self.gk_expire = gatekeeper.get('expire')
-        # taskkeeper redis
-        self.tk = redis.StrictRedis(
-            host=taskkeeper.get('host'),
-            port=taskkeeper.get('port'),
+        # jobkeeper redis
+        self.jk = redis.StrictRedis(
+            host=jobkeeper.get('host'),
+            port=jobkeeper.get('port'),
             db=0,
         )
 
@@ -151,19 +151,19 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
             logging.debug('gk returned result!')
             return scan_res
 
-        p = self.tk.pipeline()
+        p = self.jk.pipeline()
         p.setex(f'{root}:alive', task['expire'], '1')
         p.rpush('queue', json.dumps(task))
         p.execute()
 
         while context.is_active():
-            status = self.tk.get(f'{root}:complete')
+            status = self.jk.get(f'{root}:complete')
             if status is None:
                 time.sleep(0.1)
                 continue
 
             p = self.gk.pipeline()
-            results = self.tk.lrange(f'{root}:results', 0, -1)
+            results = self.jk.lrange(f'{root}:results', 0, -1)
             for r in results:
                 p.rpush(sha256, r)
                 evt = {
@@ -181,7 +181,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
             p.execute()
             break
 
-        self.tk.delete(f'{root}:alive')
+        self.jk.delete(f'{root}:alive')
         return scan_res
 
     def SendLocation(self, request, context):
@@ -230,18 +230,18 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
             else:
                 return scan_res
 
-        p = self.tk.pipeline()
+        p = self.jk.pipeline()
         p.setex(f'{root}:alive', task['expire'], '1')
         p.rpush('queue', json.dumps(task))
         p.execute()
 
         while context.is_active():
-            status = self.tk.get(f'{root}:complete')
+            status = self.jk.get(f'{root}:complete')
             if status is None:
                 time.sleep(0.1)
                 continue
 
-            results = self.tk.lrange(f'{root}:results', 0, -1)
+            results = self.jk.lrange(f'{root}:results', 0, -1)
             for r in results:
                 evt = {
                     **base_evt,
@@ -256,7 +256,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
 
             break
 
-        self.tk.delete(f'{root}:alive')
+        self.jk.delete(f'{root}:alive')
         return scan_res
 
 
@@ -302,15 +302,15 @@ def main():
     evt_log = frontend_cfg.get('evt_log')
     fk_cfg = frontend_cfg.get('filekeeper')
     gk_cfg = frontend_cfg.get('gatekeeper')
-    tk_cfg = frontend_cfg.get('taskkeeper')
+    jk_cfg = frontend_cfg.get('jobkeeper')
 
     try:
         if redis.StrictRedis(host=fk_cfg.get('host'), port=fk_cfg.get('port'), db=0).ping():
             logging.debug('verified filekeeper is up')
         if redis.StrictRedis(host=gk_cfg.get('host'), port=gk_cfg.get('port'), db=0).ping():
             logging.debug('verified gatekeeper is up')
-        if redis.StrictRedis(host=tk_cfg.get('host'), port=tk_cfg.get('port'), db=0).ping():
-            logging.debug('verified taskkeeper is up')
+        if redis.StrictRedis(host=jk_cfg.get('host'), port=jk_cfg.get('port'), db=0).ping():
+            logging.debug('verified jobkeeper is up')
     except Exception:
         logging.exception('redis server(s) unavailable')
         sys.exit()
@@ -321,7 +321,7 @@ def main():
         maximum_concurrent_rpcs=grpc_cfg.get('max_rpcs'),
     )
     strelka_pb2_grpc.add_StrelkaServicer_to_server(
-        StrelkaServicer(fk_cfg, gk_cfg, tk_cfg, evt_log),
+        StrelkaServicer(fk_cfg, gk_cfg, jk_cfg, evt_log),
         server,
     )
     server.add_insecure_port(grpc_cfg.get('address'))

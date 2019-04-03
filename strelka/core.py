@@ -275,7 +275,7 @@ class Worker(multiprocessing.Process):
         self.distribution_timeout = backend_cfg.get('timeout').get('distribution')
         self.max_depth = backend_cfg.get('timeout').get('max_depth')
         filekeeper = backend_cfg.get('filekeeper')
-        taskkeeper = backend_cfg.get('taskkeeper')
+        jobkeeper = backend_cfg.get('jobkeeper')
         # file data
         self.fk = redis.StrictRedis(
             host=filekeeper.get('host'),
@@ -283,9 +283,9 @@ class Worker(multiprocessing.Process):
             db=0,
         )
         # task queue, status/result data
-        self.tk = redis.StrictRedis(
-            host=taskkeeper.get('host'),
-            port=taskkeeper.get('port'),
+        self.jk = redis.StrictRedis(
+            host=jobkeeper.get('host'),
+            port=jobkeeper.get('port'),
             db=0,
         )
 
@@ -310,12 +310,12 @@ class Worker(multiprocessing.Process):
                 if datetime.datetime.utcnow() >= work_expire:
                     break
 
-                pop = self.tk.blpop('queue', timeout=1)
+                pop = self.jk.blpop('queue', timeout=1)
                 if pop is None:
                     continue
 
                 task = json.loads(pop[1])
-                check = self.tk.get(f'{task["root"]}:alive')
+                check = self.jk.get(f'{task["root"]}:alive')
                 if check is None:
                     continue
 
@@ -328,7 +328,7 @@ class Worker(multiprocessing.Process):
                     with interruptingcow.timeout(task['expire'],
                                                  errors.RequestTimeout):
                         self.distribute(task['root'], task['expire'], st_file)
-                        self.tk.setex(
+                        self.jk.setex(
                             f'{task["root"]}:complete',
                             task['expire'],
                             '1',
@@ -453,7 +453,7 @@ class Worker(multiprocessing.Process):
                             logging.exception(f'scanner {name} not found')
 
                     self.fk.delete(st_file.uid)
-                    p = self.tk.pipeline()
+                    p = self.jk.pipeline()
                     p.rpush(
                         f'{root}:results',
                         json.dumps(ensure_utf8(metadata)),

@@ -12,8 +12,8 @@ timeout:
 filekeeper:
     host: 'strelka_filekeeper'
     port: 6379
-taskkeeper:
-    host: 'strelka_taskkeeper'
+jobkeeper:
+    host: 'strelka_jobkeeper'
     port: 6379
 tasting:
     mime_db: null

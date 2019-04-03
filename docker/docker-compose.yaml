@@ -7,7 +7,7 @@ volumes:
     logs:
 
 services:
-    # frontend controls the gRPC servicer that feeds tasks to the backend (required).
+    # frontend controls the gRPC servicer that feeds tasks to the backend
     frontend:
         image: "strelka-frontend:latest"
         container_name: strelka_frontend
@@ -23,8 +23,8 @@ services:
         depends_on:
             - filekeeper
             - gatekeeper
-            - taskkeeper
-    # backend controls processes that perform file processing (required).
+            - jobkeeper
+    # backend controls processes that perform file processing
     backend:
         image: "strelka-backend:latest"
         container_name: strelka_backend
@@ -37,8 +37,8 @@ services:
         depends_on:
             - filekeeper
             - gatekeeper
-            - taskkeeper
-    # filekeeper is used for storing files (required).
+            - jobkeeper
+    # filekeeper is used for storing files
     filekeeper:
         image: "redis:alpine"
         container_name: strelka_filekeeper
@@ -47,7 +47,7 @@ services:
             - strelka_net
         # volumes:
             # - /path/to/your/config:/usr/local/etc/redis/r‌​edis.conf
-    # gatekeeper is used for storing events from recently scanned files (required).
+    # gatekeeper is used for storing events from recently scanned files
     gatekeeper:
         image: "redis:alpine"
         container_name: strelka_gatekeeper
@@ -56,14 +56,14 @@ services:
             - strelka_net
         # volumes:
             # - /path/to/your/config:/usr/local/etc/redis/r‌​edis.conf
-    # taskkeeper is used for queueing tasks between the frontend and backend (required).
-    taskkeeper:
+    # jobkeeper is used for coordinating jobs between the frontend and backend
+    jobkeeper:
         image: "redis:alpine"
-        container_name: strelka_taskkeeper
+        container_name: strelka_jobkeeper
         command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
         networks:
             - strelka_net
-    # mmrpc is an optional service that integrates with ScanMMbot.
+    # mmrpc is an optional service that integrates with ScanMMbot
     mmrpc:
         image: "strelka-mmrpc:latest"
         container_name: strelka_mmrpc
