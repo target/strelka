@@ -1,5 +1,6 @@
 beautifulsoup4==4.7.1
 boltons==18.0.1
+esprima==4.0.1
 grpcio==1.19.0
 grpcio-tools==1.19.0  # required for compiling protobuf, not needed afterward
 html5lib==1.0.1

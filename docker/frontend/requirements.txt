@@ -4,3 +4,4 @@ grpcio-tools==1.19.0  # required for compiling protobuf, not needed afterward
 inflection==0.3.1
 pyyaml>=4.2b1
 redis==3.2.1
+requests==2.21.0
