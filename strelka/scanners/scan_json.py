@@ -5,16 +5,16 @@ from strelka import core
 
 class ScanJson(core.StrelkaScanner):
     """Collects keys from JSON files."""
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         self.metadata.setdefault('keys', [])
 
         try:
-            self._get_keys(self, json.loads(data.decode()))
+            self._get_keys(self, json.loads(self.data.decode()))
 
         except UnicodeDecodeError:
-            self.flags.add(f'{self.scanner_name}::unicode_decode_error')
+            self.flags.add('unicode_decode_error')
         except json.decoder.JSONDecodeError:
-            self.flags.add(f'{self.scanner_name}::json_decode_error')
+            self.flags.add('json_decode_error')
 
     @staticmethod
     def _get_keys(self, variable):

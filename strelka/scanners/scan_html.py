@@ -11,7 +11,7 @@ class ScanHtml(core.StrelkaScanner):
         parser: Sets the HTML parser used during scanning.
             Defaults to 'html.parser'.
     """
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         parser = options.get('parser', 'html.parser')
 
         self.metadata['total'] = {
@@ -23,7 +23,7 @@ class ScanHtml(core.StrelkaScanner):
         }
 
         try:
-            soup = bs4.BeautifulSoup(data, parser)
+            soup = bs4.BeautifulSoup(self.data, parser)
 
             if soup.title:
                 self.metadata['title'] = util.normalize_whitespace(soup.title.text)
@@ -95,17 +95,18 @@ class ScanHtml(core.StrelkaScanner):
                     self.metadata['scripts'].append(script_entry)
 
                 if script.text:
-                    file_ = core.StrelkaFile(
+                    ex_file = core.StrelkaFile(
                         name=f'script_{index}',
-                        source=self.scanner_name,
+                        source=self.name,
                     )
-                    file_.add_flavors({'external': script_flavors})
-                    self.r0.setex(
-                        file_.uid,
-                        self.expire,
-                        script.text,
-                    )
-                    self.files.append(file_)
+                    ex_file.add_flavors({'external': script_flavors})
+                    for c in util.chunk_string(script.text):
+                        p = self.fk.pipeline()
+                        p.rpush(ex_file.uid, c)
+                        p.expire(ex_file.uid, self.expire)
+                        p.execute()
+                    self.files.append(ex_file)
+
                     self.metadata['total']['extracted'] += 1
 
             spans = soup.find_all('span')
@@ -120,4 +121,4 @@ class ScanHtml(core.StrelkaScanner):
                     self.metadata['spans'].append(span_entry)
 
         except TypeError:
-            self.flags.add(f'{self.scanner_name}::type_error')
+            self.flags.add('type_error')

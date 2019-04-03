@@ -36,7 +36,7 @@ class ScanCuckoo(core.StrelkaScanner):
         self.password = None
         self.auth_check = False
 
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         url = options.get('url', None)
         priority = options.get('priority', 3)
         timeout = options.get('timeout', 10)
@@ -49,7 +49,7 @@ class ScanCuckoo(core.StrelkaScanner):
         if url is not None:
             url += '/tasks/create/file'
             form = {
-                'file': (f'strelka_{file_object.uid}', data),
+                'file': (f'strelka_{st_file.uid}', self.data),
                 'priority': priority,
             }
             if unique:
@@ -66,9 +66,9 @@ class ScanCuckoo(core.StrelkaScanner):
                 if response.status_code == 200:
                     self.metadata['taskId'] = response.json()['task_id']
                 elif response.status_code == 400:
-                    self.flags.add(f'{self.scanner_name}::duplicate_upload')
+                    self.flags.add('duplicate_upload')
                 else:
-                    self.flags.add(f'{self.scanner_name}::upload_failed')
+                    self.flags.add('upload_failed')
 
             except requests.exceptions.ConnectTimeout:
-                self.flags.add(f'{self.scanner_name}::connect_timeout')
+                self.flags.add('connect_timeout')

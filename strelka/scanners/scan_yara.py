@@ -23,7 +23,7 @@ class ScanYara(core.StrelkaScanner):
     def init(self):
         self.compiled_yara = None
 
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         location = options.get('location', '/etc/yara/')
         metadata_identifiers = options.get('metadata_identifiers', [])
 
@@ -40,14 +40,14 @@ class ScanYara(core.StrelkaScanner):
                     self.compiled_yara = yara.compile(filepath=location)
 
         except (yara.Error, yara.SyntaxError) as YaraError:
-            self.flags.add(f'{self.scanner_name}::compiling_error')
+            self.flags.add('compiling_error')
 
         self.metadata.setdefault('matches', [])
         self.metadata.setdefault('metadata', [])
 
         try:
             if self.compiled_yara is not None:
-                yara_matches = self.compiled_yara.match(data=data)
+                yara_matches = self.compiled_yara.match(data=self.data)
                 for match in yara_matches:
                     self.metadata['matches'].append(match.rule)
                     if metadata_identifiers and match.meta:
@@ -62,4 +62,4 @@ class ScanYara(core.StrelkaScanner):
                                     self.metadata['metadata'].append(yara_entry)
 
         except (yara.Error, yara.TimeoutError) as YaraError:
-            self.flags.add(f'{self.scanner_name}::scanning_error')
+            self.flags.add('scanning_error')

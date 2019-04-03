@@ -2,22 +2,24 @@ import gzip
 import io
 
 from strelka import core
+from strelka.scanners import util
 
 
 class ScanGzip(core.StrelkaScanner):
     """Decompresses gzip files."""
-    def scan(self, data, file_object, options):
-        with io.BytesIO(data) as gzip_io:
+    def scan(self, st_file, options):
+        with io.BytesIO(self.data) as gzip_io:
             with gzip.GzipFile(fileobj=gzip_io) as gzip_file:
                 decompressed_file = gzip_file.read()
                 decompressed_size = len(decompressed_file)
                 self.metadata['decompressedSize'] = decompressed_size
-                file_ = core.StrelkaFile(
-                    source=self.scanner_name,
+
+                ex_file = core.StrelkaFile(
+                    source=self.name,
                 )
-                self.r0.setex(
-                    file_.uid,
-                    self.expire,
-                    decompressed_file,
-                )
-                self.files.append(file_)
+                for c in util.chunk_string(decompressed_file):
+                    p = self.fk.pipeline()
+                    p.rpush(ex_file.uid, c)
+                    p.expire(ex_file.uid, self.expire)
+                    p.execute()
+                self.files.append(ex_file)

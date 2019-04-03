@@ -7,6 +7,7 @@ volumes:
     logs:
 
 services:
+    # frontend controls the gRPC servicer that feeds tasks to the backend (required).
     frontend:
         image: "strelka-frontend:latest"
         container_name: strelka_frontend
@@ -20,7 +21,10 @@ services:
             # - /path/to/your/configs/:/usr/local/etc/strelka/
         restart: on-failure
         depends_on:
-            - redis
+            - filekeeper
+            - gatekeeper
+            - taskkeeper
+    # backend controls processes that perform file processing (required).
     backend:
         image: "strelka-backend:latest"
         container_name: strelka_backend
@@ -31,18 +35,38 @@ services:
             # - /path/to/your/configs/:/usr/local/etc/strelka/
         restart: on-failure
         depends_on:
-            - redis
+            - filekeeper
+            - gatekeeper
+            - taskkeeper
+    # filekeeper is used for storing files (required).
+    filekeeper:
+        image: "redis:alpine"
+        container_name: strelka_filekeeper
+        command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
+        networks:
+            - strelka_net
+        # volumes:
+            # - /path/to/your/config:/usr/local/etc/redis/r‌​edis.conf
+    # gatekeeper is used for storing events from recently scanned files (required).
+    gatekeeper:
+        image: "redis:alpine"
+        container_name: strelka_gatekeeper
+        command: redis-server --save "" --appendonly no  --maxmemory-policy allkeys-lru  # alt: use config file via volume mapping
+        networks:
+            - strelka_net
+        # volumes:
+            # - /path/to/your/config:/usr/local/etc/redis/r‌​edis.conf
+    # taskkeeper is used for queueing tasks between the frontend and backend (required).
+    taskkeeper:
+        image: "redis:alpine"
+        container_name: strelka_taskkeeper
+        command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
+        networks:
+            - strelka_net
+    # mmrpc is an optional service that integrates with ScanMMbot.
     mmrpc:
         image: "strelka-mmrpc:latest"
         container_name: strelka_mmrpc
         command: strelka-mmrpc -t 4 -a [::]:33907
         networks:
             - strelka_net
-    redis:
-        image: "redis:alpine"
-        container_name: strelka_redis
-        command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
-        networks:
-            - strelka_net
-        # volumes:
-            # - /path/to/your/config:/usr/local/etc/redis/r‌​edis.conf

@@ -137,9 +137,9 @@ class StrelkaScanner(object):
     within the class to perform scanning functions.
 
     Attributes:
-        scanner_name: String that contains the scanner class name.
+        name: String that contains the scanner class name.
             This is referenced in flags and child filenames.
-        metadata_key: String that contains the scanner's metadata key.
+        key: String that contains the scanner's metadata key.
             This is used to identify the scanner metadata in scan results.
         scanner_timeout: Amount of time (in seconds) that a scanner can spend
             scanning a file. Can be overridden on a per-scanner basis
@@ -150,13 +150,17 @@ class StrelkaScanner(object):
     """
     def __init__(self):
         """Inits scanner with scanner name and metadata key."""
-        self.scanner_name = self.__class__.__name__
-        metadata_key = self.scanner_name.replace('Scan', '', 1) + 'Metadata'
-        self.metadata_key = inflection.camelize(metadata_key, False)
+        self.name = self.__class__.__name__
+        key = self.name.replace('Scan', '', 1) + 'Metadata'
+        self.key = inflection.camelize(key, False)
         self.close_timeout = backend_cfg.get('timeout').get('close')
         self.scanner_timeout = backend_cfg.get('timeout').get('scanner')
-        redis_host = backend_cfg.get('processes').get('redis_host')
-        self.r0 = redis.StrictRedis(host=redis_host, port=6379, db=0)
+        filekeeper = backend_cfg.get('filekeeper')
+        self.fk = redis.StrictRedis(
+            host=filekeeper.get('host'),
+            port=filekeeper.get('port'),
+            db=0,
+        )
         self.init()
 
     def init(self):
@@ -188,25 +192,24 @@ class StrelkaScanner(object):
         ):
             raise
         except Exception:
-            logging.exception(f'{self.scanner_name}: exception while closing'
+            logging.exception(f'{self.name}: exception while closing'
                               ' (see traceback below)')
 
     def scan(self,
-             file_object,
+             st_file,
              options):
         """Overrideable scan method.
 
         Args:
-            file_object: StrelkaFile to be scanned.
+            st_file: StrelkaFile to be scanned.
             options: Options to be applied during scan.
         """
         pass
 
     def scan_wrapper(self,
-                     root,
                      data,
                      expire,
-                     file_object,
+                     st_file,
                      options):
         """Sets up scan attributes and calls scan method.
 
@@ -216,16 +219,18 @@ class StrelkaScanner(object):
         always returns the list of children.
 
         Args:
-            file_object: StrelkaFile to be scanned.
+            st_file: StrelkaFile to be scanned.
             options: Options to be applied during scan.
         Returns:
             Children files (whether they exist or not).
         Raises:
             Exception: Unknown exception occurred.
         """
+        start = datetime.datetime.utcnow()
         self.files = []
         self.flags = set()
         self.metadata = {}
+        self.data = data
         self.expire = expire
         self.scanner_timeout = options.get('scanner_timeout',
                                            self.scanner_timeout)
@@ -233,10 +238,10 @@ class StrelkaScanner(object):
         try:
             with interruptingcow.timeout(self.scanner_timeout,
                                          errors.ScannerTimeout):
-                self.scan(data, file_object, options)
+                self.scan(st_file, options)
 
         except errors.ScannerTimeout:
-            self.flags.add(f'{self.scanner_name}::timed_out')
+            self.flags.add(f'{self.name}::timed_out')
         except (
             errors.RequestTimeout,
             errors.DistributionTimeout,
@@ -244,16 +249,17 @@ class StrelkaScanner(object):
         ):
             raise
         except Exception:
-            logging.exception(f'{self.scanner_name}: exception while scanning'
-                              f' uid {file_object.uid} (see traceback below)')
+            logging.exception(f'{self.name}: exception while scanning'
+                              f' uid {st_file.uid} (see traceback below)')
 
         self.metadata = {
+            **{'elapsed': (datetime.datetime.utcnow() - start).total_seconds()},
             **{'flags': self.flags},
             **self.metadata,
         }
         return (
             self.files,
-            {self.metadata_key: self.metadata}
+            {self.key: self.metadata}
         )
 
 
@@ -268,12 +274,20 @@ class Worker(multiprocessing.Process):
         self.ttl = backend_cfg.get('processes').get('time_to_live')
         self.distribution_timeout = backend_cfg.get('timeout').get('distribution')
         self.max_depth = backend_cfg.get('timeout').get('max_depth')
-
-        redis_host = backend_cfg.get('processes').get('redis_host')
+        filekeeper = backend_cfg.get('filekeeper')
+        taskkeeper = backend_cfg.get('taskkeeper')
         # file data
-        self.r0 = redis.StrictRedis(host=redis_host, port=6379, db=0)
+        self.fk = redis.StrictRedis(
+            host=filekeeper.get('host'),
+            port=filekeeper.get('port'),
+            db=0,
+        )
         # task queue, status/result data
-        self.r1 = redis.StrictRedis(host=redis_host, port=6379, db=1)
+        self.tk = redis.StrictRedis(
+            host=taskkeeper.get('host'),
+            port=taskkeeper.get('port'),
+            db=0,
+        )
 
     def shutdown(self):
         """Defines worker shutdown."""
@@ -296,35 +310,36 @@ class Worker(multiprocessing.Process):
                 if datetime.datetime.utcnow() >= work_expire:
                     break
 
-                task = self.r1.blpop('queue', timeout=1)
-                if task is None:
+                pop = self.tk.blpop('queue', timeout=1)
+                if pop is None:
                     continue
 
-                taskd = json.loads(task[1])
-                check = self.r1.get(f'{taskd["root"]}:alive')
+                task = json.loads(pop[1])
+                check = self.tk.get(f'{task["root"]}:alive')
                 if check is None:
                     continue
 
-                file_object = StrelkaFile(
-                    pointer=taskd['root'],
+                st_file = StrelkaFile(
+                    pointer=task['root'],
                 )
-                file_object.add_flavors({'external': taskd['flavors']})
+                st_file.add_flavors({'external': task['flavors']})
 
-                expire = taskd['expire']
                 try:
-                    with interruptingcow.timeout(expire,
+                    with interruptingcow.timeout(task['expire'],
                                                  errors.RequestTimeout):
-                        self.distribute(taskd['root'], expire, file_object)
-                        self.r1.setex(
-                            f'{taskd["root"]}:complete',
-                            expire,
+                        self.distribute(task['root'], task['expire'], st_file)
+                        self.tk.setex(
+                            f'{task["root"]}:complete',
+                            task['expire'],
                             '1',
                         )
 
                 except errors.RequestTimeout:
-                    logging.debug(f'{self.name}: request {taskd["root"]} timed out')
+                    logging.debug(f'{self.name}: request'
+                                  f' {task["root"]} timed out')
                 except (errors.QuitWorker) as e:
-                    logging.debug(f'{self.name}: quit while scanning request {taskd["root"]}')
+                    logging.debug(f'{self.name}: quit while scanning'
+                                  f' request {task["root"]}')
                     raise
                 except Exception:
                     logging.exception(f'{self.name}: unknown exception'
@@ -340,7 +355,7 @@ class Worker(multiprocessing.Process):
                      f' {count} file(s) and'
                      f' {(datetime.datetime.utcnow() - work_start).total_seconds()} second(s)')
 
-    def distribute(self, root, expire, file_):
+    def distribute(self, root, expire, st_file):
         """Distributes a file through scanners.
 
         This method defines how files are assigned scanners:
@@ -351,7 +366,7 @@ class Worker(multiprocessing.Process):
             5. File is recursively sent to the mapped scanners.
 
         Args:
-            file_object: StrelkaFile to be scanned.
+            st_file: StrelkaFile to be scanned.
             scan_result: Dictionary that scan results are appended to.
         """
         try:
@@ -360,50 +375,60 @@ class Worker(multiprocessing.Process):
             try:
                 with interruptingcow.timeout(self.distribution_timeout,
                                              exception=errors.DistributionTimeout):
-
-                    if file_.depth > self.max_depth:
+                    if st_file.depth > self.max_depth:
                         logging.info(f'request {root} exceeded maximum depth')
                         return
 
-                    data = self.r0.get(file_.pointer)
-                    file_.add_flavors({'mime': taste_mime(data)})
-                    file_.add_flavors({'yara': taste_yara(data)})
+                    data = b''.join(self.fk.lrange(st_file.pointer, 0, -1))
+                    st_file.add_flavors({'mime': taste_mime(data)})
+                    st_file.add_flavors({'yara': taste_yara(data)})
                     scanner_cfg = backend_cfg.get('scanners')
-                    merged_flavors = (file_.flavors.get('external', []) +
-                                      file_.flavors.get('mime', []) +
-                                      file_.flavors.get('yara', []))
+                    flavors = (
+                        st_file.flavors.get('external', [])
+                        + st_file.flavors.get('mime', [])
+                        + st_file.flavors.get('yara', [])
+                    )
 
                     scanner_list = []
-                    for scanner_name in scanner_cfg:
-                        scanner_mappings = scanner_cfg.get(scanner_name, {})
-                        assigned_scanner = assign_scanner(
-                            scanner_name,
-                            scanner_mappings,
-                            merged_flavors,
-                            file_.name,
-                            file_.source,
+                    for name in scanner_cfg:
+                        mappings = scanner_cfg.get(name, {})
+                        assigned = assign_scanner(
+                            name,
+                            mappings,
+                            flavors,
+                            st_file.name,
+                            st_file.source,
                         )
-                        if assigned_scanner is not None:
-                            scanner_list.append(assigned_scanner)
+                        if assigned is not None:
+                            scanner_list.append(assigned)
                     scanner_list.sort(
                         key=lambda k: k.get('priority', 5),
                         reverse=True,
                     )
 
                     metadata = {
-                        **{'tree': {'node': file_.uid,
-                                    'parent': file_.parent}},
-                        **{'file': {'name': file_.name,
-                                    'source': file_.source,
-                                    'depth': file_.depth,
-                                    'size': len(data),
-                                    'scannerList': [s.get('scanner_name') for s in scanner_list]}},
-                        **{'flavors': file_.flavors},
+                        **{
+                            'tree': {
+                                'node': st_file.uid,
+                                'parent': st_file.parent,
+                            },
+                        },
+                        **{
+                            'file': {
+                                'name': st_file.name,
+                                'source': st_file.source,
+                                'depth': st_file.depth,
+                                'size': len(data),
+                                'scannerList': [s.get('name')
+                                                for s in scanner_list],
+                            }
+                        },
+                        **{'flavors': st_file.flavors},
                     }
 
                     for scanner in scanner_list:
                         try:
-                            name = scanner['scanner_name']
+                            name = scanner['name']
                             und_name = inflection.underscore(name)
                             scanner_import = f'strelka.scanners.{und_name}'
                             module = importlib.import_module(scanner_import)
@@ -411,25 +436,24 @@ class Worker(multiprocessing.Process):
                                 scanner_cache[und_name] = getattr(module, name)()
                             options = scanner.get('options', {})
                             plugin = scanner_cache[und_name]
-                            (scan_files, scan_metadata) = plugin.scan_wrapper(
-                                root,
+                            (f, m) = plugin.scan_wrapper(
                                 data,
                                 expire,
-                                file_,
+                                st_file,
                                 options
                             )
 
                             metadata = {
                                 **metadata,
-                                **scan_metadata,
+                                **m,
                             }
-                            files.extend(scan_files)
+                            files.extend(f)
 
                         except ModuleNotFoundError:
                             logging.exception(f'scanner {name} not found')
 
-                    self.r0.delete(file_.uid)
-                    p = self.r1.pipeline()
+                    self.fk.delete(st_file.uid)
+                    p = self.tk.pipeline()
                     p.rpush(
                         f'{root}:results',
                         json.dumps(ensure_utf8(metadata)),
@@ -441,11 +465,11 @@ class Worker(multiprocessing.Process):
                     p.execute()
 
             except errors.DistributionTimeout:
-                logging.exception(f'file {file_.uid}) timed out')
+                logging.exception(f'node {st_file.uid} timed out')
 
             for f in files:
-                f.parent = file_.uid
-                f.depth = file_.depth + 1
+                f.parent = st_file.uid
+                f.depth = st_file.depth + 1
                 self.distribute(root, expire, f)
 
         except (errors.RequestTimeout, errors.QuitWorker) as e:
@@ -453,9 +477,10 @@ class Worker(multiprocessing.Process):
 
     def close_scanners(self):
         """Runs the `close_wrapper` method on open scanners."""
-        for (scanner_name, scanner_pointer) in list(scanner_cache.items()):
-            scanner_pointer.close_wrapper()
-            logging.debug(f'{self.name}: closed scanner {inflection.camelize(scanner_name)}')
+        for (name, pointer) in list(scanner_cache.items()):
+            pointer.close_wrapper()
+            logging.debug(f'{self.name}: closed'
+                          f' scanner {inflection.camelize(name)}')
 
 
 def assign_scanner(scanner, mappings, flavors, filename, source):
@@ -486,9 +511,9 @@ def assign_scanner(scanner, mappings, flavors, filename, source):
         pos_flavors = positives.get('flavors', [])
         pos_filename = positives.get('filename', None)
         pos_source = positives.get('source', None)
-        assigned_scanner = {'scanner_name': scanner,
-                            'priority': mapping.get('priority', 5),
-                            'options': mapping.get('options', {})}
+        assigned = {'name': scanner,
+                    'priority': mapping.get('priority', 5),
+                    'options': mapping.get('options', {})}
 
         for neg_flavor in neg_flavors:
             if neg_flavor in flavors:
@@ -501,13 +526,13 @@ def assign_scanner(scanner, mappings, flavors, filename, source):
                 return None
         for pos_flavor in pos_flavors:
             if pos_flavor == '*' or pos_flavor in flavors:
-                return assigned_scanner
+                return assigned
         if pos_filename is not None:
             if re.search(pos_filename, filename) is not None:
-                return assigned_scanner
+                return assigned
         if pos_source is not None:
             if re.search(pos_source, source) is not None:
-                return assigned_scanner
+                return assigned
     return None
 
 

@@ -4,6 +4,7 @@ import tempfile
 import rpmfile
 
 from strelka import core
+from strelka.scanners import util
 
 
 class ScanRpm(core.StrelkaScanner):
@@ -13,16 +14,16 @@ class ScanRpm(core.StrelkaScanner):
         tmp_directory: Location where tempfile writes temporary files.
             Defaults to '/tmp/'.
     """
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         tmp_directory = options.get('tmp_directory', '/tmp/')
 
-        with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp:
-            tmp.write(data)
-            tmp.flush()
+        with tempfile.NamedTemporaryFile(dir=tmp_directory) as st_tmp:
+            st_tmp.write(self.data)
+            st_tmp.flush()
 
             try:
-                with rpmfile.open(tmp.name) as rpm:
-                    file_name = ''
+                with rpmfile.open(st_tmp.name) as rpm:
+                    ex_name = ''
                     for (key, value) in rpm.headers.items():
                         if key == 'arch':
                             self.metadata['architecture'] = value
@@ -48,7 +49,7 @@ class ScanRpm(core.StrelkaScanner):
                             self.metadata['group'] = value
                         elif key == 'name':
                             self.metadata['name'] = value
-                            file_name = f'{value.decode()}'
+                            ex_name = f'{value.decode()}'
                         elif key == 'os':
                             self.metadata['os'] = value
                         elif key == 'packager':
@@ -74,16 +75,16 @@ class ScanRpm(core.StrelkaScanner):
                         elif key == 'url':
                             self.metadata['url'] = value
 
-                    file_ = core.StrelkaFile(
-                        name=file_name,
-                        source=self.scanner_name,
+                    ex_file = core.StrelkaFile(
+                        name=ex_name,
+                        source=self.name,
                     )
-                    self.r0.setex(
-                        file_.uid,
-                        self.expire,
-                        data[rpm.data_offset:],
-                    )
-                    self.files.append(file_)
+                    for c in util.chunk_string(data[rpm.data_offset:]):
+                        p = self.fk.pipeline()
+                        p.rpush(ex_file.uid, c)
+                        p.expire(ex_file.uid, self.expire)
+                        p.execute()
+                    self.files.append(ex_file)
 
             except ValueError:
-                self.flags.add(f'{self.scanner_name}::value_error')
+                self.flags.add('value_error')

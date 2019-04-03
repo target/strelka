@@ -5,5 +5,5 @@ from strelka import core
 
 class ScanEntropy(core.StrelkaScanner):
     """Calculates entropy of files."""
-    def scan(self, data, file_object, options):
-        self.metadata['entropy'] = entropy.shannon_entropy(data)
+    def scan(self, st_file, options):
+        self.metadata['entropy'] = entropy.shannon_entropy(self.data)

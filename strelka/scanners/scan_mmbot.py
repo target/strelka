@@ -14,12 +14,12 @@ class ScanMmbot(core.StrelkaScanner):
         server: Network address and network port of the mmrpc service.
             Defaults to 127.0.0.1:33907.
     """
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         server = options.get('server', '127.0.0.1:33907')
 
         with grpc.insecure_channel(server) as channel:
             stub = mmbot_pb2_grpc.MmbotStub(channel)
-            response = stub.SendVba(mmbot_pb2.Vba(vba=data.decode()))
+            response = stub.SendVba(mmbot_pb2.Vba(vba=self.data.decode()))
 
         mmb_dict = json.loads(response.prediction)
         self.metadata['confidence'] = mmb_dict.get('confidence', None)

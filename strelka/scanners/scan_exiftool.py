@@ -12,15 +12,15 @@ class ScanExiftool(core.StrelkaScanner):
         tmp_directory: Location where tempfile writes temporary files.
             Defaults to '/tmp/'.
     """
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         tmp_directory = options.get('tmp_directory', '/tmp/')
 
-        with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_file:
-            tmp_file.write(data)
-            tmp_file.flush()
+        with tempfile.NamedTemporaryFile(dir=tmp_directory) as st_tmp:
+            st_tmp.write(self.data)
+            st_tmp.flush()
 
             (stdout, stderr) = subprocess.Popen(
-                ['exiftool', '-j', '-n', tmp_file.name],
+                ['exiftool', '-j', '-n', st_tmp.name],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
             ).communicate()

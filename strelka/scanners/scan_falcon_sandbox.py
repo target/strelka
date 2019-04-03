@@ -44,9 +44,9 @@ class ScanFalconSandbox(core.StrelkaScanner):
         self.depth = 0
         self.env_id = [100]
 
-    def submit_file(self, file_object, env_id):
+    def submit_file(self, st_file, env_id):
         url = self.server + '/api/submit'
-        files = {'file': data}
+        files = {'file': self.data}
 
         data = {
             'nosharevt': 1,
@@ -70,21 +70,21 @@ class ScanFalconSandbox(core.StrelkaScanner):
                 self.metadata['sha256'] = sha256
 
             elif response.status_code == 200 and response.json()['response_code'] == -1:
-                self.flags.add(f'{self.scanner_name}::duplicate_submission')  # Submission Failed - duplicate
+                self.flags.add('duplicate_submission')  # Submission Failed - duplicate
 
             else:
-                self.flags.add(f'{self.scanner_name}::upload_failed')  # Upload Failed
+                self.flags.add('upload_failed')  # Upload Failed
 
         except requests.exceptions.ConnectTimeout:
-            self.flags.add(f'{self.scanner_name}::connect_timeout')
+            self.flags.add('connect_timeout')
 
         return
 
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         self.depth = options.get('depth', 0)
 
-        if file_object.depth > self.depth:
-            self.flags.add(f'{self.scanner_name}::file_depth_exceeded')
+        if st_file.depth > self.depth:
+            self.flags.add('file_depth_exceeded')
             return
 
         self.server = options.get('server', '')
@@ -99,4 +99,4 @@ class ScanFalconSandbox(core.StrelkaScanner):
 
         # Allow submission to multiple environments (e.g. 32-bit and 64-bit)
         for env in self.env_id:
-            self.submit_file(file_object, env)
+            self.submit_file(st_file, env)

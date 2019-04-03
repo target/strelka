@@ -11,8 +11,8 @@ from strelka import core
 
 class ScanElf(core.StrelkaScanner):
     """Collects metadata from ELF files."""
-    def scan(self, data, file_object, options):
-        with io.BytesIO(data) as elf_io:
+    def scan(self, st_file, options):
+        with io.BytesIO(self.data) as elf_io:
             try:
                 elf = elffile.ELFFile(elf_io)
 
@@ -69,7 +69,7 @@ class ScanElf(core.StrelkaScanner):
                                                     self.metadata['exports'].append(symbol.name)
 
                 except OverflowError:
-                    self.flags.add(f'{self.scanner_name}::overflow_error')
+                    self.flags.add('overflow_error')
 
                 self.metadata.setdefault('segments', [])
                 segment_cache = {}
@@ -89,4 +89,4 @@ class ScanElf(core.StrelkaScanner):
                         self.metadata['segmentSections'].append(section_dict)
 
             except exceptions.ELFParseError:
-                self.flags.add(f'{self.scanner_name}::elf_parse_error')
+                self.flags.add('elf_parse_error')

@@ -7,6 +7,7 @@ Command line utility for running Strelka frontend server components.
 import argparse
 from concurrent import futures
 import datetime
+import hashlib
 import json
 import logging.config
 import os
@@ -20,6 +21,7 @@ from boltons import iterutils
 import inflection
 import grpc
 import redis
+import requests
 import yaml
 
 from strelka.proto import strelka_pb2
@@ -58,18 +60,33 @@ def remap_evt(result, case='camel'):
 
 
 class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
-    def __init__(self, redis_host, case, path):
-        # file data
-        self.r0 = redis.StrictRedis(host=redis_host, port=6379, db=0)
-        # task queue, status/result data
-        self.r1 = redis.StrictRedis(host=redis_host, port=6379, db=1)
+    def __init__(self, filekeeper, gatekeeper, taskkeeper, evt_log):
+        # filekeeper redis
+        self.fk = redis.StrictRedis(
+            host=filekeeper.get('host'),
+            port=filekeeper.get('port'),
+            db=0,
+        )
+        # gatekeeper redis
+        self.gk = redis.StrictRedis(
+            host=gatekeeper.get('host'),
+            port=gatekeeper.get('port'),
+            db=0,
+        )
+        self.gk_expire = gatekeeper.get('expire')
+        # taskkeeper redis
+        self.tk = redis.StrictRedis(
+            host=taskkeeper.get('host'),
+            port=taskkeeper.get('port'),
+            db=0,
+        )
 
-        self.case = case
+        self.case = evt_log.get('case')
         self.logger = logging.getLogger('strelka')
         self.logger.propagate = False
         self.logger.addHandler(
             logging.handlers.WatchedFileHandler(
-                path,
+                evt_log.get('path'),
                 delay=True,
             )
         )
@@ -83,61 +100,164 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
             'flavors': [],
         }
 
+        cli_req = {}
+        cli_meta = {}
         cli_case = ''
-        cli_metadata = {}
-        cli_request = {}
+        m = hashlib.sha256()
         for request in request_iterator:
-            p = self.r0.pipeline()
-            p.append(root, request.data)
+            m.update(request.data)
+            p = self.fk.pipeline()
+            p.rpush(root, request.data)
             p.expire(root, task['expire'])
             p.execute()
 
-            if not cli_request and request.request:
-                cli_request['uid'] = request.request.uid or root
-                cli_request['client'] = request.request.client
-                cli_request['source'] = request.request.source
-            if 'filename' not in cli_request and request.filename:
-                cli_request['filename'] = request.filename
+            if not cli_req and request.request:
+                cli_req['uid'] = request.request.uid or root
+                cli_req['client'] = request.request.client
+                cli_req['source'] = request.request.source
+            if 'filename' not in cli_req and request.filename:
+                cli_req['filename'] = request.filename
             if not task['flavors'] and request.metadata.flavors:
                 task['flavors'] = [f for f in request.metadata.flavors]
-            if cli_metadata and request.metadata.metadata:
-                cli_metadata = {key: value
-                                for (key, value) in request.metadata.metadata.items()}
+            if not cli_meta and request.metadata.metadata:
+                cli_meta = {
+                    key: value
+                    for (key, value) in request.metadata.metadata.items()
+                }
             if not cli_case and request.retrieve.case:
                 cli_case = request.retrieve.case
 
-        p = self.r1.pipeline()
+        scan_res = strelka_pb2.ScanResult(uid=cli_req['uid'])
+        base_evt = {
+            'time': timestamp,
+            'request': {**cli_req, 'metadata': cli_meta},
+        }
+
+        sha256 = m.hexdigest()
+        check = self.gk.exists(sha256)
+        if check != 0:
+            results = self.gk.lrange(sha256, 0, -1)
+            for r in results:
+                evt = {
+                    **base_evt,
+                    **json.loads(r),
+                }
+
+                if cli_case:
+                    cli_evt = remap_evt(evt, cli_case)
+                    scan_res.events.append(json.dumps(cli_evt))
+                srv_evt = remap_evt(evt, self.case)
+                self.logger.info(json.dumps(srv_evt))
+            logging.debug('gk returned result!')
+            return scan_res
+
+        p = self.tk.pipeline()
         p.setex(f'{root}:alive', task['expire'], '1')
         p.rpush('queue', json.dumps(task))
         p.execute()
 
-        base_evt = {
-            'time': timestamp,
-            'request': {**cli_request, 'metadata': cli_metadata},
+        while context.is_active():
+            status = self.tk.get(f'{root}:complete')
+            if status is None:
+                time.sleep(0.1)
+                continue
+
+            p = self.gk.pipeline()
+            results = self.tk.lrange(f'{root}:results', 0, -1)
+            for r in results:
+                p.rpush(sha256, r)
+                evt = {
+                    **base_evt,
+                    **json.loads(r),
+                }
+
+                if cli_case:
+                    cli_evt = remap_evt(evt, cli_case)
+                    scan_res.events.append(json.dumps(cli_evt))
+                srv_evt = remap_evt(evt, self.case)
+                self.logger.info(json.dumps(srv_evt))
+
+            p.expire(sha256, self.gk_expire)
+            p.execute()
+            break
+
+        self.tk.delete(f'{root}:alive')
+        return scan_res
+
+    def SendLocation(self, request, context):
+        timestamp = datetime.datetime.utcnow().isoformat()
+        root = uuid.uuid4().hex
+        task = {
+            'root': root,
+            'expire': math.ceil(context.time_remaining()),
+            'flavors': [],
         }
 
-        resp = strelka_pb2.ScanResult()
-        try:
-            while context.is_active():
-                status = self.r1.get(f'{root}:complete')
-                if status is not None:
-                    results = self.r1.lrange(f'{root}:results', 0, -1)
-                    for r in results:
-                        evt = {
-                            **base_evt,
-                            **json.loads(r),
-                        }
+        cli_location = {
+            key: value
+            for (key, value) in request.location.items()
+        }
+        cli_req = {
+            'uid': request.request.uid or root,
+            'client': request.request.client,
+            'source': request.request.source,
+        }
+        cli_meta = {
+            key: value
+            for (key, value) in request.metadata.metadata.items()
+        }
+        cli_case = request.retrieve.case
 
-                        cli_evt = remap_evt(evt, cli_case)
-                        resp.events.append(json.dumps(cli_evt))
-                        srv_evt = remap_evt(evt, self.case)
-                        self.logger.info(json.dumps(srv_evt))
-                    break
+        scan_res = strelka_pb2.ScanResult(uid=cli_req['uid'])
+        base_evt = {
+            'time': timestamp,
+            'request': {**cli_req, 'metadata': cli_meta},
+        }
+
+        # only http currently supported
+        if cli_location['type'] == 'http':
+            # this needs options read from env
+            response = requests.get(cli_location['object'],
+                                    allow_redirects=True,
+                                    stream=True,
+                                    verify=False)
+            if response.status_code == 200:
+                for r in response.iter_content(chunk_size=16384):
+                    p = self.fk.pipeline()
+                    p.rpush(root, r)
+                    p.expire(root, task['expire'])
+                    p.execute()
+            else:
+                return scan_res
+
+        p = self.tk.pipeline()
+        p.setex(f'{root}:alive', task['expire'], '1')
+        p.rpush('queue', json.dumps(task))
+        p.execute()
+
+        while context.is_active():
+            status = self.tk.get(f'{root}:complete')
+            if status is None:
                 time.sleep(0.1)
+                continue
 
-        finally:
-            self.r1.delete(f'{root}:alive')
-            return resp
+            results = self.tk.lrange(f'{root}:results', 0, -1)
+            for r in results:
+                evt = {
+                    **base_evt,
+                    **json.loads(r),
+                }
+
+                if cli_case:
+                    cli_evt = remap_evt(evt, cli_case)
+                    scan_res.events.append(json.dumps(cli_evt))
+                srv_evt = remap_evt(evt, self.case)
+                self.logger.info(json.dumps(srv_evt))
+
+            break
+
+        self.tk.delete(f'{root}:alive')
+        return scan_res
 
 
 run = 1
@@ -178,37 +298,39 @@ def main():
         logging.config.dictConfig(yaml.safe_load(f.read()))
     logging.info(f'using frontend configuration {frontend_cfg_path}')
 
-    grpc_addr = frontend_cfg.get('grpc_address')
-    shutdown = frontend_cfg.get('shutdown')
-    max_rpcs = frontend_cfg.get('max_rpcs')
-    threads = frontend_cfg.get('threads')
-    redis_host = frontend_cfg.get('redis_host')
-    srv_case = frontend_cfg.get('srv_case')
-    srv_path = frontend_cfg.get('srv_path')
+    grpc_cfg = frontend_cfg.get('grpc')
+    evt_log = frontend_cfg.get('evt_log')
+    fk_cfg = frontend_cfg.get('filekeeper')
+    gk_cfg = frontend_cfg.get('gatekeeper')
+    tk_cfg = frontend_cfg.get('taskkeeper')
 
     try:
-        red = redis.StrictRedis(host=redis_host, port=6379, db=0)
-        if red.ping():
-            logging.debug('verified redis-server is up')
+        if redis.StrictRedis(host=fk_cfg.get('host'), port=fk_cfg.get('port'), db=0).ping():
+            logging.debug('verified filekeeper is up')
+        if redis.StrictRedis(host=gk_cfg.get('host'), port=gk_cfg.get('port'), db=0).ping():
+            logging.debug('verified gatekeeper is up')
+        if redis.StrictRedis(host=tk_cfg.get('host'), port=tk_cfg.get('port'), db=0).ping():
+            logging.debug('verified taskkeeper is up')
     except Exception:
-        sys.exit('sysexit: redis-server is down')
+        logging.exception('redis server(s) unavailable')
+        sys.exit()
 
-    executor = futures.ThreadPoolExecutor(max_workers=threads)
+    executor = futures.ThreadPoolExecutor(max_workers=grpc_cfg.get('threads'))
     server = grpc.server(
         executor,
-        maximum_concurrent_rpcs=max_rpcs,
+        maximum_concurrent_rpcs=grpc_cfg.get('max_rpcs'),
     )
     strelka_pb2_grpc.add_StrelkaServicer_to_server(
-        StrelkaServicer(redis_host, srv_case, srv_path),
+        StrelkaServicer(fk_cfg, gk_cfg, tk_cfg, evt_log),
         server,
     )
-    server.add_insecure_port(grpc_addr)
+    server.add_insecure_port(grpc_cfg.get('address'))
     server.start()
     while run:
         time.sleep(1)
 
     logging.info('shutdown process initiated')
-    stop = server.stop(shutdown)
+    stop = server.stop(grpc_cfg.get('shutdown'))
     logging.debug('stopping gRPC server')
     stop.wait()
     logging.info('finished')

@@ -2,28 +2,30 @@ import bz2
 import io
 
 from strelka import core
+from strelka.scanners import util
 
 
 class ScanBzip2(core.StrelkaScanner):
     """Decompresses bzip2 files."""
-    def scan(self, data, file_object, options):
-        with io.BytesIO(data) as bzip2_io:
+    def scan(self, st_file, options):
+        with io.BytesIO(self.data) as bzip2_io:
             with bz2.BZ2File(filename=bzip2_io) as bzip2_file:
                 try:
                     decompressed_file = bzip2_file.read()
                     decompressed_size = len(decompressed_file)
                     self.metadata['decompressedSize'] = decompressed_size
-                    file_ = core.StrelkaFile(
-                        source=self.scanner_name,
+
+                    ex_file = core.StrelkaFile(
+                        source=self.name,
                     )
-                    self.r0.setex(
-                        file_.uid,
-                        self.expire,
-                        decompressed_file,
-                    )
-                    self.files.append(file_)
+                    for c in util.chunk_string(decompressed_file):
+                        p = self.fk.pipeline()
+                        p.rpush(ex_file.uid, c)
+                        p.expire(ex_file.uid, self.expire)
+                        p.execute()
+                    self.files.append(ex_file)
 
                 except EOFError:
-                    self.flags.add(f'{self.scanner_name}::eof_error')
+                    self.flags.add('eof_error')
                 except OSError:
-                    self.flags.add(f'{self.scanner_name}::os_error')
+                    self.flags.add('os_error')

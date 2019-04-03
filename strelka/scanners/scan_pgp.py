@@ -11,7 +11,7 @@ from strelka import core
 
 class ScanPgp(core.StrelkaScanner):
     """Collects metadata from PGP files."""
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         self.metadata['total'] = {
             'publicKeys': 0,
             'publicKeyEncryptedSessionKeys': 0,
@@ -29,7 +29,7 @@ class ScanPgp(core.StrelkaScanner):
         self.metadata.setdefault('userIds', [])
 
         try:
-            data = pgpdump.AsciiData(data)
+            data = pgpdump.AsciiData(self.data)
             for packet in data.packets():
                 if isinstance(packet, PublicKeyPacket):
                     self.metadata['total']['publicKeys'] += 1
@@ -113,4 +113,4 @@ class ScanPgp(core.StrelkaScanner):
                         self.metadata['userIds'].append(user_id_entry)
 
         except TypeError:
-            self.flags.add(f'{self.scanner_name}::type_error')
+            self.flags.add('type_error')

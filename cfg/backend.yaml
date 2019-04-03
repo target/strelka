@@ -4,12 +4,17 @@ processes:
     shutdown: 30
     max_files: 5000
     time_to_live: 900
-    redis_host: 'strelka_redis'
 timeout:
     max_depth: 15
     distribution: 600
     scanner: 150
     close: 10
+filekeeper:
+    host: 'strelka_filekeeper'
+    port: 6379
+taskkeeper:
+    host: 'strelka_taskkeeper'
+    port: 6379
 tasting:
     mime_db: null
     yara_rules: '/usr/local/etc/strelka/taste/'
@@ -152,7 +157,7 @@ scanners:
         positive:
           flavors:
             - 'javascript_file'
-            - 'javascript'
+            - 'text/javascript'
         priority: 5
         options:
           beautify: True

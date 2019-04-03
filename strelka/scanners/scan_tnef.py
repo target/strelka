@@ -1,14 +1,15 @@
 import tnefparse
 
 from strelka import core
+from strelka.scanners import util
 
 
 class ScanTnef(core.StrelkaScanner):
     """Collects metadata and extract files from TNEF files."""
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         self.metadata['total'] = {'attachments': 0, 'extracted': 0}
 
-        tnef = tnefparse.TNEF(data)
+        tnef = tnefparse.TNEF(self.data)
 
         self.metadata.setdefault('objectNames', [])
         tnef_objects = getattr(tnef, 'objects', [])
@@ -29,27 +30,28 @@ class ScanTnef(core.StrelkaScanner):
         tnef_attachments = getattr(tnef, 'attachments', [])
         self.metadata['total']['attachments'] = len(tnef_attachments)
         for attachment in tnef_attachments:
-            file_ = core.StrelkaFile(
+            ex_file = core.StrelkaFile(
                 name=f'{attachment.name.decode()}',
-                source=self.scanner_name,
+                source=self.name,
             )
-            self.r0.setex(
-                file_.uid,
-                self.expire,
-                attachment.data,
-            )
-            self.files.append(file_)
+            for c in util.chunk_string(attachment.data):
+                p = self.fk.pipeline()
+                p.rpush(ex_file.uid, c)
+                p.expire(ex_file.uid, self.expire)
+                p.execute()
+            self.files.append(ex_file)
+
             self.metadata['total']['extracted'] += 1
 
         tnef_html = getattr(tnef, 'htmlbody', None)
         if tnef_html is not None:
-            file_ = core.StrelkaFile(
+            ex_file = core.StrelkaFile(
                 name='htmlbody',
-                source=self.scanner_name,
+                source=self.name,
             )
-            self.r0.setex(
-                file_.uid,
-                self.expire,
-                tnef_html.data,
-            )
-            self.files.append(file_)
+            for c in util.chunk_string(tnef_html.data):
+                p = self.fk.pipeline()
+                p.rpush(ex_file.uid, c)
+                p.expire(ex_file.uid, self.expire)
+                p.execute()
+            self.files.append(ex_file)

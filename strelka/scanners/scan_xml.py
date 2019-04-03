@@ -1,6 +1,7 @@
 from lxml import etree
 
 from strelka import core
+from strelka.scanners import util
 
 
 class ScanXml(core.StrelkaScanner):
@@ -14,7 +15,7 @@ class ScanXml(core.StrelkaScanner):
             as metadata.
             Defaults to empty list.
     """
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         xml_args = {
             'extract_tags': options.get('extract_tags', []),
             'metadata_tags': options.get('metadata_tags', []),
@@ -27,7 +28,7 @@ class ScanXml(core.StrelkaScanner):
 
         xml = None
         try:
-            xml_buffer = data
+            xml_buffer = self.data
             if xml_buffer.startswith(b'<?XML'):
                 xml_buffer = b'<?xml' + xml_buffer[5:]
             xml = etree.fromstring(xml_buffer)
@@ -38,7 +39,7 @@ class ScanXml(core.StrelkaScanner):
                 self.metadata['version'] = docinfo.xml_version
 
         except etree.XMLSyntaxError:
-            self.flags.add(f'{self.scanner_name}::syntax_error')
+            self.flags.add('syntax_error')
 
         if xml is not None:
             self._recurse_node(self, xml, xml_args)
@@ -74,16 +75,17 @@ class ScanXml(core.StrelkaScanner):
                         if tag_data not in self.metadata['tagData']:
                             self.metadata['tagData'].append(tag_data)
                     elif tag in xml_args['extract_tags']:
-                        file_ = core.StrelkaFile(
+                        ex_file = core.StrelkaFile(
                             name=f'{tag}',
-                            source=self.scanner_name,
+                            source=self.name,
                         )
-                        self.r0.setex(
-                            file_.uid,
-                            self.expire,
-                            text,
-                        )
-                        self.files.append(file_)
+                        for c in util.chunk_string(text):
+                            p = self.fk.pipeline()
+                            p.rpush(ex_file.uid, c)
+                            p.expire(ex_file.uid, self.expire)
+                            p.execute()
+                        self.files.append(ex_file)
+
                         self.metadata['total']['extracted'] += 1
 
             for child in node.getchildren():

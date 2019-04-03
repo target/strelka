@@ -1,6 +1,11 @@
 import re
 
 
+def chunk_string(s, chunk=16384):
+    for c in range(0, len(s), chunk):
+        yield s[c:c + chunk]
+
+
 def normalize_whitespace(text):
     """Normalizes whitespace in text.
 

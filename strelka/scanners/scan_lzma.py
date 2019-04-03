@@ -2,31 +2,32 @@ import io
 import lzma
 
 from strelka import core
+from strelka.scanners import util
 
 
 class ScanLzma(core.StrelkaScanner):
     """Decompresses LZMA files."""
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         try:
-            with io.BytesIO(data) as data:
-                with lzma.LZMAFile(filename=data) as f:
+            with io.BytesIO(self.data) as data:
+                with lzma.LZMAFile(filename=data) as st_tmp:
                     try:
-                        decompressed_file = f.read()
+                        decompressed_file = st_tmp.read()
                         decompressed_size = len(decompressed_file)
                         self.metadata['decompressedSize'] = decompressed_size
 
-                        file_ = core.StrelkaFile(
-                            source=self.scanner_name,
+                        ex_file = core.StrelkaFile(
+                            source=self.name,
                         )
-                        self.r0.setex(
-                            file_.uid,
-                            self.expire,
-                            decompressed_file,
-                        )
-                        self.files.append(file_)
+                        for c in util.chunk_string(decompressed_file):
+                            p = self.fk.pipeline()
+                            p.rpush(ex_file.uid, c)
+                            p.expire(ex_file.uid, self.expire)
+                            p.execute()
+                        self.files.append(ex_file)
 
                     except EOFError:
-                        self.flags.add(f'{self.scanner_name}::eof_error')
+                        self.flags.add('eof_error')
 
         except lzma.LZMAError:
-            self.flags.add(f'{self.scanner_name}::lzma_error')
+            self.flags.add('lzma_error')

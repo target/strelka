@@ -5,6 +5,7 @@ import zlib
 
 import uuid
 from strelka import core
+from strelka.scanners import util
 
 
 class ScanZip(core.StrelkaScanner):
@@ -19,7 +20,7 @@ class ScanZip(core.StrelkaScanner):
     def init(self):
         self.rainbow_table = []
 
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         file_limit = options.get('limit', 1000)
         password_file = options.get('password_file', '/etc/strelka/passwords.txt')
 
@@ -33,11 +34,11 @@ class ScanZip(core.StrelkaScanner):
                             self.rainbow_table.append(bytes(line.strip(), 'utf-8'))
 
         except IOError:
-            self.flags.add(f'{self.scanner_name}::file_read_error')
+            self.flags.add('file_read_error')
 
-        with io.BytesIO(data) as data:
+        with io.BytesIO(self.data) as zip_io:
             try:
-                with zipfile.ZipFile(data) as zip:
+                with zipfile.ZipFile(zip_io) as zip:
                     name_list = zip.namelist()
                     self.metadata['total']['files'] = len(name_list)
                     for name in name_list:
@@ -46,47 +47,48 @@ class ScanZip(core.StrelkaScanner):
                                 break
 
                             try:
-                                file_data = None
+                                ex_data = None
                                 zinfo = zip.getinfo(name)
 
                                 if zinfo.flag_bits & 0x1 and self.rainbow_table:  # File is encrypted
                                     for pwd in self.rainbow_table:
                                         try:
-                                            file_data = zip.read(name, pwd)
+                                            ex_data = zip.read(name, pwd)
 
-                                            if file_data is not None:
-                                                self.flags.add(f'{self.scanner_name}::encrypted_archive_file')
+                                            if ex_data is not None:
+                                                self.flags.add('encrypted_archive_file')
                                                 break
                                         except RuntimeError:
                                             pass
 
                                 elif zinfo.flag_bits & 0x1 and not self.rainbow_table:  # File is encrypted, no passwords
-                                    self.flags.add(f'{self.scanner_name}::no_archive_passwords')
+                                    self.flags.add('no_archive_passwords')
                                     return
                                 else:
-                                    file_data = zip.read(name)
+                                    ex_data = zip.read(name)
 
-                                if file_data is not None:
-                                    file_ = core.StrelkaFile(
+                                if ex_data is not None:
+                                    ex_file = core.StrelkaFile(
                                         name=name,
-                                        source=self.scanner_name,
+                                        source=self.name,
                                     )
-                                    self.r0.setex(
-                                        file_.uid,
-                                        self.expire,
-                                        file_data,
-                                    )
-                                    self.files.append(file_)
+                                    for c in util.chunk_string(ex_data):
+                                        p = self.fk.pipeline()
+                                        p.rpush(ex_file.uid, c)
+                                        p.expire(ex_file.uid, self.expire)
+                                        p.execute()
+                                    self.files.append(ex_file)
+
                                     self.metadata['total']['extracted'] += 1
 
                             except NotImplementedError:
-                                self.flags.add(f'{self.scanner_name}::unsupported_compression')
+                                self.flags.add('unsupported_compression')
                             except RuntimeError:
-                                self.flags.add(f'{self.scanner_name}::runtime_error')
+                                self.flags.add('runtime_error')
                             except ValueError:
-                                self.flags.add(f'{self.scanner_name}::value_error')
+                                self.flags.add('value_error')
                             except zlib.error:
-                                self.flags.add(f'{self.scanner_name}::zlib_error')
+                                self.flags.add('zlib_error')
 
             except zipfile.BadZipFile:
-                self.flags.add(f'{self.scanner_name}::bad_zip_file')
+                self.flags.add('bad_zip_file')

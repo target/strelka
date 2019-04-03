@@ -3,6 +3,7 @@ import subprocess
 import tempfile
 
 from strelka import core
+from strelka.scanners import util
 
 
 class ScanOcr(core.StrelkaScanner):
@@ -15,38 +16,38 @@ class ScanOcr(core.StrelkaScanner):
         tmp_directory: Location where tempfile writes temporary files.
             Defaults to '/tmp/'.
     """
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         extract_text = options.get('extract_text', False)
         tmp_directory = options.get('tmp_directory', '/tmp/')
 
-        with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp:
-            tmp.write(data)
-            tmp.flush()
+        with tempfile.NamedTemporaryFile(dir=tmp_directory) as st_tmp:
+            st_tmp.write(self.data)
+            st_tmp.flush()
 
-            with tempfile.NamedTemporaryFile(dir=tmp_directory) as tess:
+            with tempfile.NamedTemporaryFile(dir=tmp_directory) as tess_tmp:
                 tess_return = subprocess.call(
-                    ['tesseract', tmp.name, tess.name],
+                    ['tesseract', st_tmp.name, tess_tmp.name],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL
                 )
-                tess_txt_name = f'{tess.name}.txt'
+                tess_txt_name = f'{tess_tmp.name}.txt'
                 if tess_return == 0:
                     with open(tess_txt_name, 'rb') as tess_txt:
                         ocr_file = tess_txt.read()
                         if ocr_file:
                             self.metadata['text'] = ocr_file.split()
                             if extract_text:
-                                file_ = core.StrelkaFile(
+                                ex_file = core.StrelkaFile(
                                     name='text',
-                                    source=self.scanner_name,
+                                    source=self.name,
                                 )
-                                self.r0.setex(
-                                    file_.uid,
-                                    self.expire,
-                                    ocr_file,
-                                )
-                                self.files.append(file_)
+                                for c in util.chunk_string(ocr_file):
+                                    p = self.fk.pipeline()
+                                    p.rpush(ex_file.uid, c)
+                                    p.expire(ex_file.uid, self.expire)
+                                    p.execute()
+                                self.files.append(ex_file)
 
                 else:
-                    self.flags.add(f'{self.scanner_name}::return_code_{tess_return}')
+                    self.flags.add('return_code_{tess_return}')
                 os.remove(tess_txt_name)

@@ -598,7 +598,7 @@ rule javascript_file
         $function3 in (0..30) or
         $push in (0..30) or
         $array in (0..30) or
-        ( $try at 0 and $catch in (5..1000) ) or
+        ( $try at 0 and $catch in (5..5000) ) or
         $document1 in (0..100) or
         $document2 in (0..100) or
         $window in (0..100) or

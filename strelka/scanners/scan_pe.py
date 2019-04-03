@@ -6,6 +6,7 @@ import struct
 import pefile
 
 from strelka import core
+from strelka.scanners import util
 
 IMAGE_MAGIC_LOOKUP = {
     0x10b: '32_BIT',
@@ -16,11 +17,11 @@ IMAGE_MAGIC_LOOKUP = {
 
 class ScanPe(core.StrelkaScanner):
     """Collects metadata from PE files."""
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         self.metadata['total'] = {'sections': 0}
 
         try:
-            pe = pefile.PE(data=data)
+            pe = pefile.PE(data=self.data)
             pe_dict = pe.dump_dict()
 
             self.metadata['total']['sections'] = pe.FILE_HEADER.NumberOfSections
@@ -48,7 +49,7 @@ class ScanPe(core.StrelkaScanner):
                 self.metadata['imphash'] = pe.get_imphash()
 
             except AttributeError:
-                self.flags.add(f'{self.scanner_name}::no_imphash')
+                self.flags.add('no_imphash')
 
             self.metadata.setdefault('exportFunctions', [])
             export_symbols = pe_dict.get('Exported symbols', [])
@@ -111,7 +112,7 @@ class ScanPe(core.StrelkaScanner):
                                 self.metadata['resources'].append(data)
 
             except AttributeError:
-                self.flags.add(f'{self.scanner_name}::no_resources')
+                self.flags.add('no_resources')
 
             if hasattr(pe, 'DIRECTORY_ENTRY_DEBUG'):
                 debug = dict()
@@ -149,22 +150,23 @@ class ScanPe(core.StrelkaScanner):
             security = pe.OPTIONAL_HEADER.DATA_DIRECTORY[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_SECURITY']]
             digital_signature_virtual_address = security.VirtualAddress
             if security.Size > 0:
-                file_data = pe.write()[digital_signature_virtual_address + 8:]
-                if len(file_data) > 0:
-                    self.flags.add(f'{self.scanner_name}::signed')
-                    file_ = core.StrelkaFile(
+                ex_data = pe.write()[digital_signature_virtual_address + 8:]
+                if len(ex_data) > 0:
+                    self.flags.add('signed')
+
+                    ex_file = core.StrelkaFile(
                         name='digital_signature',
-                        source=self.scanner_name,
+                        source=self.name,
                     )
-                    self.r0.setex(
-                        file_.uid,
-                        self.expire,
-                        file_data,
-                    )
-                    self.files.append(file_)
+                    for c in util.chunk_string(ex_data):
+                        p = self.fk.pipeline()
+                        p.rpush(ex_file.uid, c)
+                        p.expire(ex_file.uid, self.expire)
+                        p.execute()
+                    self.files.append(ex_file)
 
                 else:
-                    self.flags.add(f'{self.scanner_name}::empty_signature')
+                    self.flags.add('empty_signature')
 
             if hasattr(pe, 'FileInfo'):
                 self.metadata.setdefault('versionInfo', [])
@@ -180,9 +182,9 @@ class ScanPe(core.StrelkaScanner):
                                     if fixedinfo not in self.metadata['versionInfo']:
                                         self.metadata['versionInfo'].append(fixedinfo)
             else:
-                self.flags.add(f'{self.scanner_name}::no_version_info')
+                self.flags.add('no_version_info')
 
         except IndexError:
-            self.flags.add(f'{self.scanner_name}::pe_index_error')
+            self.flags.add('index_error')
         except pefile.PEFormatError:
-            self.flags.add(f'{self.scanner_name}::pe_format_error')
+            self.flags.add('pe_format_error')

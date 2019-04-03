@@ -8,8 +8,8 @@ from strelka import core
 
 class ScanHash(core.StrelkaScanner):
     """Calculates file hash values."""
-    def scan(self, data, file_object, options):
-        self.metadata['md5'] = hashlib.md5(data).hexdigest()
-        self.metadata['sha1'] = hashlib.sha1(data).hexdigest()
-        self.metadata['sha256'] = hashlib.sha256(data).hexdigest()
-        self.metadata['ssdeep'] = ssdeep.hash(data)
+    def scan(self, st_file, options):
+        self.metadata['md5'] = hashlib.md5(self.data).hexdigest()
+        self.metadata['sha1'] = hashlib.sha1(self.data).hexdigest()
+        self.metadata['sha256'] = hashlib.sha256(self.data).hexdigest()
+        self.metadata['ssdeep'] = ssdeep.hash(self.data)

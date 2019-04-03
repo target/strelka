@@ -27,15 +27,15 @@ message Retrieve {
 message ScanData {
   bytes data = 1; // required
   string filename = 2; // required
-  Metadata metadata = 3;
-  Request request = 4;
+  Request request = 3;
+  Metadata metadata = 4;
   Retrieve retrieve = 5;
 }
 
 message ScanLocation {
   map<string, string> location = 1;  // required
-  Metadata metadata = 2;
-  Request request = 3;
+  Request request = 2;
+  Metadata metadata = 3;
   Retrieve retrieve = 4;
 }
 

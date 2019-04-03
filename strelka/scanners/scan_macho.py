@@ -12,18 +12,18 @@ class ScanMacho(core.StrelkaScanner):
         tmp_directory: Location where tempfile writes temporary files.
             Defaults to '/tmp/'.
     """
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         tmp_directory = options.get('tmp_directory', '/tmp/')
 
         self.metadata['total'] = {'objects': 0}
         self.metadata.setdefault('abnormalities', [])
         self.metadata.setdefault('objects', [])
 
-        with tempfile.NamedTemporaryFile(dir=tmp_directory) as f:
-            f.write(data)
-            f.flush()
+        with tempfile.NamedTemporaryFile(dir=tmp_directory) as st_tmp:
+            st_tmp.write(self.data)
+            st_tmp.flush()
 
-            macho_dictionary = macholibre.parse(f.name)
+            macho_dictionary = macholibre.parse(st_tmp.name)
             for (key, value) in macho_dictionary.items():
                 if key == 'abnormalities' and value not in self.metadata['abnormalities']:
                     self.metadata['abnormalities'].append(value)

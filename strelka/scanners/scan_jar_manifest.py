@@ -3,8 +3,8 @@ from strelka import core
 
 class ScanJarManifest(core.StrelkaScanner):
     """Collects metadata from JAR manifest files."""
-    def scan(self, data, file_object, options):
-        manifest = b'\n'.join(data.splitlines()).rstrip(b'\n')
+    def scan(self, st_file, options):
+        manifest = b'\n'.join(self.data.splitlines()).rstrip(b'\n')
         section_strings = manifest.split(b'\n')
         self.metadata.setdefault('manifest', [])
         for section in section_strings:

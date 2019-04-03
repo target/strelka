@@ -15,7 +15,7 @@ class ScanX509(core.StrelkaScanner):
             scanned. Must be either 'der' or 'pem'.
             Defaults to empty string.
     """
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         type = options.get('type', '')
 
         crypto_filetype = None
@@ -29,11 +29,11 @@ class ScanX509(core.StrelkaScanner):
             if crypto_filetype is not None:
                 certificate = crypto.load_certificate(
                     crypto_filetype,
-                    data,
+                    self.data,
                 )
 
         except crypto.Error:
-            self.flags.add(f'{self.scanner_name}::load_certificate_error')
+            self.flags.add('load_certificate_error')
 
         if certificate is not None:
             self.metadata['subjectString'] = b', '.join([b'='.join(sc) for sc in certificate.get_subject().get_components()])
@@ -66,17 +66,17 @@ class ScanX509(core.StrelkaScanner):
                             self.metadata['extensions'].append(extension_entry)
 
                 except crypto.Error:
-                    self.flags.add(f'{self.scanner_name}::extension_{name.lower()}')
+                    self.flags.add('extension_{name.lower()}')
 
         else:
             crl = None
             try:
                 if crypto_filetype is not None:
-                    crl = crypto.load_crl(crypto_filetype, data)
-                    self.flags.add(f'{self.scanner_name}::crl')
+                    crl = crypto.load_crl(crypto_filetype, self.data)
+                    self.flags.add('crl')
 
             except crypto.Error:
-                self.flags.add(f'{self.scanner_name}::load_crl_error')
+                self.flags.add('load_crl_error')
 
             if crl is not None:
                 self.metadata['issuerString'] = b', '.join([b'='.join(ic) for ic in crl.get_issuer().get_components()])

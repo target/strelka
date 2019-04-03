@@ -2,6 +2,7 @@ import io
 import rarfile
 
 from strelka import core
+from strelka.scanners import util
 
 HOST_OS_MAPPING = {
     0: 'RAR_OS_MSDOS',
@@ -20,13 +21,13 @@ class ScanRar(core.StrelkaScanner):
         limit: Maximum number of files to extract.
             Defaults to 1000.
     """
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         file_limit = options.get('limit', 1000)
 
         self.metadata['total'] = {'files': 0, 'extracted': 0}
 
-        with io.BytesIO(data) as data:
-            with rarfile.RarFile(data) as rf:
+        with io.BytesIO(self.data) as rar_io:
+            with rarfile.RarFile(rar_io) as rf:
                 rf_info_list = rf.infolist()
                 self.metadata['total']['files'] = len(rf_info_list)
                 for rf_object in rf_info_list:
@@ -38,17 +39,18 @@ class ScanRar(core.StrelkaScanner):
                         if not file_info.needs_password():
                             self.metadata['hostOs'] = HOST_OS_MAPPING[file_info.host_os]
 
-                            file_ = core.StrelkaFile(
+                            ex_file = core.StrelkaFile(
                                 name=f'{file_info.filename}',
-                                source=self.scanner_name,
+                                source=self.name,
                             )
-                            self.r0.setex(
-                                file_.uid,
-                                self.expire,
-                                rf.read(rf_object),
-                            )
-                            self.files.append(file_)
+                            for c in util.chunk_string(rf.read(rf_object)):
+                                p = self.fk.pipeline()
+                                p.rpush(ex_file.uid, c)
+                                p.expire(ex_file.uid, self.expire)
+                                p.execute()
+                            self.files.append(ex_file)
+
                             self.metadata['total']['extracted'] += 1
 
                         else:
-                            self.flags.add(f'{self.scanner_name}::password_protected')
+                            self.flags.add('password_protected')

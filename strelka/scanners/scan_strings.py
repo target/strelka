@@ -18,10 +18,10 @@ class ScanStrings(core.StrelkaScanner):
     def init(self):
         self.strings_regex = re.compile(br'[^\x00-\x1F\x7F-\xFF]{4,}')
 
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         limit = options.get('limit', 0)
 
-        strings = self.strings_regex.findall(data)
+        strings = self.strings_regex.findall(self.data)
         if limit:
             strings = strings[:limit]
         self.metadata['strings'] = strings

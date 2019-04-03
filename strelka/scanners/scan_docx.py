@@ -3,6 +3,7 @@ import io
 import docx
 
 from strelka import core
+from strelka.scanners import util
 
 
 class ScanDocx(core.StrelkaScanner):
@@ -13,10 +14,10 @@ class ScanDocx(core.StrelkaScanner):
             extracted as a child file.
             Defaults to False.
     """
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         extract_text = options.get('extract_text', False)
 
-        with io.BytesIO(data) as docx_object:
+        with io.BytesIO(self.data) as docx_object:
             docx_doc = docx.Document(docx_object)
             self.metadata['author'] = docx_doc.core_properties.author
             self.metadata['category'] = docx_doc.core_properties.category
@@ -38,11 +39,13 @@ class ScanDocx(core.StrelkaScanner):
             self.metadata['version'] = docx_doc.core_properties.version
 
             if extract_text:
-                file_ = core.StrelkaFile(
+                ex_file = core.StrelkaFile(
                     name='text',
-                    source=self.scanner_name,
+                    source=self.name,
                 )
                 for paragraph in docx_doc.paragraphs:
-                    self.r0.append(file_.uid, paragraph.text)
-                    self.r0.expire(file_.uid, self.expire)
-                self.files.append(file_)
+                    p = self.fk.pipeline()
+                    p.rpush(ex_file.uid, paragraph.text)
+                    p.expire(ex_file.uid, self.expire)
+                    p.execute()
+                self.files.append(ex_file)

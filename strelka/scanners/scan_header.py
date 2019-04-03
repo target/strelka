@@ -8,7 +8,7 @@ class ScanHeader(core.StrelkaScanner):
         length: Number of header characters to log as metadata.
             Defaults to 50.
     """
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         length = options.get('length', 50)
 
-        self.metadata['header'] = data[:length]
+        self.metadata['header'] = self.data[:length]

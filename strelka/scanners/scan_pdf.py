@@ -11,6 +11,7 @@ from pdfminer import pdftypes
 from pdfminer import psparser
 
 from strelka import core
+from strelka.scanners import util
 
 
 class ScanPdf(core.StrelkaScanner):
@@ -23,7 +24,7 @@ class ScanPdf(core.StrelkaScanner):
         limit: Maximum number of files to extract.
             Defaults to 2000.
     """
-    def scan(self, data, file_object, options):
+    def scan(self, st_file, options):
         extract_text = options.get('extract_text', False)
         file_limit = options.get('limit', 2000)
 
@@ -31,8 +32,8 @@ class ScanPdf(core.StrelkaScanner):
         extracted_objects = set()
 
         try:
-            with io.BytesIO(data) as data:
-                parsed = pdfparser.PDFParser(data)
+            with io.BytesIO(self.data) as pdf_io:
+                parsed = pdfparser.PDFParser(pdf_io)
                 pdf = pdfdocument.PDFDocument(parsed)
 
                 self.metadata.setdefault('annotatedUris', [])
@@ -45,9 +46,9 @@ class ScanPdf(core.StrelkaScanner):
                             if isinstance(object, dict):
                                 for (key, value) in object.items():
                                     if key in ['AA', 'OpenAction']:
-                                        self.flags.add(f'{self.scanner_name}::auto_action')
+                                        self.flags.add('auto_action')
                                     if key in ['JS', 'Javascript']:
-                                        self.flags.add(f'{self.scanner_name}::javascript_embedded')
+                                        self.flags.add('javascript_embedded')
 
                                     try:
                                         if key == 'A':
@@ -63,32 +64,33 @@ class ScanPdf(core.StrelkaScanner):
                             if isinstance(object, pdftypes.PDFStream):
                                 try:
                                     if object_id not in extracted_objects:
-                                        file_ = core.StrelkaFile(
+                                        ex_file = core.StrelkaFile(
                                             name=f'object_{object_id}',
-                                            source=self.scanner_name,
+                                            source=self.name,
                                         )
-                                        self.r0.setex(
-                                            file_.uid,
-                                            self.expire,
-                                            object.get_data(),
-                                        )
-                                        self.files.append(file_)
+                                        for c in util.chunk_string(object.get_data()):
+                                            p = self.fk.pipeline()
+                                            p.rpush(ex_file.uid, c)
+                                            p.expire(ex_file.uid, self.expire)
+                                            p.execute()
+                                        self.files.append(ex_file)
+
                                         extracted_objects.add(object_id)
                                         self.metadata['total']['extracted'] += 1
 
                                 except TypeError:
-                                    self.flags.add(f'{self.scanner_name}::type_error_{object_id}')
+                                    self.flags.add('type_error_{object_id}')
                                 except struct.error:
-                                    self.flags.add(f'{self.scanner_name}::struct_error_{object_id}')
+                                    self.flags.add('struct_error_{object_id}')
 
                         except ValueError:
-                            self.flags.add(f'{self.scanner_name}::value_error_{object_id}')
+                            self.flags.add('value_error_{object_id}')
                         except pdftypes.PDFObjectNotFound:
-                            self.flags.add(f'{self.scanner_name}::object_not_found_{object_id}')
+                            self.flags.add('object_not_found_{object_id}')
                         except pdftypes.PDFNotImplementedError:
-                            self.flags.add(f'{self.scanner_name}::not_implemented_error_{object_id}')
+                            self.flags.add('not_implemented_error_{object_id}')
                         except psparser.PSSyntaxError:
-                            self.flags.add(f'{self.scanner_name}::ps_syntax_error_{object_id}')
+                            self.flags.add('ps_syntax_error_{object_id}')
 
                 if extract_text:
                     rsrcmgr = pdfinterp.PDFResourceManager(caching=True)
@@ -111,29 +113,30 @@ class ScanPdf(core.StrelkaScanner):
                             interpreter.process_page(page)
 
                         except struct.error:
-                            self.flags.add(f'{self.scanner_name}::text_struct_error')
+                            self.flags.add('text_struct_error')
 
-                    file_ = core.StrelkaFile(
+                    ex_file = core.StrelkaFile(
                         name='text',
-                        source=self.scanner_name,
+                        source=self.name,
                     )
-                    self.r0.setex(
-                        file_.uid,
-                        self.expire,
-                        retstr.getvalue(),
-                    )
-                    self.files.append(file_)
-                    self.flags.add(f'{self.scanner_name}::extracted_text')
+                    for c in util.chunk_string(retstr.getvalue()):
+                        p = self.fk.pipeline()
+                        p.rpush(ex_file.uid, c)
+                        p.expire(ex_file.uid, self.expire)
+                        p.execute()
+                    self.files.append(ex_file)
+
+                    self.flags.add('extracted_text')
                     device.close()
                     retstr.close()
 
         except IndexError:
-            self.flags.add(f'{self.scanner_name}::index_error')
+            self.flags.add('index_error')
         except pdfdocument.PDFEncryptionError:
-            self.flags.add(f'{self.scanner_name}::encrypted_pdf')
+            self.flags.add('encrypted_pdf')
         except pdfparser.PDFSyntaxError:
-            self.flags.add(f'{self.scanner_name}::pdf_syntax_error')
+            self.flags.add('pdf_syntax_error')
         except psparser.PSEOF:
-            self.flags.add(f'{self.scanner_name}::ps_eof')
+            self.flags.add('ps_eof')
         except psparser.PSSyntaxError:
-            self.flags.add(f'{self.scanner_name}::ps_syntax_error')
+            self.flags.add('ps_syntax_error')

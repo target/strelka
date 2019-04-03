@@ -1,4 +1,5 @@
 from strelka import core
+from strelka.scanners import util
 
 
 class ScanJpeg(core.StrelkaScanner):
@@ -6,22 +7,22 @@ class ScanJpeg(core.StrelkaScanner):
 
     This scanner extracts data that is inserted past the JFIF trailer.
     """
-    def scan(self, data, file_object, options):
-        if not data.endswith(b'\xff\xd9'):
-            trailer_index = data.rfind(b'\xff\xd9')
+    def scan(self, st_file, options):
+        if not self.data.endswith(b'\xff\xd9'):
+            trailer_index = self.data.rfind(b'\xff\xd9')
             if trailer_index == -1:
-                self.flags.add(f'{self.scanner_name}::no_trailer')
+                self.flags.add('no_trailer')
             else:
-                trailer_data = data[trailer_index + 2:]
+                trailer_data = self.data[trailer_index + 2:]
                 if trailer_data:
                     self.metadata['trailerIndex'] = trailer_index
 
-                    file_ = core.StrelkaFile(
-                        source=self.scanner_name,
+                    ex_file = core.StrelkaFile(
+                        source=self.name,
                     )
-                    self.r0.setex(
-                        file_.uid,
-                        self.expire,
-                        trailer_data,
-                    )
-                    self.files.append(file_)
+                    for c in util.chunk_string(trailer_data):
+                        p = self.fk.pipeline()
+                        p.rpush(ex_file.uid, c)
+                        p.expire(ex_file.uid, self.expire)
+                        p.execute()
+                    self.files.append(ex_file)
