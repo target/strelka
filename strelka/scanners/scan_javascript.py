@@ -32,7 +32,7 @@ class ScanJavascript(core.StrelkaScanner):
             self.flags.append('beautify_failed')
 
         if js is None:
-            js = file_object.data.decode()
+            js = self.data.decode()
 
         tokens = esprima.tokenize(
             js,
