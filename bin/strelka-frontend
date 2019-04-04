@@ -127,7 +127,6 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
             if not cli_case and request.retrieve.case:
                 cli_case = request.retrieve.case
 
-        scan_res = strelka_pb2.ScanResult(uid=cli_req['uid'])
         base_evt = {
             'time': timestamp,
             'request': {**cli_req, 'metadata': cli_meta},
@@ -136,6 +135,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
         sha256 = m.hexdigest()
         check = self.gk.exists(sha256)
         if check != 0:
+            yield strelka_pb2.ScanResult(uid=cli_req['uid'])
             results = self.gk.lrange(sha256, 0, -1)
             for r in results:
                 evt = {
@@ -145,11 +145,14 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
 
                 if cli_case:
                     cli_evt = remap_evt(evt, cli_case)
-                    scan_res.events.append(json.dumps(cli_evt))
+                    yield strelka_pb2.ScanResult(
+                        uid=cli_req['uid'],
+                        event=json.dumps(cli_evt),
+                    )
                 srv_evt = remap_evt(evt, self.case)
                 self.logger.info(json.dumps(srv_evt))
             logging.debug('gk returned result!')
-            return scan_res
+            return
 
         p = self.jk.pipeline()
         p.setex(f'{root}:alive', task['expire'], '1')
@@ -162,6 +165,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
                 time.sleep(0.1)
                 continue
 
+            yield strelka_pb2.ScanResult(uid=cli_req['uid'])
             p = self.gk.pipeline()
             results = self.jk.lrange(f'{root}:results', 0, -1)
             for r in results:
@@ -173,7 +177,10 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
 
                 if cli_case:
                     cli_evt = remap_evt(evt, cli_case)
-                    scan_res.events.append(json.dumps(cli_evt))
+                    yield strelka_pb2.ScanResult(
+                        uid=cli_req['uid'],
+                        event=json.dumps(cli_evt),
+                    )
                 srv_evt = remap_evt(evt, self.case)
                 self.logger.info(json.dumps(srv_evt))
 
@@ -182,7 +189,6 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
             break
 
         self.jk.delete(f'{root}:alive')
-        return scan_res
 
     def SendLocation(self, request, context):
         timestamp = datetime.datetime.utcnow().isoformat()

@@ -1,9 +1,9 @@
 syntax = "proto3";
 
 service Strelka {
-  rpc StreamData(stream ScanData) returns (ScanResult) {}
+  rpc StreamData(stream ScanData) returns (stream ScanResult) {}
 
-  rpc SendLocation(ScanLocation) returns (ScanResult) {}
+  rpc SendLocation(ScanLocation) returns (stream ScanResult) {}
 }
 
 // contains request details related to the RPC
@@ -41,5 +41,5 @@ message ScanLocation {
 
 message ScanResult {
   string uid = 1;
-  repeated string events = 2;
+  string event = 2;
 }
