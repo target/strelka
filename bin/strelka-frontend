@@ -59,7 +59,7 @@ def remap_evt(result, case='camel'):
         return remapped
 
 
-class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
+class Frontend(strelka_pb2_grpc.FrontendServicer):
     def __init__(self, filekeeper, gatekeeper, jobkeeper, evt_log):
         # filekeeper redis
         self.fk = redis.StrictRedis(
@@ -91,7 +91,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
             )
         )
 
-    def StreamData(self, request_iterator, context):
+    def ScanFile(self, request_iterator, context):
         timestamp = datetime.datetime.utcnow().isoformat()
         root = uuid.uuid4().hex
         task = {
@@ -111,21 +111,16 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
             p.expire(root, task['expire'])
             p.execute()
 
-            if not cli_req and request.request:
-                cli_req['uid'] = request.request.uid or root
-                cli_req['client'] = request.request.client
-                cli_req['source'] = request.request.source
-            if 'filename' not in cli_req and request.filename:
-                cli_req['filename'] = request.filename
-            if not task['flavors'] and request.metadata.flavors:
-                task['flavors'] = [f for f in request.metadata.flavors]
-            if not cli_meta and request.metadata.metadata:
-                cli_meta = {
-                    key: value
-                    for (key, value) in request.metadata.metadata.items()
-                }
-            if not cli_case and request.retrieve.case:
-                cli_case = request.retrieve.case
+            cli_req['uid'] = request.request.uid or root
+            cli_req['client'] = request.request.client
+            cli_req['source'] = request.request.source
+            cli_req['filename'] = request.filename
+            task['flavors'] = [f for f in request.metadata.flavors]
+            cli_meta = {
+                key: value
+                for (key, value) in request.metadata.metadata.items()
+            }
+            cli_case = request.retrieve.case
 
         base_evt = {
             'time': timestamp,
@@ -135,7 +130,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
         sha256 = m.hexdigest()
         check = self.gk.exists(sha256)
         if check != 0:
-            yield strelka_pb2.ScanResult(uid=cli_req['uid'])
+            yield strelka_pb2.ScanResponse(uid=cli_req['uid'])
             results = self.gk.lrange(sha256, 0, -1)
             for r in results:
                 evt = {
@@ -145,7 +140,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
 
                 if cli_case:
                     cli_evt = remap_evt(evt, cli_case)
-                    yield strelka_pb2.ScanResult(
+                    yield strelka_pb2.ScanResponse(
                         uid=cli_req['uid'],
                         event=json.dumps(cli_evt),
                     )
@@ -155,7 +150,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
             return
 
         p = self.jk.pipeline()
-        p.setex(f'{root}:alive', task['expire'], '1')
+        p.setex(f'{root}:active', task['expire'], '1')
         p.rpush('queue', json.dumps(task))
         p.execute()
 
@@ -165,7 +160,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
                 time.sleep(0.1)
                 continue
 
-            yield strelka_pb2.ScanResult(uid=cli_req['uid'])
+            yield strelka_pb2.ScanResponse(uid=cli_req['uid'])
             p = self.gk.pipeline()
             results = self.jk.lrange(f'{root}:results', 0, -1)
             for r in results:
@@ -177,7 +172,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
 
                 if cli_case:
                     cli_evt = remap_evt(evt, cli_case)
-                    yield strelka_pb2.ScanResult(
+                    yield strelka_pb2.ScanResponse(
                         uid=cli_req['uid'],
                         event=json.dumps(cli_evt),
                     )
@@ -188,9 +183,9 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
             p.execute()
             break
 
-        self.jk.delete(f'{root}:alive')
+        self.jk.delete(f'{root}:active')
 
-    def SendLocation(self, request, context):
+    def ScanHttp(self, request, context):
         timestamp = datetime.datetime.utcnow().isoformat()
         root = uuid.uuid4().hex
         task = {
@@ -199,10 +194,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
             'flavors': [],
         }
 
-        cli_location = {
-            key: value
-            for (key, value) in request.location.items()
-        }
+        cli_url = request.url
         cli_req = {
             'uid': request.request.uid or root,
             'client': request.request.client,
@@ -214,30 +206,27 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
         }
         cli_case = request.retrieve.case
 
-        scan_res = strelka_pb2.ScanResult(uid=cli_req['uid'])
         base_evt = {
             'time': timestamp,
             'request': {**cli_req, 'metadata': cli_meta},
         }
 
-        # only http currently supported
-        if cli_location['type'] == 'http':
-            # this needs options read from env
-            response = requests.get(cli_location['object'],
-                                    allow_redirects=True,
-                                    stream=True,
-                                    verify=False)
-            if response.status_code == 200:
-                for r in response.iter_content(chunk_size=16384):
-                    p = self.fk.pipeline()
-                    p.rpush(root, r)
-                    p.expire(root, task['expire'])
-                    p.execute()
-            else:
-                return scan_res
+        response = requests.get(cli_url,
+                                allow_redirects=True,
+                                stream=True,
+                                verify=False)
+        if response.status_code == 200:
+            for r in response.iter_content(chunk_size=16384):
+                p = self.fk.pipeline()
+                p.rpush(root, r)
+                p.expire(root, task['expire'])
+                p.execute()
+        else:
+            yield strelka_pb2.ScanResponse(uid=cli_req['uid'])
+            return
 
         p = self.jk.pipeline()
-        p.setex(f'{root}:alive', task['expire'], '1')
+        p.setex(f'{root}:active', task['expire'], '1')
         p.rpush('queue', json.dumps(task))
         p.execute()
 
@@ -262,7 +251,7 @@ class StrelkaServicer(strelka_pb2_grpc.StrelkaServicer):
 
             break
 
-        self.jk.delete(f'{root}:alive')
+        self.jk.delete(f'{root}:active')
         return scan_res
 
 
@@ -289,12 +278,14 @@ def main():
     frontend_cfg_path = ''
     if args.frontend_cfg_path:
         if not os.path.exists(args.frontend_cfg_path):
-            sys.exit(f'sysexit: frontend configuration {args.frontend_cfg_path} does not exist')
+            logging.exception(f'frontend configuration {args.frontend_cfg_path} does not exist')
+            sys.exit()
         frontend_cfg_path = args.frontend_cfg_path
-    elif os.path.exists('/usr/local/etc/strelka/frontend.yaml'):
-        frontend_cfg_path = '/usr/local/etc/strelka/frontend.yaml'
+    elif os.path.exists('/etc/strelka/frontend.yaml'):
+        frontend_cfg_path = '/etc/strelka/frontend.yaml'
     else:
-        sys.exit('sysexit: no frontend configuration found')
+        logging.exception('no frontend configuration found')
+        sys.exit()
 
     with open(frontend_cfg_path) as f:
         frontend_cfg = yaml.safe_load(f.read())
@@ -326,8 +317,8 @@ def main():
         executor,
         maximum_concurrent_rpcs=grpc_cfg.get('max_rpcs'),
     )
-    strelka_pb2_grpc.add_StrelkaServicer_to_server(
-        StrelkaServicer(fk_cfg, gk_cfg, jk_cfg, evt_log),
+    strelka_pb2_grpc.add_FrontendServicer_to_server(
+        Frontend(fk_cfg, gk_cfg, jk_cfg, evt_log),
         server,
     )
     server.add_insecure_port(grpc_cfg.get('address'))

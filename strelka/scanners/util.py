@@ -2,6 +2,9 @@ import re
 
 
 def chunk_string(s, chunk=16384):
+    if isinstance(s, bytearray):
+        s = bytes(value)
+
     for c in range(0, len(s), chunk):
         yield s[c:c + chunk]
 

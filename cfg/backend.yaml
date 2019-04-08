@@ -1,5 +1,5 @@
 processes:
-    logging_cfg: '/usr/local/etc/strelka/logging.yaml'
+    logging_cfg: '/etc/strelka/logging.yaml'
     workers: 4
     shutdown: 30
     max_files: 5000
@@ -17,7 +17,7 @@ jobkeeper:
     port: 6379
 tasting:
     mime_db: null
-    yara_rules: '/usr/local/etc/strelka/taste/'
+    yara_rules: '/etc/strelka/taste/'
 scanners:
     'ScanBatch':
       - positive:
@@ -293,6 +293,11 @@ scanners:
         priority: 5
         options:
           limit: 1000
+    'ScanRuby':
+      - positive:
+          flavors:
+            - 'text/x-ruby'
+        priority: 5
     'ScanSwf':
       - positive:
           flavors:

@@ -29,7 +29,7 @@ class ScanJavascript(core.StrelkaScanner):
                 js = jsbeautifier.beautify(self.data.decode())
                 self.metadata['beautified'] = True
         except:  # noqa
-            self.flags.append('beautify_failed')
+            self.flags.add('beautify_failed')
 
         if js is None:
             js = self.data.decode()

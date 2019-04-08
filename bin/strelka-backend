@@ -55,12 +55,14 @@ def main():
     backend_cfg_path = ''
     if args.backend_cfg_path:
         if not os.path.exists(args.backend_cfg_path):
-            sys.exit(f'sysexit: backend configuration {args.backend_cfg_path} does not exist')
+            logging.exception(f'backend configuration {args.backend_cfg_path} does not exist')
+            sys.exit()
         backend_cfg_path = args.backend_cfg_path
-    elif os.path.exists('/usr/local/etc/strelka/backend.yaml'):
-        backend_cfg_path = '/usr/local/etc/strelka/backend.yaml'
+    elif os.path.exists('/etc/strelka/backend.yaml'):
+        backend_cfg_path = '/etc/strelka/backend.yaml'
     else:
-        sys.exit('sysexit: no backend configuration found')
+        logging.exception('no backend configuration found')
+        sys.exit()
 
     with open(backend_cfg_path) as f:
         backend_cfg = yaml.safe_load(f.read())

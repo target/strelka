@@ -4,7 +4,7 @@ FROM ubuntu:18.04
 LABEL maintainer "Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
 # Copy Strelka files
-COPY . /usr/local/src/strelka/
+COPY . /strelka/
 
 # Update packages
 RUN apt-get -qq update && \
@@ -34,13 +34,13 @@ RUN apt-get -qq update && \
     upx \
     jq && \
 # Install Python packages
-    pip3 install -r /usr/local/src/strelka/docker/frontend/requirements.txt && \
+    pip3 install -r /strelka/docker/frontend/requirements.txt && \
 # Compile protobuf
-    cd /usr/local/src/strelka/ && \
+    cd /strelka/ && \
     python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. strelka/proto/strelka.proto && \
     python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. strelka/proto/mmbot.proto && \
 # Install Strelka
-    mv docker/frontend/setup.py /usr/local/src/strelka/ && \
+    mv docker/frontend/setup.py /strelka/ && \
     python3 setup.py -q build && \
     python3 setup.py -q install && \
 # Remove build packages
@@ -60,7 +60,7 @@ RUN apt-get -qq update && \
     python3-wheel && \
     apt-get purge -qq python3-setuptools  && \
     apt-get clean -qq && \
-    rm -rf /var/lib/apt/lists/* /usr/local/src/strelka/ /tmp/yara* && \
+    rm -rf /var/lib/apt/lists/* /strelka/ /tmp/yara* && \
 # Assign permissions to Strelka scan result logging directory
     mkdir /var/log/strelka/ && \
     chgrp -R 0 /var/log/strelka/ && \

@@ -1,4 +1,4 @@
-logging_cfg: '/usr/local/etc/strelka/logging.yaml'
+logging_cfg: '/etc/strelka/logging.yaml'
 grpc:
     address: '[::]:57314'
     threads: 4

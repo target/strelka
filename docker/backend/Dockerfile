@@ -7,7 +7,7 @@ ARG YARA_VERSION=3.9.0
 ARG YARA_PYTHON_VERSION=3.9.0
 
 # Copy Strelka files
-COPY . /usr/local/src/strelka/
+COPY . /strelka/
 
 # Update packages
 RUN apt-get -qq update && \
@@ -37,9 +37,9 @@ RUN apt-get -qq update && \
     upx \
     jq && \
 # Install Python packages
-    pip3 install -r /usr/local/src/strelka/docker/backend/requirements.txt && \
+    pip3 install -r /strelka/docker/backend/requirements.txt && \
 # Compile protobuf
-    cd /usr/local/src/strelka/ && \
+    cd /strelka/ && \
     python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. strelka/proto/strelka.proto && \
     python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. strelka/proto/mmbot.proto && \
 # Install YARA
@@ -58,8 +58,8 @@ RUN apt-get -qq update && \
     python3 setup.py build --dynamic-linking && \
     python3 setup.py install && \
 # Install Strelka
-    cd /usr/local/src/strelka/ && \
-    mv docker/backend/setup.py /usr/local/src/strelka/ && \
+    cd /strelka/ && \
+    mv docker/backend/setup.py /strelka/ && \
     python3 setup.py -q build && \
     python3 setup.py -q install && \
 # Remove build packages
@@ -79,7 +79,7 @@ RUN apt-get -qq update && \
     python3-wheel && \
     apt-get purge -qq python3-setuptools  && \
     apt-get clean -qq && \
-    rm -rf /var/lib/apt/lists/* /usr/local/src/strelka/ /tmp/yara* && \
+    rm -rf /var/lib/apt/lists/* /strelka/ /tmp/yara* && \
 # Assign permissions to Strelka scan result logging directory
     mkdir /var/log/strelka/ && \
     chgrp -R 0 /var/log/strelka/ && \

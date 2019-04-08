@@ -18,7 +18,7 @@ services:
             - strelka_net
         # volumes:
             # - logs:/var/log/strelka/
-            # - /path/to/your/configs/:/usr/local/etc/strelka/
+            # - /path/to/your/configs/:/etc/strelka/
         restart: on-failure
         depends_on:
             - filekeeper
@@ -32,7 +32,7 @@ services:
         networks:
           - strelka_net
         # volumes:
-            # - /path/to/your/configs/:/usr/local/etc/strelka/
+            # - /path/to/your/configs/:/etc/strelka/
         restart: on-failure
         depends_on:
             - filekeeper

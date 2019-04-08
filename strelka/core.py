@@ -315,7 +315,7 @@ class Worker(multiprocessing.Process):
                     continue
 
                 task = json.loads(pop[1])
-                check = self.jk.get(f'{task["root"]}:alive')
+                check = self.jk.get(f'{task["root"]}:active')
                 if check is None:
                     continue
 
