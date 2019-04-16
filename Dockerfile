@@ -7,6 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 ARG YARA_VERSION=3.8.1
 ARG YARA_PYTHON_VERSION=3.8.1
+ARG TIMEZONE=UTC
 
 # Copy Strelka files
 COPY . /opt/strelka/
@@ -15,8 +16,8 @@ COPY . /opt/strelka/
 RUN apt-get -qq update && \
 # Install optional packages and set time zone
     apt-get install -y software-properties-common apt-utils locales tzdata && \
-    echo "UTC" > /etc/timezone && \
-    ln -fs /usr/share/zoneinfo/UTC /etc/localtime && \
+    echo "$TIMEZONE" > /etc/timezone && \
+    ln -fs /usr/share/zoneinfo/$TIMEZONE /etc/localtime && \
     dpkg-reconfigure -f noninteractive tzdata && \
     apt-get install --no-install-recommends -qq \
 # Install build packages
