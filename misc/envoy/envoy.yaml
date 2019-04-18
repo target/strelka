@@ -30,8 +30,8 @@ static_resources:
       #   common_tls_context:
       #       alpn_protocols: "h2"
       #       tls_certificates:
-      #       - certificate_chain: { filename: "/etc/envoy/envoy.crt" }
-      #         private_key: { filename: "/etc/envoy/envoy.key" }
+      #       - certificate_chain: { filename: "/path/to/envoy.crt" }
+      #         private_key: { filename: "/path/to/envoy.key" }
 
   clusters:
   - name: strelka_scan
