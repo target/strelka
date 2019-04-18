@@ -13,7 +13,7 @@ import (
         "google.golang.org/grpc/credentials"
         "google.golang.org/grpc/status"
 
-        pb "github.com/target/strelka/src/go/api"
+        pb "github.com/target/strelka/src/go/api/strelka"
         "github.com/target/strelka/src/go/pkg/structs"
 )
 

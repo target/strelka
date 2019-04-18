@@ -5,7 +5,7 @@ import (
 
         "google.golang.org/grpc"
 
-        pb "github.com/target/strelka/src/go/api"
+        pb "github.com/target/strelka/src/go/api/strelka"
 )
 
 // defines structures used in configuration files

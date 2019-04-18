@@ -15,7 +15,7 @@ import (
         "google.golang.org/grpc"
         "gopkg.in/yaml.v2"
 
-        pb "github.com/target/strelka/src/go/api"
+        pb "github.com/target/strelka/src/go/api/strelka"
         "github.com/target/strelka/src/go/pkg/rpc"
         "github.com/target/strelka/src/go/pkg/structs"
 )
