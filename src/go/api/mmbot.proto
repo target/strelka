@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+service Mmbot {
+  rpc SendVba(Vba) returns (Prediction) {}
+}
+
+message Vba {
+  string vba = 1;
+}
+
+message Prediction {
+  string prediction = 1;
+}
