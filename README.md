@@ -1,8 +1,6 @@
 # Strelka
 Strelka is a real-time file scanning system used for threat hunting, threat detection, and incident response. Originally based on the design established by Lockheed Martin's [Laika BOSS](https://github.com/lmco/laikaboss) and similar projects (see: [related projects](#related-projects)), Strelka's purpose is to perform file extraction and metadata collection at huge scale.
 
-This is an experimental branch that uses gRPC instead of ZeroMQ for network communication!
-
 This is a preview branch that brings compatibility breaking changes to Strelka. The most significant changes to the project are:
 * System now fully utilizes containers (no anticipated support for direct server installations)
 * System uses multiple Redis databases for file caching and task queuing
