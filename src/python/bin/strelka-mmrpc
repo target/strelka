@@ -1,0 +1,90 @@
+#! /usr/bin/env python3
+import argparse
+from concurrent import futures
+import json
+import time
+
+import grpc
+from mmbot import mmbot
+
+from strelka.proto import mmbot_pb2
+from strelka.proto import mmbot_pb2_grpc
+
+
+class MmbotServicer(mmbot_pb2_grpc.MmbotServicer):
+    def __init__(self):
+        self.mmb = mmbot.MaliciousMacroBot()
+        self.mmb.mmb_init_model()
+
+    def SendVba(self, request, context):
+        response = mmbot_pb2.Prediction()
+        pred = self.mmb.mmb_predict(request.vba, datatype='vba')
+        pred_json = self.mmb.mmb_prediction_to_json(pred)[0]
+        return mmbot_pb2.Prediction(
+            prediction=json.dumps(pred_json),
+        )
+
+
+def main():
+    parser = argparse.ArgumentParser(prog='strelka-mmrpc',
+                                     description='runs MaliciousMacroBot as a'
+                                                 ' gRPC service',
+                                     usage='%(prog)s [options]')
+    parser.add_argument(
+        '--address',
+        action='store',
+        dest='address',
+        help='address and port that service binds to',
+    )
+    parser.add_argument(
+        '--threads',
+        action='store',
+        type=int,
+        dest='threads',
+        help='number of threads to run'
+             ' (default: number of system CPUs * 5)'
+    )
+    parser.add_argument(
+        '--max-rpcs',
+        action='store',
+        dest='max_rpcs',
+        help='maximum number of RPCs service will concurrently handle'
+             ' (default: 100)'
+    )
+    parser.add_argument(
+        '--ttl',
+        action='store',
+        type=int,
+        dest='ttl',
+        help='number of seconds to run the server'
+             ' (default: 1800 (30 minutes))',
+    )
+    parser.add_argument(
+        '--shutdown',
+        action='store',
+        type=int,
+        dest='shutdown',
+        help='number of seconds to wait for gRPC to shutdown'
+             ' (default: 30)',
+    )
+    args = parser.parse_args()
+
+    address = args.address or '[::]:33907'
+    threads = args.threads or None
+    max_rpcs = args.max_rpcs or 100
+    time_to_live = args.ttl or 30 * 60
+    shutdown = args.shutdown or 30
+
+    executor = futures.ThreadPoolExecutor(max_workers=threads)
+    server = grpc.server(executor,
+                         maximum_concurrent_rpcs=max_rpcs)
+    mmbot_pb2_grpc.add_MmbotServicer_to_server(MmbotServicer(), server)
+    server.add_insecure_port(address)
+    server.start()
+    time.sleep(time_to_live)
+    stop = server.stop(shutdown)
+    stop.wait()
+
+
+if __name__ == '__main__':
+    main()
