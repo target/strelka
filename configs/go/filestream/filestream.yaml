@@ -1,0 +1,14 @@
+conn:
+    server: '127.0.0.1:57314'
+    cert: ''
+    timeout: 1m
+    routines: 5
+files:
+    chunk: 16184
+    patterns:
+        - '/glob/to/your/files/*'
+    # delete: true
+response:
+    report: 5s
+delta: 5s
+staging: '/path/to/your/staging/directory/'

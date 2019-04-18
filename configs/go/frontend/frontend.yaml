@@ -1,0 +1,8 @@
+server: ":57314"
+cache:
+    host: "strelka_cache_1:6379"
+    db: 0
+queue:
+    host: "strelka_queue_1:6379"
+    db: 0
+log: "/var/log/strelka/strelka.log"
