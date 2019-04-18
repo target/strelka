@@ -120,14 +120,11 @@ func main() {
                         if (fi.Mode() & os.ModeType != 0) {
                                 continue
                         }
-                        m := make(map[string]string)
-                        m["test"] = "1"
 
-                        sfr := structs.ScanFileRequest{
+                        req := structs.ScanFileRequest{
                             Request:request,
                             Attributes:&pb.Attributes{
                                 Filename:f,
-                                Metadata:m,
                             },
                             Chunk:conf.Files.Chunk,
                             Delete:conf.Files.Delete,
@@ -136,7 +133,7 @@ func main() {
                         sem <- 1
                         wg.Add(1)
                         go func(){
-                                rpc.ScanFile(opts, sfr, responses)
+                                rpc.ScanFile(opts, req, responses)
                                 wg.Done()
                                 <-sem
                         }()
