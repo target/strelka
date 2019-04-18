@@ -1,0 +1,55 @@
+version: '2'
+
+networks:
+    net:
+
+volumes:
+    logs:
+
+services:
+    frontend:
+        build:
+              context: ..
+              dockerfile: build/go/frontend/Dockerfile
+        command: strelka-frontend
+        ports:
+            - "57314:57314"  # match the port in frontend.yaml
+        networks:
+            - net
+        volumes:
+            - ../configs/go/frontend/:/etc/strelka/:ro
+        restart: unless-stopped
+        depends_on:
+            - cache
+            - queue
+    backend:
+        build:
+              context: ..
+              dockerfile: build/python/backend/Dockerfile
+        command: strelka-backend
+        shm_size: 512mb
+        networks:
+          - net
+        volumes:
+            - ../configs/python/backend/:/etc/strelka/:ro
+        restart: unless-stopped
+        depends_on:
+            - cache
+            - queue
+    cache:
+        image: redis:alpine
+        command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
+        networks:
+            - net
+    queue:
+        image: redis:alpine
+        command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
+        networks:
+            - net
+    mmrpc:
+        build:
+              context: ..
+              dockerfile: build/python/mmrpc/Dockerfile
+        command: strelka-mmrpc --threads 1 --address [::]:33907
+        networks:
+            - net
