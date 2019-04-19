@@ -11,7 +11,16 @@ This is a preview branch that brings compatibility breaking changes to Strelka. 
 
 ## Quickstart
 
-To begin using the system, ensure that you have [docker](https://docs.docker.com/install/) and [docker-compose](https://docs.docker.com/compose/install/) installed. From the root of the repository, a sample system can be brought up by running the following command: `docker-compose -f build/docker-compose.yaml --project-name strelka up`
+Files in the `build/` and `configs/` directories are designed to start a demo system. The demo system can be brought up by running the following command from the root of the repository:
+```
+docker-compose -f build/docker-compose.yaml --project-name strelka up
+```
+
+Client apps `strelka-fileshot` and `strelka-filestream` are go gettable:
+```
+go install git.target.com/CFC/strelka/src/go/cmd/strelka-fileshot/
+go install git.target.com/CFC/strelka/src/go/cmd/strelka-filestream/
+```
 
 ## Licensing
 Strelka and its associated code is released under the terms of the Apache 2.0 license.
