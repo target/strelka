@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2019-04-22
+### Added
+- Dockerfile now supports UTC and local time (ufomorme)
+
 ## 2019-03-23
 ### Added
 - Scan event start and finish timestamps now support UTC and local time (ufomorme)
