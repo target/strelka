@@ -74,7 +74,7 @@ class Backend(object):
                 with interruptingcow.timeout(timeout,
                                              strelka.RequestTimeout):
                     self.distribute(root_id, file, expire_at)
-                    self.queue.rpush(root_id, 'FIN')
+                    self.queue.rpush(f'evt:{root_id}', 'FIN')
 
             except strelka.RequestTimeout:
                 logging.debug(f'request {root_id} timed out')
@@ -84,7 +84,7 @@ class Backend(object):
             count += 1
 
         logging.info(f'shutdown after scanning {count} file(s) and'
-                     f' {(time.time() - work_start).total_seconds()} second(s)')
+                     f' {time.time() - work_start} second(s)')
 
     def taste_mime(self, data):
         """Tastes file data with libmagic."""
@@ -99,18 +99,7 @@ class Backend(object):
 
     def distribute(self, root_id, file, expire_at):
         """Distributes a file through scanners.
-
-        This method defines how files are assigned scanners:
-            1. File data is formatted to bytes.
-            2. File hash is calculated and roots assigned.
-            3. File flavors are tasted via MIME and YARA.
-            4. Scanner mapping from scan configuration is applied to flavors.
-            5. File is recursively sent to the mapped scanners.
-
-        Args:
-            file: StrelkaFile to be scanned.
         """
-
         try:
             files = []
 
@@ -152,7 +141,7 @@ class Backend(object):
                         reverse=True,
                     )
 
-                    p = self.queue.pipeline()
+                    p = self.queue.pipeline(transaction=False)
                     tree = {
                         'node': file.uid,
                         'parent': file.parent,
@@ -198,8 +187,8 @@ class Backend(object):
                         except ModuleNotFoundError:
                             logging.exception(f'scanner {name} not found')
 
-                    p.rpush(root_id, strelka.format_event(metadata))
-                    p.expireat(root_id, expire_at)
+                    p.rpush(f'evt:{root_id}', strelka.format_event(metadata))
+                    p.expireat(f'evt:{root_id}', expire_at)
                     p.execute()
 
             except strelka.DistributionTimeout:
@@ -297,15 +286,19 @@ def main():
     logging.info(f'using backend configuration {backend_cfg_path}')
 
     try:
+        cache_cfg = backend_cfg.get('cache')
+        cache_addr = cache_cfg.get('addr').split(':')
         cache = redis.StrictRedis(
-            host=backend_cfg.get('cache').get('host'),
-            port=backend_cfg.get('cache').get('port'),
-            db=backend_cfg.get('cache').get('db'),
+            host=cache_addr[0],
+            port=cache_addr[1],
+            db=cache_cfg.get('db'),
         )
+        queue_cfg = backend_cfg.get('queue')
+        queue_addr = queue_cfg.get('addr').split(':')
         queue = redis.StrictRedis(
-            host=backend_cfg.get('queue').get('host'),
-            port=backend_cfg.get('queue').get('port'),
-            db=backend_cfg.get('queue').get('db'),
+            host=queue_addr[0],
+            port=queue_addr[1],
+            db=queue_cfg.get('db'),
         )
         if cache.ping():
             logging.debug('verified cache is up')

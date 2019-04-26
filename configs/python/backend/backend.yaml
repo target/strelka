@@ -6,12 +6,10 @@ limits:
     distribution: 600
     scanner: 150
 cache:
-    host: 'strelka_cache_1'
-    port: 6379
+    addr: 'strelka_cache_1:6379'
     db: 0
 queue:
-    host: 'strelka_queue_1'
-    port: 6379
+    addr: 'strelka_queue_1:6379'
     db: 0
 tasting:
     mime_db: null

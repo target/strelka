@@ -1,28 +1,25 @@
 admin:
   access_log_path: /tmp/admin_access.log
-  address:
-    socket_address: { address: 0.0.0.0, port_value: 9901 }
+  address: {socket_address: {address: 0.0.0.0, port_value: 9901}}
 
 static_resources:
   listeners:
-  - name: strelka_proxy
-    address:
-      socket_address: { address: 0.0.0.0, port_value: 8443 }
+  - name: frontend_proxy
+    address: {socket_address: {address: 0.0.0.0, port_value: 57314}}
     filter_chains:
     - filters:
       - name: envoy.http_connection_manager
         config:
-          stat_prefix: ingress_http
-          stream_idle_timeout: 0s
+          stat_prefix: frontend
           codec_type: AUTO
           route_config:
-            name: strelka_route
+            name: frontend_route
             virtual_hosts:
-            - name: strelka_service
+            - name: frontend_service
               domains: ["*"]
               routes:
               - match: { prefix: "/" }
-                route: { cluster: strelka_scan, timeout: { seconds: 0 } }
+                route: { cluster: frontend_cluster, timeout: { seconds: 0 } }
           http_filters:
           - name: envoy.router
 
@@ -34,15 +31,14 @@ static_resources:
       #         private_key: { filename: "/path/to/envoy.key" }
 
   clusters:
-  - name: strelka_scan
-    connect_timeout: 5s
-    type: static
+  - name: frontend_cluster
+    connect_timeout: 1s
+    type: STATIC
     lb_policy: LEAST_REQUEST
     http2_protocol_options: { }
-    # hosts: [ {socket_address: {address: 1.2.3.4, port_value: 57314}} ]
-    health_checks:
-      - timeout: 1s
-        interval: 60s
-        unhealthy_threshold: 1
-        healthy_threshold: 1
-        tcp_health_check: { }
+    load_assignment:
+      cluster_name: frontend_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint: {address: {socket_address: {address: 1.2.3.4, port_value: 57314}}}
+        - endpoint: {address: {socket_address: {address: 5.6.7.8, port_value: 57314}}}

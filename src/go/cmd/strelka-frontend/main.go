@@ -1,6 +1,7 @@
 package main
 
 import (
+        "context"
         "flag"
         "fmt"
         "io"
@@ -10,12 +11,13 @@ import (
         "time"
         "encoding/json"
 
-        "github.com/google/uuid"
-        "github.com/go-redis/redis"
         "google.golang.org/grpc"
+        "github.com/go-redis/redis"
+        "github.com/google/uuid"
         "gopkg.in/yaml.v2"
 
-        pb "github.com/target/strelka/src/go/api/strelka"
+        "github.com/target/strelka/src/go/api/health"
+        "github.com/target/strelka/src/go/api/strelka"
         "github.com/target/strelka/src/go/pkg/rpc"
         "github.com/target/strelka/src/go/pkg/structs"
 )
@@ -23,25 +25,31 @@ import (
 type server struct{
         cache       *redis.Client
         queue       *redis.Client
-        responses   chan <- *pb.ScanResponse
+        responses   chan <- *strelka.ScanResponse
 }
 
 type request struct {
-        Id          string          `json:"id,omitempty"`
-        Client      string          `json:"client,omitempty"`
-        Source      string          `json:"source,omitempty"`
-        Attributes  *pb.Attributes  `json:"attributes,omitempty"`
+        Id          string                  `json:"id,omitempty"`
+        Client      string                  `json:"client,omitempty"`
+        Source      string                  `json:"source,omitempty"`
+        Attributes  *strelka.Attributes     `json:"attributes,omitempty"`
 }
 
-func (s *server) ScanFile(stream pb.Frontend_ScanFileServer) error {
-        deadline, ok := stream.Context().Deadline();
+func (s *server) Check(ctx context.Context, req *health.HealthCheckRequest) (*health.HealthCheckResponse, error) {
+        return &health.HealthCheckResponse{
+            Status: health.HealthCheckResponse_SERVING,
+        }, nil
+}
+
+func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
+        deadline, ok := stream.Context().Deadline()
         if ok == false {
                 return nil
         }
 
         id := uuid.New().String()
-        var inReq *pb.Request
-        var inAttr *pb.Attributes
+        var inReq *strelka.Request
+        var inAttr *strelka.Attributes
         for {
                 in, err := stream.Recv()
         		if err == io.EOF {
@@ -63,7 +71,7 @@ func (s *server) ScanFile(stream pb.Frontend_ScanFileServer) error {
     	}
         s.cache.ExpireAt(id, deadline)
 
-    	zadd := s.queue.ZAdd(
+        zadd := s.queue.ZAdd(
                 "queue",
                 redis.Z{
                         Score:  float64(deadline.Unix()),
@@ -74,17 +82,21 @@ func (s *server) ScanFile(stream pb.Frontend_ScanFileServer) error {
                 return zadd.Err()
         }
 
+        if inReq.Id == "" {
+                inReq.Id = id
+        }
+
         r := request{
-                Id:inReq.Uid,
+                Id:inReq.Id,
                 Client:inReq.Client,
                 Source:inReq.Source,
                 Attributes:inAttr,
         }
 
         for {
-                lpop := s.queue.LPop(id)
+                lpop := s.queue.LPop(fmt.Sprintf("evt:%v", id))
                 if lpop.Err() != nil {
-                        time.Sleep(100 * time.Millisecond)
+                        time.Sleep(250 * time.Millisecond)
                         continue
                 }
                 if lpop.Val() == "FIN" {
@@ -99,8 +111,8 @@ func (s *server) ScanFile(stream pb.Frontend_ScanFileServer) error {
                 }
                 o, _ := json.Marshal(m)
 
-                resp := &pb.ScanResponse{
-                        Uid:inReq.Uid,
+                resp := &strelka.ScanResponse{
+                        Id:inReq.Id,
                         Event:string(o),
                 }
                 s.responses <- resp
@@ -134,22 +146,21 @@ func main() {
             log.Fatalf("failed to listen: %v", err)
 	}
 
-    responses := make(chan *pb.ScanResponse, 100)
+    responses := make(chan *strelka.ScanResponse, 100)
     defer close(responses)
     // this should become an option -- choose the type of response handler and options
     go rpc.LogResponses(responses, conf.Log)
 
     cache := redis.NewClient(&redis.Options{
-            Addr:       conf.Cache.Host,
+            Addr:       conf.Cache.Addr,
             DB:         conf.Cache.Db,
     })
     _, err = cache.Ping().Result()
     if err != nil {
             log.Fatalf("failed to connect to cache: %v", err)
     }
-
     queue := redis.NewClient(&redis.Options{
-            Addr:       conf.Queue.Host,
+            Addr:       conf.Queue.Addr,
             DB:         conf.Queue.Db,
     })
     _, err = queue.Ping().Result()
@@ -163,6 +174,7 @@ func main() {
             queue:queue,
             responses:responses,
     }
-	pb.RegisterFrontendServer(s, opts)
+	strelka.RegisterFrontendServer(s, opts)
+    health.RegisterHealthServer(s, opts)
 	s.Serve(listen)
 }

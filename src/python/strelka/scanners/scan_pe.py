@@ -180,8 +180,8 @@ class ScanPe(strelka.Scanner):
                                         'name': name.decode(),
                                         'value': value.decode(),
                                     }
-                                    if fixedinfo not in self.metadata['versionInfo']:
-                                        self.metadata['versionInfo'].append(fixedinfo)
+                                    if fixedinfo not in self.metadata['version_info']:
+                                        self.metadata['version_info'].append(fixedinfo)
             else:
                 self.flags.append('no_version_info')
 

@@ -8,5 +8,5 @@ RUN cd /go/src/github.com/target/strelka/src/go/cmd/strelka-fileshot/ && \
 
 FROM alpine
 COPY --from=build /tmp/strelka-fileshot /usr/local/bin/strelka-fileshot
-RUN apk add --no-cache bash
+RUN apk add --no-cache jq
 USER 1001

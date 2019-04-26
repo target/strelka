@@ -8,5 +8,4 @@ RUN cd /go/src/github.com/target/strelka/src/go/cmd/strelka-redis/ && \
 
 FROM alpine
 COPY --from=build /tmp/strelka-redis /usr/local/bin/strelka-redis
-RUN apk add --no-cache bash
 USER 1001

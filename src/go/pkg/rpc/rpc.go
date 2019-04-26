@@ -13,7 +13,8 @@ import (
         "google.golang.org/grpc/credentials"
         "google.golang.org/grpc/status"
 
-        pb "github.com/target/strelka/src/go/api/strelka"
+        "github.com/target/strelka/src/go/api/health"
+        "github.com/target/strelka/src/go/api/strelka"
         "github.com/target/strelka/src/go/pkg/structs"
 )
 
@@ -68,7 +69,7 @@ func SetAuth(cert string) grpc.DialOption {
 }
 
 // Reports number of responses received according to a delta
-func ReportResponses(responses <-chan *pb.ScanResponse, delta time.Duration) {
+func ReportResponses(responses <-chan *strelka.ScanResponse, delta time.Duration) {
         t := time.Now()
         recv := 0
 
@@ -88,7 +89,7 @@ func ReportResponses(responses <-chan *pb.ScanResponse, delta time.Duration) {
 }
 
 // Logs events in responses to local disk
-func LogResponses(responses <-chan *pb.ScanResponse, path string) {
+func LogResponses(responses <-chan *strelka.ScanResponse, path string) {
         f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
         if err != nil {
                 log.Fatalf("failed to create file %s: %v", path, err)
@@ -106,7 +107,7 @@ func LogResponses(responses <-chan *pb.ScanResponse, path string) {
 }
 
 // Discards responses
-func DiscardResponses(responses <-chan *pb.ScanResponse) {
+func DiscardResponses(responses <-chan *strelka.ScanResponse) {
         for r := range responses {
                 if r != nil {
                         continue
@@ -115,9 +116,21 @@ func DiscardResponses(responses <-chan *pb.ScanResponse) {
         }
 }
 
-func ScanFile(opts structs.Options, req structs.ScanFileRequest, responses chan <- *pb.ScanResponse) {
-        client := pb.NewFrontendClient(opts.Conn)
-        deadline := time.Now().Add(opts.Timeout)
+func HealthCheck(client health.HealthClient) error {
+        deadline := time.Now().Add(3 * time.Second)
+        ctx, cancel := context.WithDeadline(context.Background(), deadline)
+        defer cancel()
+
+        _, err := client.Check(ctx, &health.HealthCheckRequest{})
+        if err != nil {
+                return err
+        }
+
+        return nil
+}
+
+func ScanFile(client strelka.FrontendClient, timeout time.Duration, req structs.ScanFileRequest, responses chan <- *strelka.ScanResponse) {
+        deadline := time.Now().Add(timeout)
         ctx, cancel := context.WithDeadline(context.Background(), deadline)
         defer cancel()
 
@@ -150,7 +163,7 @@ func ScanFile(opts structs.Options, req structs.ScanFileRequest, responses chan 
                 }
 
                 scanFile.Send(
-                        &pb.ScanFileRequest{
+                        &strelka.ScanFileRequest{
                                 Data:buffer[:n],
                                 Request:req.Request,
                                 Attributes:req.Attributes,

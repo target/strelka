@@ -13,7 +13,8 @@ import (
         "google.golang.org/grpc"
         "gopkg.in/yaml.v2"
 
-        pb "github.com/target/strelka/src/go/api/strelka"
+        "github.com/target/strelka/src/go/api/health"
+        "github.com/target/strelka/src/go/api/strelka"
         "github.com/target/strelka/src/go/pkg/rpc"
         "github.com/target/strelka/src/go/pkg/structs"
 )
@@ -49,16 +50,6 @@ func main() {
                 log.Fatalf("failed to load config data: %v", err)
         }
 
-        client := "go-filestream"
-        if conf.Client != "" {
-                client = conf.Client
-        }
-
-        hostname, err := os.Hostname()
-        if err != nil {
-                log.Fatalf("failed to retrieve hostname: %v", err)
-        }
-
         serv := conf.Conn.Server
         auth := rpc.SetAuth(conf.Conn.Cert)
         conn, err := grpc.Dial(serv, auth)
@@ -67,17 +58,20 @@ func main() {
         }
         defer conn.Close()
 
-        var wg sync.WaitGroup
-        var wg2 sync.WaitGroup
-        opts := structs.Options{
-                Conn:conn,
-                Timeout:conf.Conn.Timeout,
+        frontend := strelka.NewFrontendClient(conn)
+        health := health.NewHealthClient(conn)
+        err = rpc.HealthCheck(health)
+        if err != nil {
+                log.Fatalf("failed to connect to %s: %v", serv, err)
         }
 
+        var wg sync.WaitGroup
+        var wg2 sync.WaitGroup
         sem := make(chan int, conf.Conn.Routines)
         defer close(sem)
-        responses := make(chan *pb.ScanResponse, 100)
+        responses := make(chan *strelka.ScanResponse, 100)
         defer close(responses)
+
         wg2.Add(1)
         if conf.Response.Log != "" {
                 go func(){
@@ -99,7 +93,17 @@ func main() {
                 log.Println("responses will be discarded")
         }
 
-        request := &pb.Request{
+        client := "go-filestream"
+        if conf.Client != "" {
+                client = conf.Client
+        }
+
+        hostname, err := os.Hostname()
+        if err != nil {
+                log.Fatalf("failed to retrieve hostname: %v", err)
+        }
+
+        request := &strelka.Request{
                 Client:client,
                 Source:hostname,
         }
@@ -126,7 +130,7 @@ func main() {
 
                         req := structs.ScanFileRequest{
                             Request:request,
-                            Attributes:&pb.Attributes{
+                            Attributes:&strelka.Attributes{
                                 Filename:f,
                             },
                             Chunk:conf.Files.Chunk,
@@ -136,7 +140,12 @@ func main() {
                         sem <- 1
                         wg.Add(1)
                         go func(){
-                                rpc.ScanFile(opts, req, responses)
+                                rpc.ScanFile(
+                                        frontend,
+                                        conf.Conn.Timeout,
+                                        req,
+                                        responses,
+                                )
                                 wg.Done()
                                 <-sem
                         }()
@@ -176,7 +185,7 @@ func main() {
 
                                 req := structs.ScanFileRequest{
                                     Request:request,
-                                    Attributes:&pb.Attributes{
+                                    Attributes:&strelka.Attributes{
                                         Filename:s,
                                     },
                                     Chunk:conf.Files.Chunk,
@@ -186,7 +195,12 @@ func main() {
                                 sem <- 1
                                 wg.Add(1)
                                 go func(){
-                                        rpc.ScanFile(opts, req, responses)
+                                        rpc.ScanFile(
+                                                frontend,
+                                                conf.Conn.Timeout,
+                                                req,
+                                                responses,
+                                        )
                                         wg.Done()
                                         <-sem
                                 }()

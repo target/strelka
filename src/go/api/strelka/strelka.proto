@@ -5,7 +5,7 @@ service Frontend {
 }
 
 message Request {
-  string uid = 1;
+  string id = 1;
   string client = 2;
   string source = 3;
 }
@@ -18,16 +18,16 @@ message Attributes {
 message ScanFileRequest {
   bytes data = 1; // required
   Request request = 2;
-  Attributes attributes = 4;
+  Attributes attributes = 3;
 }
 
 message ScanHttpRequest {
   string url = 1;  // required
   Request request = 2;
-  Attributes attributes = 4;
+  Attributes attributes = 3;
 }
 
 message ScanResponse {
-  string uid = 1;
+  string id = 1;
   string event = 2;
 }

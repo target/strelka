@@ -14,19 +14,9 @@ class FrontendStub(object):
     Args:
       channel: A grpc.Channel.
     """
-    self.ScanCache = channel.unary_stream(
-        '/Frontend/ScanCache',
-        request_serializer=strelka_dot_proto_dot_strelka__pb2.ScanCacheRequest.SerializeToString,
-        response_deserializer=strelka_dot_proto_dot_strelka__pb2.ScanResponse.FromString,
-        )
     self.ScanFile = channel.stream_stream(
         '/Frontend/ScanFile',
         request_serializer=strelka_dot_proto_dot_strelka__pb2.ScanFileRequest.SerializeToString,
-        response_deserializer=strelka_dot_proto_dot_strelka__pb2.ScanResponse.FromString,
-        )
-    self.ScanHttp = channel.unary_stream(
-        '/Frontend/ScanHttp',
-        request_serializer=strelka_dot_proto_dot_strelka__pb2.ScanHttpRequest.SerializeToString,
         response_deserializer=strelka_dot_proto_dot_strelka__pb2.ScanResponse.FromString,
         )
 
@@ -35,21 +25,7 @@ class FrontendServicer(object):
   # missing associated documentation comment in .proto file
   pass
 
-  def ScanCache(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
   def ScanFile(self, request_iterator, context):
-    # missing associated documentation comment in .proto file
-    pass
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def ScanHttp(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -59,19 +35,9 @@ class FrontendServicer(object):
 
 def add_FrontendServicer_to_server(servicer, server):
   rpc_method_handlers = {
-      'ScanCache': grpc.unary_stream_rpc_method_handler(
-          servicer.ScanCache,
-          request_deserializer=strelka_dot_proto_dot_strelka__pb2.ScanCacheRequest.FromString,
-          response_serializer=strelka_dot_proto_dot_strelka__pb2.ScanResponse.SerializeToString,
-      ),
       'ScanFile': grpc.stream_stream_rpc_method_handler(
           servicer.ScanFile,
           request_deserializer=strelka_dot_proto_dot_strelka__pb2.ScanFileRequest.FromString,
-          response_serializer=strelka_dot_proto_dot_strelka__pb2.ScanResponse.SerializeToString,
-      ),
-      'ScanHttp': grpc.unary_stream_rpc_method_handler(
-          servicer.ScanHttp,
-          request_deserializer=strelka_dot_proto_dot_strelka__pb2.ScanHttpRequest.FromString,
           response_serializer=strelka_dot_proto_dot_strelka__pb2.ScanResponse.SerializeToString,
       ),
   }

@@ -46,7 +46,7 @@ func main() {
         }
 
         queue := redis.NewClient(&redis.Options{
-                Addr:       conf.Queue.Host,
+                Addr:       conf.Queue.Addr,
                 DB:         conf.Queue.Db,
         })
 

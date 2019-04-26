@@ -27,7 +27,7 @@ services:
               context: ..
               dockerfile: build/python/backend/Dockerfile
         command: strelka-backend
-        shm_size: 512mb
+        shm_size: 512mb  # increase as necessary, required for some scanners
         networks:
           - net
         volumes:
@@ -36,6 +36,27 @@ services:
         depends_on:
             - cache
             - queue
+    redis:
+        build:
+              context: ..
+              dockerfile: build/go/redis/Dockerfile
+        command: strelka-redis
+        restart: unless-stopped
+        networks:
+          - net
+        volumes:
+            - ../configs/go/redis/:/etc/strelka/:ro
+        restart: unless-stopped
+        depends_on:
+            - cache
+            - queue
+    mmrpc:
+        build:
+              context: ..
+              dockerfile: build/python/mmrpc/Dockerfile
+        command: strelka-mmrpc --threads 1 --address [::]:33907
+        networks:
+            - net
     cache:
         image: redis:alpine
         command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
@@ -44,12 +65,5 @@ services:
     queue:
         image: redis:alpine
         command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
-        networks:
-            - net
-    mmrpc:
-        build:
-              context: ..
-              dockerfile: build/python/mmrpc/Dockerfile
-        command: strelka-mmrpc --threads 1 --address [::]:33907
         networks:
             - net

@@ -5,7 +5,7 @@ import (
 
         "google.golang.org/grpc"
 
-        pb "github.com/target/strelka/src/go/api/strelka"
+        "github.com/target/strelka/src/go/api/strelka"
 )
 
 // defines structures used in configuration files
@@ -23,7 +23,7 @@ type ConfFiles struct {
 }
 
 type ConfRedis struct {
-        Host            string          // required
+        Addr            string          // required
         Db              int             // required
 }
 
@@ -68,8 +68,8 @@ type Options struct {
 }
 
 type ScanFileRequest struct {
-        Request             *pb.Request
-        Attributes          *pb.Attributes
+        Request             *strelka.Request
+        Attributes          *strelka.Attributes
         Chunk               int
         Delete              bool  // optional, only use if files should be deleted!
 }

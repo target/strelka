@@ -2,9 +2,9 @@ conn:
     server: '127.0.0.1:57314'
     cert: ''
     timeout: 1m
-    routines: 5
+    routines: 8
 files:
-    chunk: 16184
+    chunk: 32768
     patterns:
         - '/glob/to/your/files/*'
     # delete: true

@@ -8,8 +8,7 @@ RUN cd /go/src/github.com/target/strelka/src/go/cmd/strelka-frontend/ && \
 
 FROM alpine
 COPY --from=build /tmp/strelka-frontend /usr/local/bin/strelka-frontend
-RUN apk add --no-cache bash && \
-    mkdir /var/log/strelka/ && \
+RUN mkdir /var/log/strelka/ && \
     chgrp -R 0 /var/log/strelka/ && \
     chmod -R g=u /var/log/strelka/
 USER 1001

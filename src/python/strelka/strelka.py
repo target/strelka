@@ -181,7 +181,7 @@ class Scanner(object):
                 the cache.
             expire_at: Expiration date for data stored in pointer.
         """
-        p = self.cache.pipeline()
+        p = self.cache.pipeline(transaction=False)
         p.rpush(pointer, chunk)
         p.expireat(pointer, expire_at)
         p.execute()

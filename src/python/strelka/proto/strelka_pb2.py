@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x1bstrelka/proto/strelka.proto\"6\n\x07Request\x12\x0b\n\x03uid\x18\x01 \x01(\t\x12\x0e\n\x06\x63lient\x18\x02 \x01(\t\x12\x0e\n\x06source\x18\x03 \x01(\t\"\x18\n\x08Retrieve\x12\x0c\n\x04\x63\x61se\x18\x01 \x01(\t\"\x8d\x01\n\nAttributes\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x0f\n\x07\x66lavors\x18\x02 \x03(\t\x12+\n\x08metadata\x18\x03 \x03(\x0b\x32\x19.Attributes.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"{\n\x10ScanCacheRequest\x12\x0e\n\x06sha256\x18\x01 \x01(\t\x12\x19\n\x07request\x18\x02 \x01(\x0b\x32\x08.Request\x12\x1b\n\x08retrieve\x18\x03 \x01(\x0b\x32\t.Retrieve\x12\x1f\n\nattributes\x18\x04 \x01(\x0b\x32\x0b.Attributes\"x\n\x0fScanFileRequest\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\x12\x19\n\x07request\x18\x02 \x01(\x0b\x32\x08.Request\x12\x1b\n\x08retrieve\x18\x03 \x01(\x0b\x32\t.Retrieve\x12\x1f\n\nattributes\x18\x04 \x01(\x0b\x32\x0b.Attributes\"w\n\x0fScanHttpRequest\x12\x0b\n\x03url\x18\x01 \x01(\t\x12\x19\n\x07request\x18\x02 \x01(\x0b\x32\x08.Request\x12\x1b\n\x08retrieve\x18\x03 \x01(\x0b\x32\t.Retrieve\x12\x1f\n\nattributes\x18\x04 \x01(\x0b\x32\x0b.Attributes\"*\n\x0cScanResponse\x12\x0b\n\x03uid\x18\x01 \x01(\t\x12\r\n\x05\x65vent\x18\x02 \x01(\t2\xa1\x01\n\x08\x46rontend\x12\x31\n\tScanCache\x12\x11.ScanCacheRequest\x1a\r.ScanResponse\"\x00\x30\x01\x12\x31\n\x08ScanFile\x12\x10.ScanFileRequest\x1a\r.ScanResponse\"\x00(\x01\x30\x01\x12/\n\x08ScanHttp\x12\x10.ScanHttpRequest\x1a\r.ScanResponse\"\x00\x30\x01\x62\x06proto3')
+  serialized_pb=_b('\n\x1bstrelka/proto/strelka.proto\"5\n\x07Request\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0e\n\x06\x63lient\x18\x02 \x01(\t\x12\x0e\n\x06source\x18\x03 \x01(\t\"|\n\nAttributes\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12+\n\x08metadata\x18\x02 \x03(\x0b\x32\x19.Attributes.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"[\n\x0fScanFileRequest\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\x12\x19\n\x07request\x18\x02 \x01(\x0b\x32\x08.Request\x12\x1f\n\nattributes\x18\x03 \x01(\x0b\x32\x0b.Attributes\"Z\n\x0fScanHttpRequest\x12\x0b\n\x03url\x18\x01 \x01(\t\x12\x19\n\x07request\x18\x02 \x01(\x0b\x32\x08.Request\x12\x1f\n\nattributes\x18\x03 \x01(\x0b\x32\x0b.Attributes\")\n\x0cScanResponse\x12\n\n\x02id\x18\x01 \x01(\t\x12\r\n\x05\x65vent\x18\x02 \x01(\t2=\n\x08\x46rontend\x12\x31\n\x08ScanFile\x12\x10.ScanFileRequest\x1a\r.ScanResponse\"\x00(\x01\x30\x01\x62\x06proto3')
 )
 
 
@@ -33,7 +33,7 @@ _REQUEST = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='uid', full_name='Request.uid', index=0,
+      name='id', full_name='Request.id', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -66,38 +66,7 @@ _REQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=31,
-  serialized_end=85,
-)
-
-
-_RETRIEVE = _descriptor.Descriptor(
-  name='Retrieve',
-  full_name='Retrieve',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='case', full_name='Retrieve.case', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=87,
-  serialized_end=111,
+  serialized_end=84,
 )
 
 
@@ -134,8 +103,8 @@ _ATTRIBUTES_METADATAENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=208,
-  serialized_end=255,
+  serialized_start=163,
+  serialized_end=210,
 )
 
 _ATTRIBUTES = _descriptor.Descriptor(
@@ -153,15 +122,8 @@ _ATTRIBUTES = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='flavors', full_name='Attributes.flavors', index=1,
-      number=2, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='metadata', full_name='Attributes.metadata', index=2,
-      number=3, type=11, cpp_type=10, label=3,
+      name='metadata', full_name='Attributes.metadata', index=1,
+      number=2, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -178,60 +140,8 @@ _ATTRIBUTES = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=114,
-  serialized_end=255,
-)
-
-
-_SCANCACHEREQUEST = _descriptor.Descriptor(
-  name='ScanCacheRequest',
-  full_name='ScanCacheRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='sha256', full_name='ScanCacheRequest.sha256', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='request', full_name='ScanCacheRequest.request', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='retrieve', full_name='ScanCacheRequest.retrieve', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='attributes', full_name='ScanCacheRequest.attributes', index=3,
-      number=4, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=257,
-  serialized_end=380,
+  serialized_start=86,
+  serialized_end=210,
 )
 
 
@@ -257,15 +167,8 @@ _SCANFILEREQUEST = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='retrieve', full_name='ScanFileRequest.retrieve', index=2,
+      name='attributes', full_name='ScanFileRequest.attributes', index=2,
       number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='attributes', full_name='ScanFileRequest.attributes', index=3,
-      number=4, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -282,8 +185,8 @@ _SCANFILEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=382,
-  serialized_end=502,
+  serialized_start=212,
+  serialized_end=303,
 )
 
 
@@ -309,15 +212,8 @@ _SCANHTTPREQUEST = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='retrieve', full_name='ScanHttpRequest.retrieve', index=2,
+      name='attributes', full_name='ScanHttpRequest.attributes', index=2,
       number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='attributes', full_name='ScanHttpRequest.attributes', index=3,
-      number=4, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -334,8 +230,8 @@ _SCANHTTPREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=504,
-  serialized_end=623,
+  serialized_start=305,
+  serialized_end=395,
 )
 
 
@@ -347,7 +243,7 @@ _SCANRESPONSE = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='uid', full_name='ScanResponse.uid', index=0,
+      name='id', full_name='ScanResponse.id', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -372,25 +268,18 @@ _SCANRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=625,
-  serialized_end=667,
+  serialized_start=397,
+  serialized_end=438,
 )
 
 _ATTRIBUTES_METADATAENTRY.containing_type = _ATTRIBUTES
 _ATTRIBUTES.fields_by_name['metadata'].message_type = _ATTRIBUTES_METADATAENTRY
-_SCANCACHEREQUEST.fields_by_name['request'].message_type = _REQUEST
-_SCANCACHEREQUEST.fields_by_name['retrieve'].message_type = _RETRIEVE
-_SCANCACHEREQUEST.fields_by_name['attributes'].message_type = _ATTRIBUTES
 _SCANFILEREQUEST.fields_by_name['request'].message_type = _REQUEST
-_SCANFILEREQUEST.fields_by_name['retrieve'].message_type = _RETRIEVE
 _SCANFILEREQUEST.fields_by_name['attributes'].message_type = _ATTRIBUTES
 _SCANHTTPREQUEST.fields_by_name['request'].message_type = _REQUEST
-_SCANHTTPREQUEST.fields_by_name['retrieve'].message_type = _RETRIEVE
 _SCANHTTPREQUEST.fields_by_name['attributes'].message_type = _ATTRIBUTES
 DESCRIPTOR.message_types_by_name['Request'] = _REQUEST
-DESCRIPTOR.message_types_by_name['Retrieve'] = _RETRIEVE
 DESCRIPTOR.message_types_by_name['Attributes'] = _ATTRIBUTES
-DESCRIPTOR.message_types_by_name['ScanCacheRequest'] = _SCANCACHEREQUEST
 DESCRIPTOR.message_types_by_name['ScanFileRequest'] = _SCANFILEREQUEST
 DESCRIPTOR.message_types_by_name['ScanHttpRequest'] = _SCANHTTPREQUEST
 DESCRIPTOR.message_types_by_name['ScanResponse'] = _SCANRESPONSE
@@ -402,13 +291,6 @@ Request = _reflection.GeneratedProtocolMessageType('Request', (_message.Message,
   # @@protoc_insertion_point(class_scope:Request)
   ))
 _sym_db.RegisterMessage(Request)
-
-Retrieve = _reflection.GeneratedProtocolMessageType('Retrieve', (_message.Message,), dict(
-  DESCRIPTOR = _RETRIEVE,
-  __module__ = 'strelka.proto.strelka_pb2'
-  # @@protoc_insertion_point(class_scope:Retrieve)
-  ))
-_sym_db.RegisterMessage(Retrieve)
 
 Attributes = _reflection.GeneratedProtocolMessageType('Attributes', (_message.Message,), dict(
 
@@ -424,13 +306,6 @@ Attributes = _reflection.GeneratedProtocolMessageType('Attributes', (_message.Me
   ))
 _sym_db.RegisterMessage(Attributes)
 _sym_db.RegisterMessage(Attributes.MetadataEntry)
-
-ScanCacheRequest = _reflection.GeneratedProtocolMessageType('ScanCacheRequest', (_message.Message,), dict(
-  DESCRIPTOR = _SCANCACHEREQUEST,
-  __module__ = 'strelka.proto.strelka_pb2'
-  # @@protoc_insertion_point(class_scope:ScanCacheRequest)
-  ))
-_sym_db.RegisterMessage(ScanCacheRequest)
 
 ScanFileRequest = _reflection.GeneratedProtocolMessageType('ScanFileRequest', (_message.Message,), dict(
   DESCRIPTOR = _SCANFILEREQUEST,
@@ -462,33 +337,15 @@ _FRONTEND = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=670,
-  serialized_end=831,
+  serialized_start=440,
+  serialized_end=501,
   methods=[
-  _descriptor.MethodDescriptor(
-    name='ScanCache',
-    full_name='Frontend.ScanCache',
-    index=0,
-    containing_service=None,
-    input_type=_SCANCACHEREQUEST,
-    output_type=_SCANRESPONSE,
-    serialized_options=None,
-  ),
   _descriptor.MethodDescriptor(
     name='ScanFile',
     full_name='Frontend.ScanFile',
-    index=1,
+    index=0,
     containing_service=None,
     input_type=_SCANFILEREQUEST,
-    output_type=_SCANRESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='ScanHttp',
-    full_name='Frontend.ScanHttp',
-    index=2,
-    containing_service=None,
-    input_type=_SCANHTTPREQUEST,
     output_type=_SCANRESPONSE,
     serialized_options=None,
   ),
