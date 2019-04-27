@@ -13,21 +13,6 @@ import (
         "github.com/target/strelka/src/go/pkg/structs"
 )
 
-// TODO: this should be an optional goroutine
-// func pruneQueue(r *redis.Client) {
-//         for {
-//                 zrem := queue.ZRemRangeByScore(
-//                         "queue",
-//                         "-inf",
-//                         fmt.Sprintf("(%v", time.Now().Unix()),
-//                 )
-//                 if zrem.Val() != 0 {
-//                         log.Println(zrem.Val())
-//                 }
-//                 time.sleep(1 * time.Second)
-//         }
-// }
-
 func main() {
         confPath := flag.String(
                 "c",
@@ -39,26 +24,34 @@ func main() {
         if err != nil {
                 log.Fatalf("failed to read config file %s: %v", confPath, err)
         }
-        var conf structs.RedisManager
+        var conf structs.Redis
         err = yaml.Unmarshal(confData, &conf)
         if err != nil {
                 log.Fatalf("failed to load config data: %v", err)
         }
 
-        queue := redis.NewClient(&redis.Options{
-                Addr:       conf.Queue.Addr,
-                DB:         conf.Queue.Db,
+        coordinator := redis.NewClient(&redis.Options{
+                Addr:       conf.Coordinator.Addr,
+                DB:         conf.Coordinator.Db,
         })
+        err = coordinator.Ping().Err()
+        if err != nil {
+                log.Fatalf("failed to connect to coordinator: %v", err)
+        }
 
         // TODO: this should be a goroutine
         for {
-                zrem := queue.ZRemRangeByScore(
-                        "queue",
+                zrem, err := coordinator.ZRemRangeByScore(
+                        "tasks",
                         "-inf",
                         fmt.Sprintf("(%v", time.Now().Unix()),
-                )
-                if zrem.Val() != 0 {
-                        log.Println(zrem.Val())
+                ).Result()
+                if err != nil {
+                        log.Printf("zrem err: %v", err)
+                        continue
+                }
+                if zrem != 0 {
+                        log.Printf("removed %v task(s)", zrem)
                 }
                 time.Sleep(1 * time.Second)
         }

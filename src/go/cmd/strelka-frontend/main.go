@@ -23,9 +23,9 @@ import (
 )
 
 type server struct{
-        cache       *redis.Client
-        queue       *redis.Client
-        responses   chan <- *strelka.ScanResponse
+        cache           *redis.Client
+        coordinator     *redis.Client
+        responses       chan <- *strelka.ScanResponse
 }
 
 type request struct {
@@ -71,15 +71,15 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
     	}
         s.cache.ExpireAt(id, deadline)
 
-        zadd := s.queue.ZAdd(
-                "queue",
+        err := s.coordinator.ZAdd(
+                "tasks",
                 redis.Z{
                         Score:  float64(deadline.Unix()),
                         Member: id,
                 },
-        )
-        if zadd.Err() != nil {
-                return zadd.Err()
+        ).Err()
+        if err != nil {
+                return err
         }
 
         if inReq.Id == "" {
@@ -94,19 +94,19 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
         }
 
         for {
-                lpop := s.queue.LPop(fmt.Sprintf("evt:%v", id))
-                if lpop.Err() != nil {
+                lpop, err := s.coordinator.LPop(fmt.Sprintf("evt:%v", id)).Result()
+                if err != nil {
                         time.Sleep(250 * time.Millisecond)
                         continue
                 }
-                if lpop.Val() == "FIN" {
+                if lpop == "FIN" {
                         break
                 }
 
                 m := make(map[string]interface{})
                 m["time"] = time.Now().Format(time.RFC3339)
                 m["request_metadata"] = r
-                if err := json.Unmarshal([]byte(lpop.Val()), &m); err != nil{
+                if err := json.Unmarshal([]byte(lpop), &m); err != nil{
                         return err
                 }
                 o, _ := json.Marshal(m)
@@ -155,23 +155,23 @@ func main() {
             Addr:       conf.Cache.Addr,
             DB:         conf.Cache.Db,
     })
-    _, err = cache.Ping().Result()
+    err = cache.Ping().Err()
     if err != nil {
             log.Fatalf("failed to connect to cache: %v", err)
     }
-    queue := redis.NewClient(&redis.Options{
-            Addr:       conf.Queue.Addr,
-            DB:         conf.Queue.Db,
+    coordinator := redis.NewClient(&redis.Options{
+            Addr:       conf.Coordinator.Addr,
+            DB:         conf.Coordinator.Db,
     })
-    _, err = queue.Ping().Result()
+    err = coordinator.Ping().Err()
     if err != nil {
-            log.Fatalf("failed to connect to queue: %v", err)
+            log.Fatalf("failed to connect to coordinator: %v", err)
     }
 
 	s := grpc.NewServer()
     opts := &server{
             cache:cache,
-            queue:queue,
+            coordinator:coordinator,
             responses:responses,
     }
 	strelka.RegisterFrontendServer(s, opts)

@@ -34,6 +34,7 @@ type ConfResponse struct {
         Report          time.Duration   // optional, loads rpc.ReportResponses
 }
 
+// defines structures of configuration files
 type FileShot struct {
         Client          string          // optional
         Conn            ConfConn        // required
@@ -53,12 +54,12 @@ type FileStream struct {
 type Frontend struct {
         Server              string
         Cache               ConfRedis
-        Queue               ConfRedis
+        Coordinator         ConfRedis
         Log                 string
 }
 
-type RedisManager struct {
-        Queue               ConfRedis
+type Redis struct {
+        Coordinator         ConfRedis
 }
 
 // defines options used when sending scan requests
@@ -71,5 +72,5 @@ type ScanFileRequest struct {
         Request             *strelka.Request
         Attributes          *strelka.Attributes
         Chunk               int
-        Delete              bool  // optional, only use if files should be deleted!
+        Delete              bool  // optional, only use if files must be deleted!
 }

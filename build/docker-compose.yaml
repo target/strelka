@@ -13,7 +13,7 @@ services:
               dockerfile: build/go/frontend/Dockerfile
         command: strelka-frontend
         ports:
-            - "57314:57314"  # match the port in frontend.yaml
+            - "57314:57314"  # must match the port in frontend.yaml
         networks:
             - net
         volumes:
@@ -21,7 +21,7 @@ services:
         restart: unless-stopped
         depends_on:
             - cache
-            - queue
+            - coordinator
     backend:
         build:
               context: ..
@@ -35,7 +35,7 @@ services:
         restart: unless-stopped
         depends_on:
             - cache
-            - queue
+            - coordinator
     redis:
         build:
               context: ..
@@ -49,12 +49,12 @@ services:
         restart: unless-stopped
         depends_on:
             - cache
-            - queue
+            - coordinator
     mmrpc:
         build:
               context: ..
               dockerfile: build/python/mmrpc/Dockerfile
-        command: strelka-mmrpc --threads 1 --address [::]:33907
+        command: strelka-mmrpc --threads 2 --address [::]:33907
         networks:
             - net
     cache:
@@ -62,7 +62,7 @@ services:
         command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
         networks:
             - net
-    queue:
+    coordinator:
         image: redis:alpine
         command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
         networks:

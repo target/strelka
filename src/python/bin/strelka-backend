@@ -25,11 +25,11 @@ from strelka import strelka
 
 
 class Backend(object):
-    def __init__(self, backend_cfg, cache, queue):
+    def __init__(self, backend_cfg, cache, coordinator):
         self.scanner_cache = {}
         self.backend_cfg = backend_cfg
         self.cache = cache
-        self.queue = queue
+        self.coordinator = coordinator
         self.limits = backend_cfg.get('limits')
         self.scanners = backend_cfg.get('scanners')
 
@@ -64,7 +64,7 @@ class Backend(object):
             if time.time() >= work_expire:
                 break
 
-            (_, root_id, expire_at) = self.queue.bzpopmin('queue')
+            (_, root_id, expire_at) = self.coordinator.bzpopmin('tasks')
             root_id = root_id.decode()
             expire_at = math.ceil(expire_at)
             timeout = math.ceil(expire_at - time.time())
@@ -74,7 +74,7 @@ class Backend(object):
                 with interruptingcow.timeout(timeout,
                                              strelka.RequestTimeout):
                     self.distribute(root_id, file, expire_at)
-                    self.queue.rpush(f'evt:{root_id}', 'FIN')
+                    self.coordinator.rpush(f'evt:{root_id}', 'FIN')
 
             except strelka.RequestTimeout:
                 logging.debug(f'request {root_id} timed out')
@@ -141,7 +141,7 @@ class Backend(object):
                         reverse=True,
                     )
 
-                    p = self.queue.pipeline(transaction=False)
+                    p = self.coordinator.pipeline(transaction=False)
                     tree = {
                         'node': file.uid,
                         'parent': file.parent,
@@ -293,23 +293,23 @@ def main():
             port=cache_addr[1],
             db=cache_cfg.get('db'),
         )
-        queue_cfg = backend_cfg.get('queue')
-        queue_addr = queue_cfg.get('addr').split(':')
-        queue = redis.StrictRedis(
-            host=queue_addr[0],
-            port=queue_addr[1],
-            db=queue_cfg.get('db'),
+        coordinator_cfg = backend_cfg.get('coordinator')
+        coordinator_addr = coordinator_cfg.get('addr').split(':')
+        coordinator = redis.StrictRedis(
+            host=coordinator_addr[0],
+            port=coordinator_addr[1],
+            db=coordinator_cfg.get('db'),
         )
         if cache.ping():
             logging.debug('verified cache is up')
-        if queue.ping():
-            logging.debug('verified queue is up')
+        if coordinator.ping():
+            logging.debug('verified coordinator is up')
 
     except Exception:
         logging.exception('redis server(s) unavailable')
         sys.exit()
 
-    backend = Backend(backend_cfg, cache, queue)
+    backend = Backend(backend_cfg, cache, coordinator)
     backend.work()
 
 

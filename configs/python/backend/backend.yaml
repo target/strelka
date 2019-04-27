@@ -8,8 +8,8 @@ limits:
 cache:
     addr: 'strelka_cache_1:6379'
     db: 0
-queue:
-    addr: 'strelka_queue_1:6379'
+coordinator:
+    addr: 'strelka_coordinator_1:6379'
     db: 0
 tasting:
     mime_db: null
