@@ -23,15 +23,18 @@ func main() {
         confPath := flag.String(
                 "c",
                 "/etc/strelka/fileshot.yaml",
-                "path to fileshot conf")
+                "path to fileshot conf",
+        )
         cpuProf := flag.Bool(
                 "cpu",
                 false,
-                "enables cpu profiling")
+                "enables cpu profiling",
+        )
         heapProf := flag.Bool(
                 "heap",
                 false,
-                "enables heap profiling")
+                "enables heap profiling",
+        )
         flag.Parse()
 
         if *cpuProf {

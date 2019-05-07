@@ -2,6 +2,7 @@ package main
 
 import (
         "context"
+        "encoding/json"
         "flag"
         "fmt"
         "io"
@@ -9,7 +10,6 @@ import (
         "log"
         "net"
         "time"
-        "encoding/json"
 
         "google.golang.org/grpc"
         "github.com/go-redis/redis"
@@ -35,10 +35,8 @@ type request struct {
         Attributes  *strelka.Attributes     `json:"attributes,omitempty"`
 }
 
-func (s *server) Check(ctx context.Context, req *health.HealthCheckRequest) (*health.HealthCheckResponse, error) {
-        return &health.HealthCheckResponse{
-            Status: health.HealthCheckResponse_SERVING,
-        }, nil
+func (s *server) Check(ctx context.Context, req *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
+        return &grpc_health_v1.HealthCheckResponse{Status: grpc_health_v1.HealthCheckResponse_SERVING}, nil
 }
 
 func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
@@ -47,30 +45,35 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                 return nil
         }
 
+        counter := 0
         id := uuid.New().String()
-        var inReq *strelka.Request
-        var inAttr *strelka.Attributes
+        var incomingRequest *strelka.Request
+        var incomingAttributes *strelka.Attributes
         for {
-                in, err := stream.Recv()
-        		if err == io.EOF {
+                incoming, err := stream.Recv()
+                if err == io.EOF {
                         break
-        		}
-        		if err != nil {
-                        fmt.Printf("%v", err)
+                }
+                if err != nil {
                         return err
-        		}
-
-                if inReq == nil {
-                        inReq = in.Request
-                }
-                if inAttr == nil {
-                        inAttr = in.Attributes
                 }
 
-                s.cache.RPush(id, in.Data)
+                if incomingRequest == nil {
+                        incomingRequest = incoming.Request
+                }
+                if incomingAttributes == nil {
+                        incomingAttributes = incoming.Attributes
+                }
+
+                s.cache.RPush(id, incoming.Data)
+                counter++
     	}
-        s.cache.ExpireAt(id, deadline)
 
+        if counter == 0 {
+                return nil
+        }
+
+        s.cache.ExpireAt(id, deadline)
         err := s.coordinator.ZAdd(
                 "tasks",
                 redis.Z{
@@ -82,15 +85,15 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                 return err
         }
 
-        if inReq.Id == "" {
-                inReq.Id = id
+        if incomingRequest.Id == "" {
+                incomingRequest.Id = id
         }
 
         r := request{
-                Id:inReq.Id,
-                Client:inReq.Client,
-                Source:inReq.Source,
-                Attributes:inAttr,
+                Id:incomingRequest.Id,
+                Client:incomingRequest.Client,
+                Source:incomingRequest.Source,
+                Attributes:incomingAttributes,
         }
 
         for {
@@ -105,15 +108,15 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 
                 m := make(map[string]interface{})
                 m["time"] = time.Now().Format(time.RFC3339)
-                m["request_metadata"] = r
+                m["request"] = r
                 if err := json.Unmarshal([]byte(lpop), &m); err != nil{
                         return err
                 }
-                o, _ := json.Marshal(m)
 
+                evt, _ := json.Marshal(m)
                 resp := &strelka.ScanResponse{
-                        Id:inReq.Id,
-                        Event:string(o),
+                        Id:incomingRequest.Id,
+                        Event:string(evt),
                 }
                 s.responses <- resp
                 if err := stream.Send(resp); err != nil {
@@ -125,56 +128,72 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 }
 
 func main() {
-    confPath := flag.String(
-            "c",
-            "/etc/strelka/frontend.yaml",
-            "path to frontend config")
-    flag.Parse()
+        confPath := flag.String(
+                "c",
+                "/etc/strelka/frontend.yaml",
+                "path to frontend config",
+        )
+        flag.Parse()
 
-    confData, err := ioutil.ReadFile(*confPath)
-    if err != nil {
-            log.Fatalf("failed to read config file %s: %v", confPath, err)
-    }
-    var conf structs.Frontend
-    err = yaml.Unmarshal(confData, &conf)
-    if err != nil {
-            log.Fatalf("failed to load config data: %v", err)
-    }
+        confData, err := ioutil.ReadFile(*confPath)
+        if err != nil {
+                log.Fatalf("failed to read config file %s: %v", confPath, err)
+        }
 
-    listen, err := net.Listen("tcp", conf.Server)
-	if err != nil {
-            log.Fatalf("failed to listen: %v", err)
-	}
+        var conf structs.Frontend
+        err = yaml.Unmarshal(confData, &conf)
+        if err != nil {
+                log.Fatalf("failed to load config data: %v", err)
+        }
 
-    responses := make(chan *strelka.ScanResponse, 100)
-    defer close(responses)
-    // this should become an option -- choose the type of response handler and options
-    go rpc.LogResponses(responses, conf.Log)
+        listen, err := net.Listen("tcp", conf.Server)
+        if err != nil {
+                log.Fatalf("failed to listen: %v", err)
+        }
 
-    cache := redis.NewClient(&redis.Options{
-            Addr:       conf.Cache.Addr,
-            DB:         conf.Cache.Db,
-    })
-    err = cache.Ping().Err()
-    if err != nil {
-            log.Fatalf("failed to connect to cache: %v", err)
-    }
-    coordinator := redis.NewClient(&redis.Options{
-            Addr:       conf.Coordinator.Addr,
-            DB:         conf.Coordinator.Db,
-    })
-    err = coordinator.Ping().Err()
-    if err != nil {
-            log.Fatalf("failed to connect to coordinator: %v", err)
-    }
+        responses := make(chan *strelka.ScanResponse, 100)
+        defer close(responses)
+        if conf.Response.Log != "" {
+                go func(){
+                        rpc.LogResponses(responses, conf.Response.Log)
+                }()
+                log.Printf("responses will be logged to %v", conf.Response.Log)
+        } else if conf.Response.Report != 0 {
+                go func(){
+                        rpc.ReportResponses(responses, conf.Response.Report)
+                }()
+                log.Printf("responses will be reported every %v", conf.Response.Report)
+        } else {
+                go func(){
+                        rpc.DiscardResponses(responses)
+                }()
+                log.Println("responses will be discarded")
+        }
 
-	s := grpc.NewServer()
-    opts := &server{
-            cache:cache,
-            coordinator:coordinator,
-            responses:responses,
-    }
-	strelka.RegisterFrontendServer(s, opts)
-    health.RegisterHealthServer(s, opts)
-	s.Serve(listen)
+        cache := redis.NewClient(&redis.Options{
+                Addr:       conf.Cache.Addr,
+                DB:         conf.Cache.Db,
+        })
+        err = cache.Ping().Err()
+        if err != nil {
+                log.Fatalf("failed to connect to cache: %v", err)
+        }
+        coordinator := redis.NewClient(&redis.Options{
+                Addr:       conf.Coordinator.Addr,
+                DB:         conf.Coordinator.Db,
+        })
+        err = coordinator.Ping().Err()
+        if err != nil {
+                log.Fatalf("failed to connect to coordinator: %v", err)
+        }
+
+        s := grpc.NewServer()
+        opts := &server{
+                cache:cache,
+                coordinator:coordinator,
+                responses:responses,
+        }
+        strelka.RegisterFrontendServer(s, opts)
+        grpc_health_v1.RegisterHealthServer(s, opts)
+        s.Serve(listen)
 }

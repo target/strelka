@@ -27,11 +27,13 @@ func main() {
         cpuProf := flag.Bool(
                 "cpu",
                 false,
-                "enables cpu profiling")
+                "enables cpu profiling",
+        )
         heapProf := flag.Bool(
                 "heap",
                 false,
-                "enables heap profiling")
+                "enables heap profiling",
+        )
         flag.Parse()
 
         if *cpuProf {
