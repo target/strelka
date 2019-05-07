@@ -25,7 +25,7 @@ class ScanZip(strelka.Scanner):
         file_limit = options.get('limit', 1000)
         password_file = options.get('password_file', '/etc/strelka/passwords.dat')
 
-        self.metadata['total'] = {'files': 0, 'extracted': 0}
+        self.event['total'] = {'files': 0, 'extracted': 0}
 
         try:
             if not self.passwords:
@@ -41,10 +41,10 @@ class ScanZip(strelka.Scanner):
             try:
                 with zipfile.ZipFile(zip_io) as zip:
                     name_list = zip.namelist()
-                    self.metadata['total']['files'] = len(name_list)
+                    self.event['total']['files'] = len(name_list)
                     for name in name_list:
                         if not name.endswith('/'):
-                            if self.metadata['total']['extracted'] >= file_limit:
+                            if self.event['total']['extracted'] >= file_limit:
                                 break
 
                             try:
@@ -81,7 +81,7 @@ class ScanZip(strelka.Scanner):
                                         )
 
                                     self.files.append(extract_file)
-                                    self.metadata['total']['extracted'] += 1
+                                    self.event['total']['extracted'] += 1
 
                             except NotImplementedError:
                                 self.flags.append('unsupported_compression')

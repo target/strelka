@@ -11,7 +11,7 @@ class ScanGzip(strelka.Scanner):
             with gzip.GzipFile(fileobj=gzip_io) as gzip_file:
                 decompressed_file = gzip_file.read()
                 decompressed_size = len(decompressed_file)
-                self.metadata['decompressed_size'] = decompressed_size
+                self.event['decompressed_size'] = decompressed_size
 
                 extract_file = strelka.File(
                     source=self.name,

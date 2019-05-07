@@ -24,4 +24,4 @@ class ScanStrings(strelka.Scanner):
         strings = self.strings_regex.findall(data)
         if limit:
             strings = strings[:limit]
-        self.metadata['strings'] = strings
+        self.event['strings'] = strings

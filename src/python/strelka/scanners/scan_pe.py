@@ -18,55 +18,55 @@ IMAGE_MAGIC_LOOKUP = {
 class ScanPe(strelka.Scanner):
     """Collects metadata from PE files."""
     def scan(self, data, file, options, expire_at):
-        self.metadata['total'] = {'sections': 0}
+        self.event['total'] = {'sections': 0}
 
         try:
             pe = pefile.PE(data=data)
             pe_dict = pe.dump_dict()
 
-            self.metadata['total']['sections'] = pe.FILE_HEADER.NumberOfSections
-            self.metadata['warnings'] = pe.get_warnings()
-            self.metadata['timestamp'] = datetime.utcfromtimestamp(pe.FILE_HEADER.TimeDateStamp).isoformat()
+            self.event['total']['sections'] = pe.FILE_HEADER.NumberOfSections
+            self.event['warnings'] = pe.get_warnings()
+            self.event['timestamp'] = datetime.utcfromtimestamp(pe.FILE_HEADER.TimeDateStamp).isoformat()
             machine = pe.FILE_HEADER.Machine
-            self.metadata['machine'] = {
+            self.event['machine'] = {
                 'id': machine,
                 'type': pefile.MACHINE_TYPE.get(machine),
             }
             # Reference: http://msdn.microsoft.com/en-us/library/windows/desktop/ms680339%28v=vs.85%29.aspx
-            self.metadata['image_magic'] = IMAGE_MAGIC_LOOKUP.get(pe.OPTIONAL_HEADER.Magic, 'Unknown')
+            self.event['image_magic'] = IMAGE_MAGIC_LOOKUP.get(pe.OPTIONAL_HEADER.Magic, 'Unknown')
             subsystem = pe.OPTIONAL_HEADER.Subsystem
-            self.metadata['subsystem'] = pefile.SUBSYSTEM_TYPE.get(subsystem)
-            self.metadata['stack_reserve_size'] = pe.OPTIONAL_HEADER.SizeOfStackReserve
-            self.metadata['stack_commit_size'] = pe.OPTIONAL_HEADER.SizeOfStackCommit
-            self.metadata['heap_reserve_size'] = pe.OPTIONAL_HEADER.SizeOfHeapReserve
-            self.metadata['heap_commit_size'] = pe.OPTIONAL_HEADER.SizeOfHeapCommit
-            self.metadata['image_base'] = pe.OPTIONAL_HEADER.ImageBase
-            self.metadata['entry_point'] = pe.OPTIONAL_HEADER.AddressOfEntryPoint
-            self.metadata['image_characteristics'] = pe_dict.get('Flags')
-            self.metadata['dll_characteristics'] = pe_dict.get('DllCharacteristics')
+            self.event['subsystem'] = pefile.SUBSYSTEM_TYPE.get(subsystem)
+            self.event['stack_reserve_size'] = pe.OPTIONAL_HEADER.SizeOfStackReserve
+            self.event['stack_commit_size'] = pe.OPTIONAL_HEADER.SizeOfStackCommit
+            self.event['heap_reserve_size'] = pe.OPTIONAL_HEADER.SizeOfHeapReserve
+            self.event['heap_commit_size'] = pe.OPTIONAL_HEADER.SizeOfHeapCommit
+            self.event['image_base'] = pe.OPTIONAL_HEADER.ImageBase
+            self.event['entry_point'] = pe.OPTIONAL_HEADER.AddressOfEntryPoint
+            self.event['image_characteristics'] = pe_dict.get('Flags')
+            self.event['dll_characteristics'] = pe_dict.get('DllCharacteristics')
 
             try:
-                self.metadata['imphash'] = pe.get_imphash()
+                self.event['imphash'] = pe.get_imphash()
 
             except AttributeError:
                 self.flags.append('no_imphash')
 
-            self.metadata.setdefault('export_functions', [])
+            self.event.setdefault('export_functions', [])
             export_symbols = pe_dict.get('Exported symbols', [])
             for symbols in export_symbols:
                 name = symbols.get('Name')
-                if name is not None and isinstance(name, bytes) and name not in self.metadata['export_functions']:
-                    self.metadata['export_functions'].append(name)
+                if name is not None and isinstance(name, bytes) and name not in self.event['export_functions']:
+                    self.event['export_functions'].append(name)
 
             import_cache = {}
-            self.metadata.setdefault('imports', [])
+            self.event.setdefault('imports', [])
             import_symbols = pe_dict.get('Imported symbols', [])
             for symbol in import_symbols:
                 for import_ in symbol:
                     dll = import_.get('DLL')
                     if dll is not None:
-                        if dll not in self.metadata['imports']:
-                            self.metadata['imports'].append(dll)
+                        if dll not in self.event['imports']:
+                            self.event['imports'].append(dll)
                             import_cache.setdefault(dll, [])
                         ordinal = import_.get('Ordinal')
                         if ordinal is not None:
@@ -76,13 +76,13 @@ class ScanPe(strelka.Scanner):
                         if name is not None:
                             import_cache[dll].append(name)
 
-            self.metadata.setdefault('import_functions', [])
+            self.event.setdefault('import_functions', [])
             for (import_, functions) in import_cache.items():
                 import_entry = {'import': import_, 'functions': functions}
-                if import_entry not in self.metadata['import_functions']:
-                    self.metadata['import_functions'].append(import_entry)
+                if import_entry not in self.event['import_functions']:
+                    self.event['import_functions'].append(import_entry)
 
-            self.metadata.setdefault('resources', [])
+            self.event.setdefault('resources', [])
             try:
                 for resource in pe.DIRECTORY_ENTRY_RESOURCE.entries:
                     res_type = pefile.RESOURCE_TYPE.get(resource.id, 'Unknown')
@@ -108,8 +108,8 @@ class ScanPe(strelka.Scanner):
                                 'language': language,
                                 'sub_language': sublang,
                             }
-                            if data not in self.metadata['resources']:
-                                self.metadata['resources'].append(data)
+                            if data not in self.event['resources']:
+                                self.event['resources'].append(data)
 
             except AttributeError:
                 self.flags.append('no_resources')
@@ -128,15 +128,15 @@ class ScanPe(strelka.Scanner):
                         )
                         debug['age'] = struct.unpack('<L', pdb[20:24])[0]
                         debug['pdb'] = pdb[24:].rstrip(b'\x00')
-                        self.metadata['rsds'] = debug
+                        self.event['rsds'] = debug
                     elif rawData.find(b'NB10') != -1 and len(rawData) > 16:
                         pdb = rawData[rawData.find(b'NB10') + 8:]
                         debug['created'] = struct.unpack('<L', pdb[0:4])[0]
                         debug['age'] = struct.unpack('<L', pdb[4:8])[0]
                         debug['pdb'] = pdb[8:].rstrip(b'\x00')
-                        self.metadata['nb10'] = debug
+                        self.event['nb10'] = debug
 
-            self.metadata.setdefault('sections', [])
+            self.event.setdefault('sections', [])
             sections = pe_dict.get('PE Sections', [])
             for section in sections:
                 section_entry = {
@@ -144,8 +144,8 @@ class ScanPe(strelka.Scanner):
                     'flags': section.get('Flags', []),
                     'structure': section.get('Structure', ''),
                 }
-                if section_entry not in self.metadata['sections']:
-                    self.metadata['sections'].append(section_entry)
+                if section_entry not in self.event['sections']:
+                    self.event['sections'].append(section_entry)
 
             security = pe.OPTIONAL_HEADER.DATA_DIRECTORY[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_SECURITY']]
             digital_signature_virtual_address = security.VirtualAddress
@@ -170,7 +170,7 @@ class ScanPe(strelka.Scanner):
                     self.flags.append('empty_signature')
 
             if hasattr(pe, 'FileInfo'):
-                self.metadata.setdefault('version_info', [])
+                self.event.setdefault('version_info', [])
                 for structure in pe.FileInfo:
                     for fileinfo in structure:
                         if fileinfo.Key.decode() == 'StringFileInfo':
@@ -180,8 +180,8 @@ class ScanPe(strelka.Scanner):
                                         'name': name.decode(),
                                         'value': value.decode(),
                                     }
-                                    if fixedinfo not in self.metadata['version_info']:
-                                        self.metadata['version_info'].append(fixedinfo)
+                                    if fixedinfo not in self.event['version_info']:
+                                        self.event['version_info'].append(fixedinfo)
             else:
                 self.flags.append('no_version_info')
 

@@ -20,10 +20,10 @@ class ScanXml(strelka.Scanner):
             'metadata_tags': options.get('metadata_tags', []),
         }
 
-        self.metadata.setdefault('tags', [])
-        self.metadata.setdefault('tag_data', [])
-        self.metadata.setdefault('namespaces', [])
-        self.metadata['total'] = {'tags': 0, 'extracted': 0}
+        self.event.setdefault('tags', [])
+        self.event.setdefault('tag_data', [])
+        self.event.setdefault('namespaces', [])
+        self.event['total'] = {'tags': 0, 'extracted': 0}
 
         xml = None
         try:
@@ -33,9 +33,9 @@ class ScanXml(strelka.Scanner):
             xml = etree.fromstring(xml_buffer)
             docinfo = xml.getroottree().docinfo
             if docinfo.doctype:
-                self.metadata['doc_type'] = docinfo.doctype
+                self.event['doc_type'] = docinfo.doctype
             if docinfo.xml_version:
-                self.metadata['version'] = docinfo.xml_version
+                self.event['version'] = docinfo.xml_version
 
         except etree.XMLSyntaxError:
             self.flags.append('syntax_error')
@@ -61,18 +61,18 @@ class ScanXml(strelka.Scanner):
                     namespace = None
                     tag = node.tag
 
-                self.metadata['total']['tags'] += 1
-                if namespace not in self.metadata['namespaces']:
-                    self.metadata['namespaces'].append(namespace)
-                if tag not in self.metadata['tags']:
-                    self.metadata['tags'].append(tag)
+                self.event['total']['tags'] += 1
+                if namespace not in self.event['namespaces']:
+                    self.event['namespaces'].append(namespace)
+                if tag not in self.event['tags']:
+                    self.event['tags'].append(tag)
 
                 text = node.attrib.get('name', node.text)
                 if text is not None:
                     if tag in xml_args['metadata_tags']:
                         tag_data = {'tag': tag, 'text': text.strip()}
-                        if tag_data not in self.metadata['tag_data']:
-                            self.metadata['tag_data'].append(tag_data)
+                        if tag_data not in self.event['tag_data']:
+                            self.event['tag_data'].append(tag_data)
                     elif tag in xml_args['extract_tags']:
                         extract_file = strelka.File(
                             name=tag,
@@ -87,7 +87,7 @@ class ScanXml(strelka.Scanner):
                             )
 
                         self.files.append(extract_file)
-                        self.metadata['total']['extracted'] += 1
+                        self.event['total']['extracted'] += 1
 
             for child in node.getchildren():
                 self._recurse_node(self, child, xml_args)

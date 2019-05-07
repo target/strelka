@@ -13,7 +13,7 @@ class ScanHtml(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         parser = options.get('parser', 'html.parser')
 
-        self.metadata['total'] = {
+        self.event['total'] = {
             'scripts': 0,
             'forms': 0,
             'inputs': 0,
@@ -25,33 +25,33 @@ class ScanHtml(strelka.Scanner):
             soup = bs4.BeautifulSoup(data, parser)
 
             if soup.title:
-                self.metadata['title'] = strelka.normalize_whitespace(soup.title.text)
+                self.event['title'] = strelka.normalize_whitespace(soup.title.text)
 
             hyperlinks = []
             hyperlinks.extend(soup.find_all('a', href=True))
             hyperlinks.extend(soup.find_all('img', src=True))
-            self.metadata.setdefault('hyperlinks', [])
+            self.event.setdefault('hyperlinks', [])
             for hyperlink in hyperlinks:
                 link = hyperlink.get('href') or hyperlink.get('src')
-                if link not in self.metadata['hyperlinks']:
-                    self.metadata['hyperlinks'].append(link)
+                if link not in self.event['hyperlinks']:
+                    self.event['hyperlinks'].append(link)
 
             forms = soup.find_all('form')
-            self.metadata['total']['forms'] = len(forms)
-            self.metadata.setdefault('forms', [])
+            self.event['total']['forms'] = len(forms)
+            self.event.setdefault('forms', [])
             for form in forms:
                 form_entry = {
                     'action': form.get('action'),
                     'method': form.get('method'),
                 }
-                if form_entry not in self.metadata['forms']:
-                    self.metadata['forms'].append(form_entry)
+                if form_entry not in self.event['forms']:
+                    self.event['forms'].append(form_entry)
 
             frames = []
             frames.extend(soup.find_all('frame'))
             frames.extend(soup.find_all('iframe'))
-            self.metadata['total']['frames'] = len(frames)
-            self.metadata.setdefault('frames', [])
+            self.event['total']['frames'] = len(frames)
+            self.event.setdefault('frames', [])
             for frame in frames:
                 frame_entry = {
                     'src': frame.get('src'),
@@ -62,24 +62,24 @@ class ScanHtml(strelka.Scanner):
                     'id': frame.get('id'),
                     'style': frame.get('style'),
                 }
-                if frame_entry not in self.metadata['frames']:
-                    self.metadata['frames'].append(frame_entry)
+                if frame_entry not in self.event['frames']:
+                    self.event['frames'].append(frame_entry)
 
             inputs = soup.find_all('input')
-            self.metadata['total']['inputs'] = len(inputs)
-            self.metadata.setdefault('inputs', [])
+            self.event['total']['inputs'] = len(inputs)
+            self.event.setdefault('inputs', [])
             for input in inputs:
                 input_entry = {
                     'type': input.get('type'),
                     'name': input.get('name'),
                     'value': input.get('value'),
                 }
-                if input_entry not in self.metadata['inputs']:
-                    self.metadata['inputs'].append(input_entry)
+                if input_entry not in self.event['inputs']:
+                    self.event['inputs'].append(input_entry)
 
             scripts = soup.find_all('script')
-            self.metadata['total']['scripts'] = len(scripts)
-            self.metadata.setdefault('scripts', [])
+            self.event['total']['scripts'] = len(scripts)
+            self.event.setdefault('scripts', [])
             for (index, script) in enumerate(scripts):
                 script_flavors = [
                     script.get('language', '').lower(),
@@ -90,8 +90,8 @@ class ScanHtml(strelka.Scanner):
                     'language': script.get('language'),
                     'type': script.get('type'),
                 }
-                if script_entry not in self.metadata['scripts']:
-                    self.metadata['scripts'].append(script_entry)
+                if script_entry not in self.event['scripts']:
+                    self.event['scripts'].append(script_entry)
 
                 if script.text:
                     extract_file = strelka.File(
@@ -108,18 +108,18 @@ class ScanHtml(strelka.Scanner):
                         )
 
                     self.files.append(extract_file)
-                    self.metadata['total']['extracted'] += 1
+                    self.event['total']['extracted'] += 1
 
             spans = soup.find_all('span')
-            self.metadata['total']['spans'] = len(spans)
-            self.metadata.setdefault('spans', [])
+            self.event['total']['spans'] = len(spans)
+            self.event.setdefault('spans', [])
             for span in spans:
                 span_entry = {
                     'class': span.get('class'),
                     'style': span.get('style'),
                 }
-                if span_entry not in self.metadata['spans']:
-                    self.metadata['spans'].append(span_entry)
+                if span_entry not in self.event['spans']:
+                    self.event['spans'].append(span_entry)
 
         except TypeError:
             self.flags.append('type_error')

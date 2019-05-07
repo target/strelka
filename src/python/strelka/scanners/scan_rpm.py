@@ -25,54 +25,54 @@ class ScanRpm(strelka.Scanner):
                     extract_name = ''
                     for (key, value) in rpm.headers.items():
                         if key == 'arch':
-                            self.metadata['architecture'] = value
+                            self.event['architecture'] = value
                         elif key == 'archive_compression':
-                            self.metadata['archive_compression'] = value
+                            self.event['archive_compression'] = value
                         elif key == 'archive_format':
-                            self.metadata['archive_format'] = value
+                            self.event['archive_format'] = value
                         elif key == 'authors':
-                            self.metadata['authors'] = value
+                            self.event['authors'] = value
                         elif key == 'buildhost':
-                            self.metadata['build_host'] = value
+                            self.event['build_host'] = value
                         elif key == 'buildtime':
                             if value is not None:
-                                self.metadata['build_time'] = datetime.utcfromtimestamp(value).isoformat()
+                                self.event['build_time'] = datetime.utcfromtimestamp(value).isoformat()
                         elif key == 'copyright':
-                            self.metadata['copyright'] = value
+                            self.event['copyright'] = value
                         elif key == 'description':
                             if value is not None:
-                                self.metadata['description'] = value.replace(b'\n', b' ')
+                                self.event['description'] = value.replace(b'\n', b' ')
                         elif key == 'filenames':
-                            self.metadata['filenames'] = value
+                            self.event['filenames'] = value
                         elif key == 'group':
-                            self.metadata['group'] = value
+                            self.event['group'] = value
                         elif key == 'name':
-                            self.metadata['name'] = value
+                            self.event['name'] = value
                             extract_name = f'{value.decode()}'
                         elif key == 'os':
-                            self.metadata['os'] = value
+                            self.event['os'] = value
                         elif key == 'packager':
-                            self.metadata['packager'] = value
+                            self.event['packager'] = value
                         elif key == 'provides':
-                            self.metadata['provides'] = value
+                            self.event['provides'] = value
                         elif key == 'release':
-                            self.metadata['release'] = value
+                            self.event['release'] = value
                         elif key == 'requirename':
-                            self.metadata['require_name'] = value
+                            self.event['require_name'] = value
                         elif key == 'rpmversion':
-                            self.metadata['rpm_version'] = value
+                            self.event['rpm_version'] = value
                         elif key == 'serial':
-                            self.metadata['serial'] = value
+                            self.event['serial'] = value
                         elif key == 'sourcerpm':
-                            self.metadata['source_rpm'] = value
+                            self.event['source_rpm'] = value
                         elif key == 'summary':
-                            self.metadata['summary'] = value
+                            self.event['summary'] = value
                         elif key == 'vendor':
-                            self.metadata['vendor'] = value
+                            self.event['vendor'] = value
                         elif key == 'version':
-                            self.metadata['version'] = value
+                            self.event['version'] = value
                         elif key == 'url':
-                            self.metadata['url'] = value
+                            self.event['url'] = value
 
                     extract_file = strelka.File(
                         name=extract_name,

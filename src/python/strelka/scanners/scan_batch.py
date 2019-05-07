@@ -34,38 +34,38 @@ class ScanBatch(strelka.Scanner):
                 if highlight_entry['value']:
                     ordered_highlights.append(highlight_entry)
 
-        self.metadata.setdefault('tokens', [])
-        self.metadata.setdefault('comments', [])
-        self.metadata.setdefault('keywords', [])
-        self.metadata.setdefault('labels', [])
-        self.metadata.setdefault('strings', [])
-        self.metadata.setdefault('text', [])
-        self.metadata.setdefault('variables', [])
+        self.event.setdefault('tokens', [])
+        self.event.setdefault('comments', [])
+        self.event.setdefault('keywords', [])
+        self.event.setdefault('labels', [])
+        self.event.setdefault('strings', [])
+        self.event.setdefault('text', [])
+        self.event.setdefault('variables', [])
 
         position = 0
         while position < len(ordered_highlights):
             ohlp = ordered_highlights[position]
-            if ohlp['token'] not in self.metadata['tokens']:
-                self.metadata['tokens'].append(ohlp['token'])
+            if ohlp['token'] not in self.event['tokens']:
+                self.event['tokens'].append(ohlp['token'])
             if ohlp['token'] == 'Token.Comment.Single':
-                if ohlp['value'] not in self.metadata['comments']:
-                    self.metadata['comments'].append(ohlp['value'])
+                if ohlp['value'] not in self.event['comments']:
+                    self.event['comments'].append(ohlp['value'])
             elif ohlp['token'] == 'Token.Keyword':
-                if ohlp['value'] not in self.metadata['keywords']:
-                    self.metadata['keywords'].append(ohlp['value'])
+                if ohlp['value'] not in self.event['keywords']:
+                    self.event['keywords'].append(ohlp['value'])
             elif ohlp['token'] == 'Token.Name.Label':
-                if ohlp['value'] not in self.metadata['labels']:
-                    self.metadata['labels'].append(ohlp['value'])
+                if ohlp['value'] not in self.event['labels']:
+                    self.event['labels'].append(ohlp['value'])
             elif ohlp['token'] == 'Token.Literal.String.Double':
-                if ohlp['value'] not in self.metadata['strings']:
-                    self.metadata['strings'].append(ohlp['value'])
+                if ohlp['value'] not in self.event['strings']:
+                    self.event['strings'].append(ohlp['value'])
             elif ohlp['token'] == 'Token.Literal.String.Single':
-                if ohlp['value'] not in self.metadata['strings']:
-                    self.metadata['strings'].append(ohlp['value'])
+                if ohlp['value'] not in self.event['strings']:
+                    self.event['strings'].append(ohlp['value'])
             elif ohlp['token'] == 'Token.Text':
-                if ohlp['value'] not in self.metadata['text']:
-                    self.metadata['text'].append(ohlp['value'])
+                if ohlp['value'] not in self.event['text']:
+                    self.event['text'].append(ohlp['value'])
             elif ohlp['token'] == 'Token.Name.Variable':
-                if ohlp['value'] not in self.metadata['variables']:
-                    self.metadata['variables'].append(ohlp['value'])
+                if ohlp['value'] not in self.event['variables']:
+                    self.event['variables'].append(ohlp['value'])
             position += 1

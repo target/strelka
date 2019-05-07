@@ -36,17 +36,17 @@ class ScanX509(strelka.Scanner):
             self.flags.append('load_certificate_error')
 
         if certificate is not None:
-            self.metadata['subject_string'] = b', '.join([b'='.join(sc) for sc in certificate.get_subject().get_components()])
-            self.metadata['issuer_string'] = b', '.join([b'='.join(ic) for ic in certificate.get_issuer().get_components()])
-            self.metadata['not_after'] = datetime.strptime(certificate.get_notAfter().decode(), '%Y%m%d%H%M%SZ').isoformat()
-            self.metadata['not_before'] = datetime.strptime(certificate.get_notBefore().decode(), '%Y%m%d%H%M%SZ').isoformat()
-            self.metadata['serial_number'] = str(certificate.get_serial_number())
-            self.metadata['signature_algorithm'] = certificate.get_signature_algorithm()
-            self.metadata['version'] = certificate.get_version()
-            self.metadata['expired'] = certificate.has_expired()
-            self.metadata['subject_name_hash'] = str(certificate.subject_name_hash())
+            self.event['subject_string'] = b', '.join([b'='.join(sc) for sc in certificate.get_subject().get_components()])
+            self.event['issuer_string'] = b', '.join([b'='.join(ic) for ic in certificate.get_issuer().get_components()])
+            self.event['not_after'] = datetime.strptime(certificate.get_notAfter().decode(), '%Y%m%d%H%M%SZ').isoformat()
+            self.event['not_before'] = datetime.strptime(certificate.get_notBefore().decode(), '%Y%m%d%H%M%SZ').isoformat()
+            self.event['serial_number'] = str(certificate.get_serial_number())
+            self.event['signature_algorithm'] = certificate.get_signature_algorithm()
+            self.event['version'] = certificate.get_version()
+            self.event['expired'] = certificate.has_expired()
+            self.event['subject_name_hash'] = str(certificate.subject_name_hash())
 
-            self.metadata.setdefault('extensions', [])
+            self.event.setdefault('extensions', [])
             for index in range(certificate.get_extension_count()):
                 try:
                     name = certificate.get_extension(index=index).get_short_name().decode()
@@ -62,8 +62,8 @@ class ScanX509(strelka.Scanner):
                             value = [ev.strip() for ev in value.split('\n') if ev]
 
                         extension_entry = {'name': name, 'value': value}
-                        if extension_entry not in self.metadata['extensions']:
-                            self.metadata['extensions'].append(extension_entry)
+                        if extension_entry not in self.event['extensions']:
+                            self.event['extensions'].append(extension_entry)
 
                 except crypto.Error:
                     self.flags.append('extension_{name.lower()}')
@@ -79,12 +79,12 @@ class ScanX509(strelka.Scanner):
                 self.flags.append('load_crl_error')
 
             if crl is not None:
-                self.metadata['issuer_string'] = b', '.join([b'='.join(ic) for ic in crl.get_issuer().get_components()])
+                self.event['issuer_string'] = b', '.join([b'='.join(ic) for ic in crl.get_issuer().get_components()])
 
                 revoked = crl.get_revoked()
                 if revoked:
-                    self.metadata['total'] = {'revoked': len(revoked)}
-                    self.metadata.setdefault('revoked', [])
+                    self.event['total'] = {'revoked': len(revoked)}
+                    self.event.setdefault('revoked', [])
                     for r in revoked:
                         revoked_entry = {
                             'reason': r.get_reason(),
@@ -92,5 +92,5 @@ class ScanX509(strelka.Scanner):
                             'serial_number': r.get_serial(),
                         }
 
-                        if revoked_entry not in self.metadata['revoked']:
-                            self.metadata['revoked'].append(revoked_entry)
+                        if revoked_entry not in self.event['revoked']:
+                            self.event['revoked'].append(revoked_entry)

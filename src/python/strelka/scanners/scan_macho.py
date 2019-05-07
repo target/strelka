@@ -15,9 +15,9 @@ class ScanMacho(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         tmp_directory = options.get('tmp_directory', '/tmp/')
 
-        self.metadata['total'] = {'objects': 0}
-        self.metadata.setdefault('abnormalities', [])
-        self.metadata.setdefault('objects', [])
+        self.event['total'] = {'objects': 0}
+        self.event.setdefault('abnormalities', [])
+        self.event.setdefault('objects', [])
 
         with tempfile.NamedTemporaryFile(dir=tmp_directory) as st_tmp:
             st_tmp.write(data)
@@ -25,15 +25,15 @@ class ScanMacho(strelka.Scanner):
 
             macho_dictionary = macholibre.parse(st_tmp.name)
             for (key, value) in macho_dictionary.items():
-                if key == 'abnormalities' and value not in self.metadata['abnormalities']:
-                    self.metadata['abnormalities'].append(value)
+                if key == 'abnormalities' and value not in self.event['abnormalities']:
+                    self.event['abnormalities'].append(value)
                 elif key == 'macho':
-                    self.metadata['total']['objects'] = 1
+                    self.event['total']['objects'] = 1
                     self._macho_parse(self, value)
                 elif key == 'universal':
                     for (x, y) in value.items():
                         if key == 'machos':
-                            self.metadata['total']['objects'] = len(y)
+                            self.event['total']['objects'] = len(y)
                             for macho in y:
                                 self._macho_parse(self, macho)
 
@@ -76,4 +76,4 @@ class ScanMacho(strelka.Scanner):
             if import_entry not in macho_out['import_functions']:
                 macho_out['import_functions'].append(import_entry)
 
-        self.metadata['objects'].append(macho_out)
+        self.event['objects'].append(macho_out)

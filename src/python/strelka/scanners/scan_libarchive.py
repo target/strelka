@@ -14,14 +14,14 @@ class ScanLibarchive(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         file_limit = options.get('limit', 1000)
 
-        self.metadata['total'] = {'files': 0, 'extracted': 0}
+        self.event['total'] = {'files': 0, 'extracted': 0}
 
         try:
             with libarchive.memory_reader(data) as archive:
                 for entry in archive:
-                    self.metadata['total']['files'] += 1
+                    self.event['total']['files'] += 1
                     if entry.isfile:
-                        if self.metadata['total']['extracted'] >= file_limit:
+                        if self.event['total']['extracted'] >= file_limit:
                             continue
 
                         extract_file = strelka.File(
@@ -37,7 +37,7 @@ class ScanLibarchive(strelka.Scanner):
                             )
 
                         self.files.append(extract_file)
-                        self.metadata['total']['extracted'] += 1
+                        self.event['total']['extracted'] += 1
 
         except libarchive.ArchiveError:
             self.flags.append('libarchive_archive_error')

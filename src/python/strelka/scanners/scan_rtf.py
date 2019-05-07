@@ -13,14 +13,14 @@ class ScanRtf(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         file_limit = options.get('limit', 1000)
 
-        self.metadata['total'] = {'objects': 0, 'extracted': 0}
+        self.event['total'] = {'objects': 0, 'extracted': 0}
 
         rtf = rtfobj.RtfObjParser(data)
         rtf.parse()
-        self.metadata['total']['objects'] = len(rtf.objects)
+        self.event['total']['objects'] = len(rtf.objects)
 
         for object in rtf.objects:
-            if self.metadata['total']['extracted'] >= file_limit:
+            if self.event['total']['extracted'] >= file_limit:
                 break
 
             index = rtf.server.index(object)
@@ -64,4 +64,4 @@ class ScanRtf(strelka.Scanner):
                     )
 
             self.files.append(extract_file)
-            self.metadata['total']['extracted'] += 1
+            self.event['total']['extracted'] += 1

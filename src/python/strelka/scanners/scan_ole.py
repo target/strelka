@@ -9,12 +9,12 @@ from strelka import strelka
 class ScanOle(strelka.Scanner):
     """Extracts files from OLECF files."""
     def scan(self, data, file, options, expire_at):
-        self.metadata['total'] = {'streams': 0, 'extracted': 0}
+        self.event['total'] = {'streams': 0, 'extracted': 0}
 
         try:
             ole = olefile.OleFileIO(data)
             ole_streams = ole.listdir(streams=True)
-            self.metadata['total']['streams'] = len(ole_streams)
+            self.event['total']['streams'] = len(ole_streams)
             for stream in ole_streams:
                 file = ole.openstream(stream)
                 extract_data = file.read()
@@ -55,7 +55,7 @@ class ScanOle(strelka.Scanner):
                         )
 
                 self.files.append(extract_file)
-                self.metadata['total']['extracted'] += 1
+                self.event['total']['extracted'] += 1
 
         except OSError:
             self.flags.append('os_error')

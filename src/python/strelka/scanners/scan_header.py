@@ -11,4 +11,4 @@ class ScanHeader(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         length = options.get('length', 50)
 
-        self.metadata['header'] = data[:length]
+        self.event['header'] = data[:length]

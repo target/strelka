@@ -27,10 +27,10 @@ class ScanExiftool(strelka.Scanner):
 
             if stdout:
                 exiftool_dictionary = json.loads(stdout)[0]
-                self.metadata.setdefault('exiftool', [])
+                self.event.setdefault('exiftool', [])
                 for (key, value) in exiftool_dictionary.items():
                     if isinstance(value, str):
                         value = value.strip()
                     exiftool_entry = {'field': key, 'value': value}
-                    if exiftool_entry not in self.metadata['exiftool']:
-                        self.metadata['exiftool'].append(exiftool_entry)
+                    if exiftool_entry not in self.event['exiftool']:
+                        self.event['exiftool'].append(exiftool_entry)

@@ -6,7 +6,7 @@ class ScanJarManifest(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         manifest = b'\n'.join(data.splitlines()).rstrip(b'\n')
         section_strings = manifest.split(b'\n')
-        self.metadata.setdefault('manifest', [])
+        self.event.setdefault('manifest', [])
         for section in section_strings:
             split_section = section.replace(b'\n ', b'').split(b': ')
             if len(split_section) == 2:
@@ -14,5 +14,5 @@ class ScanJarManifest(strelka.Scanner):
                     'header': split_section[0],
                     'value': split_section[1],
                 }
-                if jar_entry not in self.metadata['manifest']:
-                    self.metadata['manifest'].append(jar_entry)
+                if jar_entry not in self.event['manifest']:
+                    self.event['manifest'].append(jar_entry)

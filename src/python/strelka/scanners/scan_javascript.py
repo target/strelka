@@ -15,19 +15,19 @@ class ScanJavascript(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         beautify = options.get('beautify', True)
 
-        self.metadata.setdefault('tokens', [])
-        self.metadata.setdefault('keywords', [])
-        self.metadata.setdefault('strings', [])
-        self.metadata.setdefault('identifiers', [])
-        self.metadata.setdefault('regular_expressions', [])
-        self.metadata['beautified'] = False
+        self.event.setdefault('tokens', [])
+        self.event.setdefault('keywords', [])
+        self.event.setdefault('strings', [])
+        self.event.setdefault('identifiers', [])
+        self.event.setdefault('regular_expressions', [])
+        self.event['beautified'] = False
 
         js = None
 
         try:
             if beautify:
                 js = jsbeautifier.beautify(data.decode())
-                self.metadata['beautified'] = True
+                self.event['beautified'] = True
         except:  # noqa
             self.flags.append('beautify_failed')
 
@@ -42,18 +42,18 @@ class ScanJavascript(strelka.Scanner):
             }
         )
         for t in tokens:
-            if t.type not in self.metadata['tokens']:
-                self.metadata['tokens'].append(t.type)
+            if t.type not in self.event['tokens']:
+                self.event['tokens'].append(t.type)
             if t.type == 'String':
                 stripped_val = t.value.strip('"\'')
-                if stripped_val not in self.metadata['strings']:
-                    self.metadata['strings'].append(stripped_val)
+                if stripped_val not in self.event['strings']:
+                    self.event['strings'].append(stripped_val)
             if t.type == 'Keyword':
-                if t.value not in self.metadata['keywords']:
-                    self.metadata['keywords'].append(t.value)
+                if t.value not in self.event['keywords']:
+                    self.event['keywords'].append(t.value)
             if t.type == 'Identifier':
-                if t.value not in self.metadata['identifiers']:
-                    self.metadata['identifiers'].append(t.value)
+                if t.value not in self.event['identifiers']:
+                    self.event['identifiers'].append(t.value)
             if type == 'RegularExpression':
-                if t.value not in self.metadata['regular_expressions']:
-                    self.metadata['regular_expressions'].append(t.value)
+                if t.value not in self.event['regular_expressions']:
+                    self.event['regular_expressions'].append(t.value)

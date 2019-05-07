@@ -42,14 +42,14 @@ class ScanYara(strelka.Scanner):
         except (yara.Error, yara.SyntaxError) as YaraError:
             self.flags.append('compiling_error')
 
-        self.metadata.setdefault('matches', [])
-        self.metadata.setdefault('metadata', [])
+        self.event.setdefault('matches', [])
+        self.event.setdefault('metadata', [])
 
         try:
             if self.compiled_yara is not None:
                 yara_matches = self.compiled_yara.match(data=data)
                 for match in yara_matches:
-                    self.metadata['matches'].append(match.rule)
+                    self.event['matches'].append(match.rule)
                     if metadata_identifiers and match.meta:
                         for (key, value) in match.meta.items():
                             if key in metadata_identifiers:
@@ -58,8 +58,8 @@ class ScanYara(strelka.Scanner):
                                     'identifier': key,
                                     'value': value,
                                 }
-                                if yara_entry not in self.metadata['metadata']:
-                                    self.metadata['metadata'].append(yara_entry)
+                                if yara_entry not in self.event['metadata']:
+                                    self.event['metadata'].append(yara_entry)
 
         except (yara.Error, yara.TimeoutError) as YaraError:
             self.flags.append('scanning_error')

@@ -64,7 +64,7 @@ class ScanCuckoo(strelka.Scanner):
                 )
 
                 if response.status_code == 200:
-                    self.metadata['taskId'] = response.json()['task_id']
+                    self.event['taskId'] = response.json()['task_id']
                 elif response.status_code == 400:
                     self.flags.append('duplicate_upload')
                 else:

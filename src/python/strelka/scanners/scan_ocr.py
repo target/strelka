@@ -34,7 +34,7 @@ class ScanOcr(strelka.Scanner):
                     with open(tess_txt_name, 'rb') as tess_txt:
                         ocr_file = tess_txt.read()
                         if ocr_file:
-                            self.metadata['text'] = ocr_file.split()
+                            self.event['text'] = ocr_file.split()
                             if extract_text:
                                 extract_file = strelka.File(
                                     name='text',

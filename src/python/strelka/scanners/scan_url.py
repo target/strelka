@@ -36,9 +36,9 @@ class ScanUrl(strelka.Scanner):
             url_regex = self.regexes['default']
 
         normalized_data = strelka.normalize_whitespace(data)
-        self.metadata.setdefault('urls', [])
+        self.event.setdefault('urls', [])
         urls = url_regex.findall(normalized_data)
         for url in urls:
             url = url.strip(b'!"#$%&\'()*+,-./@:;<=>[\\]^_`{|}~')
-            if url not in self.metadata['urls']:
-                self.metadata['urls'].append(url)
+            if url not in self.event['urls']:
+                self.event['urls'].append(url)

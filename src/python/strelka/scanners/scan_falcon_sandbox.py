@@ -67,7 +67,7 @@ class ScanFalconSandbox(strelka.Scanner):
 
             if response.status_code == 200 and response.json()['response_code'] == 0:
                 sha256 = response.json()['response']['sha256']  # Successfully submitted file
-                self.metadata['sha256'] = sha256
+                self.event['sha256'] = sha256
 
             elif response.status_code == 200 and response.json()['response_code'] == -1:
                 self.flags.append('duplicate_submission')  # Submission Failed - duplicate

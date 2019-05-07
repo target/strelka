@@ -34,31 +34,31 @@ class ScanPhp(strelka.Scanner):
                 if highlight_entry['value']:
                     ordered_highlights.append(highlight_entry)
 
-        self.metadata.setdefault('tokens', [])
-        self.metadata.setdefault('builtins', [])
-        self.metadata.setdefault('operators', [])
-        self.metadata.setdefault('strings', [])
-        self.metadata.setdefault('variables', [])
+        self.event.setdefault('tokens', [])
+        self.event.setdefault('builtins', [])
+        self.event.setdefault('operators', [])
+        self.event.setdefault('strings', [])
+        self.event.setdefault('variables', [])
 
         position = 0
         while position < len(ordered_highlights):
             ohlp = ordered_highlights[position]
-            if ohlp['token'] not in self.metadata['tokens']:
-                self.metadata['tokens'].append(ohlp['token'])
+            if ohlp['token'] not in self.event['tokens']:
+                self.event['tokens'].append(ohlp['token'])
             if ohlp['token'] == 'Token.Name.Builtin':
-                if ohlp['value'] not in self.metadata['builtins']:
-                    self.metadata['builtins'].append(ohlp['value'])
+                if ohlp['value'] not in self.event['builtins']:
+                    self.event['builtins'].append(ohlp['value'])
             elif ohlp['token'] == 'Token.Operator':
-                if ohlp['value'] not in self.metadata['operators']:
-                    self.metadata['operators'].append(ohlp['value'])
+                if ohlp['value'] not in self.event['operators']:
+                    self.event['operators'].append(ohlp['value'])
             elif ohlp['token'] in ['Token.Literal.String.Single',
                                    'Token.Literal.String.Double',
                                    'Token.Literal.String.Backtick',
                                    'Token.Literal.String.Doc']:
-                if ohlp['value'] not in self.metadata['strings']:
-                    self.metadata['strings'].append(ohlp['value'])
+                if ohlp['value'] not in self.event['strings']:
+                    self.event['strings'].append(ohlp['value'])
             elif ohlp['token'] == 'Token.Name.Variable':
-                if ohlp['value'] not in self.metadata['variables']:
-                    self.metadata['variables'].append(ohlp['value'])
+                if ohlp['value'] not in self.event['variables']:
+                    self.event['variables'].append(ohlp['value'])
 
             position += 1

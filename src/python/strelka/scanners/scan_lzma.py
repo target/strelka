@@ -13,7 +13,7 @@ class ScanLzma(strelka.Scanner):
                     try:
                         decompressed_file = st_tmp.read()
                         decompressed_size = len(decompressed_file)
-                        self.metadata['decompressed_size'] = decompressed_size
+                        self.event['decompressed_size'] = decompressed_size
 
                         extract_file = strelka.File(
                             source=self.name,

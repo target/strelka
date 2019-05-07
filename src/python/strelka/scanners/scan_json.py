@@ -6,7 +6,7 @@ from strelka import strelka
 class ScanJson(strelka.Scanner):
     """Collects keys from JSON files."""
     def scan(self, data, file, options, expire_at):
-        self.metadata.setdefault('keys', [])
+        self.event.setdefault('keys', [])
 
         try:
             self._get_keys(self, json.loads(data.decode()))
@@ -25,8 +25,8 @@ class ScanJson(strelka.Scanner):
         """
         if isinstance(variable, dict):
             for (key, value) in variable.items():
-                if key not in self.metadata['keys']:
-                    self.metadata['keys'].append(key)
+                if key not in self.event['keys']:
+                    self.event['keys'].append(key)
                 self._get_keys(self, value)
         elif isinstance(variable, list):
             for v in variable:

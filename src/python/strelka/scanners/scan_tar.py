@@ -14,16 +14,16 @@ class ScanTar(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         file_limit = options.get('limit', 1000)
 
-        self.metadata['total'] = {'files': 0, 'extracted': 0}
+        self.event['total'] = {'files': 0, 'extracted': 0}
 
         with io.BytesIO(data) as tar_io:
             try:
                 with tarfile.open(fileobj=tar_io) as tar:
                     tar_members = tar.getmembers()
-                    self.metadata['total']['files'] = len(tar_members)
+                    self.event['total']['files'] = len(tar_members)
                     for tar_member in tar_members:
                         if tar_member.isfile:
-                            if self.metadata['total']['extracted'] >= file_limit:
+                            if self.event['total']['extracted'] >= file_limit:
                                 break
 
                             try:
@@ -42,7 +42,7 @@ class ScanTar(strelka.Scanner):
                                         )
 
                                     self.files.append(extract_file)
-                                    self.metadata['total']['extracted'] += 1
+                                    self.event['total']['extracted'] += 1
 
                             except KeyError:
                                 self.flags.append('key_error')

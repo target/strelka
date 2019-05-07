@@ -14,7 +14,7 @@ class ScanGif(strelka.Scanner):
             else:
                 trailer_data = data[trailer_index + 2:]
                 if trailer_data:
-                    self.metadata['trailer_index'] = trailer_index
+                    self.event['trailer_index'] = trailer_index
 
                     extract_file = strelka.File(
                         source=self.name,

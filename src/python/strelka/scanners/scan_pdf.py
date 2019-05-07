@@ -27,7 +27,7 @@ class ScanPdf(strelka.Scanner):
         extract_text = options.get('extract_text', False)
         file_limit = options.get('limit', 2000)
 
-        self.metadata['total'] = {'objects': 0, 'extracted': 0}
+        self.event['total'] = {'objects': 0, 'extracted': 0}
         extracted_objects = set()
 
         try:
@@ -35,10 +35,10 @@ class ScanPdf(strelka.Scanner):
                 parsed = pdfparser.PDFParser(pdf_io)
                 pdf = pdfdocument.PDFDocument(parsed)
 
-                self.metadata.setdefault('annotated_uris', [])
+                self.event.setdefault('annotated_uris', [])
                 for xref in pdf.xrefs:
                     for object_id in xref.get_objids():
-                        self.metadata['total']['objects'] += 1
+                        self.event['total']['objects'] += 1
 
                         try:
                             object = pdf.getobj(object_id)
@@ -52,13 +52,13 @@ class ScanPdf(strelka.Scanner):
                                     try:
                                         if key == 'A':
                                             uri = value.get('URI')
-                                            if uri not in self.metadata['annotated_uris']:
-                                                self.metadata['annotated_uris'].append(uri)
+                                            if uri not in self.event['annotated_uris']:
+                                                self.event['annotated_uris'].append(uri)
 
                                     except AttributeError:
                                         pass
 
-                            if self.metadata['total']['extracted'] >= file_limit:
+                            if self.event['total']['extracted'] >= file_limit:
                                 continue
                             if isinstance(object, pdftypes.PDFStream):
                                 try:
@@ -76,7 +76,7 @@ class ScanPdf(strelka.Scanner):
                                             )
 
                                         self.files.append(extract_file)
-                                        self.metadata['total']['extracted'] += 1
+                                        self.event['total']['extracted'] += 1
                                         extracted_objects.add(object_id)
 
                                 except TypeError:
