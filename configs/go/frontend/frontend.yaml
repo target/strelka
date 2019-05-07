@@ -5,4 +5,5 @@ cache:
 coordinator:
     addr: 'strelka_coordinator_1:6379'
     db: 0
-log: "/var/log/strelka/strelka.log"
+response:
+    log: "/var/log/strelka/strelka.log"
