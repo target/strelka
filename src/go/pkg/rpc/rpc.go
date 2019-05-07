@@ -116,19 +116,6 @@ func DiscardResponses(responses <-chan *strelka.ScanResponse) {
         }
 }
 
-func HealthCheck(client health.HealthClient) error {
-        deadline := time.Now().Add(3 * time.Second)
-        ctx, cancel := context.WithDeadline(context.Background(), deadline)
-        defer cancel()
-
-        _, err := client.Check(ctx, &health.HealthCheckRequest{})
-        if err != nil {
-                return err
-        }
-
-        return nil
-}
-
 func ScanFile(client strelka.FrontendClient, timeout time.Duration, req structs.ScanFileRequest, responses chan <- *strelka.ScanResponse) {
         deadline := time.Now().Add(timeout)
         ctx, cancel := context.WithDeadline(context.Background(), deadline)
