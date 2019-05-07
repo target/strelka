@@ -146,7 +146,7 @@ class Backend(object):
                         'node': file.uid,
                         'parent': file.parent,
                     }
-                    file_meta = {
+                    file_data = {
                         'depth': file.depth,
                         'filename': file.name,
                         'flavors': file.flavors,
@@ -155,8 +155,8 @@ class Backend(object):
                         'size': len(data),
                         'source': file.source,
                     }
-                    metadata = {
-                        **{'file_metadata': file_meta},
+                    event = {
+                        **{'file': file_data},
                         **{'tree': tree},
                     }
 
@@ -171,7 +171,7 @@ class Backend(object):
                                 self.scanner_cache[und_name] = attr
                             options = scanner.get('options', {})
                             plugin = self.scanner_cache[und_name]
-                            (f, m) = plugin.scan_wrapper(
+                            (f, e) = plugin.scan_wrapper(
                                 data,
                                 file,
                                 options,
@@ -179,15 +179,15 @@ class Backend(object):
                             )
                             files.extend(f)
 
-                            metadata = {
-                                **metadata,
-                                **m,
+                            event = {
+                                **event,
+                                **e,
                             }
 
                         except ModuleNotFoundError:
                             logging.exception(f'scanner {name} not found')
 
-                    p.rpush(f'evt:{root_id}', strelka.format_event(metadata))
+                    p.rpush(f'evt:{root_id}', strelka.format_event(event))
                     p.expireat(f'evt:{root_id}', expire_at)
                     p.execute()
 
