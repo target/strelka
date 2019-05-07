@@ -13,7 +13,7 @@ type ConfConn struct {
         Server          string          // required
         Cert            string          // required
         Timeout         time.Duration   // required
-        Routines        int             // required
+        Concurrency     int             // required
 }
 
 type ConfFiles struct {
@@ -55,7 +55,7 @@ type Frontend struct {
         Server              string
         Cache               ConfRedis
         Coordinator         ConfRedis
-        Log                 string
+        Response            ConfResponse    // optional
 }
 
 type Redis struct {
