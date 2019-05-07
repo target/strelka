@@ -17,7 +17,7 @@ static_resources:
 
   clusters:
   - name: cache_cluster
-    connect_timeout: 1s
+    connect_timeout: 0.5s
     type: STATIC
     lb_policy: MAGLEV
     load_assignment:
