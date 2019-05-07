@@ -16,17 +16,17 @@ _sym_db = _symbol_database.Default()
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='strelka/proto/health.proto',
-  package='',
+  package='grpc.health.v1',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x1astrelka/proto/health.proto\"%\n\x12HealthCheckRequest\x12\x0f\n\x07service\x18\x01 \x01(\t\"\x85\x01\n\x13HealthCheckResponse\x12\x32\n\x06status\x18\x01 \x01(\x0e\x32\".HealthCheckResponse.ServingStatus\":\n\rServingStatus\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07SERVING\x10\x01\x12\x0f\n\x0bNOT_SERVING\x10\x02\x32<\n\x06Health\x12\x32\n\x05\x43heck\x12\x13.HealthCheckRequest\x1a\x14.HealthCheckResponseb\x06proto3')
+  serialized_pb=_b('\n\x1astrelka/proto/health.proto\x12\x0egrpc.health.v1\"%\n\x12HealthCheckRequest\x12\x0f\n\x07service\x18\x01 \x01(\t\"\x94\x01\n\x13HealthCheckResponse\x12\x41\n\x06status\x18\x01 \x01(\x0e\x32\x31.grpc.health.v1.HealthCheckResponse.ServingStatus\":\n\rServingStatus\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07SERVING\x10\x01\x12\x0f\n\x0bNOT_SERVING\x10\x02\x32Z\n\x06Health\x12P\n\x05\x43heck\x12\".grpc.health.v1.HealthCheckRequest\x1a#.grpc.health.v1.HealthCheckResponseb\x06proto3')
 )
 
 
 
 _HEALTHCHECKRESPONSE_SERVINGSTATUS = _descriptor.EnumDescriptor(
   name='ServingStatus',
-  full_name='HealthCheckResponse.ServingStatus',
+  full_name='grpc.health.v1.HealthCheckResponse.ServingStatus',
   filename=None,
   file=DESCRIPTOR,
   values=[
@@ -45,21 +45,21 @@ _HEALTHCHECKRESPONSE_SERVINGSTATUS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=145,
-  serialized_end=203,
+  serialized_start=176,
+  serialized_end=234,
 )
 _sym_db.RegisterEnumDescriptor(_HEALTHCHECKRESPONSE_SERVINGSTATUS)
 
 
 _HEALTHCHECKREQUEST = _descriptor.Descriptor(
   name='HealthCheckRequest',
-  full_name='HealthCheckRequest',
+  full_name='grpc.health.v1.HealthCheckRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='service', full_name='HealthCheckRequest.service', index=0,
+      name='service', full_name='grpc.health.v1.HealthCheckRequest.service', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -77,20 +77,20 @@ _HEALTHCHECKREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=30,
-  serialized_end=67,
+  serialized_start=46,
+  serialized_end=83,
 )
 
 
 _HEALTHCHECKRESPONSE = _descriptor.Descriptor(
   name='HealthCheckResponse',
-  full_name='HealthCheckResponse',
+  full_name='grpc.health.v1.HealthCheckResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='status', full_name='HealthCheckResponse.status', index=0,
+      name='status', full_name='grpc.health.v1.HealthCheckResponse.status', index=0,
       number=1, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -109,8 +109,8 @@ _HEALTHCHECKRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=70,
-  serialized_end=203,
+  serialized_start=86,
+  serialized_end=234,
 )
 
 _HEALTHCHECKRESPONSE.fields_by_name['status'].enum_type = _HEALTHCHECKRESPONSE_SERVINGSTATUS
@@ -122,14 +122,14 @@ _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 HealthCheckRequest = _reflection.GeneratedProtocolMessageType('HealthCheckRequest', (_message.Message,), dict(
   DESCRIPTOR = _HEALTHCHECKREQUEST,
   __module__ = 'strelka.proto.health_pb2'
-  # @@protoc_insertion_point(class_scope:HealthCheckRequest)
+  # @@protoc_insertion_point(class_scope:grpc.health.v1.HealthCheckRequest)
   ))
 _sym_db.RegisterMessage(HealthCheckRequest)
 
 HealthCheckResponse = _reflection.GeneratedProtocolMessageType('HealthCheckResponse', (_message.Message,), dict(
   DESCRIPTOR = _HEALTHCHECKRESPONSE,
   __module__ = 'strelka.proto.health_pb2'
-  # @@protoc_insertion_point(class_scope:HealthCheckResponse)
+  # @@protoc_insertion_point(class_scope:grpc.health.v1.HealthCheckResponse)
   ))
 _sym_db.RegisterMessage(HealthCheckResponse)
 
@@ -137,16 +137,16 @@ _sym_db.RegisterMessage(HealthCheckResponse)
 
 _HEALTH = _descriptor.ServiceDescriptor(
   name='Health',
-  full_name='Health',
+  full_name='grpc.health.v1.Health',
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=205,
-  serialized_end=265,
+  serialized_start=236,
+  serialized_end=326,
   methods=[
   _descriptor.MethodDescriptor(
     name='Check',
-    full_name='Health.Check',
+    full_name='grpc.health.v1.Health.Check',
     index=0,
     containing_service=None,
     input_type=_HEALTHCHECKREQUEST,
