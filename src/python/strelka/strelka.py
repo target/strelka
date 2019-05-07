@@ -84,7 +84,7 @@ class Scanner(object):
         """Inits scanner with scanner name and metadata key."""
         self.name = self.__class__.__name__
         self.key = inflection.underscore(
-            self.name.replace('Scan', '', 1) + 'Metadata',
+            self.name.replace('Scan', '', 1),
         )
         self.scanner_timeout = backend_cfg.get('limits').get('scanner')
         self.cache = cache
@@ -140,7 +140,7 @@ class Scanner(object):
         start = time.time()
         self.files = []
         self.flags = []
-        self.metadata = {}
+        self.event = {}
         self.scanner_timeout = options.get('scanner_timeout',
                                            self.scanner_timeout)
 
@@ -158,14 +158,14 @@ class Scanner(object):
                               f' uid {file.uid} (see traceback below)')
             self.flags.append('uncaught_exception')
 
-        self.metadata = {
+        self.event = {
             **{'elapsed': (time.time() - start)},
             **{'flags': self.flags},
-            **self.metadata,
+            **self.event,
         }
         return (
             self.files,
-            {self.key: self.metadata}
+            {self.key: self.event}
         )
 
     def upload_to_cache(self, pointer, chunk, expire_at):
