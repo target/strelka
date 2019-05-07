@@ -1,11 +1,11 @@
 # Contributing to Strelka
-Thank you so much for your interest in contributing to Strelka! This document includes guidelines to follow when contributing to the project.
+Thank you so much for your interest in contributing to Strelka! This document contains guidelines to follow when contributing to the project.
 
 ## Code of Conduct
 The Code of Conduct can be reviewed [here](https://github.com/target/strelka/blob/master/CODE_OF_CONDUCT.md).
 
 ## Submitting Changes
-Pull requests should be submitted using the pull request template and follow the [branching style guide](#branching). Changes will be validated by the project maintainers before merging to master.
+Pull requests should be submitted using the pull request template. Changes will be validated by the project maintainers before merging to master.
 
 ## Submitting Bugs
 Bugs should be submitted as issues using the bug report template.
@@ -14,6 +14,7 @@ Bugs should be submitted as issues using the bug report template.
 Enhancements should be submitted as issues using the feature request template.
 
 ## Development Environment
+Development builds can tested using the default docker-compose.yaml file (`build/docker-compose.yaml`). 
 We recommend using Docker as a development environment. If needed, a development container can be created based on the production Dockerfile.
 
 Below are some quickstart commands for testing a development build using Docker:
