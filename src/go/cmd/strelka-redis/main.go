@@ -25,7 +25,6 @@ func main() {
         if err != nil {
                 log.Fatalf("failed to read config file %s: %v", confPath, err)
         }
-
         var conf structs.Redis
         err = yaml.Unmarshal(confData, &conf)
         if err != nil {
