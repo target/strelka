@@ -20,7 +20,7 @@ pyjsparser==2.5.2
 pylzma==0.5.0
 protobuf==3.6.1
 pygments==2.3.1
-pyopenssl==18.0.0
+git+https://github.com/jshlbrd/pyopenssl.git
 python-docx==0.8.10
 git+https://github.com/jshlbrd/python-entropy.git   # v0.11 as of this freeze (package installed as 'entropy')
 python-keystoneclient==3.18.0
