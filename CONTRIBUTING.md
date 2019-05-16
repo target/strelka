@@ -40,14 +40,13 @@ Python code should attempt to adhere as closely to [PEP8](https://www.python.org
   ```
   * BytesIO
   ```py
-  with io.BytesIO(data) as bzip2_object:
+  with io.BytesIO(data) as bzip2_obj:
   ```
   * tempfile
   ```py
-  with tempfile.NamedTemporaryFile(dir=tmp_directory) as strelka_file:
-      strelka_filename = strelka_file.name
-      strelka_file.write(data)
-      strelka_file.flush()
+  with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
+      tmp_data.write(data)
+      tmp_data.flush()
   ```
 * Add appropriate try/except statements and append the exceptions as flags
   ```py
