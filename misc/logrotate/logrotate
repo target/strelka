@@ -1,0 +1,7 @@
+/var/lib/docker/volumes/strelka_logs/_data/strelka.log {
+  daily
+  maxage 5
+  rotate 4
+  compress
+  copytruncate
+}

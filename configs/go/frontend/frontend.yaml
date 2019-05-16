@@ -1,0 +1,9 @@
+server: ":57314"
+cache:
+    addr: "strelka_cache_1:6379"
+    db: 0
+coordinator:
+    addr: 'strelka_coordinator_1:6379'
+    db: 0
+response:
+    log: "/var/log/strelka/strelka.log"

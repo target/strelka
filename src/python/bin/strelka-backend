@@ -1,0 +1,317 @@
+#!/usr/bin/env python3
+"""
+strelka-backend
+
+Command line utility for running Strelka backend server components.
+"""
+import argparse
+import glob
+import importlib
+import logging.config
+import math
+import os
+import string
+import sys
+import time
+
+import inflection
+import interruptingcow
+import magic
+import redis
+import yaml
+import yara
+
+from strelka import strelka
+
+
+class Backend(object):
+    def __init__(self, backend_cfg, cache, coordinator):
+        self.scanner_cache = {}
+        self.backend_cfg = backend_cfg
+        self.cache = cache
+        self.coordinator = coordinator
+        self.limits = backend_cfg.get('limits')
+        self.scanners = backend_cfg.get('scanners')
+
+        self.compiled_magic = magic.Magic(
+            magic_file=backend_cfg.get('tasting').get('mime_db'),
+            mime=True,
+        )
+
+        yara_rules = backend_cfg.get('tasting').get('yara_rules')
+        if os.path.isdir(yara_rules):
+            yara_filepaths = {}
+            globbed_yara = glob.iglob(
+                f'{yara_rules}/**/*.yar*',
+                recursive=True,
+            )
+            for (i, entry) in enumerate(globbed_yara):
+                yara_filepaths[f'namespace{i}'] = entry
+            self.compiled_yara = yara.compile(filepaths=yara_filepaths)
+        else:
+            self.compiled_yara = yara.compile(filepath=yara_rules)
+
+    def work(self):
+        logging.info('starting up')
+
+        count = 0
+        work_start = time.time()
+        work_expire = work_start + self.limits.get('time_to_live')
+
+        while 1:
+            if count >= self.limits.get('max_files'):
+                break
+            if time.time() >= work_expire:
+                break
+
+            (_, root_id, expire_at) = self.coordinator.bzpopmin('tasks')
+            root_id = root_id.decode()
+            expire_at = math.ceil(expire_at)
+            timeout = math.ceil(expire_at - time.time())
+            file = strelka.File(pointer=root_id)
+
+            try:
+                with interruptingcow.timeout(timeout,
+                                             strelka.RequestTimeout):
+                    self.distribute(root_id, file, expire_at)
+                    self.coordinator.rpush(f'evt:{root_id}', 'FIN')
+
+            except strelka.RequestTimeout:
+                logging.debug(f'request {root_id} timed out')
+            except Exception:
+                logging.exception('unknown exception (see traceback below)')
+
+            count += 1
+
+        logging.info(f'shutdown after scanning {count} file(s) and'
+                     f' {time.time() - work_start} second(s)')
+
+    def taste_mime(self, data):
+        """Tastes file data with libmagic."""
+        return [self.compiled_magic.from_buffer(data)]
+
+    def taste_yara(self, data):
+        """Tastes file data with YARA."""
+        encoded_whitespace = string.whitespace.encode()
+        stripped_data = data.lstrip(encoded_whitespace)
+        yara_matches = self.compiled_yara.match(data=stripped_data)
+        return [match.rule for match in yara_matches]
+
+    def distribute(self, root_id, file, expire_at):
+        """Distributes a file through scanners.
+        """
+        try:
+            files = []
+
+            try:
+                with interruptingcow.timeout(self.limits.get('distribution'),
+                                             exception=strelka.DistributionTimeout):
+                    if file.depth > self.limits.get('max_depth'):
+                        logging.info(f'request {root_id} exceeded maximum depth')
+                        return
+
+                    data = b''
+                    while 1:
+                        pop = self.cache.lpop(file.pointer)
+                        if pop is None:
+                            break
+                        data += pop
+
+                    file.add_flavors({'mime': self.taste_mime(data)})
+                    file.add_flavors({'yara': self.taste_yara(data)})
+                    flavors = (
+                        file.flavors.get('external', [])
+                        + file.flavors.get('mime', [])
+                        + file.flavors.get('yara', [])
+                    )
+
+                    scanner_list = []
+                    for name in self.scanners:
+                        mappings = self.scanners.get(name, {})
+                        assigned = self.assign_scanner(
+                            name,
+                            mappings,
+                            flavors,
+                            file,
+                        )
+                        if assigned is not None:
+                            scanner_list.append(assigned)
+                    scanner_list.sort(
+                        key=lambda k: k.get('priority', 5),
+                        reverse=True,
+                    )
+
+                    p = self.coordinator.pipeline(transaction=False)
+                    tree = {
+                        'node': file.uid,
+                        'parent': file.parent,
+                    }
+                    file_data = {
+                        'depth': file.depth,
+                        'filename': file.name,
+                        'flavors': file.flavors,
+                        'scanner_list': [s.get('name')
+                                         for s in scanner_list],
+                        'size': len(data),
+                        'source': file.source,
+                    }
+                    event = {
+                        **{'file': file_data},
+                        **{'tree': tree},
+                    }
+
+                    for scanner in scanner_list:
+                        try:
+                            name = scanner['name']
+                            und_name = inflection.underscore(name)
+                            scanner_import = f'strelka.scanners.{und_name}'
+                            module = importlib.import_module(scanner_import)
+                            if und_name not in self.scanner_cache:
+                                attr = getattr(module, name)(self.backend_cfg, self.cache)
+                                self.scanner_cache[und_name] = attr
+                            options = scanner.get('options', {})
+                            plugin = self.scanner_cache[und_name]
+                            (f, e) = plugin.scan_wrapper(
+                                data,
+                                file,
+                                options,
+                                expire_at,
+                            )
+                            files.extend(f)
+
+                            event = {
+                                **event,
+                                **e,
+                            }
+
+                        except ModuleNotFoundError:
+                            logging.exception(f'scanner {name} not found')
+
+                    p.rpush(f'evt:{root_id}', strelka.format_event(event))
+                    p.expireat(f'evt:{root_id}', expire_at)
+                    p.execute()
+
+            except strelka.DistributionTimeout:
+                logging.exception(f'node {file.uid} timed out')
+
+            for f in files:
+                f.parent = file.uid
+                f.depth = file.depth + 1
+                self.distribute(root_id, f, expire_at)
+
+        except strelka.RequestTimeout:
+            raise
+
+    def assign_scanner(self, scanner, mappings, flavors, file):
+        """Assigns scanners based on mappings and file data.
+
+        Performs the task of assigning scanners based on the scan configuration
+        mappings and file flavors, filename, and source. Assignment supports
+        positive and negative matching: scanners are assigned if any positive
+        categories are matched and no negative categories are matched. Flavors are
+        literal matches, filename and source matches uses regular expressions.
+
+        Args:
+            scanner: Name of the scanner to be assigned.
+            mappings: List of dictionaries that contain values used to assign
+                the scanner.
+            flavors: List of file flavors to use during scanner assignment.
+            filename: Filename to use during scanner assignment.
+            source: File source to use during scanner assignment.
+        Returns:
+            Dictionary containing the assigned scanner or None.
+        """
+        for mapping in mappings:
+            negatives = mapping.get('negative', {})
+            positives = mapping.get('positive', {})
+            neg_flavors = negatives.get('flavors', [])
+            neg_filename = negatives.get('filename', None)
+            neg_source = negatives.get('source', None)
+            pos_flavors = positives.get('flavors', [])
+            pos_filename = positives.get('filename', None)
+            pos_source = positives.get('source', None)
+            assigned = {'name': scanner,
+                        'priority': mapping.get('priority', 5),
+                        'options': mapping.get('options', {})}
+
+            for neg_flavor in neg_flavors:
+                if neg_flavor in flavors:
+                    return None
+            if neg_filename is not None:
+                if re.search(neg_filename, file.name) is not None:
+                    return None
+            if neg_source is not None:
+                if re.search(neg_source, file.source) is not None:
+                    return None
+            for pos_flavor in pos_flavors:
+                if pos_flavor == '*' or pos_flavor in flavors:
+                    return assigned
+            if pos_filename is not None:
+                if re.search(pos_filename, file.name) is not None:
+                    return assigned
+            if pos_source is not None:
+                if re.search(pos_source, file.source) is not None:
+                    return assigned
+        return None
+
+
+def main():
+    parser = argparse.ArgumentParser(prog='strelka-worker',
+                                     description='runs Strelka workers',
+                                     usage='%(prog)s [options]')
+    parser.add_argument('-c', '--worker-config',
+                        action='store',
+                        dest='backend_cfg_path',
+                        help='path to server configuration file')
+    args = parser.parse_args()
+
+    backend_cfg_path = ''
+    if args.backend_cfg_path:
+        if not os.path.exists(args.backend_cfg_path):
+            logging.exception(f'backend configuration {args.backend_cfg_path} does not exist')
+            sys.exit()
+        backend_cfg_path = args.backend_cfg_path
+    elif os.path.exists('/etc/strelka/backend.yaml'):
+        backend_cfg_path = '/etc/strelka/backend.yaml'
+    else:
+        logging.exception('no backend configuration found')
+        sys.exit()
+
+    with open(backend_cfg_path) as f:
+        backend_cfg = yaml.safe_load(f.read())
+
+    log_cfg_path = backend_cfg.get('logging_cfg')
+    with open(log_cfg_path) as f:
+        logging.config.dictConfig(yaml.safe_load(f.read()))
+    logging.info(f'using backend configuration {backend_cfg_path}')
+
+    try:
+        cache_cfg = backend_cfg.get('cache')
+        cache_addr = cache_cfg.get('addr').split(':')
+        cache = redis.StrictRedis(
+            host=cache_addr[0],
+            port=cache_addr[1],
+            db=cache_cfg.get('db'),
+        )
+        coordinator_cfg = backend_cfg.get('coordinator')
+        coordinator_addr = coordinator_cfg.get('addr').split(':')
+        coordinator = redis.StrictRedis(
+            host=coordinator_addr[0],
+            port=coordinator_addr[1],
+            db=coordinator_cfg.get('db'),
+        )
+        if cache.ping():
+            logging.debug('verified cache is up')
+        if coordinator.ping():
+            logging.debug('verified coordinator is up')
+
+    except Exception:
+        logging.exception('redis server(s) unavailable')
+        sys.exit()
+
+    backend = Backend(backend_cfg, cache, coordinator)
+    backend.work()
+
+
+if __name__ == '__main__':
+    main()

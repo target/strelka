@@ -1,0 +1,69 @@
+admin:
+  access_log_path: /tmp/admin_access.log
+  address: {socket_address: {address: 0.0.0.0, port_value: 9901}}
+
+static_resources:
+  listeners:
+  - name: frontend_proxy
+    address: {socket_address: {address: 0.0.0.0, port_value: 57314}}
+    filter_chains:
+    - filters:
+      - name: envoy.http_connection_manager
+        config:
+          stat_prefix: frontend
+          stream_idle_timeout: 0s  # not setting this to 0s can break long gRPC streams
+          codec_type: AUTO
+          route_config:
+            name: frontend_route
+            virtual_hosts:
+            - name: frontend_service
+              domains: ["*"]
+              routes:
+              - match: { prefix: "/Health/Check" }
+                route:
+                  cluster: frontend_cluster
+              - match: { prefix: "/Frontend/ScanFile" }
+                route:
+                  cluster: frontend_cluster
+                  max_grpc_timeout: 0s  # clients set their deadline
+          http_filters:
+          - name: envoy.router
+
+
+      # tls_context:
+      #   common_tls_context:
+      #       alpn_protocols: "h2"
+      #       tls_certificates:
+      #       - certificate_chain: { filename: "/path/to/envoy.crt" }
+      #         private_key: { filename: "/path/to/envoy.key" }
+
+  clusters:
+  - name: frontend_cluster
+    connect_timeout: 0.5s
+    type: STATIC
+    lb_policy: LEAST_REQUEST
+    # required for gRPC clusters
+    http2_protocol_options: { }
+    # required to keep gRPC stream connections alive
+    upstream_connection_options: { tcp_keepalive: { keepalive_probes: 4, keepalive_time: 15, keepalive_interval: 15 } }
+    load_assignment:
+      cluster_name: frontend_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint: {address: {socket_address: {address: 1.2.3.4, port_value: 57314}}}
+        - endpoint: {address: {socket_address: {address: 5.6.7.8, port_value: 57314}}}
+    # circuit breaker *_requests should be 10x the times of expected active requests
+    # this number should be estimated based on the overall potential concurrency of all clients
+    circuit_breakers:
+      thresholds:
+        max_pending_requests: 10240
+        max_requests: 10240
+        max_retries: 0  # gRPC streams cannot be retried, client-side retry is required
+    # ensures upstream servers are up and available
+    health_checks:
+      timeout: 0.5s
+      interval: 30s
+      interval_jitter: 1s
+      unhealthy_threshold: 1
+      healthy_threshold: 1
+      grpc_health_check: { }
