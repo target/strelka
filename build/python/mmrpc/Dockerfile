@@ -1,6 +1,4 @@
-# needs cleanup
 FROM ubuntu:18.04
-
 LABEL maintainer "Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
 # Copy Strelka files
