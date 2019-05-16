@@ -3,7 +3,7 @@ Strelka is a real-time, container-based file scanning system used for threat hun
 
 Strelka differs from its sibling projects in a few significant ways:
 * Core codebase is Go and Python3.6+
-* Server-side components run in containers for ease and flexibility of deployment
+* Server components run in containers for ease and flexibility of deployment
 * OS-native client applications for Windows, Mac, and Linux
 * Built using [libraries and formats](#architecture) that allow cross-platform, cross-language support
 
@@ -68,7 +68,7 @@ File metadata is an additional pillar of data (alongside network, endpoint, auth
 It depends -- we recommend reviewing the features of each and choosing the most appropriate tool for your needs. We believe the most significant motivating factors for switching to Strelka are:
 * More scanners (40+ at release) and file types (60+ at release) than [related projects](#related-projects)
 * Modern codebase (Go and Python3.6+)
-* Server-side components run in containers for ease and flexibility of deployment
+* Server components run in containers for ease and flexibility of deployment
 * Performant, OS-native client applications compatible with Windows, Mac, and Linux
 * OS-native client applications for Windows, Mac, and Linux
 * Built using [libraries and formats](#architecture) that allow cross-platform, cross-language support
