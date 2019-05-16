@@ -28,6 +28,8 @@ loggers:
     propagate: 0
   entropy:
     propagate: 0
+  esprima:
+    propagate: 0
   gzip:
     propagate: 0
   hashlib:
@@ -53,8 +55,6 @@ loggers:
   pgpdump:
     propagate: 0
   pygments:
-    propagate: 0
-  pyjsparser:
     propagate: 0
   pylzma:
     propagate: 0
