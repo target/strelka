@@ -18,8 +18,8 @@ class ScanTar(strelka.Scanner):
 
         with io.BytesIO(data) as tar_io:
             try:
-                with tarfile.open(fileobj=tar_io) as tar:
-                    tar_members = tar.getmembers()
+                with tarfile.open(fileobj=tar_io) as tar_obj:
+                    tar_members = tar_obj.getmembers()
                     self.event['total']['files'] = len(tar_members)
                     for tar_member in tar_members:
                         if tar_member.isfile:
@@ -27,7 +27,7 @@ class ScanTar(strelka.Scanner):
                                 break
 
                             try:
-                                tar_file = tar.extractfile(tar_member)
+                                tar_file = tar_obj.extractfile(tar_member)
                                 if tar_file is not None:
                                     extract_file = strelka.File(
                                         name=tar_member.name,

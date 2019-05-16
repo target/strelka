@@ -8,8 +8,8 @@ class ScanGzip(strelka.Scanner):
     """Decompresses gzip files."""
     def scan(self, data, file, options, expire_at):
         with io.BytesIO(data) as gzip_io:
-            with gzip.GzipFile(fileobj=gzip_io) as gzip_file:
-                decompressed_file = gzip_file.read()
+            with gzip.GzipFile(fileobj=gzip_io) as gzip_obj:
+                decompressed_file = gzip_obj.read()
                 decompressed_size = len(decompressed_file)
                 self.event['decompressed_size'] = decompressed_size
 

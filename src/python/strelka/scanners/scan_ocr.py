@@ -19,17 +19,17 @@ class ScanOcr(strelka.Scanner):
         extract_text = options.get('extract_text', False)
         tmp_directory = options.get('tmp_directory', '/tmp/')
 
-        with tempfile.NamedTemporaryFile(dir=tmp_directory) as st_tmp:
-            st_tmp.write(data)
-            st_tmp.flush()
+        with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
+            tmp_data.write(data)
+            tmp_data.flush()
 
-            with tempfile.NamedTemporaryFile(dir=tmp_directory) as tess_tmp:
+            with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_tess:
                 tess_return = subprocess.call(
-                    ['tesseract', st_tmp.name, tess_tmp.name],
+                    ['tesseract', tmp_data.name, tmp_tess.name],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL
                 )
-                tess_txt_name = f'{tess_tmp.name}.txt'
+                tess_txt_name = f'{tmp_tess.name}.txt'
                 if tess_return == 0:
                     with open(tess_txt_name, 'rb') as tess_txt:
                         ocr_file = tess_txt.read()

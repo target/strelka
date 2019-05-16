@@ -27,15 +27,15 @@ class ScanRar(strelka.Scanner):
         self.event['total'] = {'files': 0, 'extracted': 0}
 
         with io.BytesIO(data) as rar_io:
-            with rarfile.RarFile(rar_io) as rf:
-                rf_info_list = rf.infolist()
+            with rarfile.RarFile(rar_io) as rar_obj:
+                rf_info_list = rar_obj.infolist()
                 self.event['total']['files'] = len(rf_info_list)
                 for rf_object in rf_info_list:
                     if not rf_object.isdir():
                         if self.event['total']['extracted'] >= file_limit:
                             break
 
-                        file_info = rf.getinfo(rf_object)
+                        file_info = rar_obj.getinfo(rf_object)
                         if not file_info.needs_password():
                             self.event['host_os'] = HOST_OS_MAPPING[file_info.host_os]
 
@@ -44,7 +44,7 @@ class ScanRar(strelka.Scanner):
                                 source=self.name,
                             )
 
-                            for c in strelka.chunk_string(rf.read(rf_object)):
+                            for c in strelka.chunk_string(rar_obj.read(rf_object)):
                                 self.upload_to_cache(
                                     extract_file.pointer,
                                     c,

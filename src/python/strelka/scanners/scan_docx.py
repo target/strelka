@@ -16,8 +16,8 @@ class ScanDocx(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         extract_text = options.get('extract_text', False)
 
-        with io.BytesIO(data) as docx_object:
-            docx_doc = docx.Document(docx_object)
+        with io.BytesIO(data) as docx_io:
+            docx_doc = docx.Document(docx_io)
             self.event['author'] = docx_doc.core_properties.author
             self.event['category'] = docx_doc.core_properties.category
             self.event['comments'] = docx_doc.core_properties.comments

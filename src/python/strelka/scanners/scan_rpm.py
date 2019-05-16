@@ -16,14 +16,14 @@ class ScanRpm(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         tmp_directory = options.get('tmp_directory', '/tmp/')
 
-        with tempfile.NamedTemporaryFile(dir=tmp_directory) as st_tmp:
-            st_tmp.write(data)
-            st_tmp.flush()
+        with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
+            tmp_data.write(data)
+            tmp_data.flush()
 
             try:
-                with rpmfile.open(st_tmp.name) as rpm:
+                with rpmfile.open(tmp_data.name) as rpm_obj:
                     extract_name = ''
-                    for (key, value) in rpm.headers.items():
+                    for (key, value) in rpm_obj.headers.items():
                         if key == 'arch':
                             self.event['architecture'] = value
                         elif key == 'archive_compression':
@@ -79,7 +79,7 @@ class ScanRpm(strelka.Scanner):
                         source=self.name,
                     )
 
-                    for c in strelka.chunk_string(data[rpm.data_offset:]):
+                    for c in strelka.chunk_string(data[rpm_obj.data_offset:]):
                         self.upload_to_cache(
                             extract_file.pointer,
                             c,

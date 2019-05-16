@@ -39,8 +39,8 @@ class ScanZip(strelka.Scanner):
 
         with io.BytesIO(data) as zip_io:
             try:
-                with zipfile.ZipFile(zip_io) as zip:
-                    name_list = zip.namelist()
+                with zipfile.ZipFile(zip_io) as zip_obj:
+                    name_list = zip_obj.namelist()
                     self.event['total']['files'] = len(name_list)
                     for name in name_list:
                         if not name.endswith('/'):
@@ -49,12 +49,12 @@ class ScanZip(strelka.Scanner):
 
                             try:
                                 extract_data = None
-                                zinfo = zip.getinfo(name)
+                                zinfo = zip_obj.getinfo(name)
 
                                 if zinfo.flag_bits & 0x1 and self.passwords:  # File is encrypted
                                     for pwd in self.passwords:
                                         try:
-                                            extract_data = zip.read(name, pwd)
+                                            extract_data = zip_obj.read(name, pwd)
                                             if extract_data is not None:
                                                 self.flags.append('encrypted_archive_file')
                                                 break
@@ -65,7 +65,7 @@ class ScanZip(strelka.Scanner):
                                     self.flags.append('no_archive_passwords')
                                     return
                                 else:
-                                    extract_data = zip.read(name)
+                                    extract_data = zip_obj.read(name)
 
                                 if extract_data is not None:
                                     extract_file = strelka.File(

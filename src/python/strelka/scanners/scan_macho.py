@@ -19,11 +19,11 @@ class ScanMacho(strelka.Scanner):
         self.event.setdefault('abnormalities', [])
         self.event.setdefault('objects', [])
 
-        with tempfile.NamedTemporaryFile(dir=tmp_directory) as st_tmp:
-            st_tmp.write(data)
-            st_tmp.flush()
+        with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
+            tmp_data.write(data)
+            tmp_data.flush()
 
-            macho_dictionary = macholibre.parse(st_tmp.name)
+            macho_dictionary = macholibre.parse(tmp_data.name)
             for (key, value) in macho_dictionary.items():
                 if key == 'abnormalities' and value not in self.event['abnormalities']:
                     self.event['abnormalities'].append(value)

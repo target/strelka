@@ -15,12 +15,12 @@ class ScanExiftool(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         tmp_directory = options.get('tmp_directory', '/tmp/')
 
-        with tempfile.NamedTemporaryFile(dir=tmp_directory) as st_tmp:
-            st_tmp.write(data)
-            st_tmp.flush()
+        with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
+            tmp_data.write(data)
+            tmp_data.flush()
 
             (stdout, stderr) = subprocess.Popen(
-                ['exiftool', '-j', '-n', st_tmp.name],
+                ['exiftool', '-j', '-n', tmp_data.name],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
             ).communicate()

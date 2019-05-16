@@ -8,10 +8,10 @@ class ScanLzma(strelka.Scanner):
     """Decompresses LZMA files."""
     def scan(self, data, file, options, expire_at):
         try:
-            with io.BytesIO(data) as data:
-                with lzma.LZMAFile(filename=data) as st_tmp:
+            with io.BytesIO(data) as lzma_io:
+                with lzma.LZMAFile(filename=lzma_io) as lzma_obj:
                     try:
-                        decompressed_file = st_tmp.read()
+                        decompressed_file = lzma_obj.read()
                         decompressed_size = len(decompressed_file)
                         self.event['decompressed_size'] = decompressed_size
 

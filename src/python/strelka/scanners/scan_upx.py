@@ -15,17 +15,17 @@ class ScanUpx(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         tmp_directory = options.get('tmp_directory', '/tmp/')
 
-        with tempfile.NamedTemporaryFile(dir=tmp_directory) as st_tmp:
-            st_tmp.write(data)
-            st_tmp.flush()
+        with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
+            tmp_data.write(data)
+            tmp_data.flush()
 
             upx_return = subprocess.call(
-                ['upx', '-d', st_tmp.name, '-o', f'{st_tmp.name}_upx'],
+                ['upx', '-d', tmp_data.name, '-o', f'{tmp_data.name}_upx'],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
             if upx_return == 0:
-                with open(f'{st_tmp.name}_upx', 'rb') as upx_fin:
+                with open(f'{tmp_data.name}_upx', 'rb') as upx_fin:
                     upx_file = upx_fin.read()
                     upx_size = len(upx_file)
                     if upx_size > file.size:
@@ -40,7 +40,7 @@ class ScanUpx(strelka.Scanner):
                             )
                         self.files.append(extract_file)
 
-                os.remove(f'{st_tmp.name}_upx')
+                os.remove(f'{tmp_data.name}_upx')
 
             else:
                 self.flags.append('return_code_{upx_return}')
