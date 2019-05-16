@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2019-05-16
+### Changed
+- Switched pyopenssl to forked packages (jshlbrd)
+
 ## 2019-04-22
 ### Added
 - Dockerfile now supports UTC and local time (ufomorme)
