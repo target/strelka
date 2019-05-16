@@ -1,5 +1,4 @@
+misc
 .dockerignore
 .git*
 **/*.py[cod]
-Dockerfile
-tmp_certificates
