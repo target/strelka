@@ -18,9 +18,9 @@ services:
             - net
         volumes:
             - ../configs/go/frontend/:/etc/strelka/:ro
+            - logs:/var/log/strelka/
         restart: unless-stopped
         depends_on:
-            - cache
             - coordinator
     backend:
         build:
@@ -34,7 +34,6 @@ services:
             - ../configs/python/backend/:/etc/strelka/:ro
         restart: unless-stopped
         depends_on:
-            - cache
             - coordinator
     redis:
         build:
@@ -48,18 +47,12 @@ services:
             - ../configs/go/redis/:/etc/strelka/:ro
         restart: unless-stopped
         depends_on:
-            - cache
             - coordinator
     mmrpc:
         build:
               context: ..
               dockerfile: build/python/mmrpc/Dockerfile
         command: strelka-mmrpc --threads 2 --address [::]:33907
-        networks:
-            - net
-    cache:
-        image: redis:alpine
-        command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
         networks:
             - net
     coordinator:

@@ -29,7 +29,6 @@ static_resources:
           http_filters:
           - name: envoy.router
 
-
       # tls_context:
       #   common_tls_context:
       #       alpn_protocols: "h2"
@@ -40,18 +39,22 @@ static_resources:
   clusters:
   - name: frontend_cluster
     connect_timeout: 0.5s
-    type: STATIC
+    type: STRICT_DNS
     lb_policy: LEAST_REQUEST
-    # required for gRPC clusters
-    http2_protocol_options: { }
-    # required to keep gRPC stream connections alive
-    upstream_connection_options: { tcp_keepalive: { keepalive_probes: 4, keepalive_time: 15, keepalive_interval: 15 } }
     load_assignment:
       cluster_name: frontend_cluster
       endpoints:
       - lb_endpoints:
-        - endpoint: {address: {socket_address: {address: 1.2.3.4, port_value: 57314}}}
-        - endpoint: {address: {socket_address: {address: 5.6.7.8, port_value: 57314}}}
+        - endpoint: {address: {socket_address: {address: strelka_frontend_1, port_value: 57314}}}
+        - endpoint: {address: {socket_address: {address: strelka_frontend_2, port_value: 57314}}}
+    # required for gRPC clusters
+    http2_protocol_options: { }
+    # required to keep gRPC stream connections alive
+    upstream_connection_options:
+      tcp_keepalive:
+        keepalive_probes: 4
+        keepalive_time: 15
+        keepalive_interval: 15
     # circuit breaker *_requests should be 10x the times of expected active requests
     # this number should be estimated based on the overall potential concurrency of all clients
     circuit_breakers:

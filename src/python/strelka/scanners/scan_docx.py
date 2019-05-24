@@ -44,7 +44,7 @@ class ScanDocx(strelka.Scanner):
                 )
 
                 for paragraph in docx_doc.paragraphs:
-                    self.upload_to_cache(
+                    self.upload_to_coordinator(
                         extract_file.pointer,
                         paragraph.text,
                         expire_at,

@@ -31,7 +31,7 @@ class ScanRtf(strelka.Scanner):
                 )
 
                 for c in strelka.chunk_string(object.olepkgdata):
-                    self.upload_to_cache(
+                    self.upload_to_coordinator(
                         extract_file.pointer,
                         c,
                         expire_at,
@@ -44,7 +44,7 @@ class ScanRtf(strelka.Scanner):
                 )
 
                 for c in strelka.chunk_string(object.oledata):
-                    self.upload_to_cache(
+                    self.upload_to_coordinator(
                         extract_file.pointer,
                         c,
                         expire_at,
@@ -57,7 +57,7 @@ class ScanRtf(strelka.Scanner):
                 )
 
                 for c in strelka.chunk_string(object.rawdata):
-                    self.upload_to_cache(
+                    self.upload_to_coordinator(
                         extract_file.pointer,
                         c,
                         expire_at,

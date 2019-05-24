@@ -78,16 +78,14 @@ class Scanner(object):
         scanner_timeout: Amount of time (in seconds) that a scanner can spend
             scanning a file. Can be overridden on a per-scanner basis
             (see scan_wrapper).
-        cache: Redis client connection to the cache.
+        coordinator: Redis client connection to the coordinator.
     """
-    def __init__(self, backend_cfg, cache):
+    def __init__(self, backend_cfg, coordinator):
         """Inits scanner with scanner name and metadata key."""
         self.name = self.__class__.__name__
-        self.key = inflection.underscore(
-            self.name.replace('Scan', '', 1),
-        )
+        self.key = inflection.underscore(self.name)
         self.scanner_timeout = backend_cfg.get('limits').get('scanner')
-        self.cache = cache
+        self.coordinator = coordinator
         self.init()
 
     def init(self):
@@ -159,7 +157,7 @@ class Scanner(object):
             self.flags.append('uncaught_exception')
 
         self.event = {
-            **{'elapsed': (time.time() - start)},
+            **{'elapsed': round(time.time() - start, 6)},
             **{'flags': self.flags},
             **self.event,
         }
@@ -168,29 +166,29 @@ class Scanner(object):
             {self.key: self.event}
         )
 
-    def upload_to_cache(self, pointer, chunk, expire_at):
-        """Uploads data to cache.
+    def upload_to_coordinator(self, pointer, chunk, expire_at):
+        """Uploads data to coordinator.
 
-        This method is used during scanning to upload data to cache,
+        This method is used during scanning to upload data to coordinator,
         where the data is later pulled from during file distribution.
 
         Args:
             pointer: String that contains the location of the file bytes
                 in Redis.
             chunk: String that contains a chunk of data to be added to
-                the cache.
+                the coordinator.
             expire_at: Expiration date for data stored in pointer.
         """
-        p = self.cache.pipeline(transaction=False)
-        p.rpush(pointer, chunk)
-        p.expireat(pointer, expire_at)
+        p = self.coordinator.pipeline(transaction=False)
+        p.rpush(f'data:{pointer}', chunk)
+        p.expireat(f'data:{pointer}', expire_at)
         p.execute()
 
 
 def chunk_string(s, chunk=1024 * 16):
     """Takes an input string and turns it into smaller byte pieces.
 
-    This method is required for inserting data into cache.
+    This method is required for inserting data into coordinator.
 
     Yields:
         Chunks of the input string.

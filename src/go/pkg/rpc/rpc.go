@@ -148,6 +148,7 @@ func ScanFile(client strelka.FrontendClient, timeout time.Duration, req structs.
                         break
                 }
 
+                time.Sleep(req.Delay)
                 scanFile.Send(
                         &strelka.ScanFileRequest{
                                 Data:buffer[:n],

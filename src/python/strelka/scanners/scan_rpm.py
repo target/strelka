@@ -1,4 +1,3 @@
-from datetime import datetime
 import tempfile
 
 import rpmfile
@@ -35,8 +34,7 @@ class ScanRpm(strelka.Scanner):
                         elif key == 'buildhost':
                             self.event['build_host'] = value
                         elif key == 'buildtime':
-                            if value is not None:
-                                self.event['build_time'] = datetime.utcfromtimestamp(value).isoformat()
+                            self.event['build_time'] = value
                         elif key == 'copyright':
                             self.event['copyright'] = value
                         elif key == 'description':
@@ -80,7 +78,7 @@ class ScanRpm(strelka.Scanner):
                     )
 
                     for c in strelka.chunk_string(data[rpm_obj.data_offset:]):
-                        self.upload_to_cache(
+                        self.upload_to_coordinator(
                             extract_file.pointer,
                             c,
                             expire_at,

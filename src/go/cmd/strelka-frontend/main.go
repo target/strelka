@@ -23,7 +23,6 @@ import (
 )
 
 type server struct{
-        cache           *redis.Client
         coordinator     *redis.Client
         responses       chan <- *strelka.ScanResponse
 }
@@ -47,6 +46,8 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 
         counter := 0
         id := uuid.New().String()
+        dataKey := fmt.Sprintf("data:%v", id)
+        eventKey := fmt.Sprintf("event:%v", id)
         var incomingRequest *strelka.Request
         var incomingAttributes *strelka.Attributes
         for {
@@ -65,7 +66,10 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                         incomingAttributes = incoming.Attributes
                 }
 
-                s.cache.RPush(id, incoming.Data)
+                pipe := s.coordinator.Pipeline()
+                pipe.RPush(dataKey, incoming.Data)
+                pipe.ExpireAt(dataKey, deadline)
+                _, _ = pipe.Exec()
                 counter++
     	}
 
@@ -73,7 +77,6 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                 return nil
         }
 
-        s.cache.ExpireAt(id, deadline)
         err := s.coordinator.ZAdd(
                 "tasks",
                 redis.Z{
@@ -97,7 +100,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
         }
 
         for {
-                lpop, err := s.coordinator.LPop(fmt.Sprintf("evt:%v", id)).Result()
+                lpop, err := s.coordinator.LPop(eventKey).Result()
                 if err != nil {
                         time.Sleep(250 * time.Millisecond)
                         continue
@@ -107,16 +110,16 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                 }
 
                 m := make(map[string]interface{})
-                m["time"] = time.Now().Format(time.RFC3339)
+                m["time"] = time.Now().Unix()
                 m["request"] = r
                 if err := json.Unmarshal([]byte(lpop), &m); err != nil{
                         return err
                 }
 
-                evt, _ := json.Marshal(m)
+                event, _ := json.Marshal(m)
                 resp := &strelka.ScanResponse{
                         Id:incomingRequest.Id,
-                        Event:string(evt),
+                        Event:string(event),
                 }
                 s.responses <- resp
                 if err := stream.Send(resp); err != nil {
@@ -170,14 +173,6 @@ func main() {
                 log.Println("responses will be discarded")
         }
 
-        cache := redis.NewClient(&redis.Options{
-                Addr:       conf.Cache.Addr,
-                DB:         conf.Cache.Db,
-        })
-        err = cache.Ping().Err()
-        if err != nil {
-                log.Fatalf("failed to connect to cache: %v", err)
-        }
         coordinator := redis.NewClient(&redis.Options{
                 Addr:       conf.Coordinator.Addr,
                 DB:         conf.Coordinator.Db,
@@ -189,7 +184,6 @@ func main() {
 
         s := grpc.NewServer()
         opts := &server{
-                cache:cache,
                 coordinator:coordinator,
                 responses:responses,
         }

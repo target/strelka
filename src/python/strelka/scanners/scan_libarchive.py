@@ -30,7 +30,7 @@ class ScanLibarchive(strelka.Scanner):
                         )
 
                         for block in entry.get_blocks():
-                            self.upload_to_cache(
+                            self.upload_to_coordinator(
                                 extract_file.pointer,
                                 block,
                                 expire_at,

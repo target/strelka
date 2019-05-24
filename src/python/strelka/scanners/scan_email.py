@@ -39,7 +39,7 @@ class ScanEmail(strelka.Scanner):
                     extract_file.add_flavors({'external': [part.get_content_type()]})
 
                     for c in strelka.chunk_string(extract_data):
-                        self.upload_to_cache(
+                        self.upload_to_coordinator(
                             extract_file.pointer,
                             c,
                             expire_at,

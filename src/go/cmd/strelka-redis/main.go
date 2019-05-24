@@ -54,6 +54,6 @@ func main() {
                 if zrem != 0 {
                         log.Printf("removed %v task(s)", zrem)
                 }
-                time.Sleep(1 * time.Second)
+                time.Sleep(250 * time.Millisecond)
         }
 }
