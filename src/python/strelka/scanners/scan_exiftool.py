@@ -20,7 +20,7 @@ class ScanExiftool(strelka.Scanner):
             tmp_data.flush()
 
             (stdout, stderr) = subprocess.Popen(
-                ['exiftool', '-j', '-n', tmp_data.name],
+                ['exiftool', '-d', '"%s"', '-j', tmp_data.name],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
             ).communicate()

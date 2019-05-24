@@ -44,7 +44,9 @@ class ScanMacho(strelka.Scanner):
 
         for (key, value) in macho_dictionary.items():
             if key == 'strtab':
-                macho_out['str_tab'] = value
+                macho_out['string_table'] = value
+            elif key == 'symtab':
+                macho_out['symbol_table'] = value
             elif key == 'filetype':
                 macho_out['file_type'] = value
             elif key == 'cputype':

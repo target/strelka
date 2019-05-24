@@ -26,7 +26,7 @@ class ScanSwf(strelka.Scanner):
                     )
 
                     for c in strelka.chunk_string(extract_data):
-                        self.upload_to_cache(
+                        self.upload_to_coordinator(
                             extract_file.pointer,
                             c,
                             expire_at,
@@ -46,7 +46,7 @@ class ScanSwf(strelka.Scanner):
                 )
 
                 for c in strelka.chunk_string(extract_data):
-                    self.upload_to_cache(
+                    self.upload_to_coordinator(
                         extract_file.pointer,
                         c,
                         expire_at,

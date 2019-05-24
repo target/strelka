@@ -5,9 +5,6 @@ limits:
     max_depth: 15
     distribution: 600
     scanner: 150
-cache:
-    addr: 'strelka_cache_1:6379'
-    db: 0
 coordinator:
     addr: 'strelka_coordinator_1:6379'
     db: 0
@@ -265,6 +262,8 @@ scanners:
           flavors:
             - 'pkcs7_file'
         priority: 5
+        options:
+          tmp_directory: '/dev/shm/'
     'ScanRar':
       - positive:
           flavors:

@@ -1,6 +1,21 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2019-05-24
+### Added
+- 'throughput' section added to fileshot and filestream configuration files (jshlbrd)
+- Added default docker-compose DNS hosts to misc/envoy/* configuration templates (jshlbrd)
+- Added Docker volume mapping to frontend in default docker-compose (jshlbrd)
+### Changed
+- forked pyopenssl replaced with M2Crypto (jshlbrd)
+- 'tree' event dictionary is now nested under 'file' event dictionary (jshlbrd)
+- scanner event dictionaries now start with 'scan_' (jshlbrd)
+- timestamps are now unix/epoch (jshlbrd)
+- ScanExiftool now outputs 'human readable' data (jshlbrd)
+- Looping Redis commands sleep at a consistent interval of 250ms (jshlbrd)
+### Removed
+- 'cache' is no longer used -- 'coordinator' takes over all Redis tasks (jshlbrd)
+
 ## 2019-05-16
 ### Changed
 - Switched pyopenssl to forked package (jshlbrd)

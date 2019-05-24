@@ -25,10 +25,9 @@ from strelka import strelka
 
 
 class Backend(object):
-    def __init__(self, backend_cfg, cache, coordinator):
+    def __init__(self, backend_cfg, coordinator):
         self.scanner_cache = {}
         self.backend_cfg = backend_cfg
-        self.cache = cache
         self.coordinator = coordinator
         self.limits = backend_cfg.get('limits')
         self.scanners = backend_cfg.get('scanners')
@@ -64,17 +63,27 @@ class Backend(object):
             if time.time() >= work_expire:
                 break
 
-            (_, root_id, expire_at) = self.coordinator.bzpopmin('tasks')
+            task = self.coordinator.zpopmin('tasks', count=1)
+            if len(task) == 0:
+                time.sleep(0.25)
+                continue
+
+            (root_id, expire_at) = task[0]
             root_id = root_id.decode()
+            file = strelka.File(pointer=root_id)
             expire_at = math.ceil(expire_at)
             timeout = math.ceil(expire_at - time.time())
-            file = strelka.File(pointer=root_id)
+            if timeout <= 0:
+                continue
 
             try:
                 with interruptingcow.timeout(timeout,
                                              strelka.RequestTimeout):
                     self.distribute(root_id, file, expire_at)
-                    self.coordinator.rpush(f'evt:{root_id}', 'FIN')
+                    p = self.coordinator.pipeline(transaction=False)
+                    p.rpush(f'event:{root_id}', 'FIN')
+                    p.expireat(f'event:{root_id}', expire_at)
+                    p.execute()
 
             except strelka.RequestTimeout:
                 logging.debug(f'request {root_id} timed out')
@@ -98,8 +107,7 @@ class Backend(object):
         return [match.rule for match in yara_matches]
 
     def distribute(self, root_id, file, expire_at):
-        """Distributes a file through scanners.
-        """
+        """Distributes a file through scanners."""
         try:
             files = []
 
@@ -112,7 +120,7 @@ class Backend(object):
 
                     data = b''
                     while 1:
-                        pop = self.cache.lpop(file.pointer)
+                        pop = self.coordinator.lpop(f'data:{file.pointer}')
                         if pop is None:
                             break
                         data += pop
@@ -142,22 +150,22 @@ class Backend(object):
                     )
 
                     p = self.coordinator.pipeline(transaction=False)
-                    tree = {
+                    tree_dict = {
                         'node': file.uid,
                         'parent': file.parent,
                     }
-                    file_data = {
+                    file_dict = {
                         'depth': file.depth,
-                        'filename': file.name,
+                        'name': file.name,
                         'flavors': file.flavors,
                         'scanner_list': [s.get('name')
                                          for s in scanner_list],
                         'size': len(data),
                         'source': file.source,
+                        'tree': tree_dict,
                     }
                     event = {
-                        **{'file': file_data},
-                        **{'tree': tree},
+                        **{'file': file_dict},
                     }
 
                     for scanner in scanner_list:
@@ -167,7 +175,7 @@ class Backend(object):
                             scanner_import = f'strelka.scanners.{und_name}'
                             module = importlib.import_module(scanner_import)
                             if und_name not in self.scanner_cache:
-                                attr = getattr(module, name)(self.backend_cfg, self.cache)
+                                attr = getattr(module, name)(self.backend_cfg, self.coordinator)
                                 self.scanner_cache[und_name] = attr
                             options = scanner.get('options', {})
                             plugin = self.scanner_cache[und_name]
@@ -187,8 +195,8 @@ class Backend(object):
                         except ModuleNotFoundError:
                             logging.exception(f'scanner {name} not found')
 
-                    p.rpush(f'evt:{root_id}', strelka.format_event(event))
-                    p.expireat(f'evt:{root_id}', expire_at)
+                    p.rpush(f'event:{root_id}', strelka.format_event(event))
+                    p.expireat(f'event:{root_id}', expire_at)
                     p.execute()
 
             except strelka.DistributionTimeout:
@@ -286,13 +294,6 @@ def main():
     logging.info(f'using backend configuration {backend_cfg_path}')
 
     try:
-        cache_cfg = backend_cfg.get('cache')
-        cache_addr = cache_cfg.get('addr').split(':')
-        cache = redis.StrictRedis(
-            host=cache_addr[0],
-            port=cache_addr[1],
-            db=cache_cfg.get('db'),
-        )
         coordinator_cfg = backend_cfg.get('coordinator')
         coordinator_addr = coordinator_cfg.get('addr').split(':')
         coordinator = redis.StrictRedis(
@@ -300,16 +301,14 @@ def main():
             port=coordinator_addr[1],
             db=coordinator_cfg.get('db'),
         )
-        if cache.ping():
-            logging.debug('verified cache is up')
         if coordinator.ping():
             logging.debug('verified coordinator is up')
 
     except Exception:
-        logging.exception('redis server(s) unavailable')
+        logging.exception('coordinator unavailable')
         sys.exit()
 
-    backend = Backend(backend_cfg, cache, coordinator)
+    backend = Backend(backend_cfg, coordinator)
     backend.work()
 
 

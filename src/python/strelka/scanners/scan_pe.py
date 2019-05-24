@@ -1,5 +1,4 @@
 import binascii
-from datetime import datetime
 import hashlib
 import struct
 
@@ -26,7 +25,7 @@ class ScanPe(strelka.Scanner):
 
             self.event['total']['sections'] = pe.FILE_HEADER.NumberOfSections
             self.event['warnings'] = pe.get_warnings()
-            self.event['timestamp'] = datetime.utcfromtimestamp(pe.FILE_HEADER.TimeDateStamp).isoformat()
+            self.event['timestamp'] = pe.FILE_HEADER.TimeDateStamp
             machine = pe.FILE_HEADER.Machine
             self.event['machine'] = {
                 'id': machine,
@@ -159,7 +158,7 @@ class ScanPe(strelka.Scanner):
                         source=self.name,
                     )
                     for c in strelka.chunk_string(extract_data):
-                        self.upload_to_cache(
+                        self.upload_to_coordinator(
                             extract_file.pointer,
                             c,
                             expire_at,

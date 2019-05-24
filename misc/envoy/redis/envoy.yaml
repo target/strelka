@@ -18,11 +18,11 @@ static_resources:
   clusters:
   - name: cache_cluster
     connect_timeout: 0.5s
-    type: STATIC
+    type: STRICT_DNS
     lb_policy: MAGLEV
     load_assignment:
       cluster_name: strelka_cache
       endpoints:
       - lb_endpoints:
-        - endpoint: {address: {socket_address: {address: 1.2.3.4, port_value: 6379}}}
-        - endpoint: {address: {socket_address: {address: 5.6.7.8, port_value: 6379}}}
+        - endpoint: {address: {socket_address: {address: strelka_coordinator_1, port_value: 6379}}}
+        - endpoint: {address: {socket_address: {address: strelka_coordinator_2, port_value: 6379}}}

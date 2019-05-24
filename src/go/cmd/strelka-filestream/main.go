@@ -23,7 +23,8 @@ func main() {
         confPath := flag.String(
                 "c",
                 "/etc/strelka/filestream.yaml",
-                "path to filestream config")
+                "path to filestream config",
+        )
         cpuProf := flag.Bool(
                 "cpu",
                 false,
@@ -70,7 +71,7 @@ func main() {
         var wgResponse sync.WaitGroup
 
         frontend := strelka.NewFrontendClient(conn)
-        sem := make(chan int, conf.Conn.Concurrency)
+        sem := make(chan int, conf.Throughput.Concurrency)
         defer close(sem)
         responses := make(chan *strelka.ScanResponse, 100)
         defer close(responses)
@@ -136,7 +137,8 @@ func main() {
                             Attributes:&strelka.Attributes{
                                 Filename:f,
                             },
-                            Chunk:conf.Files.Chunk,
+                            Chunk:conf.Throughput.Chunk,
+                            Delay:conf.Throughput.Delay,
                             Delete:conf.Files.Delete,
                         }
 
@@ -191,7 +193,8 @@ func main() {
                                     Attributes:&strelka.Attributes{
                                         Filename:s,
                                     },
-                                    Chunk:conf.Files.Chunk,
+                                    Chunk:conf.Throughput.Chunk,
+                                    Delay:conf.Throughput.Delay,
                                     Delete:conf.Files.Delete,
                                 }
 

@@ -101,7 +101,7 @@ class ScanHtml(strelka.Scanner):
                     extract_file.add_flavors({'external': script_flavors})
 
                     for c in strelka.chunk_string(script.text):
-                        self.upload_to_cache(
+                        self.upload_to_coordinator(
                             extract_file.pointer,
                             c,
                             expire_at,
