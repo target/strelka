@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2019-06-11
+### Changed
+- go-redis Z commands changed to non-literal (jshlbrd)
+
 ## 2019-05-24
 ### Added
 - 'throughput' section added to fileshot and filestream configuration files (jshlbrd)
