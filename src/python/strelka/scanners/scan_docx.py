@@ -23,15 +23,15 @@ class ScanDocx(strelka.Scanner):
             self.event['comments'] = docx_doc.core_properties.comments
             self.event['content_status'] = docx_doc.core_properties.content_status
             if docx_doc.core_properties.created is not None:
-                self.event['created'] = docx_doc.core_properties.created.isoformat()
+                self.event['created'] = int(docx_doc.core_properties.created.strftime('%s'))
             self.event['identifier'] = docx_doc.core_properties.identifier
             self.event['keywords'] = docx_doc.core_properties.keywords
             self.event['language'] = docx_doc.core_properties.language
             self.event['last_modified_by'] = docx_doc.core_properties.last_modified_by
             if docx_doc.core_properties.last_printed is not None:
-                self.event['last_printed'] = docx_doc.core_properties.last_printed.isoformat()
+                self.event['last_printed'] = int(docx_doc.core_properties.last_printed.strftime('%s'))
             if docx_doc.core_properties.modified is not None:
-                self.event['modified'] = docx_doc.core_properties.modified.isoformat()
+                self.event['modified'] = int(docx_doc.core_properties.modified.strftime('%s'))
             self.event['revision'] = docx_doc.core_properties.revision
             self.event['subject'] = docx_doc.core_properties.subject
             self.event['title'] = docx_doc.core_properties.title
@@ -44,9 +44,10 @@ class ScanDocx(strelka.Scanner):
                 )
 
                 for paragraph in docx_doc.paragraphs:
+                    text = f'{paragraph.text}\n'
                     self.upload_to_coordinator(
                         extract_file.pointer,
-                        paragraph.text,
+                        text,
                         expire_at,
                     )
 
