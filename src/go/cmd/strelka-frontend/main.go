@@ -79,7 +79,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 
         err := s.coordinator.ZAdd(
                 "tasks",
-                redis.Z{
+                &redis.Z{
                         Score:  float64(deadline.Unix()),
                         Member: id,
                 },
