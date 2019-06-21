@@ -170,7 +170,7 @@ Strelka's core server components are written in Go and Python3.6 and are run fro
 2. Build the cluster
     ```sh
     cd /opt/strelka/
-    docker-compose -f build/docker-compose.yaml --project-name strelka up -d
+    docker-compose -f build/docker-compose.yaml up -d
     ```
 
 ## Quickstart
@@ -178,7 +178,7 @@ By default, Strelka is configured to use a minimal "quickstart" deployment that 
 
 Terminal 1
 ```
-$ docker-compose -f build/docker-compose.yaml --project-name strelka up
+$ docker-compose -f build/docker-compose.yaml up
 ```
 
 Terminal 2:
