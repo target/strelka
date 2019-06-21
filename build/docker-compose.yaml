@@ -1,62 +1,65 @@
 version: '2'
 
 networks:
-    net:
+  net:
 
 volumes:
-    logs:
+  logs:
 
 services:
-    frontend:
-        build:
-              context: ..
-              dockerfile: build/go/frontend/Dockerfile
-        command: strelka-frontend
-        ports:
-            - "57314:57314"  # must match the port in frontend.yaml
-        networks:
-            - net
-        volumes:
-            - ../configs/go/frontend/:/etc/strelka/:ro
-            - logs:/var/log/strelka/
-        restart: unless-stopped
-        depends_on:
-            - coordinator
-    backend:
-        build:
-              context: ..
-              dockerfile: build/python/backend/Dockerfile
-        command: strelka-backend
-        shm_size: 512mb  # increase as necessary, required for some scanners
-        networks:
-          - net
-        volumes:
-            - ../configs/python/backend/:/etc/strelka/:ro
-        restart: unless-stopped
-        depends_on:
-            - coordinator
-    redis:
-        build:
-              context: ..
-              dockerfile: build/go/redis/Dockerfile
-        command: strelka-redis
-        restart: unless-stopped
-        networks:
-          - net
-        volumes:
-            - ../configs/go/redis/:/etc/strelka/:ro
-        restart: unless-stopped
-        depends_on:
-            - coordinator
-    mmrpc:
-        build:
-              context: ..
-              dockerfile: build/python/mmrpc/Dockerfile
-        command: strelka-mmrpc --threads 2 --address [::]:33907
-        networks:
-            - net
-    coordinator:
-        image: redis:alpine
-        command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
-        networks:
-            - net
+  frontend:
+    build:
+      context: ..
+      dockerfile: build/go/frontend/Dockerfile
+    command: strelka-frontend
+    ports:
+      - "57314:57314"  # must match the port in frontend.yaml
+    networks:
+      - net
+    volumes:
+      - ../configs/go/frontend/:/etc/strelka/:ro
+      - logs:/var/log/strelka/
+    restart: unless-stopped
+    depends_on:
+      - coordinator
+
+  backend:
+    build:
+      context: ..
+      dockerfile: build/python/backend/Dockerfile
+    command: strelka-backend
+    shm_size: 512mb  # increase as necessary, required for some scanners
+    networks:
+      - net
+    volumes:
+      - ../configs/python/backend/:/etc/strelka/:ro
+    restart: unless-stopped
+    depends_on:
+      - coordinator
+
+  redis:
+    build:
+      context: ..
+      dockerfile: build/go/redis/Dockerfile
+    command: strelka-redis
+    restart: unless-stopped
+    networks:
+      - net
+    volumes:
+      - ../configs/go/redis/:/etc/strelka/:ro
+    depends_on:
+      - coordinator
+
+  mmrpc:
+    build:
+      context: ..
+      dockerfile: build/python/mmrpc/Dockerfile
+    command: strelka-mmrpc --threads 2 --address [::]:33907
+    networks:
+      - net
+
+  coordinator:
+    image: redis:alpine
+    command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
+    networks:
+      - net

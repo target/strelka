@@ -1,6 +1,6 @@
 server: ":57314"
 coordinator:
-    addr: 'strelka_coordinator_1:6379'
-    db: 0
+  addr: 'strelka_coordinator_1:6379'
+  db: 0
 response:
-    log: "/var/log/strelka/strelka.log"
+  log: "/var/log/strelka/strelka.log"
