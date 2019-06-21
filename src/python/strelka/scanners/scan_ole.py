@@ -60,4 +60,5 @@ class ScanOle(strelka.Scanner):
         except OSError:
             self.flags.append('os_error')
         finally:
+            # TODO this should be wrapped with another try / catch as the variable assignment is not guaranteed
             ole.close()

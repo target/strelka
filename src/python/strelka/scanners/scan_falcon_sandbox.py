@@ -46,6 +46,7 @@ class ScanFalconSandbox(strelka.Scanner):
 
     def submit_file(self, file, env_id):
         url = self.server + '/api/submit'
+        # TODO data is never referenced so this will crash
         files = {'file': data}
 
         data = {

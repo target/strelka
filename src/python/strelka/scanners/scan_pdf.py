@@ -41,9 +41,9 @@ class ScanPdf(strelka.Scanner):
                         self.event['total']['objects'] += 1
 
                         try:
-                            object = pdf.getobj(object_id)
-                            if isinstance(object, dict):
-                                for (key, value) in object.items():
+                            pdf_object = pdf.getobj(object_id)
+                            if isinstance(pdf_object, dict):
+                                for (key, value) in pdf_object.items():
                                     if key in ['AA', 'OpenAction']:
                                         self.flags.append('auto_action')
                                     if key in ['JS', 'Javascript']:
@@ -60,7 +60,7 @@ class ScanPdf(strelka.Scanner):
 
                             if self.event['total']['extracted'] >= file_limit:
                                 continue
-                            if isinstance(object, pdftypes.PDFStream):
+                            if isinstance(pdf_object, pdftypes.PDFStream):
                                 try:
                                     if object_id not in extracted_objects:
                                         extract_file = strelka.File(
@@ -68,7 +68,7 @@ class ScanPdf(strelka.Scanner):
                                             source=self.name,
                                         )
 
-                                        for c in strelka.chunk_string(object.get_data()):
+                                        for c in strelka.chunk_string(pdf_object.get_data()):
                                             self.upload_to_coordinator(
                                                 extract_file.pointer,
                                                 c,

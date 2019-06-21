@@ -44,21 +44,22 @@ class ScanVba(strelka.Scanner):
                     self.event.setdefault('ioc', [])
                     self.event.setdefault('suspicious', [])
                     macros = vba.analyze_macros()
-                    for (type, keyword, description) in macros:
-                        if type == 'AutoExec':
+                    for (macro_type, keyword, description) in macros:
+                        if macro_type == 'AutoExec':
                             self.event['auto_exec'].append(keyword)
-                        elif type == 'Base64 String':
+                        elif macro_type == 'Base64 String':
                             self.event['base64'].append(keyword)
-                        elif type == 'Dridex String':
+                        elif macro_type == 'Dridex String':
                             self.event['dridex'].append(keyword)
-                        elif type == 'Hex String':
+                        elif macro_type == 'Hex String':
                             self.event['hex'].append(keyword)
-                        elif type == 'IOC':
+                        elif macro_type == 'IOC':
                             self.event['ioc'].append(keyword)
-                        elif type == 'Suspicious':
+                        elif macro_type == 'Suspicious':
                             self.event['suspicious'].append(keyword)
 
         except olevba3.FileOpenError:
             self.flags.append('file_open_error')
         finally:
+            # TODO referenced before potential assignment as vba is opened in a try / catch block
             vba.close()

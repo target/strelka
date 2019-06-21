@@ -39,7 +39,7 @@ class ScanYara(strelka.Scanner):
                 else:
                     self.compiled_yara = yara.compile(filepath=location)
 
-        except (yara.Error, yara.SyntaxError) as YaraError:
+        except (yara.Error, yara.SyntaxError):
             self.flags.append('compiling_error')
 
         self.event.setdefault('matches', [])
@@ -61,5 +61,5 @@ class ScanYara(strelka.Scanner):
                                 if yara_entry not in self.event['metadata']:
                                     self.event['metadata'].append(yara_entry)
 
-        except (yara.Error, yara.TimeoutError) as YaraError:
+        except (yara.Error, yara.TimeoutError):
             self.flags.append('scanning_error')

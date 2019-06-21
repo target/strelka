@@ -13,37 +13,37 @@ class ScanRtf(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         file_limit = options.get('limit', 1000)
 
-        self.event['total'] = {'objects': 0, 'extracted': 0}
+        self.event['total'] = {'rtf_objects': 0, 'extracted': 0}
 
         rtf = rtfobj.RtfObjParser(data)
         rtf.parse()
-        self.event['total']['objects'] = len(rtf.objects)
+        self.event['total']['rtf_objects'] = len(rtf.rtf_objects)
 
-        for object in rtf.objects:
+        for rtf_object in rtf.rtf_objects:
             if self.event['total']['extracted'] >= file_limit:
                 break
 
-            index = rtf.server.index(object)
-            if object.is_package:
+            index = rtf.server.index(rtf_object)
+            if rtf_object.is_package:
                 extract_file = strelka.File(
-                    name=object.filename,
+                    name=rtf_object.filename,
                     source=self.name,
                 )
 
-                for c in strelka.chunk_string(object.olepkgdata):
+                for c in strelka.chunk_string(rtf_object.olepkgdata):
                     self.upload_to_coordinator(
                         extract_file.pointer,
                         c,
                         expire_at,
                     )
 
-            elif object.is_ole:
+            elif rtf_object.is_ole:
                 extract_file = strelka.File(
-                    name=f'object_{index}',
+                    name=f'rtf_object_{index}',
                     source=self.name,
                 )
 
-                for c in strelka.chunk_string(object.oledata):
+                for c in strelka.chunk_string(rtf_object.oledata):
                     self.upload_to_coordinator(
                         extract_file.pointer,
                         c,
@@ -52,11 +52,11 @@ class ScanRtf(strelka.Scanner):
 
             else:
                 extract_file = strelka.File(
-                    name=f'object_{index}',
+                    name=f'rtf_object_{index}',
                     source=self.name,
                 )
 
-                for c in strelka.chunk_string(object.rawdata):
+                for c in strelka.chunk_string(rtf_object.rawdata):
                     self.upload_to_coordinator(
                         extract_file.pointer,
                         c,
