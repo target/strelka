@@ -1,5 +1,4 @@
 import libarchive
-import uuid
 
 from strelka import strelka
 

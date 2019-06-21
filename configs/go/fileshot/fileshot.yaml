@@ -1,14 +1,14 @@
 conn:
-    server: '127.0.0.1:57314'
-    cert: ''
-    timeout: 1m
+  server: '127.0.0.1:57314'
+  cert: ''
+  timeout: 1m
 throughput:
-    concurrency: 8
-    chunk: 32768
-    delay: 0s
+  concurrency: 8
+  chunk: 32768
+  delay: 0s
 files:
-    patterns:
-        - '/glob/to/your/files/*'
-    delete: false
+  patterns:
+    - '/glob/to/your/files/*'
+  delete: false
 response:
-    log: 'strelka.log'
+  log: 'strelka.log'

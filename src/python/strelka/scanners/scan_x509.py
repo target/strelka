@@ -16,9 +16,9 @@ class ScanX509(strelka.Scanner):
             Defaults to empty string.
     """
     def scan(self, data, file, options, expire_at):
-        type = options.get('type', '')
+        file_type = options.get('type', '')
 
-        if type == 'der':
+        if file_type == 'der':
             cert = X509.load_cert_der_string(data)
         else:
             cert = X509.load_cert_string(data)

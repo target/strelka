@@ -68,11 +68,11 @@ class ScanHtml(strelka.Scanner):
             inputs = soup.find_all('input')
             self.event['total']['inputs'] = len(inputs)
             self.event.setdefault('inputs', [])
-            for input in inputs:
+            for html_input in inputs:
                 input_entry = {
-                    'type': input.get('type'),
-                    'name': input.get('name'),
-                    'value': input.get('value'),
+                    'type': html_input.get('type'),
+                    'name': html_input.get('name'),
+                    'value': html_input.get('value'),
                 }
                 if input_entry not in self.event['inputs']:
                     self.event['inputs'].append(input_entry)
