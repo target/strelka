@@ -29,8 +29,8 @@ type server struct{
 
 type request struct {
         Attributes  *strelka.Attributes     `json:"attributes,omitempty"`
-        Id          string                  `json:"id,omitempty"`
         Client      string                  `json:"client,omitempty"`
+        Id          string                  `json:"id,omitempty"`
         Source      string                  `json:"source,omitempty"`
         Time        int64                   `json:"time,omitempty"`
 }
@@ -94,10 +94,10 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
         }
 
         r := request{
-                Id:incomingRequest.Id,
-                Client:incomingRequest.Client,
-                Source:incomingRequest.Source,
                 Attributes:incomingAttributes,
+                Client:incomingRequest.Client,
+                Id:incomingRequest.Id,
+                Source:incomingRequest.Source,
                 Time:time.Now().Unix(),
         }
 
