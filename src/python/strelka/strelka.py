@@ -83,7 +83,7 @@ class Scanner(object):
     def __init__(self, backend_cfg, coordinator):
         """Inits scanner with scanner name and metadata key."""
         self.name = self.__class__.__name__
-        self.key = inflection.underscore(self.name)
+        self.key = inflection.underscore(self.name.replace('Scan', ''))
         self.scanner_timeout = backend_cfg.get('limits').get('scanner')
         self.coordinator = coordinator
         self.init()
