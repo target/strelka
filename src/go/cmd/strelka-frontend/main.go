@@ -28,10 +28,11 @@ type server struct{
 }
 
 type request struct {
+        Attributes  *strelka.Attributes     `json:"attributes,omitempty"`
         Id          string                  `json:"id,omitempty"`
         Client      string                  `json:"client,omitempty"`
         Source      string                  `json:"source,omitempty"`
-        Attributes  *strelka.Attributes     `json:"attributes,omitempty"`
+        Time        int64                   `json:"time,omitempty"`
 }
 
 func (s *server) Check(ctx context.Context, req *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
@@ -97,6 +98,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                 Client:incomingRequest.Client,
                 Source:incomingRequest.Source,
                 Attributes:incomingAttributes,
+                Time:time.Now().Unix(),
         }
 
         for {
@@ -110,7 +112,6 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                 }
 
                 m := make(map[string]interface{})
-                m["time"] = time.Now().Unix()
                 m["request"] = r
                 if err := json.Unmarshal([]byte(lpop), &m); err != nil{
                         return err

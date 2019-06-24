@@ -159,15 +159,12 @@ class Backend(object):
                         'depth': file.depth,
                         'name': file.name,
                         'flavors': file.flavors,
-                        'scanner_list': [s.get('name')
-                                         for s in scanner_list],
+                        'scanners': [s.get('name') for s in scanner_list],
                         'size': len(data),
                         'source': file.source,
                         'tree': tree_dict,
                     }
-                    event = {
-                        **{'file': file_dict},
-                    }
+                    scan = {}
 
                     for scanner in scanner_list:
                         try:
@@ -180,7 +177,7 @@ class Backend(object):
                                 self.scanner_cache[und_name] = attr
                             options = scanner.get('options', {})
                             plugin = self.scanner_cache[und_name]
-                            (f, e) = plugin.scan_wrapper(
+                            (f, s) = plugin.scan_wrapper(
                                 data,
                                 file,
                                 options,
@@ -188,13 +185,18 @@ class Backend(object):
                             )
                             files.extend(f)
 
-                            event = {
-                                **event,
-                                **e,
+                            scan = {
+                                **scan,
+                                **s,
                             }
 
                         except ModuleNotFoundError:
                             logging.exception(f'scanner {name} not found')
+
+                    event = {
+                        **{'file': file_dict},
+                        **{'scan': scan},
+                    }
 
                     p.rpush(f'event:{root_id}', strelka.format_event(event))
                     p.expireat(f'event:{root_id}', expire_at)
