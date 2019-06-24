@@ -38,6 +38,7 @@ RUN apt-get -qq update && \
     jq && \
 # Install Python packages
     pip3 install -r /strelka/requirements.txt && \
+    pip3 install --index-url https://lief-project.github.io/packages --trusted-host lief.quarkslab.com lief && \
 # Install YARA
     cd /tmp/ && \
     curl -OL https://github.com/VirusTotal/yara/archive/v$YARA_VERSION.tar.gz && \
