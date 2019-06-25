@@ -16,7 +16,6 @@ M2Crypto==0.33.0
 pdfminer.six==20181108
 pefile==2018.8.8
 pgpdump3==1.5.2
-pyelftools==0.25
 pylzma==0.5.0
 pygments==2.3.1
 python-docx==0.8.10
