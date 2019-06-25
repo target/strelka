@@ -80,18 +80,18 @@ class ScanPdf(strelka.Scanner):
                                         extracted_objects.add(object_id)
 
                                 except TypeError:
-                                    self.flags.append('type_error_{object_id}')
+                                    self.flags.append(f'type_error_{object_id}')
                                 except struct.error:
-                                    self.flags.append('struct_error_{object_id}')
+                                    self.flags.append(f'struct_error_{object_id}')
 
                         except ValueError:
-                            self.flags.append('value_error_{object_id}')
+                            self.flags.append(f'value_error_{object_id}')
                         except pdftypes.PDFObjectNotFound:
-                            self.flags.append('object_not_found_{object_id}')
+                            self.flags.append(f'object_not_found_{object_id}')
                         except pdftypes.PDFNotImplementedError:
-                            self.flags.append('not_implemented_error_{object_id}')
+                            self.flags.append(f'not_implemented_error_{object_id}')
                         except psparser.PSSyntaxError:
-                            self.flags.append('ps_syntax_error_{object_id}')
+                            self.flags.append(f'ps_syntax_error_{object_id}')
 
                 if extract_text:
                     rsrcmgr = pdfinterp.PDFResourceManager(caching=True)
