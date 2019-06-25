@@ -1,6 +1,23 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2019-06-25
+### Changed
+- Transitioned ScanElf from pyelftools to LIEF (jshlbrd)
+- Fixed ScanPdf f-string flags (jshlbrd)
+
+## 2019-06-24
+### Changed
+- scan_* dictionaries are now nested under scan: {} (jshlbrd)
+- 'time' field is now 'request.time' (jshlbrd)
+- 'file.scanners_list' is now 'file.scanners' (jshlbrd)
+
+## 2019-06-21
+### Changed
+- Updated YAML files to use 2 spaces instead of 4 spaces (jshlbrd)
+- Conflicting variable names were refactored (jshlbrd)
+- Added .env file for cleaner execution of docker-compose (jshlbrd)
+
 ## 2019-06-11
 ### Changed
 - go-redis Z commands changed to non-literal (jshlbrd)
@@ -11,10 +28,10 @@ Changes to the project will be tracked in this file via the date of change.
 - Added default docker-compose DNS hosts to misc/envoy/* configuration templates (jshlbrd)
 - Added Docker volume mapping to frontend in default docker-compose (jshlbrd)
 ### Changed
-- forked pyopenssl replaced with M2Crypto (jshlbrd)
+- Forked pyopenssl replaced with M2Crypto (jshlbrd)
 - 'tree' event dictionary is now nested under 'file' event dictionary (jshlbrd)
-- scanner event dictionaries now start with 'scan_' (jshlbrd)
-- timestamps are now unix/epoch (jshlbrd)
+- Scanner event dictionaries now start with 'scan_' (jshlbrd)
+- Timestamps are now unix/epoch (jshlbrd)
 - ScanExiftool now outputs 'human readable' data (jshlbrd)
 - Looping Redis commands sleep at a consistent interval of 250ms (jshlbrd)
 ### Removed
