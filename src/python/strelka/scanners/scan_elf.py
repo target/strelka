@@ -12,6 +12,7 @@ class ScanElf(strelka.Scanner):
             'relocations': len(elf.relocations),
             'sections': elf.header.numberof_sections,
             'segments': elf.header.numberof_segments,
+            'symbols': len(elf.symbols),
         }
 
         self.event['entrypoint'] = elf.entrypoint
@@ -57,10 +58,10 @@ class ScanElf(strelka.Scanner):
             }
 
             if relo.has_section:
-                row['symbol']: relo.section.name
+                row['section'] = relo.section.name
 
             if relo.has_symbol:
-                row['symbol']: relo.symbol.name
+                row['symbol'] = relo.symbol.name
 
             if elf.header.machine_type == ELF.ARCH.x86_64:
                 row['type'] = str(ELF.RELOCATION_X86_64(relo.type)).split('.')[1]
@@ -78,6 +79,7 @@ class ScanElf(strelka.Scanner):
         self.event['sections'] = []
         for sec in elf.sections:
             self.event['sections'].append({
+                'alignment': sec.alignment,
                 'entropy': sec.entropy,
                 'flags': [str(f).split('.')[1] for f in sec.flags_list],
                 'name': sec.name,
