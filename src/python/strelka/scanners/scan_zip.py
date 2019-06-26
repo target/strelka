@@ -27,18 +27,14 @@ class ScanZip(strelka.Scanner):
 
         self.event['total'] = {'files': 0, 'extracted': 0}
 
-        try:
-            if not self.passwords:
-                if os.path.isfile(password_file):
-                    with open(password_file, 'r+') as f:
-                        for line in f:
-                            self.passwords.append(bytes(line.strip(), 'utf-8'))
-
-        except IOError:
-            self.flags.append('file_read_error')
+        if not self.passwords:
+            if os.path.isfile(password_file):
+                with open(password_file, 'r') as f:
+                    for line in f:
+                        self.passwords.append(bytes(line.strip(), 'utf-8'))
 
         with io.BytesIO(data) as zip_io:
-            try:
+            # try:
                 with zipfile.ZipFile(zip_io) as zip_obj:
                     name_list = zip_obj.namelist()
                     self.event['total']['files'] = len(name_list)
@@ -59,6 +55,8 @@ class ScanZip(strelka.Scanner):
                                                 self.flags.append('encrypted_archive_file')
                                                 break
                                         except RuntimeError:
+                                            pass
+                                        except zipfile.BadZipFile:
                                             pass
 
                                 elif zinfo.flag_bits & 0x1 and not self.passwords:  # File is encrypted, no passwords
@@ -92,5 +90,5 @@ class ScanZip(strelka.Scanner):
                             except zlib.error:
                                 self.flags.append('zlib_error')
 
-            except zipfile.BadZipFile:
-                self.flags.append('bad_zip_file')
+            # except zipfile.BadZipFile:
+            #     self.flags.append('bad_zip_file')
