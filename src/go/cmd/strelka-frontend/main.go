@@ -2,6 +2,7 @@ package main
 
 import (
         "context"
+        "crypto/sha256"
         "encoding/json"
         "flag"
         "fmt"
@@ -22,8 +23,18 @@ import (
         "github.com/target/strelka/src/go/pkg/structs"
 )
 
-type server struct{
-        coordinator     *redis.Client
+type coord struct {
+        cli     *redis.Client
+}
+
+type gate struct {
+        cli     *redis.Client
+        ttl     time.Duration
+}
+
+type server struct {
+        coordinator     coord
+        gatekeeper      gate
         responses       chan <- *strelka.ScanResponse
 }
 
@@ -49,6 +60,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
         id := uuid.New().String()
         dataKey := fmt.Sprintf("data:%v", id)
         eventKey := fmt.Sprintf("event:%v", id)
+        hash := sha256.New()
         var incomingRequest *strelka.Request
         var incomingAttributes *strelka.Attributes
         for {
@@ -67,26 +79,16 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                         incomingAttributes = incoming.Attributes
                 }
 
-                pipe := s.coordinator.Pipeline()
-                pipe.RPush(dataKey, incoming.Data)
-                pipe.ExpireAt(dataKey, deadline)
-                _, _ = pipe.Exec()
+                hash.Write(incoming.Data)
+                p := s.coordinator.cli.Pipeline()
+                p.RPush(dataKey, incoming.Data)
+                p.ExpireAt(dataKey, deadline)
+                _, _ = p.Exec()
                 counter++
     	}
 
         if counter == 0 {
                 return nil
-        }
-
-        err := s.coordinator.ZAdd(
-                "tasks",
-                &redis.Z{
-                        Score:  float64(deadline.Unix()),
-                        Member: id,
-                },
-        ).Err()
-        if err != nil {
-                return err
         }
 
         if incomingRequest.Id == "" {
@@ -101,8 +103,47 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                 Time:time.Now().Unix(),
         }
 
+        m := make(map[string]interface{})
+        m["request"] = r
+
+        sha := fmt.Sprintf("%x", hash.Sum(nil))
+        events := s.gatekeeper.cli.LRange(sha, 0, -1).Val()
+        if len(events) > 0 {
+                for _, e := range events {
+                        if err := json.Unmarshal([]byte(e), &m); err != nil{
+                                return err
+                        }
+
+                        event, _ := json.Marshal(m)
+                        resp := &strelka.ScanResponse{
+                                Id:incomingRequest.Id,
+                                Event:string(event),
+                        }
+                        s.responses <- resp
+                        if err := stream.Send(resp); err != nil {
+                                return err
+                        }
+                }
+
+                return nil
+        }
+
+        err := s.coordinator.cli.ZAdd(
+                "tasks",
+                &redis.Z{
+                        Score:  float64(deadline.Unix()),
+                        Member: id,
+                },
+        ).Err()
+        if err != nil {
+                return err
+        }
+
+        tx := s.gatekeeper.cli.TxPipeline()
+        tx.Del(sha)
+
         for {
-                lpop, err := s.coordinator.LPop(eventKey).Result()
+                lpop, err := s.coordinator.cli.LPop(eventKey).Result()
                 if err != nil {
                         time.Sleep(250 * time.Millisecond)
                         continue
@@ -111,8 +152,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                         break
                 }
 
-                m := make(map[string]interface{})
-                m["request"] = r
+                tx.RPush(sha, string(lpop))
                 if err := json.Unmarshal([]byte(lpop), &m); err != nil{
                         return err
                 }
@@ -127,6 +167,9 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                         return err
                 }
         }
+
+        tx.Expire(sha, s.gatekeeper.ttl)
+        _, _ = tx.Exec()
 
         return nil
 }
@@ -183,9 +226,24 @@ func main() {
                 log.Fatalf("failed to connect to coordinator: %v", err)
         }
 
+        gatekeeper := redis.NewClient(&redis.Options{
+                Addr:       conf.Gatekeeper.Addr,
+                DB:         conf.Gatekeeper.Db,
+        })
+        err = gatekeeper.Ping().Err()
+        if err != nil {
+                log.Fatalf("failed to connect to gatekeeper: %v", err)
+        }
+
         s := grpc.NewServer()
         opts := &server{
-                coordinator:coordinator,
+                coordinator:coord{
+                        cli:coordinator,
+                },
+                gatekeeper:gate{
+                        cli:gatekeeper,
+                        ttl:conf.Gatekeeper.Ttl,
+                },
                 responses:responses,
         }
         strelka.RegisterFrontendServer(s, opts)
