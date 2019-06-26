@@ -22,6 +22,7 @@ services:
     restart: unless-stopped
     depends_on:
       - coordinator
+      - gatekeeper
 
   backend:
     build:
@@ -61,5 +62,11 @@ services:
   coordinator:
     image: redis:alpine
     command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
+    networks:
+      - net
+
+  gatekeeper:
+    image: redis:alpine
+    command: redis-server --save "" --appendonly no --maxmemory-policy allkeys-lru # alt: use config file via volume mapping
     networks:
       - net

@@ -26,9 +26,15 @@ type ConfFiles struct {
         Delete          bool                        // optional
 }
 
-type ConfRedis struct {
+type ConfCoordinator struct {
         Addr            string                      // required
         Db              int                         // required
+}
+
+type ConfGatekeeper struct {
+        Addr            string                      // required
+        Db              int                         // required
+        Ttl             time.Duration               //required
 }
 
 // determines what action the client takes with responses, defaults to discarding messages
@@ -59,13 +65,13 @@ type FileStream struct {
 
 type Frontend struct {
         Server              string                  // required
-        Cache               ConfRedis               // required
-        Coordinator         ConfRedis               // required
+        Coordinator         ConfCoordinator         // required
+        Gatekeeper          ConfGatekeeper          // required
         Response            ConfResponse            // optional
 }
 
 type Redis struct {
-        Coordinator         ConfRedis               // required
+        Coordinator         ConfCoordinator         // required
 }
 
 // defines options used when sending scan requests
