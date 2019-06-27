@@ -110,6 +110,7 @@ func main() {
         request := &strelka.Request{
                 Client:client,
                 Source:hostname,
+                Gatekeeper:conf.Files.Gatekeeper,
         }
 
         for _, p := range conf.Files.Patterns {
