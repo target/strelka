@@ -5,6 +5,6 @@ coordinator:
 gatekeeper:
   addr: 'strelka_gatekeeper_1:6379'
   db: 0
-  ttl: 30s
+  ttl: 1h
 response:
   log: "/var/log/strelka/strelka.log"

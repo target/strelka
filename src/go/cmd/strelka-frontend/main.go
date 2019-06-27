@@ -56,15 +56,16 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                 return nil
         }
 
-        counter := 0
-        id := uuid.New().String()
-        dataKey := fmt.Sprintf("data:%v", id)
-        eventKey := fmt.Sprintf("event:%v", id)
         hash := sha256.New()
-        var incomingRequest *strelka.Request
-        var incomingAttributes *strelka.Attributes
+        id := uuid.New().String()
+        keyd := fmt.Sprintf("data:%v", id)
+        keye := fmt.Sprintf("event:%v", id)
+
+        var attr *strelka.Attributes
+        var req *strelka.Request
+
         for {
-                incoming, err := stream.Recv()
+                in, err := stream.Recv()
                 if err == io.EOF {
                         break
                 }
@@ -72,70 +73,72 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                         return err
                 }
 
-                if incomingRequest == nil {
-                        incomingRequest = incoming.Request
+                if attr == nil {
+                        attr = in.Attributes
                 }
-                if incomingAttributes == nil {
-                        incomingAttributes = incoming.Attributes
+                if req == nil {
+                        req = in.Request
                 }
 
-                hash.Write(incoming.Data)
+                hash.Write(in.Data)
+
                 p := s.coordinator.cli.Pipeline()
-                p.RPush(dataKey, incoming.Data)
-                p.ExpireAt(dataKey, deadline)
-                _, _ = p.Exec()
-                counter++
-    	}
-
-        if counter == 0 {
-                return nil
+                p.RPush(keyd, in.Data)
+                p.ExpireAt(keyd, deadline)
+                if _, err := p.Exec(); err != nil {
+                        return err
+                }
         }
 
-        if incomingRequest.Id == "" {
-                incomingRequest.Id = id
+        if req.Id == "" {
+                req.Id = id
         }
 
-        r := request{
-                Attributes:incomingAttributes,
-                Client:incomingRequest.Client,
-                Id:incomingRequest.Id,
-                Source:incomingRequest.Source,
+        sha := fmt.Sprintf("hash:%x", hash.Sum(nil))
+        em := make(map[string]interface{})
+        em["request"] = request{
+                Attributes:attr,
+                Client:req.Client,
+                Id:req.Id,
+                Source:req.Source,
                 Time:time.Now().Unix(),
         }
 
-        m := make(map[string]interface{})
-        m["request"] = r
+        if req.Gatekeeper {
+                lrange := s.gatekeeper.cli.LRange(sha, 0, -1).Val()
+                if len(lrange) > 0 {
+                        for _, e := range lrange {
+                                if err := json.Unmarshal([]byte(e), &em); err != nil {
+                                        return err
+                                }
 
-        sha := fmt.Sprintf("%x", hash.Sum(nil))
-        events := s.gatekeeper.cli.LRange(sha, 0, -1).Val()
-        if len(events) > 0 {
-                for _, e := range events {
-                        if err := json.Unmarshal([]byte(e), &m); err != nil{
-                                return err
+                                event, err := json.Marshal(em)
+                                if err != nil {
+                                        return err
+                                }
+
+                                resp := &strelka.ScanResponse{
+                                        Id:req.Id,
+                                        Event:string(event),
+                                }
+
+                                s.responses <- resp
+                                if err := stream.Send(resp); err != nil {
+                                        return err
+                                }
                         }
 
-                        event, _ := json.Marshal(m)
-                        resp := &strelka.ScanResponse{
-                                Id:incomingRequest.Id,
-                                Event:string(event),
-                        }
-                        s.responses <- resp
-                        if err := stream.Send(resp); err != nil {
-                                return err
-                        }
+                        return nil
                 }
-
-                return nil
         }
 
-        err := s.coordinator.cli.ZAdd(
+        if err := s.coordinator.cli.ZAdd(
                 "tasks",
                 &redis.Z{
                         Score:  float64(deadline.Unix()),
                         Member: id,
                 },
-        ).Err()
-        if err != nil {
+        ).Err(); err != nil {
                 return err
         }
 
@@ -143,7 +146,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
         tx.Del(sha)
 
         for {
-                lpop, err := s.coordinator.cli.LPop(eventKey).Result()
+                lpop, err := s.coordinator.cli.LPop(keye).Result()
                 if err != nil {
                         time.Sleep(250 * time.Millisecond)
                         continue
@@ -152,16 +155,21 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                         break
                 }
 
-                tx.RPush(sha, string(lpop))
-                if err := json.Unmarshal([]byte(lpop), &m); err != nil{
+                tx.RPush(sha, lpop)
+                if err := json.Unmarshal([]byte(lpop), &em); err != nil {
                         return err
                 }
 
-                event, _ := json.Marshal(m)
+                event, err := json.Marshal(em)
+                if err != nil {
+                        return err
+                }
+
                 resp := &strelka.ScanResponse{
-                        Id:incomingRequest.Id,
+                        Id:req.Id,
                         Event:string(event),
                 }
+
                 s.responses <- resp
                 if err := stream.Send(resp); err != nil {
                         return err
@@ -169,7 +177,9 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
         }
 
         tx.Expire(sha, s.gatekeeper.ttl)
-        _, _ = tx.Exec()
+        if _, err := tx.Exec(); err != nil {
+                return err
+        }
 
         return nil
 }
@@ -217,35 +227,34 @@ func main() {
                 log.Println("responses will be discarded")
         }
 
-        coordinator := redis.NewClient(&redis.Options{
+        cd := redis.NewClient(&redis.Options{
                 Addr:       conf.Coordinator.Addr,
-                DB:         conf.Coordinator.Db,
+                DB:         conf.Coordinator.DB,
         })
-        err = coordinator.Ping().Err()
-        if err != nil {
+        if err := cd.Ping().Err(); err != nil {
                 log.Fatalf("failed to connect to coordinator: %v", err)
         }
 
-        gatekeeper := redis.NewClient(&redis.Options{
+        gk := redis.NewClient(&redis.Options{
                 Addr:       conf.Gatekeeper.Addr,
-                DB:         conf.Gatekeeper.Db,
+                DB:         conf.Gatekeeper.DB,
         })
-        err = gatekeeper.Ping().Err()
-        if err != nil {
+        if err := gk.Ping().Err(); err != nil {
                 log.Fatalf("failed to connect to gatekeeper: %v", err)
         }
 
         s := grpc.NewServer()
         opts := &server{
                 coordinator:coord{
-                        cli:coordinator,
+                        cli:cd,
                 },
                 gatekeeper:gate{
-                        cli:gatekeeper,
-                        ttl:conf.Gatekeeper.Ttl,
+                        cli:gk,
+                        ttl:conf.Gatekeeper.TTL,
                 },
                 responses:responses,
         }
+
         strelka.RegisterFrontendServer(s, opts)
         grpc_health_v1.RegisterHealthServer(s, opts)
         s.Serve(listen)

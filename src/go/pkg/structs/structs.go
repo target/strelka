@@ -24,17 +24,18 @@ type ConfThroughput struct {
 type ConfFiles struct {
         Patterns        []string                    // required
         Delete          bool                        // optional
+        Gatekeeper      bool                        // required
 }
 
 type ConfCoordinator struct {
         Addr            string                      // required
-        Db              int                         // required
+        DB              int                         // required
 }
 
 type ConfGatekeeper struct {
         Addr            string                      // required
-        Db              int                         // required
-        Ttl             time.Duration               //required
+        DB              int                         // required
+        TTL             time.Duration               //required
 }
 
 // determines what action the client takes with responses, defaults to discarding messages
