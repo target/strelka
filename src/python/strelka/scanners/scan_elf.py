@@ -9,9 +9,11 @@ class ScanElf(strelka.Scanner):
         elf = ELF.parse(raw=data)
 
         self.event['total'] = {
+            'libraries': len(elf.libraries),
             'relocations': len(elf.relocations),
             'sections': elf.header.numberof_sections,
             'segments': elf.header.numberof_segments,
+            'symbols': len(elf.symbols),
         }
 
         self.event['entrypoint'] = elf.entrypoint
@@ -58,7 +60,6 @@ class ScanElf(strelka.Scanner):
 
             if relo.has_section:
                 row['symbol']: relo.section.name
-
             if relo.has_symbol:
                 row['symbol']: relo.symbol.name
 
@@ -107,6 +108,7 @@ class ScanElf(strelka.Scanner):
         self.event['symbols'] = {
             'exported': [sym.name for sym in elf.exported_symbols],
             'imported': [sym.name for sym in elf.imported_symbols],
+            'libraries': elf.libraries,
             'table': [],
         }
 
