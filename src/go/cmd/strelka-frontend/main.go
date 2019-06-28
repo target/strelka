@@ -90,6 +90,9 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                 }
         }
 
+        if req == nil || attr == nil {
+                return nil
+        }
         if req.Id == "" {
                 req.Id = id
         }
