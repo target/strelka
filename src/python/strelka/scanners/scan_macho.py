@@ -188,6 +188,8 @@ PROTECTIONS = {
 class ScanMacho(strelka.Scanner):
     """Collects metadata from Mach-O files."""
     def scan(self, data, file, options, expire_at):
+        tmp_directory = options.get('tmp_directory', '/tmp/')
+
         macho = MachO.parse(raw=data, config=MachO.ParserConfig.deep)
 
         self.event['total'] = {
@@ -197,7 +199,7 @@ class ScanMacho(strelka.Scanner):
         if macho.size > 1:
             for r in range(0, macho.size):
                 b = macho.at(r)
-                with tempfile.NamedTemporaryFile(dir='/tmp/') as tmp_data:
+                with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
                     b.write(tmp_data.name)
                     tmp_data.flush()
 
@@ -223,6 +225,8 @@ class ScanMacho(strelka.Scanner):
         self.event['total'] = {
             **self.event['total'],
             'commands': binary.header.nb_cmds,
+            'libraries': len(binary.libraries),
+            'relocations': len(binary.relocations),
             'sections': len(binary.sections),
             'segments': len(binary.segments),
             'symbols': len(binary.symbols),
@@ -257,11 +261,9 @@ class ScanMacho(strelka.Scanner):
             }
 
             if relo.has_section:
-                row['symbol'] = relo.section.name
-
+                row['section'] = relo.section.name
             if relo.has_segment:
                 row['segment'] = relo.segment.name
-
             if relo.has_symbol:
                 row['symbol'] = relo.symbol.name
 
@@ -270,7 +272,7 @@ class ScanMacho(strelka.Scanner):
         self.event['sections'] = []
         for sec in binary.sections:
             self.event['sections'].append({
-                'alignment': seg.alignment,
+                'alignment': sec.alignment,
                 'entropy': sec.entropy,
                 'name': sec.name,
                 'offset': sec.offset,
@@ -297,8 +299,8 @@ class ScanMacho(strelka.Scanner):
                     'init': PROTECTIONS[seg.init_protection],
                     'max': PROTECTIONS[seg.max_protection],
                 },
-                'name': segment.name,
-                'sections': [str(sec.name).split('.')[1] for sec in seg.sections],
+                'name': seg.name,
+                'sections': [sec.name for sec in seg.sections],
                 'virtual': {
                     'address': seg.virtual_address,
                     'size': seg.virtual_size,
@@ -308,6 +310,7 @@ class ScanMacho(strelka.Scanner):
         self.event['symbols'] = {
             'exported': [sym.name for sym in binary.exported_symbols],
             'imported': [sym.name for sym in binary.imported_symbols],
+            'libraries': [lib.name for lib in binary.libraries],
             'table': [],
         }
 
@@ -326,15 +329,19 @@ class ScanMacho(strelka.Scanner):
                 }
 
                 if sym.binding_info.has_library:
+                    lib = sym.binding_info.library
                     row['binding']['library'] = {
-                        'name': sym.binding_info.library.name,
-                        'ordinal': sym.binding_info.library_ordinal,
-                        'timestamp': sym.binding_info.library.timestamp,
+                        'name': lib.name,
+                        'size': lib.size,
+                        'timestamp': lib.timestamp,
                         'version': {
-                            'compatibility': '.'.join([str(ver) for ver in sym.binding_info.library.compatibility_version]),
-                            'current': '.'.join([str(ver) for ver in sym.binding_info.library.current_version]),
+                            'compatibility': '.'.join([str(ver) for ver in lib.compatibility_version]),
+                            'current': '.'.join([str(ver) for ver in lib.current_version]),
                         },
                     }
+
+                if sym.binding_info.has_segment:
+                    row['binding']['segment'] = sym.binding_info.segment.name
 
             elif sym.has_export_info:
                 row['export'] = {
@@ -348,7 +355,7 @@ class ScanMacho(strelka.Scanner):
         }
 
         if binary.has_code_signature:
-            self.event['commands']['code_sig'] = {
+            self.event['commands']['code_signature'] = {
                 'command': {
                     'offset': binary.code_signature.command_offset,
                     'size': binary.code_signature.size,
@@ -453,7 +460,7 @@ class ScanMacho(strelka.Scanner):
             }
 
         if binary.has_encryption_info:
-            encryption_info = {
+            self.event['commands']['encryption_info'] = {
                 'command': {
                     'offset': binary.encryption_info.command_offset,
                     'size': binary.encryption_info.size,
