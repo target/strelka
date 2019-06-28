@@ -213,10 +213,10 @@ This server component is the backend for a cluster -- this is where files submit
 This server component manages portions of Strelka's Redis servers.
 
 #### coordinator
-This server component is a Redis server that coordinates data between the frontend and backend; it contains a task queue and file scan results.
+This server component is a Redis server that coordinates tasks and data between the frontend and backend. This component is compatible with Envoy's Redis load balancing capabilities.
 
-#### cache
-This server component is a Redis server that caches file data for the frontend and backend. Very large clusters may need to use Envoy to load balance data across many caches.
+#### gatekeeper
+This server component is a Redis server that acts as a temporary event cache. This component is not compatible with Envoy's Redis load balancing capabilities.
 
 #### mmrpc
 This is an optional server component that turns the [MaliciousMacroBot](https://github.com/egaus/MaliciousMacroBot) project into a networked service with gRPC.
@@ -234,6 +234,7 @@ For the options below, only one response setting may be configured.
 * "files.chunk": size of file chunks that will be sent to the frontend server (defaults to 32768b / 32kb)
 * "files.patterns": list of glob patterns that determine which files will be sent for scanning (defaults to example glob pattern)
 * "files.delete": boolean that determines if files should be deleted after being sent for scanning (defaults to false -- does not delete files)
+* "files.gatekeeper": boolean that determines if events should be pulled from the temporary event cache (defaults to true)
 * "response.log": location where worker scan results are logged to (defaults to /var/log/strelka/strelka.log)
 * "response.report": frequency at which the frontend reports the number of files processed (no default)
 
@@ -256,10 +257,11 @@ For the options below, only one response setting may be configured.
 For the options below, only one response setting may be configured.
 
 * "server": network address of the frontend server (defaults to :57314)
-* "cache.addr": network address of the cache (defaults to strelka_cache_1:6379)
-* "cache.db": Redis database of the cache (defaults to 0)
 * "coordinator.addr": network address of the coordinator (defaults to strelka_coordinator_1:6379)
 * "coordinator.db": Redis database of the coordinator (defaults to 0)
+* "gatekeeper.addr": network address of the gatekeeper (defaults to strelka_gatekeeper_1:6379)
+* "gatekeeper.db": Redis database of the gatekeeper (defaults to 0)
+* "gatekeeper.ttl": time-to-live for events added to the gatekeeper (defaults to 1 hour)
 * "response.log": location where worker scan results are logged to (defaults to /var/log/strelka/strelka.log)
 * "response.report": frequency at which the frontend reports the number of files processed (no default)
 

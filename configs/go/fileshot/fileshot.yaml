@@ -10,5 +10,6 @@ files:
   patterns:
     - '/glob/to/your/files/*'
   delete: false
+  gatekeeper: true
 response:
   log: 'strelka.log'

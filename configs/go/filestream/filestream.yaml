@@ -10,6 +10,7 @@ files:
   patterns:
     - '/glob/to/your/files/*'
   delete: false
+  gatekeeper: true
 response:
   report: 5s
 delta: 5s
