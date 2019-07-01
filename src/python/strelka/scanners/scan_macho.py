@@ -316,7 +316,7 @@ class ScanMacho(strelka.Scanner):
 
         for sym in binary.symbols:
             row = {
-                'name': sym.name,
+                'symbol': sym.name,
                 'origin': str(sym.origin).rsplit('.')[1],
             }
 
