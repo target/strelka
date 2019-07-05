@@ -233,8 +233,8 @@ class ScanMacho(strelka.Scanner):
         }
 
         if binary.has_entrypoint:
-            self.event['entrypoint'] = binary.entrypoint
-        self.event['imagebase'] = binary.imagebase
+            self.event['entry_point'] = binary.entrypoint
+        self.event['image_base'] = binary.imagebase
         self.event['nx'] = binary.has_nx
         self.event['pie'] = binary.is_pie
 

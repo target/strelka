@@ -16,8 +16,8 @@ class ScanElf(strelka.Scanner):
             'symbols': len(elf.symbols),
         }
 
-        self.event['entrypoint'] = elf.entrypoint
-        self.event['imagebase'] = elf.imagebase
+        self.event['entry_point'] = elf.entrypoint
+        self.event['image_base'] = elf.imagebase
         self.event['nx'] = elf.has_nx
         self.event['pie'] = elf.is_pie
 
@@ -123,7 +123,6 @@ class ScanElf(strelka.Scanner):
                 'static': sym.is_static,
                 'version': str(sym.symbol_version),
                 'type': str(sym.type).rsplit('.')[1],
-                'value': sym.value,
                 'variable': sym.is_variable,
                 'visibility': str(sym.visibility).rsplit('.')[1],
             })
