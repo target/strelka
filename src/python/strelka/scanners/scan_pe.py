@@ -1,954 +1,485 @@
-import hashlib
-import tempfile
+import binascii
+import struct
 
-from boltons import setutils
-from lief import PE
 import pefile
 
 from strelka import strelka
 
-
-IMPHASH = {
-    'ws2_32': {
-        1: 'accept',
-        2: 'bind',
-        3: 'closesocket',
-        4: 'connect',
-        5: 'getpeername',
-        6: 'getsockname',
-        7: 'getsockopt',
-        8: 'htonl',
-        9: 'htons',
-        10: 'ioctlsocket',
-        11: 'inet_addr',
-        12: 'inet_ntoa',
-        13: 'listen',
-        14: 'ntohl',
-        15: 'ntohs',
-        16: 'recv',
-        17: 'recvfrom',
-        18: 'select',
-        19: 'send',
-        20: 'sendto',
-        21: 'setsockopt',
-        22: 'shutdown',
-        23: 'socket',
-        24: 'GetAddrInfoW',
-        25: 'GetNameInfoW',
-        26: 'WSApSetPostRoutine',
-        27: 'FreeAddrInfoW',
-        28: 'WPUCompleteOverlappedRequest',
-        29: 'WSAAccept',
-        30: 'WSAAddressToStringA',
-        31: 'WSAAddressToStringW',
-        32: 'WSACloseEvent',
-        33: 'WSAConnect',
-        34: 'WSACreateEvent',
-        35: 'WSADuplicateSocketA',
-        36: 'WSADuplicateSocketW',
-        37: 'WSAEnumNameSpaceProvidersA',
-        38: 'WSAEnumNameSpaceProvidersW',
-        39: 'WSAEnumNetworkEvents',
-        40: 'WSAEnumProtocolsA',
-        41: 'WSAEnumProtocolsW',
-        42: 'WSAEventSelect',
-        43: 'WSAGetOverlappedResult',
-        44: 'WSAGetQOSByName',
-        45: 'WSAGetServiceClassInfoA',
-        46: 'WSAGetServiceClassInfoW',
-        47: 'WSAGetServiceClassNameByClassIdA',
-        48: 'WSAGetServiceClassNameByClassIdW',
-        49: 'WSAHtonl',
-        50: 'WSAHtons',
-        51: 'gethostbyaddr',
-        52: 'gethostbyname',
-        53: 'getprotobyname',
-        54: 'getprotobynumber',
-        55: 'getservbyname',
-        56: 'getservbyport',
-        57: 'gethostname',
-        58: 'WSAInstallServiceClassA',
-        59: 'WSAInstallServiceClassW',
-        60: 'WSAIoctl',
-        61: 'WSAJoinLeaf',
-        62: 'WSALookupServiceBeginA',
-        63: 'WSALookupServiceBeginW',
-        64: 'WSALookupServiceEnd',
-        65: 'WSALookupServiceNextA',
-        66: 'WSALookupServiceNextW',
-        67: 'WSANSPIoctl',
-        68: 'WSANtohl',
-        69: 'WSANtohs',
-        70: 'WSAProviderConfigChange',
-        71: 'WSARecv',
-        72: 'WSARecvDisconnect',
-        73: 'WSARecvFrom',
-        74: 'WSARemoveServiceClass',
-        75: 'WSAResetEvent',
-        76: 'WSASend',
-        77: 'WSASendDisconnect',
-        78: 'WSASendTo',
-        79: 'WSASetEvent',
-        80: 'WSASetServiceA',
-        81: 'WSASetServiceW',
-        82: 'WSASocketA',
-        83: 'WSASocketW',
-        84: 'WSAStringToAddressA',
-        85: 'WSAStringToAddressW',
-        86: 'WSAWaitForMultipleEvents',
-        87: 'WSCDeinstallProvider',
-        88: 'WSCEnableNSProvider',
-        89: 'WSCEnumProtocols',
-        90: 'WSCGetProviderPath',
-        91: 'WSCInstallNameSpace',
-        92: 'WSCInstallProvider',
-        93: 'WSCUnInstallNameSpace',
-        94: 'WSCUpdateProvider',
-        95: 'WSCWriteNameSpaceOrder',
-        96: 'WSCWriteProviderOrder',
-        97: 'freeaddrinfo',
-        98: 'getaddrinfo',
-        99: 'getnameinfo',
-        101: 'WSAAsyncSelect',
-        102: 'WSAAsyncGetHostByAddr',
-        103: 'WSAAsyncGetHostByName',
-        104: 'WSAAsyncGetProtoByNumber',
-        105: 'WSAAsyncGetProtoByName',
-        106: 'WSAAsyncGetServByPort',
-        107: 'WSAAsyncGetServByName',
-        108: 'WSACancelAsyncRequest',
-        109: 'WSASetBlockingHook',
-        110: 'WSAUnhookBlockingHook',
-        111: 'WSAGetLastError',
-        112: 'WSASetLastError',
-        113: 'WSACancelBlockingCall',
-        114: 'WSAIsBlocking',
-        115: 'WSAStartup',
-        116: 'WSACleanup',
-        151: '__WSAFDIsSet',
-        500: 'WEP',
-    },
-    'wsock32': {
-        1: 'accept',
-        2: 'bind',
-        3: 'closesocket',
-        4: 'connect',
-        5: 'getpeername',
-        6: 'getsockname',
-        7: 'getsockopt',
-        8: 'htonl',
-        9: 'htons',
-        10: 'ioctlsocket',
-        11: 'inet_addr',
-        12: 'inet_ntoa',
-        13: 'listen',
-        14: 'ntohl',
-        15: 'ntohs',
-        16: 'recv',
-        17: 'recvfrom',
-        18: 'select',
-        19: 'send',
-        20: 'sendto',
-        21: 'setsockopt',
-        22: 'shutdown',
-        23: 'socket',
-        24: 'GetAddrInfoW',
-        25: 'GetNameInfoW',
-        26: 'WSApSetPostRoutine',
-        27: 'FreeAddrInfoW',
-        28: 'WPUCompleteOverlappedRequest',
-        29: 'WSAAccept',
-        30: 'WSAAddressToStringA',
-        31: 'WSAAddressToStringW',
-        32: 'WSACloseEvent',
-        33: 'WSAConnect',
-        34: 'WSACreateEvent',
-        35: 'WSADuplicateSocketA',
-        36: 'WSADuplicateSocketW',
-        37: 'WSAEnumNameSpaceProvidersA',
-        38: 'WSAEnumNameSpaceProvidersW',
-        39: 'WSAEnumNetworkEvents',
-        40: 'WSAEnumProtocolsA',
-        41: 'WSAEnumProtocolsW',
-        42: 'WSAEventSelect',
-        43: 'WSAGetOverlappedResult',
-        44: 'WSAGetQOSByName',
-        45: 'WSAGetServiceClassInfoA',
-        46: 'WSAGetServiceClassInfoW',
-        47: 'WSAGetServiceClassNameByClassIdA',
-        48: 'WSAGetServiceClassNameByClassIdW',
-        49: 'WSAHtonl',
-        50: 'WSAHtons',
-        51: 'gethostbyaddr',
-        52: 'gethostbyname',
-        53: 'getprotobyname',
-        54: 'getprotobynumber',
-        55: 'getservbyname',
-        56: 'getservbyport',
-        57: 'gethostname',
-        58: 'WSAInstallServiceClassA',
-        59: 'WSAInstallServiceClassW',
-        60: 'WSAIoctl',
-        61: 'WSAJoinLeaf',
-        62: 'WSALookupServiceBeginA',
-        63: 'WSALookupServiceBeginW',
-        64: 'WSALookupServiceEnd',
-        65: 'WSALookupServiceNextA',
-        66: 'WSALookupServiceNextW',
-        67: 'WSANSPIoctl',
-        68: 'WSANtohl',
-        69: 'WSANtohs',
-        70: 'WSAProviderConfigChange',
-        71: 'WSARecv',
-        72: 'WSARecvDisconnect',
-        73: 'WSARecvFrom',
-        74: 'WSARemoveServiceClass',
-        75: 'WSAResetEvent',
-        76: 'WSASend',
-        77: 'WSASendDisconnect',
-        78: 'WSASendTo',
-        79: 'WSASetEvent',
-        80: 'WSASetServiceA',
-        81: 'WSASetServiceW',
-        82: 'WSASocketA',
-        83: 'WSASocketW',
-        84: 'WSAStringToAddressA',
-        85: 'WSAStringToAddressW',
-        86: 'WSAWaitForMultipleEvents',
-        87: 'WSCDeinstallProvider',
-        88: 'WSCEnableNSProvider',
-        89: 'WSCEnumProtocols',
-        90: 'WSCGetProviderPath',
-        91: 'WSCInstallNameSpace',
-        92: 'WSCInstallProvider',
-        93: 'WSCUnInstallNameSpace',
-        94: 'WSCUpdateProvider',
-        95: 'WSCWriteNameSpaceOrder',
-        96: 'WSCWriteProviderOrder',
-        97: 'freeaddrinfo',
-        98: 'getaddrinfo',
-        99: 'getnameinfo',
-        101: 'WSAAsyncSelect',
-        102: 'WSAAsyncGetHostByAddr',
-        103: 'WSAAsyncGetHostByName',
-        104: 'WSAAsyncGetProtoByNumber',
-        105: 'WSAAsyncGetProtoByName',
-        106: 'WSAAsyncGetServByPort',
-        107: 'WSAAsyncGetServByName',
-        108: 'WSACancelAsyncRequest',
-        109: 'WSASetBlockingHook',
-        110: 'WSAUnhookBlockingHook',
-        111: 'WSAGetLastError',
-        112: 'WSASetLastError',
-        113: 'WSACancelBlockingCall',
-        114: 'WSAIsBlocking',
-        115: 'WSAStartup',
-        116: 'WSACleanup',
-        151: '__WSAFDIsSet',
-        500: 'WEP',
-    },
-    'oleaut32': {
-        2: 'SysAllocString',
-        3: 'SysReAllocString',
-        4: 'SysAllocStringLen',
-        5: 'SysReAllocStringLen',
-        6: 'SysFreeString',
-        7: 'SysStringLen',
-        8: 'VariantInit',
-        9: 'VariantClear',
-        10: 'VariantCopy',
-        11: 'VariantCopyInd',
-        12: 'VariantChangeType',
-        13: 'VariantTimeToDosDateTime',
-        14: 'DosDateTimeToVariantTime',
-        15: 'SafeArrayCreate',
-        16: 'SafeArrayDestroy',
-        17: 'SafeArrayGetDim',
-        18: 'SafeArrayGetElemsize',
-        19: 'SafeArrayGetUBound',
-        20: 'SafeArrayGetLBound',
-        21: 'SafeArrayLock',
-        22: 'SafeArrayUnlock',
-        23: 'SafeArrayAccessData',
-        24: 'SafeArrayUnaccessData',
-        25: 'SafeArrayGetElement',
-        26: 'SafeArrayPutElement',
-        27: 'SafeArrayCopy',
-        28: 'DispGetParam',
-        29: 'DispGetIDsOfNames',
-        30: 'DispInvoke',
-        31: 'CreateDispTypeInfo',
-        32: 'CreateStdDispatch',
-        33: 'RegisterActiveObject',
-        34: 'RevokeActiveObject',
-        35: 'GetActiveObject',
-        36: 'SafeArrayAllocDescriptor',
-        37: 'SafeArrayAllocData',
-        38: 'SafeArrayDestroyDescriptor',
-        39: 'SafeArrayDestroyData',
-        40: 'SafeArrayRedim',
-        41: 'SafeArrayAllocDescriptorEx',
-        42: 'SafeArrayCreateEx',
-        43: 'SafeArrayCreateVectorEx',
-        44: 'SafeArraySetRecordInfo',
-        45: 'SafeArrayGetRecordInfo',
-        46: 'VarParseNumFromStr',
-        47: 'VarNumFromParseNum',
-        48: 'VarI2FromUI1',
-        49: 'VarI2FromI4',
-        50: 'VarI2FromR4',
-        51: 'VarI2FromR8',
-        52: 'VarI2FromCy',
-        53: 'VarI2FromDate',
-        54: 'VarI2FromStr',
-        55: 'VarI2FromDisp',
-        56: 'VarI2FromBool',
-        57: 'SafeArraySetIID',
-        58: 'VarI4FromUI1',
-        59: 'VarI4FromI2',
-        60: 'VarI4FromR4',
-        61: 'VarI4FromR8',
-        62: 'VarI4FromCy',
-        63: 'VarI4FromDate',
-        64: 'VarI4FromStr',
-        65: 'VarI4FromDisp',
-        66: 'VarI4FromBool',
-        67: 'SafeArrayGetIID',
-        68: 'VarR4FromUI1',
-        69: 'VarR4FromI2',
-        70: 'VarR4FromI4',
-        71: 'VarR4FromR8',
-        72: 'VarR4FromCy',
-        73: 'VarR4FromDate',
-        74: 'VarR4FromStr',
-        75: 'VarR4FromDisp',
-        76: 'VarR4FromBool',
-        77: 'SafeArrayGetVartype',
-        78: 'VarR8FromUI1',
-        79: 'VarR8FromI2',
-        80: 'VarR8FromI4',
-        81: 'VarR8FromR4',
-        82: 'VarR8FromCy',
-        83: 'VarR8FromDate',
-        84: 'VarR8FromStr',
-        85: 'VarR8FromDisp',
-        86: 'VarR8FromBool',
-        87: 'VarFormat',
-        88: 'VarDateFromUI1',
-        89: 'VarDateFromI2',
-        90: 'VarDateFromI4',
-        91: 'VarDateFromR4',
-        92: 'VarDateFromR8',
-        93: 'VarDateFromCy',
-        94: 'VarDateFromStr',
-        95: 'VarDateFromDisp',
-        96: 'VarDateFromBool',
-        97: 'VarFormatDateTime',
-        98: 'VarCyFromUI1',
-        99: 'VarCyFromI2',
-        100: 'VarCyFromI4',
-        101: 'VarCyFromR4',
-        102: 'VarCyFromR8',
-        103: 'VarCyFromDate',
-        104: 'VarCyFromStr',
-        105: 'VarCyFromDisp',
-        106: 'VarCyFromBool',
-        107: 'VarFormatNumber',
-        108: 'VarBstrFromUI1',
-        109: 'VarBstrFromI2',
-        110: 'VarBstrFromI4',
-        111: 'VarBstrFromR4',
-        112: 'VarBstrFromR8',
-        113: 'VarBstrFromCy',
-        114: 'VarBstrFromDate',
-        115: 'VarBstrFromDisp',
-        116: 'VarBstrFromBool',
-        117: 'VarFormatPercent',
-        118: 'VarBoolFromUI1',
-        119: 'VarBoolFromI2',
-        120: 'VarBoolFromI4',
-        121: 'VarBoolFromR4',
-        122: 'VarBoolFromR8',
-        123: 'VarBoolFromDate',
-        124: 'VarBoolFromCy',
-        125: 'VarBoolFromStr',
-        126: 'VarBoolFromDisp',
-        127: 'VarFormatCurrency',
-        128: 'VarWeekdayName',
-        129: 'VarMonthName',
-        130: 'VarUI1FromI2',
-        131: 'VarUI1FromI4',
-        132: 'VarUI1FromR4',
-        133: 'VarUI1FromR8',
-        134: 'VarUI1FromCy',
-        135: 'VarUI1FromDate',
-        136: 'VarUI1FromStr',
-        137: 'VarUI1FromDisp',
-        138: 'VarUI1FromBool',
-        139: 'VarFormatFromTokens',
-        140: 'VarTokenizeFormatString',
-        141: 'VarAdd',
-        142: 'VarAnd',
-        143: 'VarDiv',
-        144: 'DllCanUnloadNow',
-        145: 'DllGetClassObject',
-        146: 'DispCallFunc',
-        147: 'VariantChangeTypeEx',
-        148: 'SafeArrayPtrOfIndex',
-        149: 'SysStringByteLen',
-        150: 'SysAllocStringByteLen',
-        151: 'DllRegisterServer',
-        152: 'VarEqv',
-        153: 'VarIdiv',
-        154: 'VarImp',
-        155: 'VarMod',
-        156: 'VarMul',
-        157: 'VarOr',
-        158: 'VarPow',
-        159: 'VarSu',
-        160: 'CreateTypeLi',
-        161: 'LoadTypeLi',
-        162: 'LoadRegTypeLi',
-        163: 'RegisterTypeLi',
-        164: 'QueryPathOfRegTypeLi',
-        165: 'LHashValOfNameSys',
-        166: 'LHashValOfNameSysA',
-        167: 'VarXor',
-        168: 'VarAbs',
-        169: 'VarFix',
-        170: 'OaBuildVersion',
-        171: 'ClearCustData',
-        172: 'VarInt',
-        173: 'VarNeg',
-        174: 'VarNot',
-        175: 'VarRound',
-        176: 'VarCmp',
-        177: 'VarDecAdd',
-        178: 'VarDecDiv',
-        179: 'VarDecMul',
-        180: 'CreateTypeLib2',
-        181: 'VarDecSu',
-        182: 'VarDecAbs',
-        183: 'LoadTypeLibEx',
-        184: 'SystemTimeToVariantTime',
-        185: 'VariantTimeToSystemTime',
-        186: 'UnRegisterTypeLi',
-        187: 'VarDecFix',
-        188: 'VarDecInt',
-        189: 'VarDecNeg',
-        190: 'VarDecFromUI1',
-        191: 'VarDecFromI2',
-        192: 'VarDecFromI4',
-        193: 'VarDecFromR4',
-        194: 'VarDecFromR8',
-        195: 'VarDecFromDate',
-        196: 'VarDecFromCy',
-        197: 'VarDecFromStr',
-        198: 'VarDecFromDisp',
-        199: 'VarDecFromBool',
-        200: 'GetErrorInfo',
-        201: 'SetErrorInfo',
-        202: 'CreateErrorInfo',
-        203: 'VarDecRound',
-        204: 'VarDecCmp',
-        205: 'VarI2FromI1',
-        206: 'VarI2FromUI2',
-        207: 'VarI2FromUI4',
-        208: 'VarI2FromDec',
-        209: 'VarI4FromI1',
-        210: 'VarI4FromUI2',
-        211: 'VarI4FromUI4',
-        212: 'VarI4FromDec',
-        213: 'VarR4FromI1',
-        214: 'VarR4FromUI2',
-        215: 'VarR4FromUI4',
-        216: 'VarR4FromDec',
-        217: 'VarR8FromI1',
-        218: 'VarR8FromUI2',
-        219: 'VarR8FromUI4',
-        220: 'VarR8FromDec',
-        221: 'VarDateFromI1',
-        222: 'VarDateFromUI2',
-        223: 'VarDateFromUI4',
-        224: 'VarDateFromDec',
-        225: 'VarCyFromI1',
-        226: 'VarCyFromUI2',
-        227: 'VarCyFromUI4',
-        228: 'VarCyFromDec',
-        229: 'VarBstrFromI1',
-        230: 'VarBstrFromUI2',
-        231: 'VarBstrFromUI4',
-        232: 'VarBstrFromDec',
-        233: 'VarBoolFromI1',
-        234: 'VarBoolFromUI2',
-        235: 'VarBoolFromUI4',
-        236: 'VarBoolFromDec',
-        237: 'VarUI1FromI1',
-        238: 'VarUI1FromUI2',
-        239: 'VarUI1FromUI4',
-        240: 'VarUI1FromDec',
-        241: 'VarDecFromI1',
-        242: 'VarDecFromUI2',
-        243: 'VarDecFromUI4',
-        244: 'VarI1FromUI1',
-        245: 'VarI1FromI2',
-        246: 'VarI1FromI4',
-        247: 'VarI1FromR4',
-        248: 'VarI1FromR8',
-        249: 'VarI1FromDate',
-        250: 'VarI1FromCy',
-        251: 'VarI1FromStr',
-        252: 'VarI1FromDisp',
-        253: 'VarI1FromBool',
-        254: 'VarI1FromUI2',
-        255: 'VarI1FromUI4',
-        256: 'VarI1FromDec',
-        257: 'VarUI2FromUI1',
-        258: 'VarUI2FromI2',
-        259: 'VarUI2FromI4',
-        260: 'VarUI2FromR4',
-        261: 'VarUI2FromR8',
-        262: 'VarUI2FromDate',
-        263: 'VarUI2FromCy',
-        264: 'VarUI2FromStr',
-        265: 'VarUI2FromDisp',
-        266: 'VarUI2FromBool',
-        267: 'VarUI2FromI1',
-        268: 'VarUI2FromUI4',
-        269: 'VarUI2FromDec',
-        270: 'VarUI4FromUI1',
-        271: 'VarUI4FromI2',
-        272: 'VarUI4FromI4',
-        273: 'VarUI4FromR4',
-        274: 'VarUI4FromR8',
-        275: 'VarUI4FromDate',
-        276: 'VarUI4FromCy',
-        277: 'VarUI4FromStr',
-        278: 'VarUI4FromDisp',
-        279: 'VarUI4FromBool',
-        280: 'VarUI4FromI1',
-        281: 'VarUI4FromUI2',
-        282: 'VarUI4FromDec',
-        283: 'BSTR_UserSize',
-        284: 'BSTR_UserMarshal',
-        285: 'BSTR_UserUnmarshal',
-        286: 'BSTR_UserFree',
-        287: 'VARIANT_UserSize',
-        288: 'VARIANT_UserMarshal',
-        289: 'VARIANT_UserUnmarshal',
-        290: 'VARIANT_UserFree',
-        291: 'LPSAFEARRAY_UserSize',
-        292: 'LPSAFEARRAY_UserMarshal',
-        293: 'LPSAFEARRAY_UserUnmarshal',
-        294: 'LPSAFEARRAY_UserFree',
-        295: 'LPSAFEARRAY_Size',
-        296: 'LPSAFEARRAY_Marshal',
-        297: 'LPSAFEARRAY_Unmarshal',
-        298: 'VarDecCmpR8',
-        299: 'VarCyAdd',
-        300: 'DllUnregisterServer',
-        301: 'OACreateTypeLib2',
-        303: 'VarCyMul',
-        304: 'VarCyMulI4',
-        305: 'VarCySu',
-        306: 'VarCyAbs',
-        307: 'VarCyFix',
-        308: 'VarCyInt',
-        309: 'VarCyNeg',
-        310: 'VarCyRound',
-        311: 'VarCyCmp',
-        312: 'VarCyCmpR8',
-        313: 'VarBstrCat',
-        314: 'VarBstrCmp',
-        315: 'VarR8Pow',
-        316: 'VarR4CmpR8',
-        317: 'VarR8Round',
-        318: 'VarCat',
-        319: 'VarDateFromUdateEx',
-        322: 'GetRecordInfoFromGuids',
-        323: 'GetRecordInfoFromTypeInfo',
-        325: 'SetVarConversionLocaleSetting',
-        326: 'GetVarConversionLocaleSetting',
-        327: 'SetOaNoCache',
-        329: 'VarCyMulI8',
-        330: 'VarDateFromUdate',
-        331: 'VarUdateFromDate',
-        332: 'GetAltMonthNames',
-        333: 'VarI8FromUI1',
-        334: 'VarI8FromI2',
-        335: 'VarI8FromR4',
-        336: 'VarI8FromR8',
-        337: 'VarI8FromCy',
-        338: 'VarI8FromDate',
-        339: 'VarI8FromStr',
-        340: 'VarI8FromDisp',
-        341: 'VarI8FromBool',
-        342: 'VarI8FromI1',
-        343: 'VarI8FromUI2',
-        344: 'VarI8FromUI4',
-        345: 'VarI8FromDec',
-        346: 'VarI2FromI8',
-        347: 'VarI2FromUI8',
-        348: 'VarI4FromI8',
-        349: 'VarI4FromUI8',
-        360: 'VarR4FromI8',
-        361: 'VarR4FromUI8',
-        362: 'VarR8FromI8',
-        363: 'VarR8FromUI8',
-        364: 'VarDateFromI8',
-        365: 'VarDateFromUI8',
-        366: 'VarCyFromI8',
-        367: 'VarCyFromUI8',
-        368: 'VarBstrFromI8',
-        369: 'VarBstrFromUI8',
-        370: 'VarBoolFromI8',
-        371: 'VarBoolFromUI8',
-        372: 'VarUI1FromI8',
-        373: 'VarUI1FromUI8',
-        374: 'VarDecFromI8',
-        375: 'VarDecFromUI8',
-        376: 'VarI1FromI8',
-        377: 'VarI1FromUI8',
-        378: 'VarUI2FromI8',
-        379: 'VarUI2FromUI8',
-        401: 'OleLoadPictureEx',
-        402: 'OleLoadPictureFileEx',
-        411: 'SafeArrayCreateVector',
-        412: 'SafeArrayCopyData',
-        413: 'VectorFromBstr',
-        414: 'BstrFromVector',
-        415: 'OleIconToCursor',
-        416: 'OleCreatePropertyFrameIndirect',
-        417: 'OleCreatePropertyFrame',
-        418: 'OleLoadPicture',
-        419: 'OleCreatePictureIndirect',
-        420: 'OleCreateFontIndirect',
-        421: 'OleTranslateColor',
-        422: 'OleLoadPictureFile',
-        423: 'OleSavePictureFile',
-        424: 'OleLoadPicturePath',
-        425: 'VarUI4FromI8',
-        426: 'VarUI4FromUI8',
-        427: 'VarI8FromUI8',
-        428: 'VarUI8FromI8',
-        429: 'VarUI8FromUI1',
-        430: 'VarUI8FromI2',
-        431: 'VarUI8FromR4',
-        432: 'VarUI8FromR8',
-        433: 'VarUI8FromCy',
-        434: 'VarUI8FromDate',
-        435: 'VarUI8FromStr',
-        436: 'VarUI8FromDisp',
-        437: 'VarUI8FromBool',
-        438: 'VarUI8FromI1',
-        439: 'VarUI8FromUI2',
-        440: 'VarUI8FromUI4',
-        441: 'VarUI8FromDec',
-        442: 'RegisterTypeLibForUser',
-        443: 'UnRegisterTypeLibForUser',
-    },
+CHARACTERISTICS_DLL = {
+    0x0020: 'HIGH_ENTROPY_VA',
+    0x0040: 'DYNAMIC_BASE',
+    0x0080: 'FORCE_INTEGRITY',
+    0x0100: 'NX_COMPAT',
+    0x0200: 'NO_ISOLATION',
+    0x0400: 'NO_SEH',
+    0x0800: 'NO_BIND',
+    0x1000: 'APPCONTAINER',
+    0x2000: 'WDM_DRIVER',
+    0x4000: 'GUARD_CF',
+    0x8000: 'TERMINAL_SERVER_AWARE',
+}
+CHARACTERISTICS_IMAGE = {
+    0x0001: 'RELOCS_STRIPPED',
+    0x0002: 'EXECUTABLE_IMAGE',
+    0x0004: 'LINE_NUMS_STRIPPED',
+    0x0008: 'LOCAL_SYMS_STRIPPED',
+    0x0010: 'AGGRESIVE_WS_TRIM',
+    0x0020: 'LARGE_ADDRESS_AWARE',
+    0x0040: '16BIT_MACHINE',
+    0x0080: 'BYTES_REVERSED_LO',
+    0x0100: '32BIT_MACHINE',
+    0x0200: 'DEBUG_STRIPPED',
+    0x0400: 'REMOVABLE_RUN_FROM_SWAP',
+    0x0800: 'NET_RUN_FROM_SWAP',
+    0x1000: 'SYSTEM',
+    0x2000: 'DLL',
+    0x4000: 'UP_SYSTEM_ONLY',
+    0x8000: 'BYTES_REVERSED_HI',
+}
+CHARACTERISTICS_SECTION = {
+    0x00000000: 'TYPE_REG',
+    0x00000001: 'TYPE_DSECT',
+    0x00000002: 'TYPE_NOLOAD',
+    0x00000004: 'TYPE_GROUP',
+    0x00000008: 'TYPE_NO_PAD',
+    0x00000010: 'TYPE_COPY',
+    0x00000020: 'CNT_CODE',
+    0x00000040: 'CNT_INITIALIZED_DATA',
+    0x00000080: 'CNT_UNINITIALIZED_DATA',
+    0x00000100: 'LNK_OTHER',
+    0x00000200: 'LNK_INFO',
+    0x00000400: 'LNK_OVER',
+    0x00000800: 'LNK_REMOVE',
+    0x00001000: 'LNK_COMDAT',
+    0x00004000: 'MEM_PROTECTED',
+    0x00004000: 'NO_DEFER_SPEC_EXC',
+    0x00008000: 'GPREL',
+    0x00008000: 'MEM_FARDATA',
+    0x00010000: 'MEM_SYSHEAP',
+    0x00020000: 'MEM_PURGEABLE',
+    0x00020000: 'MEM_16BIT',
+    0x00040000: 'MEM_LOCKED',
+    0x00080000: 'MEM_PRELOAD',
+    0x00100000: 'ALIGN_1BYTES',
+    0x00200000: 'ALIGN_2BYTES',
+    0x00300000: 'ALIGN_4BYTES',
+    0x00400000: 'ALIGN_8BYTES',
+    0x00500000: 'ALIGN_16BYTES',
+    0x00600000: 'ALIGN_32BYTES',
+    0x00700000: 'ALIGN_64BYTES',
+    0x00800000: 'ALIGN_128BYTES',
+    0x00900000: 'ALIGN_256BYTES',
+    0x00A00000: 'ALIGN_512BYTES',
+    0x00B00000: 'ALIGN_1024BYTES',
+    0x00C00000: 'ALIGN_2048BYTES',
+    0x00D00000: 'ALIGN_4096BYTES',
+    0x00E00000: 'ALIGN_8192BYTES',
+    0x00F00000: 'ALIGN_MASK',
+    0x01000000: 'LNK_NRELOC_OVFL',
+    0x02000000: 'MEM_DISCARDABLE',
+    0x04000000: 'MEM_NOT_CACHED',
+    0x08000000: 'MEM_NOT_PAGED',
+    0x10000000: 'MEM_SHARED',
+    0x20000000: 'MEM_EXECUTE',
+    0x40000000: 'MEM_READ',
+    0x80000000: 'MEM_WRITE',
+}
+# https://docs.microsoft.com/en-us/windows/win32/api/verrsrc/ns-verrsrc-tagvs_fixedfileinfo
+FIXED_FILE_INFO_FLAGS = {
+    0x00000001: 'DEBUG',
+    0x00000010: 'INFOINFERRED',
+    0x00000004: 'PATCHED',
+    0x00000002: 'PRERELEASE',
+    0x00000008: 'PRIVATEBUILD',
+    0x00000020: 'SPECIALBUILD',
+}
+FIXED_FILE_INFO_OS = {
+    0x00000000: 'UNKNOWN',
+    0x00000001: 'WINDOWS16',
+    0x00000002: 'PM16',
+    0x00000003: 'PM32',
+    0x00000004: 'WINDOWS32',
+    0x00010000: 'DOS',
+    0x00040000: 'NT',
+    0x00020000: 'OS216',
+    0x00030000: 'OS232',
+}
+FIXED_FILE_INFO_SUBTYPE = {
+    (0x00000003, 0x00000000): 'UNKNOWN',
+    (0x00000003, 0x00000001): 'DRV_PRINTER',
+    (0x00000003, 0x00000002): 'DRV_KEYBOARD',
+    (0x00000003, 0x00000003): 'DRV_LANGUAGE',
+    (0x00000003, 0x00000004): 'DRV_DISPLAY',
+    (0x00000003, 0x00000005): 'DRV_MOUSE',
+    (0x00000003, 0x00000006): 'DRV_NETWORK',
+    (0x00000003, 0x00000007): 'DRV_SYSTEM',
+    (0x00000003, 0x00000008): 'DRV_INSTALLABLE',
+    (0x00000003, 0x00000009): 'DRV_SOUND',
+    (0x00000003, 0x0000000A): 'DRV_COMM',
+    (0x00000003, 0x0000000C): 'DRV_VERSIONED_PRINTER',
+    (0x00000004, 0x00000000): 'UNKNOWN',
+    (0x00000004, 0x00000001): 'FONT_RASTER',
+    (0x00000004, 0x00000002): 'FONT_VECTOR',
+    (0x00000004, 0x00000003): 'FONT_TRUETYPE',
+}
+FIXED_FILE_INFO_TYPE = {
+    0x00000000: 'UNKNOWN',
+    0x00000001: 'APP',
+    0x00000002: 'DLL',
+    0x00000003: 'DRV',
+    0x00000004: 'FONT',
+    0x00000005: 'VXD',
+    0x00000007: 'STATIC_LIB',
+}
+MAGIC_DOS = {
+    0x5A4D: 'DOS',
+    0x4D5A: 'DOSZM',
+    0x454E: 'NE',
+    0x454C: 'LE',
+    0x584C: 'LX',
+    0x5A56: 'TE',
+    0x00004550: 'NT',
+}
+MAGIC_IMAGE = {
+    0x10b: '32_BIT',
+    0x20b: '64_BIT',
+    0x107: 'ROM_IMAGE',
+}
+VAR_FILE_INFO_LANGS = {
+    0x0401: 'Arabic',
+    0x0415: 'Polish',
+    0x0402: 'Bulgarian',
+    0x0416: 'Portuguese (Brazil)',
+    0x0403: 'Catalan',
+    0x0417: 'Rhaeto-Romanic',
+    0x0404: 'Traditional Chinese',
+    0x0418: 'Romanian',
+    0x0405: 'Czech',
+    0x0419: 'Russian',
+    0x0406: 'Danish',
+    0x041A: 'Croato-Serbian (Latin)',
+    0x0407: 'German',
+    0x041B: 'Slovak',
+    0x0408: 'Greek',
+    0x041C: 'Albanian',
+    0x0409: 'U.S. English',
+    0x041D: 'Swedish',
+    0x040A: 'Castilian Spanish',
+    0x041E: 'Thai',
+    0x040B: 'Finnish',
+    0x041F: 'Turkish',
+    0x040C: 'French',
+    0x0420: 'Urdu',
+    0x040D: 'Hebrew',
+    0x0421: 'Bahasa',
+    0x040E: 'Hungarian',
+    0x0804: 'Simplified Chinese',
+    0x040F: 'Icelandic',
+    0x0807: 'Swiss German',
+    0x0410: 'Italian',
+    0x0809: 'U.K. English',
+    0x0411: 'Japanese',
+    0x080A: 'Spanish (Mexico)',
+    0x0412: 'Korean',
+    0x080C: 'Belgian French',
+    0x0413: 'Dutch',
+    0x0C0C: 'Canadian French',
+    0x0414: 'Norwegian – Bokmal',
+    0x100C: 'Swiss French',
+    0x0810: 'Swiss Italian',
+    0x0816: 'Portuguese (Portugal)',
+    0x0813: 'Belgian Dutch',
+    0x081A: 'Serbo-Croatian (Cyrillic)',
+    0x0814: 'Norwegian – Nynorsk',
+}
+VAR_FILE_INFO_CHARS = {
+    0: '7-bit ASCII',
+    932: 'Japan (Shift – JIS X-0208)',
+    949: 'Korea (Shift – KSC 5601)',
+    950: 'Taiwan (Big5)',
+    1200: 'Unicode',
+    1250: 'Latin-2 (Eastern European)',
+    1251: 'Cyrillic',
+    1252: 'Multilingual',
+    1253: 'Greek',
+    1254: 'Turkish',
+    1255: 'Hebrew',
+    1256: 'Arabic',
 }
 
 
 class ScanPe(strelka.Scanner):
     """Collects metadata from PE files."""
     def scan(self, data, file, options, expire_at):
-        tmp_directory = options.get('tmp_directory', '/tmp/')
-
-        exe = PE.parse(raw=data)
+        pe = pefile.PE(data=data)
 
         self.event['total'] = {
-            'debugs': len(exe.debug),
-            'directories': exe.optional_header.numberof_rva_and_size,
-            'libraries': len(exe.libraries),
-            'sections': exe.header.numberof_sections,
-            'symbols': exe.header.numberof_symbols,
+            'libraries': 0,
+            'resources': 0,
+            'sections': len(pe.sections),
+            'symbols': 0,
         }
 
-        self.event['entrypoint'] = exe.entrypoint
-        self.event['nx'] = exe.has_nx
-        self.event['pie'] = exe.is_pie
+        if hasattr(pe, 'DIRECTORY_ENTRY_DEBUG'):
+            for d in pe.DIRECTORY_ENTRY_DEBUG:
+                data = pe.get_data(d.struct.AddressOfRawData, d.struct.SizeOfData)
+                if data.find(b'RSDS') != -1 and len(data) > 24:
+                    pdb = data[data.find(b'RSDS'):]
+                    self.event['debug'] = {
+                        'type': 'rsds',
+                        'guid': b'%s-%s-%s-%s' % (
+                            binascii.hexlify(pdb[4:8]),
+                            binascii.hexlify(pdb[8:10]),
+                            binascii.hexlify(pdb[10:12]),
+                            binascii.hexlify(pdb[12:20]),
+                        ),
+                        'age': struct.unpack('<L', pdb[20:24])[0],
+                        'pdb': pdb[24:].rstrip(b'\x00')
+                    }
+                elif data.find(b'NB10') != -1 and len(data) > 16:
+                    pdb = data[data.find(b'NB10') + 8:]
+                    self.event['debug'] = {
+                        'type': 'nb10',
+                        'created': struct.unpack('<L', pdb[0:4])[0],
+                        'age': struct.unpack('<L', pdb[4:8])[0],
+                        'pdb': pdb[8:].rstrip(b'\x00'),
+                    }
+
+        self.event['file_info'] = {
+            'fixed': {},
+            'string': [],
+            'var': {},
+        }
+
+        if hasattr(pe, 'FileInfo'):
+            fi = pe.FileInfo[0]  # contains a single element
+            for i in fi:
+                if i.Key == b'StringFileInfo':
+                    for st in i.StringTable:
+                        for k, v in st.entries.items():
+                            self.event['file_info']['string'].append({
+                                'name': k.decode(),
+                                'value': v.decode(),
+                            })
+                elif i.Key == b'VarFileInfo':
+                    for v in i.Var:
+                        translation = v.entry.get(b'Translation')
+                        (lang, char) = (translation.split())
+                        self.event['file_info']['var'] = {
+                            'language': VAR_FILE_INFO_LANGS.get(int(lang, 16)),
+                            'character_set': VAR_FILE_INFO_CHARS.get(int(char, 16)),
+                        }
+
+        if hasattr(pe, 'VS_FIXEDFILEINFO'):
+            vs_ffi = pe.VS_FIXEDFILEINFO[0]  # contains a single element
+            self.event['file_info']['fixed'] = {
+                'flags': [],
+                'operating_systems': [],
+                'type': {
+                    'primary': FIXED_FILE_INFO_TYPE.get(vs_ffi.FileType),
+                    'secondary': FIXED_FILE_INFO_SUBTYPE.get((vs_ffi.FileType, vs_ffi.FileSubtype), ''),
+                }
+            }
+
+            # http://www.jasinskionline.com/windowsapi/ref/v/vs_fixedfileinfo.html
+            ff_flags = vs_ffi.FileFlagsMask & vs_ffi.FileFlags
+            for f in FIXED_FILE_INFO_FLAGS:
+                if ff_flags & f:
+                    self.event['file_info']['fixed']['flags'].append(FIXED_FILE_INFO_FLAGS[f])
+            for o in FIXED_FILE_INFO_OS:
+                if vs_ffi.FileOS & o:
+                    self.event['file_info']['fixed']['operating_systems'].append(FIXED_FILE_INFO_OS[o])
 
         self.event['header'] = {
             'address': {
-                'code': exe.optional_header.baseof_code,
-                'data': exe.optional_header.baseof_data,
-                'image': exe.optional_header.imagebase,
+                'code': pe.OPTIONAL_HEADER.BaseOfCode,
+                'data': pe.OPTIONAL_HEADER.BaseOfData,
+                'entry_point': pe.OPTIONAL_HEADER.AddressOfEntryPoint,
+                'image': pe.OPTIONAL_HEADER.ImageBase,
             },
             'alignment': {
-                'file': exe.optional_header.file_alignment,
-                'section': exe.optional_header.section_alignment,
+                'file': pe.OPTIONAL_HEADER.FileAlignment,
+                'section': pe.OPTIONAL_HEADER.SectionAlignment,
             },
             'characteristics': {
-                'dll': [str(d).split('.')[1] for d in exe.optional_header.dll_characteristics_lists],
-                'image': [str(c).split('.')[1] for c in exe.header.characteristics_list],
+                'dll': [],
+                'image': [],
             },
-            'checksum': exe.optional_header.checksum,
-            'machine': str(exe.header.machine).split('.')[1],
-            'magic': str(exe.optional_header.magic).split('.')[1],
+            'checksum': pe.OPTIONAL_HEADER.CheckSum,
+            'machine': {
+                'id': pe.FILE_HEADER.Machine,
+                'type': pefile.MACHINE_TYPE.get(pe.FILE_HEADER.Machine).replace('IMAGE_FILE_', ''),
+            },
+            'magic': {
+                'dos': MAGIC_DOS.get(pe.DOS_HEADER.e_magic, ''),
+                'image': MAGIC_IMAGE.get(pe.OPTIONAL_HEADER.Magic, ''),
+            },
             'size': {
-                'code': exe.optional_header.sizeof_code,
+                'code': pe.OPTIONAL_HEADER.SizeOfCode,
                 'data': {
-                    'initialized': exe.optional_header.sizeof_initialized_data,
-                    'uninitialized': exe.optional_header.sizeof_uninitialized_data,
+                    'initialized': pe.OPTIONAL_HEADER.SizeOfInitializedData,
+                    'uninitialized': pe.OPTIONAL_HEADER.SizeOfUninitializedData,
                 },
-                'headers': exe.optional_header.sizeof_headers,
+                'headers': pe.OPTIONAL_HEADER.SizeOfHeaders,
                 'heap': {
-                    'reserve': exe.optional_header.sizeof_heap_reserve,
-                    'commit': exe.optional_header.sizeof_heap_commit,
+                    'reserve': pe.OPTIONAL_HEADER.SizeOfHeapReserve,
+                    'commit': pe.OPTIONAL_HEADER.SizeOfHeapCommit,
                 },
-                'image': exe.optional_header.sizeof_image,
+                'image': pe.OPTIONAL_HEADER.SizeOfImage,
                 'stack': {
-                    'commit': exe.optional_header.sizeof_stack_commit,
-                    'reserve': exe.optional_header.sizeof_stack_reserve,
+                    'commit': pe.OPTIONAL_HEADER.SizeOfStackCommit,
+                    'reserve': pe.OPTIONAL_HEADER.SizeOfStackReserve,
                 },
             },
-            'subsystem': str(exe.optional_header.subsystem).split('.')[1],
-            'timestamp': exe.header.time_date_stamps,
+            'subsystem': pefile.SUBSYSTEM_TYPE.get(pe.OPTIONAL_HEADER.Subsystem).replace('IMAGE_SUBSYSTEM_', ''),
+            'timestamp': pe.FILE_HEADER.TimeDateStamp,
             'version': {
-                'image': f'{exe.optional_header.major_image_version}.{exe.optional_header.minor_image_version}',
-                'linker': f'{exe.optional_header.major_linker_version}.{exe.optional_header.minor_linker_version}',
-                'operating_system': f'{exe.optional_header.major_operating_system_version}.{exe.optional_header.minor_operating_system_version}',
-                'subsystem': f'{exe.optional_header.major_subsystem_version}.{exe.optional_header.minor_subsystem_version}',
+                'image': f'{pe.OPTIONAL_HEADER.MajorImageVersion}.{pe.OPTIONAL_HEADER.MinorImageVersion}',
+                'linker': f'{pe.OPTIONAL_HEADER.MajorLinkerVersion}.{pe.OPTIONAL_HEADER.MinorLinkerVersion}',
+                'operating_system': f'{pe.OPTIONAL_HEADER.MajorOperatingSystemVersion}.{pe.OPTIONAL_HEADER.MinorOperatingSystemVersion}',
+                'subsystem': f'{pe.OPTIONAL_HEADER.MajorSubsystemVersion}.{pe.OPTIONAL_HEADER.MinorSubsystemVersion}',
             },
         }
 
-        # mimics the pefile imphash calculation
-        # per @williballenthin, this is the official implementation of the spec
-        imphash_imports = []
-        for imp in exe.imports:
-            imp_name = imp.name.lower()
-            p = imp_name.rsplit('.', 1)
-            if len(p) > 1 and p[1] in ['ocx', 'sys', 'dll']:
-                imp_name = p[0]
+        for o in CHARACTERISTICS_DLL:
+            if pe.OPTIONAL_HEADER.DllCharacteristics & o:
+                self.event['header']['characteristics']['dll'].append(CHARACTERISTICS_DLL[o])
 
-            for entry in imp.entries:
-                if entry.is_ordinal:
-                    ord_name = IMPHASH.get(imp_name, {}).get(entry.ordinal, None)
-                    if ord_name:
-                        imphash_imports.append(f'{imp_name}.{ord_name.lower()}')
-                    else:
-                        imphash_imports.append(f'{imp_name}.ord{entry.ordinal}')
-                else:
-                    imphash_imports.append(f'{imp_name}.{entry.name.lower()}')
+        for o in CHARACTERISTICS_IMAGE:
+            if pe.FILE_HEADER.Characteristics & o:
+                self.event['header']['characteristics']['image'].append(CHARACTERISTICS_IMAGE[o])
 
-        self.event['imphash'] = hashlib.md5(','.join(imphash_imports).encode()).hexdigest()
+        self.event['resources'] = []
+        if hasattr(pe, 'DIRECTORY_ENTRY_RESOURCE'):
+            for r0 in pe.DIRECTORY_ENTRY_RESOURCE.entries:
+                for r1 in r0.directory.entries:
+                    name = ''
+                    if r1.name:
+                        name = str(r1.name)
 
-        self.event['functions'] = {
-            'exported': [e.name for e in exe.exported_functions],
-            'imported': [i.name for i in exe.imported_functions],
-            'libraries': list(setutils.IndexedSet(exe.libraries)),
+                    for r2 in r1.directory.entries:
+                        lang = r2.data.lang
+                        sub = r2.data.sublang
+                        sub = pefile.get_sublang_name_for_lang(lang, sub)
+                        lang = pefile.LANG.get(lang, '')
+                        self.event['resources'].append({
+                            'id': r1.id,
+                            'name': name,
+                            'language': {
+                                'primary': lang.replace('LANG_', ''),
+                                'secondary': sub.replace('SUBLANG_', '')
+                            },
+                            'type': pefile.RESOURCE_TYPE.get(r0.id, '').replace('RT_', ''),
+                        })
+
+                        data = pe.get_data(r2.data.struct.OffsetToData, r2.data.struct.Size)
+                        if len(data) > 0:
+                            extract_file = strelka.File(
+                                name=f'resource_{name or r1.id}',
+                                source=self.name,
+                            )
+                            for c in strelka.chunk_string(data):
+                                self.upload_to_coordinator(
+                                    extract_file.pointer,
+                                    c,
+                                    expire_at,
+                                )
+                            self.files.append(extract_file)
+
+        self.event['total']['resources'] = len(self.event['resources'])
+
+        self.event['sections'] = []
+        for s in pe.sections:
+            name = s.Name.rstrip(b'\x00').decode()
+            row = {
+                'address': {
+                    'physical': s.Misc_PhysicalAddress,
+                    'virtual': s.VirtualAddress,
+                },
+                'characteristics': [],
+                'entropy': s.get_entropy(),
+                'name': name,
+                'size': s.SizeOfRawData,
+            }
+            for o in CHARACTERISTICS_SECTION:
+                if s.Characteristics & o:
+                    row['characteristics'].append(CHARACTERISTICS_SECTION[o])
+
+            if s.SizeOfRawData > 0:
+                extract_file = strelka.File(
+                    name=f'{name}',
+                    source=self.name,
+                )
+                for c in strelka.chunk_string(s.get_data()):
+                    self.upload_to_coordinator(
+                        extract_file.pointer,
+                        c,
+                        expire_at,
+                    )
+                self.files.append(extract_file)
+
+            self.event['sections'].append(row)
+
+        self.event['symbols'] = {
+            'exported': [],
+            'imported': [],
+            'libraries': [],
             'table': [],
         }
 
-        if exe.has_imports:
-            for i in exe.imports:
-                row = {
-                    'library': i.name,
-                    'rva': {
-                        'address': i.import_address_table_rva,
-                        'lookup': i.import_lookup_table_rva,
-                    }
-                }
+        if hasattr(pe, 'DIRECTORY_ENTRY_IMPORT'):
+            self.event['imphash'] = pe.get_imphash()
 
-                row['functions'] = []
-                for e in i.entries:
-                    if e.is_ordinal:
-                        row['functions'].append(f'ord{e.ordinal}')
+            for i in pe.DIRECTORY_ENTRY_IMPORT:
+                lib = i.dll.decode()
+                if lib not in self.event['symbols']['libraries']:
+                    self.event['symbols']['libraries'].append(lib)
+
+                entry = {
+                    'library': lib,
+                    'symbols': [],
+                    'type': 'import',
+                }
+                for o in i.imports:
+                    if not o.name:
+                        name = f'ord{o.ordinal}'
                     else:
-                        row['functions'].append(e.name)
-                self.event['functions']['table'].append(row)
+                        name = o.name.decode()
+                    self.event['symbols']['imported'].append(name)
+                    entry['symbols'].append(name)
+                self.event['symbols']['table'].append(entry)
 
-        resources = {
-            'dialogs': [],
-            'icons': [],
-            'file_info': {},
-            'languages': {
-                'primary': [str(l).rsplit('.')[1] for l in exe.resources_manager.langs_available],
-                'secondary': [str(s).rsplit('.')[1] for s in exe.resources_manager.sublangs_available],
-            },
-            'types': [str(t).rsplit('.')[1] for t in exe.resources_manager.types_available]
-        }
-
-        if exe.resources_manager.has_dialogs:
-            self.event['total']['dialogs'] = len(exe.resources_manager.dialogs)
-            for d in exe.resources_manager.dialogs:
-                resources['dialogs'].append({
-                    'character_set': d.charset,
-                    'font': {
-                        'size': d.point_size,
-                        'typeface': d.typeface,
-                        'weight': d.weight,
-                    },
-                    'height': d.cy,
-                    'help_id': d.help_id,
-                    'language': {
-                        'primary': str(d.lang).split('.')[1],
-                        'secondary': str(d.sub_lang).split('.')[1],
-                    },
-                    'signature': d.signature,
-                    'styles': {
-                        'dialog_box': [str(s).split('.')[1] for s in d.dialogbox_style_list],
-                        'extended_window': [str(s).split('.')[1] for s in d.extended_style_list],
-                        'window': [str(s).split('.')[1] for s in d.style_list],
-                    },
-                    'title': d.title,
-                    'width': d.cx,
+        if hasattr(pe, 'DIRECTORY_ENTRY_EXPORT'):
+            for i in pe.DIRECTORY_ENTRY_EXPORT.symbols:
+                if not i.name:
+                    name = f'ord{i.ordinal}'
+                else:
+                    name = i.name
+                self.event['symbols']['exported'].append(name)
+                self.event['symbols']['table'].append({
+                    'address': i.address,
+                    'symbol': name,
+                    'type': 'export',
                 })
 
-        if exe.resources_manager.has_icons:
-            self.event['total']['icons'] = len(exe.resources_manager.icons)
-            for i in exe.resources_manager.icons:
-                resources['icons'].append({
-                    'count': {
-                        'bit': i.bit_count,
-                        'color': i.color_count,
-                    },
-                    'height': i.height,
-                    'id': i.id,
-                    'language': {
-                        'primary': str(i.lang).split('.')[1],
-                        'secondary': str(i.sublang).split('.')[1],
-                    },
-                    'width': i.width,
-                })
+        self.event['total']['libraries'] = len(self.event['symbols']['libraries'])
+        self.event['total']['symbols'] = len(self.event['symbols']['table'])
 
-                with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
-                    i.save(tmp_data.name)
-                    tmp_data.flush()
+        security = pe.OPTIONAL_HEADER.DATA_DIRECTORY[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_SECURITY']]
+        sec_addr = security.VirtualAddress
+        if security.Size > 0:
+            data = pe.write()[sec_addr + 8:]
+            if len(data) > 0:
+                self.flags.append('signed')
 
-                    with open(tmp_data.name, 'rb') as f:
-                        extract_file = strelka.File(
-                            name=f'icon_{i.id}',
-                            source=self.name,
-                        )
-
-                        for c in strelka.chunk_string(f.read()):
-                            self.upload_to_coordinator(
-                                extract_file.pointer,
-                                c,
-                                expire_at,
-                            )
-
-                        self.files.append(extract_file)
-
-        if exe.resources_manager.has_version:
-            if exe.resources_manager.version.has_fixed_file_info:
-                ffi = exe.resources_manager.version.fixed_file_info
-                resources['file_info']['fixed'] = {
-                    'function': str(ffi.file_subtype).split('.')[1],
-                    'operating_system': str(ffi.file_os).split('.')[1],
-                    'type': str(ffi.file_type).split('.')[1],
-                }
-            if exe.resources_manager.version.has_string_file_info:
-                sfi = exe.resources_manager.version.string_file_info
-                string_info = []
-                for i in sfi.langcode_items:
-                    info = {
-                        'code_page': str(i.code_page).split('.')[1],
-                        'items': [],
-                        'language': {
-                            'primary': str(i.lang).split('.')[1],
-                            'secondary': str(i.sublang).split('.')[1],
-                        },
-                    }
-
-                    for k, v in i.items.items():
-                        info['items'].append({
-                            'name': k,
-                            'value': v,
-                        })
-                    string_info.append(info)
-                resources['file_info']['string'] = string_info
-        self.event['resources'] = resources
-
-        if exe.resources_manager.has_manifest:
-            extract_file = strelka.File(
-                name='manifest',
-                source=self.name,
-            )
-
-            for c in strelka.chunk_string(exe.resources_manager.manifest):
-                self.upload_to_coordinator(
-                    extract_file.pointer,
-                    c,
-                    expire_at,
+                extract_file = strelka.File(
+                    name='signature',
+                    source=self.name,
                 )
-
-            self.files.append(extract_file)
-
-        self.event['debug'] = []
-        if exe.has_debug:
-            for d in exe.debug:
-                row = {
-                    'address': d.addressof_rawdata,
-                    'offset': d.pointerto_rawdata,
-                    'timestamp': d.timestamp,
-                    'type': str(d.type).split('.')[1],
-                    'version': f'{d.major_version}.{d.minor_version}',
-                }
-
-                if d.has_code_view:
-                    cv = d.code_view
-                    row['code_view'] = {
-                        'age': cv.age,
-                        'path': cv.filename,
-                        'type': str(cv.cv_signature).split('.')[1],
-                    }
-                self.event['debug'].append(row)
-
-        self.event['sections'] = []
-        for s in exe.sections:
-            section = {
-                'address': {
-                    'virtual': s.virtual_address,
-                },
-                'characteristics': [str(c).split('.')[1] for c in s.characteristics_lists],
-                'entropy': s.entropy,
-                'name': s.name,
-                'offset': s.offset,
-                'size': s.size,
-                'size': {
-                    'raw': s.size,
-                    'virtual': s.virtual_size,
-                },
-            }
-            self.event['sections'].append(section)
-
-        if exe.has_tls:
-            self.event['tls'] = {
-                'address': {
-                    'callbacks': exe.tls.addressof_callbacks,
-                    'data': {
-                        'start': exe.tls.addressof_raw_data[0],
-                        'end': exe.tls.addressof_raw_data[1],
-                    },
-                    'index': exe.tls.addressof_index,
-                },
-                'callbacks': exe.tls.callbacks,
-            }
-
-            if exe.tls.has_section:
-                self.event['tls']['section'] = exe.tls.section.name
-
-        try:
-            pe = pefile.PE(data=data, fast_load=True)
-            security = pe.OPTIONAL_HEADER.DATA_DIRECTORY[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_SECURITY']]
-            security_address = security.VirtualAddress
-            if security.Size > 0:
-                extract_data = pe.write()[security_address + 8:]
-                if len(extract_data) > 0:
-                    extract_file = strelka.File(
-                        name='digital_signature',
-                        source=self.name,
+                for c in strelka.chunk_string(data):
+                    self.upload_to_coordinator(
+                        extract_file.pointer,
+                        c,
+                        expire_at,
                     )
-                    for c in strelka.chunk_string(extract_data):
-                        self.upload_to_coordinator(
-                            extract_file.pointer,
-                            c,
-                            expire_at,
-                        )
-                    self.files.append(extract_file)
-
-        except pefile.PEFormatError:
-            self.flags.append('pe_format_error')
+                self.files.append(extract_file)
