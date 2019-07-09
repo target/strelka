@@ -334,10 +334,10 @@ class ScanPe(strelka.Scanner):
             'subsystem': pefile.SUBSYSTEM_TYPE.get(pe.OPTIONAL_HEADER.Subsystem).replace('IMAGE_SUBSYSTEM_', ''),
             'timestamp': pe.FILE_HEADER.TimeDateStamp,
             'version': {
-                'image': f'{pe.OPTIONAL_HEADER.MajorImageVersion}.{pe.OPTIONAL_HEADER.MinorImageVersion}',
-                'linker': f'{pe.OPTIONAL_HEADER.MajorLinkerVersion}.{pe.OPTIONAL_HEADER.MinorLinkerVersion}',
-                'operating_system': f'{pe.OPTIONAL_HEADER.MajorOperatingSystemVersion}.{pe.OPTIONAL_HEADER.MinorOperatingSystemVersion}',
-                'subsystem': f'{pe.OPTIONAL_HEADER.MajorSubsystemVersion}.{pe.OPTIONAL_HEADER.MinorSubsystemVersion}',
+                'image': float(f'{pe.OPTIONAL_HEADER.MajorImageVersion}.{pe.OPTIONAL_HEADER.MinorImageVersion}'),
+                'linker': float(f'{pe.OPTIONAL_HEADER.MajorLinkerVersion}.{pe.OPTIONAL_HEADER.MinorLinkerVersion}'),
+                'operating_system': float(f'{pe.OPTIONAL_HEADER.MajorOperatingSystemVersion}.{pe.OPTIONAL_HEADER.MinorOperatingSystemVersion}'),
+                'subsystem': float(f'{pe.OPTIONAL_HEADER.MajorSubsystemVersion}.{pe.OPTIONAL_HEADER.MinorSubsystemVersion}'),
             },
         }
 
@@ -351,32 +351,32 @@ class ScanPe(strelka.Scanner):
 
         self.event['resources'] = []
         if hasattr(pe, 'DIRECTORY_ENTRY_RESOURCE'):
-            for r0 in pe.DIRECTORY_ENTRY_RESOURCE.entries:
-                for r1 in r0.directory.entries:
+            for res0 in pe.DIRECTORY_ENTRY_RESOURCE.entries:
+                for res1 in res0.directory.entries:
                     name = ''
-                    if r1.name:
-                        name = str(r1.name)
+                    if res1.name:
+                        name = str(res1.name)
 
-                    for r2 in r1.directory.entries:
-                        lang = r2.data.lang
-                        sub = r2.data.sublang
+                    for res2 in res1.directory.entries:
+                        lang = res2.data.lang
+                        sub = res2.data.sublang
                         sub = pefile.get_sublang_name_for_lang(lang, sub)
                         lang = pefile.LANG.get(lang, '')
                         self.event['resources'].append({
-                            'id': r1.id,
+                            'id': res1.id,
                             'name': name,
                             'language': {
                                 'primary': lang.replace('LANG_', ''),
                                 'secondary': sub.replace('SUBLANG_', '')
                             },
-                            'type': pefile.RESOURCE_TYPE.get(r0.id, '').replace('RT_', ''),
+                            'type': pefile.RESOURCE_TYPE.get(res0.id, '').replace('RT_', ''),
                         })
 
-                        data = pe.get_data(r2.data.struct.OffsetToData, r2.data.struct.Size)
+                        data = pe.get_data(res2.data.struct.OffsetToData, res2.data.struct.Size)
                         if len(data) > 0:
                             extract_file = strelka.File(
-                                name=f'resource_{name or r1.id}',
-                                source=self.name,
+                                name=f'{name or res1.id}',
+                                source=f'{self.name}::Resource',
                             )
                             for c in strelka.chunk_string(data):
                                 self.upload_to_coordinator(
@@ -389,28 +389,28 @@ class ScanPe(strelka.Scanner):
         self.event['total']['resources'] = len(self.event['resources'])
 
         self.event['sections'] = []
-        for s in pe.sections:
-            name = s.Name.rstrip(b'\x00').decode()
+        for sec in pe.sections:
+            name = sec.Name.rstrip(b'\x00').decode()
             row = {
                 'address': {
-                    'physical': s.Misc_PhysicalAddress,
-                    'virtual': s.VirtualAddress,
+                    'physical': sec.Misc_PhysicalAddress,
+                    'virtual': sec.VirtualAddress,
                 },
                 'characteristics': [],
-                'entropy': s.get_entropy(),
+                'entropy': sec.get_entropy(),
                 'name': name,
-                'size': s.SizeOfRawData,
+                'size': sec.SizeOfRawData,
             }
             for o in CHARACTERISTICS_SECTION:
-                if s.Characteristics & o:
+                if sec.Characteristics & o:
                     row['characteristics'].append(CHARACTERISTICS_SECTION[o])
 
-            if s.SizeOfRawData > 0:
+            if sec.SizeOfRawData > 0:
                 extract_file = strelka.File(
-                    name=f'{name}',
-                    source=self.name,
+                    name=name,
+                    source=f'{self.name}::Section',
                 )
-                for c in strelka.chunk_string(s.get_data()):
+                for c in strelka.chunk_string(sec.get_data()):
                     self.upload_to_coordinator(
                         extract_file.pointer,
                         c,
@@ -430,34 +430,34 @@ class ScanPe(strelka.Scanner):
         if hasattr(pe, 'DIRECTORY_ENTRY_IMPORT'):
             self.event['imphash'] = pe.get_imphash()
 
-            for i in pe.DIRECTORY_ENTRY_IMPORT:
-                lib = i.dll.decode()
+            for imp in pe.DIRECTORY_ENTRY_IMPORT:
+                lib = imp.dll.decode()
                 if lib not in self.event['symbols']['libraries']:
                     self.event['symbols']['libraries'].append(lib)
 
-                entry = {
+                row = {
                     'library': lib,
                     'symbols': [],
                     'type': 'import',
                 }
-                for o in i.imports:
-                    if not o.name:
-                        name = f'ord{o.ordinal}'
+                for e in imp.imports:
+                    if not e.name:
+                        name = f'ord{e.ordinal}'
                     else:
-                        name = o.name.decode()
+                        name = e.name.decode()
                     self.event['symbols']['imported'].append(name)
-                    entry['symbols'].append(name)
-                self.event['symbols']['table'].append(entry)
+                    row['symbols'].append(name)
+                self.event['symbols']['table'].append(row)
 
         if hasattr(pe, 'DIRECTORY_ENTRY_EXPORT'):
-            for i in pe.DIRECTORY_ENTRY_EXPORT.symbols:
-                if not i.name:
-                    name = f'ord{i.ordinal}'
+            for exp in pe.DIRECTORY_ENTRY_EXPORT.symbols:
+                if not exp.name:
+                    name = f'ord{exp.ordinal}'
                 else:
-                    name = i.name
+                    name = exp.name
                 self.event['symbols']['exported'].append(name)
                 self.event['symbols']['table'].append({
-                    'address': i.address,
+                    'address': exp.address,
                     'symbol': name,
                     'type': 'export',
                 })
@@ -474,7 +474,7 @@ class ScanPe(strelka.Scanner):
 
                 extract_file = strelka.File(
                     name='signature',
-                    source=self.name,
+                    source=f'{self.name}::Security',
                 )
                 for c in strelka.chunk_string(data):
                     self.upload_to_coordinator(
