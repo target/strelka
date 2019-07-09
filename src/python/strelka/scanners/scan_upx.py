@@ -28,7 +28,7 @@ class ScanUpx(strelka.Scanner):
                 with open(f'{tmp_data.name}_upx', 'rb') as upx_fin:
                     upx_file = upx_fin.read()
                     upx_size = len(upx_file)
-                    if upx_size > file.size:
+                    if upx_size > len(data):
                         extract_file = strelka.File(
                             source=self.name,
                         )
@@ -43,4 +43,4 @@ class ScanUpx(strelka.Scanner):
                 os.remove(f'{tmp_data.name}_upx')
 
             else:
-                self.flags.append('return_code_{upx_return}')
+                self.flags.append(f'return_code_{upx_return}')

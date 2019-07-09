@@ -16,14 +16,12 @@ class ScanElf(strelka.Scanner):
             'symbols': len(elf.symbols),
         }
 
-        self.event['entrypoint'] = elf.entrypoint
-        self.event['imagebase'] = elf.imagebase
-        self.event['name'] = elf.name
         self.event['nx'] = elf.has_nx
         self.event['pie'] = elf.is_pie
 
         self.event['header'] = {
             'endianness': str(elf.header.identity_data).split('.')[1],
+            'entry_point': elf.header.entrypoint,
             'file': {
                 'type': str(elf.header.file_type).split('.')[1],
                 'version': str(elf.header.object_file_version).split('.')[1],
@@ -118,13 +116,12 @@ class ScanElf(strelka.Scanner):
                 'binding': str(sym.binding).rsplit('.')[1],
                 'information': sym.information,
                 'function': sym.is_function,
-                'name': sym.name,
+                'symbol': sym.name,
                 'section_index': str(ELF.SYMBOL_SECTION_INDEX(sym.shndx)).rsplit('.')[1],
                 'size': sym.size,
                 'static': sym.is_static,
-                'symbol_version': str(sym.symbol_version),
+                'version': str(sym.symbol_version),
                 'type': str(sym.type).rsplit('.')[1],
-                'value': sym.value,
                 'variable': sym.is_variable,
                 'visibility': str(sym.visibility).rsplit('.')[1],
             })

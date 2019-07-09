@@ -232,9 +232,6 @@ class ScanMacho(strelka.Scanner):
             'symbols': len(binary.symbols),
         }
 
-        if binary.has_entrypoint:
-            self.event['entrypoint'] = binary.entrypoint
-        self.event['imagebase'] = binary.imagebase
         self.event['nx'] = binary.has_nx
         self.event['pie'] = binary.is_pie
 
@@ -246,10 +243,10 @@ class ScanMacho(strelka.Scanner):
 
         self.event['header'] = {
             'cpu': {
-                'type': cpu_type,
-                'subtype': cpu_subtype,
+                'primary': cpu_type,
+                'sub': cpu_subtype,
             },
-            'file_type': str(binary.header.file_type).split('.')[1],
+            'file': str(binary.header.file_type).split('.')[1],
             'flags': [str(flag).split('.')[1] for flag in binary.header.flags_list],
         }
 
@@ -316,7 +313,7 @@ class ScanMacho(strelka.Scanner):
 
         for sym in binary.symbols:
             row = {
-                'name': sym.name,
+                'symbol': sym.name,
                 'origin': str(sym.origin).rsplit('.')[1],
             }
 
@@ -490,7 +487,7 @@ class ScanMacho(strelka.Scanner):
                     'offset': binary.main_command.command_offset,
                     'size': binary.main_command.size,
                 },
-                'entrypoint': binary.main_command.entrypoint,
+                'entry_point': binary.main_command.entrypoint,
                 'stack_size': binary.main_command.stack_size,
             }
 
