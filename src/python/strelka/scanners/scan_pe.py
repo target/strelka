@@ -277,7 +277,7 @@ class ScanPe(strelka.Scanner):
                 'operating_systems': [],
                 'type': {
                     'primary': FIXED_FILE_INFO_TYPE.get(vs_ffi.FileType),
-                    'secondary': FIXED_FILE_INFO_SUBTYPE.get((vs_ffi.FileType, vs_ffi.FileSubtype), ''),
+                    'sub': FIXED_FILE_INFO_SUBTYPE.get((vs_ffi.FileType, vs_ffi.FileSubtype), ''),
                 }
             }
 
@@ -367,7 +367,7 @@ class ScanPe(strelka.Scanner):
                             'name': name,
                             'language': {
                                 'primary': lang.replace('LANG_', ''),
-                                'secondary': sub.replace('SUBLANG_', '')
+                                'sub': sub.replace('SUBLANG_', '')
                             },
                             'type': pefile.RESOURCE_TYPE.get(res0.id, '').replace('RT_', ''),
                         })
