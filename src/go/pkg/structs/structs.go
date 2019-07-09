@@ -71,7 +71,7 @@ type Frontend struct {
         Response            ConfResponse            // optional
 }
 
-type Redis struct {
+type Manager struct {
         Coordinator         ConfCoordinator         // required
 }
 

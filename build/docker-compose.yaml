@@ -38,16 +38,16 @@ services:
     depends_on:
       - coordinator
 
-  redis:
+  manager:
     build:
       context: ..
-      dockerfile: build/go/redis/Dockerfile
-    command: strelka-redis
+      dockerfile: build/go/manager/Dockerfile
+    command: strelka-manager
     restart: unless-stopped
     networks:
       - net
     volumes:
-      - ../configs/go/redis/:/etc/strelka/:ro
+      - ../configs/go/manager/:/etc/strelka/:ro
     depends_on:
       - coordinator
 
@@ -67,6 +67,6 @@ services:
 
   gatekeeper:
     image: redis:alpine
-    command: redis-server --save "" --appendonly no --maxmemory-policy allkeys-lru # alt: use config file via volume mapping
+    command: redis-server --save "" --appendonly no --maxmemory-policy allkeys-lru  # alt: use config file via volume mapping
     networks:
       - net

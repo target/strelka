@@ -16,8 +16,8 @@ import (
 func main() {
         confPath := flag.String(
                 "c",
-                "/etc/strelka/redis.yaml",
-                "path to redis config",
+                "/etc/strelka/manager.yaml",
+                "path to manager config",
         )
         flag.Parse()
 
@@ -25,24 +25,23 @@ func main() {
         if err != nil {
                 log.Fatalf("failed to read config file %s: %v", confPath, err)
         }
-        var conf structs.Redis
+        var conf structs.Manager
         err = yaml.Unmarshal(confData, &conf)
         if err != nil {
                 log.Fatalf("failed to load config data: %v", err)
         }
 
-        coordinator := redis.NewClient(&redis.Options{
+        cd := redis.NewClient(&redis.Options{
                 Addr:       conf.Coordinator.Addr,
-                DB:         conf.Coordinator.Db,
+                DB:         conf.Coordinator.DB,
         })
-        err = coordinator.Ping().Err()
-        if err != nil {
+        if err := cd.Ping().Err(); err != nil {
                 log.Fatalf("failed to connect to coordinator: %v", err)
         }
 
         // TODO: this should be a goroutine
         for {
-                zrem, err := coordinator.ZRemRangeByScore(
+                zrem, err := cd.ZRemRangeByScore(
                         "tasks",
                         "-inf",
                         fmt.Sprintf("(%v", time.Now().Unix()),
