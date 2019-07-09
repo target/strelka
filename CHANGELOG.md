@@ -4,6 +4,18 @@ Changes to the project will be tracked in this file via the date of change.
 ## 2019-07-09
 ### Changed
 - Renamed strelka-redis to strelka-manager (jshlbrd)
+- Updated ScanPe to better sync with ScanElf and ScanMacho (jshlbrd)
+
+## 2019-06-28
+### Changed
+- Fixed frontend crashing issues when empty files are sent to cluster (jshlbrd)
+
+## 2019-06-27
+### Added
+- Added Gatekeeper (temporary event cache), a new required component (jshlbrd)
+### Changed
+- Transitioned ScanMacho from macholibre to LIEF (jshlbrd)
+- Fixed multiple issues in ScanElf JSON dictionary (jshlbrd)
 
 ## 2019-06-25
 ### Changed
