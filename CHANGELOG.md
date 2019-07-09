@@ -3,6 +3,7 @@ Changes to the project will be tracked in this file via the date of change.
 
 ## 2019-07-09
 ### Changed
+- Renamed strelka-redis to strelka-manager (jshlbrd)
 - Updated ScanPe to better sync with ScanElf and ScanMacho (jshlbrd)
 
 ## 2019-06-28

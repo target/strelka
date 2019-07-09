@@ -24,16 +24,16 @@ Strelka differs from its sibling projects in a few significant ways:
     * [Server Components](#server-components)
         * [strelka-frontend](#strelka-frontend)
         * [strelka-backend](#strelka-backend)
-        * [strelka-redis](#strelka-redis)
+        * [strelka-manager](#strelka-manager)
         * [coordinator](#coordinator)
-        * [cache](#cache)
+        * [gatekeeper](#gatekeeper)
         * [mmrpc](#mmrpc)
     * [Configuration Files](#configuration-files)
         * [fileshot](#fileshot)
         * [filestream](#filestream)
         * [frontend](#frontend)
         * [backend](#backend)
-        * [redis](#redis)
+        * [manager](#manager)
     * [Encryption and Authentication](#encryption-and-authentication)
     * [Clusters](#clusters)
         * [Design Patterns](#design-patterns)
@@ -209,8 +209,8 @@ This server component is the frontend for a cluster -- clients can connect direc
 #### strelka-backend
 This server component is the backend for a cluster -- this is where files submitted to the cluster are processed.
 
-#### strelka-redis
-This server component manages portions of Strelka's Redis servers.
+#### strelka-manager
+This server component manages portions of Strelka's Redis databases.
 
 #### coordinator
 This server component is a Redis server that coordinates tasks and data between the frontend and backend. This component is compatible with Envoy's Redis load balancing capabilities.
@@ -265,7 +265,7 @@ For the options below, only one response setting may be configured.
 * "response.log": location where worker scan results are logged to (defaults to /var/log/strelka/strelka.log)
 * "response.report": frequency at which the frontend reports the number of files processed (no default)
 
-#### redis
+#### manager
 * "coordinator.addr": network address of the coordinator (defaults to strelka_coordinator_1:6379)
 * "coordinator.db": Redis database of the coordinator (defaults to 0)
 
@@ -278,8 +278,6 @@ The backend configuration contains two sections: one that controls the backend p
 * "limits.max_depth": maximum depth that extracted files will be processed by the backend (defaults to 15)
 * "limits.distribution": amount of time (in seconds) that a single file can be distributed to all scanners (defaults to 600 seconds / 10 minutes)
 * "limits.scanner": amount of time (in seconds) that a scanner can spend scanning a file (defaults to 150 seconds / 1.5 minutes, can be overridden per-scanner)
-* "cache.addr": network address of the cache (defaults to strelka_cache_1:6379)
-* "cache.db": Redis database of the cache (defaults to 0)
 * "coordinator.addr": network address of the coordinator (defaults to strelka_coordinator_1:6379)
 * "coordinator.db": Redis database of the coordinator (defaults to 0)
 * "tasting.mime_db": location of the MIME database used to taste files (defaults to None, system default)
@@ -395,7 +393,7 @@ The following recommendations apply to all clusters:
 * Allocate at least 1GB RAM per backend
     * If backends do not have enough RAM, then there will be excessive memory errors
     * Big files (especially compressed files) require more RAM
-* Allocate as much RAM as reasonable to the cache
+* Allocate as much RAM as reasonable to the coordinator(s)
 
 #### Sizing Considerations
 Multiple variables should be considered when determining the appropriate size for a cluster:
@@ -448,11 +446,14 @@ Communication occurs through a combination of gRPC and Redis.
 Client-to-frontend communication uses bi-directional gRPC streams. Clients upload their requests in chunks and receive scan results one-by-one for their request. If a file request is successful, then clients will always receive scan results for their requests and can choose how to handle these results.
 
 #### Frontend-to-Backend
-Frontend-to-Backend communication uses two Redis databases -- a coordinator and a cache.
+Frontend-to-backend communication uses one or many Redis server, referred to as the 'coordinator' or 'coordinators'.
 
-The coordinator acts as a task queue between the frontend and backend; it is also the database where the backend sends scan results for the frontend to pick up and send to the client.
+The coordinator acts as a task queue between the frontend and backend, a temporary file cache for the backend, and the database where the backend sends scan results for the frontend to pick up and send to the client. The coordinator can be scaled horizontally via Envoy's Redis proxy.
 
-The cache acts as a temporary file cache for both the frontend and backend. As the frontend receives streams of data, it is assigned a pointer and stored in the cache. This pointer is placed in the coordinator's task queue where the backend pulls it and retrieves the file from the cache.
+### Frontend-to-Gatekeeper
+Frontend-to-gatekeeper communication relies on one Redis server, referred to as the 'gatekeeper'.
+
+The gatekeeper is a temporary event cache from which the frontend can optionally retrieve events. As file chunks stream into the frontend, they are hashed with SHA256 and, when the file is complete, the frontend checks the gatekeeper to see if it has any events related to the requested file. If events exist and the client has not set the option to bypass the gatekeeper, then the cached file events are sent back to the client. 
 
 ### File Distribution, Scanners, Flavors, and Tastes
 Strelka's file distribution assigns scanners (`src/python/strelka//scanners/`) to files based on a system of "flavors" and "tastes". Flavors describe the type of file being distributed through the system and come in three types:
