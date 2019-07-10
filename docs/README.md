@@ -1,5 +1,5 @@
 # Strelka
-Strelka is a real-time, container-based file scanning system used for threat hunting, threat detection, and incident response. Originally based on the design established by Lockheed Martin's [Laika BOSS](https://github.com/lmco/laikaboss) and similar projects (see: [related projects](#related-projects)), Strelka's purpose is to perform file extraction and metadata collection at huge scale.
+Strelka is a real-time, container-based file scanning system used for threat hunting, threat detection, and incident response. Originally based on the design established by Lockheed Martin's [Laika BOSS](https://github.com/lmco/laikaboss) and similar projects (see: [related projects](#related-projects)), Strelka's purpose is to perform file extraction and metadata collection at enterprise scale.
 
 Strelka differs from its sibling projects in a few significant ways:
 * Core codebase is Go and Python3.6+
@@ -453,7 +453,7 @@ The coordinator acts as a task queue between the frontend and backend, a tempora
 ### Frontend-to-Gatekeeper
 Frontend-to-gatekeeper communication relies on one Redis server, referred to as the 'gatekeeper'.
 
-The gatekeeper is a temporary event cache from which the frontend can optionally retrieve events. As file chunks stream into the frontend, they are hashed with SHA256 and, when the file is complete, the frontend checks the gatekeeper to see if it has any events related to the requested file. If events exist and the client has not set the option to bypass the gatekeeper, then the cached file events are sent back to the client. 
+The gatekeeper is a temporary event cache from which the frontend can optionally retrieve events. As file chunks stream into the frontend, they are hashed with SHA256 and, when the file is complete, the frontend checks the gatekeeper to see if it has any events related to the requested file. If events exist and the client has not set the option to bypass the gatekeeper, then the cached file events are sent back to the client.
 
 ### File Distribution, Scanners, Flavors, and Tastes
 Strelka's file distribution assigns scanners (`src/python/strelka//scanners/`) to files based on a system of "flavors" and "tastes". Flavors describe the type of file being distributed through the system and come in three types:
