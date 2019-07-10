@@ -131,6 +131,10 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
                                 }
                         }
 
+                        if err := s.coordinator.cli.Del(keyd).Err(); err != nil {
+                                return err
+                        }
+
                         return nil
                 }
         }
