@@ -505,6 +505,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanHash | Calculates file hash values | N/A |
 | ScanHeader | Collects file header | "length" -- number of header characters to log as metadata (defaults to 50) |
 | ScanHtml | Collects metadata and extracts embedded files from HTML files | "parser" -- sets the HTML parser used during scanning (defaults to "html.parser") |
+| ScanIni | Parses keys from INI files | N/A |
 | ScanJarManifest | Collects metadata from JAR manifest files | N/A |
 | ScanJavascript | Collects metadata from Javascript files | "beautify" -- beautifies JavaScript before parsing (defaults to True) |
 | ScanJpeg | Extracts data embedded in JPEG files | N/A |
