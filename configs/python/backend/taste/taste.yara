@@ -674,6 +674,16 @@ rule html_file
         $n at 0
 }
 
+rule ini_file
+{
+    meta:
+        type = "text"
+    strings:
+        $a = /^\[[^\]\r\n]+](\r?\n([^[\r\n].*)?)*/ // section header pattern
+    condition:
+        filesize < 1KB and $a at 0
+}
+
 rule json_file
 {
     meta:
