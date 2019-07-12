@@ -229,7 +229,8 @@ For the options below, only one response setting may be configured.
 
 * "conn.server": network address of the frontend server (defaults to 127.0.0.1:57314)
 * "conn.cert": local path to the frontend SSL server certificate (defaults to empty string -- SSL disabled)
-* "conn.timeout": amount of time to wait for an individual file to complete a scan (defaults to 1 minute)
+* "conn.timeout.dial": amount of time to wait for the client to dial the server (defaults to 5 seconds)
+* "conn.timeout.file": amount of time to wait for an individual file to complete a scan (defaults to 1 minute)
 * "conn.concurrency": number of concurrent requests to make (defaults to 8)
 * "files.chunk": size of file chunks that will be sent to the frontend server (defaults to 32768b / 32kb)
 * "files.patterns": list of glob patterns that determine which files will be sent for scanning (defaults to example glob pattern)
@@ -243,7 +244,8 @@ For the options below, only one response setting may be configured.
 
 * "conn.server": network address of the frontend server (defaults to 127.0.0.1:57314)
 * "conn.cert": local path to the frontend SSL server certificate (defaults to empty string -- SSL disabled)
-* "conn.timeout": amount of time to wait for an individual file to complete a scan (defaults to 1 minute)
+* "conn.timeout.dial": amount of time to wait for the client to dial the server (defaults to 5 seconds)
+* "conn.timeout.file": amount of time to wait for an individual file to complete a scan (defaults to 1 minute)
 * "conn.concurrency": number of concurrent requests to make (defaults to 8)
 * "files.chunk": size of file chunks that will be sent to the frontend server (defaults to 32768b / 32kb)
 * "files.patterns": list of glob patterns that determine which files will be sent for scanning (defaults to example glob pattern)

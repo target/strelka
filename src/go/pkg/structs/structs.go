@@ -12,7 +12,12 @@ import (
 type ConfConn struct {
         Server          string                      // required
         Cert            string                      // required
-        Timeout         time.Duration               // required
+        Timeout         ConfTimeout                 // required
+}
+
+type ConfTimeout struct {
+        Dial            time.Duration               // required
+        File            time.Duration               // required
 }
 
 type ConfThroughput struct {
