@@ -1,5 +1,5 @@
 # Strelka
-Strelka is a real-time, container-based file scanning system used for threat hunting, threat detection, and incident response. Originally based on the design established by Lockheed Martin's [Laika BOSS](https://github.com/lmco/laikaboss) and similar projects (see: [related projects](#related-projects)), Strelka's purpose is to perform file extraction and metadata collection at huge scale.
+Strelka is a real-time, container-based file scanning system used for threat hunting, threat detection, and incident response. Originally based on the design established by Lockheed Martin's [Laika BOSS](https://github.com/lmco/laikaboss) and similar projects (see: [related projects](#related-projects)), Strelka's purpose is to perform file extraction and metadata collection at enterprise scale.
 
 Strelka differs from its sibling projects in a few significant ways:
 * Core codebase is Go and Python3.6+
@@ -24,16 +24,16 @@ Strelka differs from its sibling projects in a few significant ways:
     * [Server Components](#server-components)
         * [strelka-frontend](#strelka-frontend)
         * [strelka-backend](#strelka-backend)
-        * [strelka-redis](#strelka-redis)
+        * [strelka-manager](#strelka-manager)
         * [coordinator](#coordinator)
-        * [cache](#cache)
+        * [gatekeeper](#gatekeeper)
         * [mmrpc](#mmrpc)
     * [Configuration Files](#configuration-files)
         * [fileshot](#fileshot)
         * [filestream](#filestream)
         * [frontend](#frontend)
         * [backend](#backend)
-        * [redis](#redis)
+        * [manager](#manager)
     * [Encryption and Authentication](#encryption-and-authentication)
     * [Clusters](#clusters)
         * [Design Patterns](#design-patterns)
@@ -209,14 +209,14 @@ This server component is the frontend for a cluster -- clients can connect direc
 #### strelka-backend
 This server component is the backend for a cluster -- this is where files submitted to the cluster are processed.
 
-#### strelka-redis
-This server component manages portions of Strelka's Redis servers.
+#### strelka-manager
+This server component manages portions of Strelka's Redis databases.
 
 #### coordinator
-This server component is a Redis server that coordinates data between the frontend and backend; it contains a task queue and file scan results.
+This server component is a Redis server that coordinates tasks and data between the frontend and backend. This component is compatible with Envoy's Redis load balancing capabilities.
 
-#### cache
-This server component is a Redis server that caches file data for the frontend and backend. Very large clusters may need to use Envoy to load balance data across many caches.
+#### gatekeeper
+This server component is a Redis server that acts as a temporary event cache. This component is not compatible with Envoy's Redis load balancing capabilities.
 
 #### mmrpc
 This is an optional server component that turns the [MaliciousMacroBot](https://github.com/egaus/MaliciousMacroBot) project into a networked service with gRPC.
@@ -229,11 +229,13 @@ For the options below, only one response setting may be configured.
 
 * "conn.server": network address of the frontend server (defaults to 127.0.0.1:57314)
 * "conn.cert": local path to the frontend SSL server certificate (defaults to empty string -- SSL disabled)
-* "conn.timeout": amount of time to wait for an individual file to complete a scan (defaults to 1 minute)
+* "conn.timeout.dial": amount of time to wait for the client to dial the server (defaults to 5 seconds)
+* "conn.timeout.file": amount of time to wait for an individual file to complete a scan (defaults to 1 minute)
 * "conn.concurrency": number of concurrent requests to make (defaults to 8)
 * "files.chunk": size of file chunks that will be sent to the frontend server (defaults to 32768b / 32kb)
 * "files.patterns": list of glob patterns that determine which files will be sent for scanning (defaults to example glob pattern)
 * "files.delete": boolean that determines if files should be deleted after being sent for scanning (defaults to false -- does not delete files)
+* "files.gatekeeper": boolean that determines if events should be pulled from the temporary event cache (defaults to true)
 * "response.log": location where worker scan results are logged to (defaults to /var/log/strelka/strelka.log)
 * "response.report": frequency at which the frontend reports the number of files processed (no default)
 
@@ -242,7 +244,8 @@ For the options below, only one response setting may be configured.
 
 * "conn.server": network address of the frontend server (defaults to 127.0.0.1:57314)
 * "conn.cert": local path to the frontend SSL server certificate (defaults to empty string -- SSL disabled)
-* "conn.timeout": amount of time to wait for an individual file to complete a scan (defaults to 1 minute)
+* "conn.timeout.dial": amount of time to wait for the client to dial the server (defaults to 5 seconds)
+* "conn.timeout.file": amount of time to wait for an individual file to complete a scan (defaults to 1 minute)
 * "conn.concurrency": number of concurrent requests to make (defaults to 8)
 * "files.chunk": size of file chunks that will be sent to the frontend server (defaults to 32768b / 32kb)
 * "files.patterns": list of glob patterns that determine which files will be sent for scanning (defaults to example glob pattern)
@@ -256,14 +259,15 @@ For the options below, only one response setting may be configured.
 For the options below, only one response setting may be configured.
 
 * "server": network address of the frontend server (defaults to :57314)
-* "cache.addr": network address of the cache (defaults to strelka_cache_1:6379)
-* "cache.db": Redis database of the cache (defaults to 0)
 * "coordinator.addr": network address of the coordinator (defaults to strelka_coordinator_1:6379)
 * "coordinator.db": Redis database of the coordinator (defaults to 0)
+* "gatekeeper.addr": network address of the gatekeeper (defaults to strelka_gatekeeper_1:6379)
+* "gatekeeper.db": Redis database of the gatekeeper (defaults to 0)
+* "gatekeeper.ttl": time-to-live for events added to the gatekeeper (defaults to 1 hour)
 * "response.log": location where worker scan results are logged to (defaults to /var/log/strelka/strelka.log)
 * "response.report": frequency at which the frontend reports the number of files processed (no default)
 
-#### redis
+#### manager
 * "coordinator.addr": network address of the coordinator (defaults to strelka_coordinator_1:6379)
 * "coordinator.db": Redis database of the coordinator (defaults to 0)
 
@@ -276,8 +280,6 @@ The backend configuration contains two sections: one that controls the backend p
 * "limits.max_depth": maximum depth that extracted files will be processed by the backend (defaults to 15)
 * "limits.distribution": amount of time (in seconds) that a single file can be distributed to all scanners (defaults to 600 seconds / 10 minutes)
 * "limits.scanner": amount of time (in seconds) that a scanner can spend scanning a file (defaults to 150 seconds / 1.5 minutes, can be overridden per-scanner)
-* "cache.addr": network address of the cache (defaults to strelka_cache_1:6379)
-* "cache.db": Redis database of the cache (defaults to 0)
 * "coordinator.addr": network address of the coordinator (defaults to strelka_coordinator_1:6379)
 * "coordinator.db": Redis database of the coordinator (defaults to 0)
 * "tasting.mime_db": location of the MIME database used to taste files (defaults to None, system default)
@@ -393,7 +395,7 @@ The following recommendations apply to all clusters:
 * Allocate at least 1GB RAM per backend
     * If backends do not have enough RAM, then there will be excessive memory errors
     * Big files (especially compressed files) require more RAM
-* Allocate as much RAM as reasonable to the cache
+* Allocate as much RAM as reasonable to the coordinator(s)
 
 #### Sizing Considerations
 Multiple variables should be considered when determining the appropriate size for a cluster:
@@ -446,11 +448,14 @@ Communication occurs through a combination of gRPC and Redis.
 Client-to-frontend communication uses bi-directional gRPC streams. Clients upload their requests in chunks and receive scan results one-by-one for their request. If a file request is successful, then clients will always receive scan results for their requests and can choose how to handle these results.
 
 #### Frontend-to-Backend
-Frontend-to-Backend communication uses two Redis databases -- a coordinator and a cache.
+Frontend-to-backend communication uses one or many Redis server, referred to as the 'coordinator' or 'coordinators'.
 
-The coordinator acts as a task queue between the frontend and backend; it is also the database where the backend sends scan results for the frontend to pick up and send to the client.
+The coordinator acts as a task queue between the frontend and backend, a temporary file cache for the backend, and the database where the backend sends scan results for the frontend to pick up and send to the client. The coordinator can be scaled horizontally via Envoy's Redis proxy.
 
-The cache acts as a temporary file cache for both the frontend and backend. As the frontend receives streams of data, it is assigned a pointer and stored in the cache. This pointer is placed in the coordinator's task queue where the backend pulls it and retrieves the file from the cache.
+### Frontend-to-Gatekeeper
+Frontend-to-gatekeeper communication relies on one Redis server, referred to as the 'gatekeeper'.
+
+The gatekeeper is a temporary event cache from which the frontend can optionally retrieve events. As file chunks stream into the frontend, they are hashed with SHA256 and, when the file is complete, the frontend checks the gatekeeper to see if it has any events related to the requested file. If events exist and the client has not set the option to bypass the gatekeeper, then the cached file events are sent back to the client.
 
 ### File Distribution, Scanners, Flavors, and Tastes
 Strelka's file distribution assigns scanners (`src/python/strelka//scanners/`) to files based on a system of "flavors" and "tastes". Flavors describe the type of file being distributed through the system and come in three types:
@@ -502,6 +507,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanHash | Calculates file hash values | N/A |
 | ScanHeader | Collects file header | "length" -- number of header characters to log as metadata (defaults to 50) |
 | ScanHtml | Collects metadata and extracts embedded files from HTML files | "parser" -- sets the HTML parser used during scanning (defaults to "html.parser") |
+| ScanIni | Parses keys from INI files | N/A |
 | ScanJarManifest | Collects metadata from JAR manifest files | N/A |
 | ScanJavascript | Collects metadata from Javascript files | "beautify" -- beautifies JavaScript before parsing (defaults to True) |
 | ScanJpeg | Extracts data embedded in JPEG files | N/A |

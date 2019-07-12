@@ -137,6 +137,12 @@ scanners:
       priority: 5
       options:
         parser: "html5lib"
+  'ScanIni':
+    - positive:
+        filename: '(\.([Cc][Ff][Gg]|[Ii][Nn][Ii])|PROJECT)$'
+        flavors:
+          - 'ini_file'
+      priority: 5
   'ScanJarManifest':
     - positive:
         flavors:

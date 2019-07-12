@@ -12,7 +12,12 @@ import (
 type ConfConn struct {
         Server          string                      // required
         Cert            string                      // required
-        Timeout         time.Duration               // required
+        Timeout         ConfTimeout                 // required
+}
+
+type ConfTimeout struct {
+        Dial            time.Duration               // required
+        File            time.Duration               // required
 }
 
 type ConfThroughput struct {
@@ -24,11 +29,18 @@ type ConfThroughput struct {
 type ConfFiles struct {
         Patterns        []string                    // required
         Delete          bool                        // optional
+        Gatekeeper      bool                        // required
 }
 
-type ConfRedis struct {
+type ConfCoordinator struct {
         Addr            string                      // required
-        Db              int                         // required
+        DB              int                         // required
+}
+
+type ConfGatekeeper struct {
+        Addr            string                      // required
+        DB              int                         // required
+        TTL             time.Duration               //required
 }
 
 // determines what action the client takes with responses, defaults to discarding messages
@@ -59,13 +71,13 @@ type FileStream struct {
 
 type Frontend struct {
         Server              string                  // required
-        Cache               ConfRedis               // required
-        Coordinator         ConfRedis               // required
+        Coordinator         ConfCoordinator         // required
+        Gatekeeper          ConfGatekeeper          // required
         Response            ConfResponse            // optional
 }
 
-type Redis struct {
-        Coordinator         ConfRedis               // required
+type Manager struct {
+        Coordinator         ConfCoordinator         // required
 }
 
 // defines options used when sending scan requests
