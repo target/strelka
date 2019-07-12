@@ -29,12 +29,12 @@ class ScanZip(strelka.Scanner):
 
         if not self.passwords:
             if os.path.isfile(password_file):
-                with open(password_file, 'r') as f:
+                with open(password_file, 'rb') as f:
                     for line in f:
-                        self.passwords.append(bytes(line.strip(), 'utf-8'))
+                        self.passwords.append(line.strip())
 
         with io.BytesIO(data) as zip_io:
-            # try:
+            try:
                 with zipfile.ZipFile(zip_io) as zip_obj:
                     name_list = zip_obj.namelist()
                     self.event['total']['files'] = len(name_list)
@@ -44,28 +44,23 @@ class ScanZip(strelka.Scanner):
                                 break
 
                             try:
-                                extract_data = None
+                                extract_data = b''
                                 zinfo = zip_obj.getinfo(name)
 
-                                if zinfo.flag_bits & 0x1 and self.passwords:  # File is encrypted
+                                if zinfo.flag_bits & 0x1:
+                                    self.flags.append('encrypted')
                                     for pwd in self.passwords:
                                         try:
                                             extract_data = zip_obj.read(name, pwd)
-                                            if extract_data is not None:
-                                                self.flags.append('encrypted_archive_file')
+                                            if extract_data:
                                                 break
-                                        except RuntimeError:
-                                            pass
-                                        except zipfile.BadZipFile:
+                                        except (RuntimeError, zipfile.BadZipFile):
                                             pass
 
-                                elif zinfo.flag_bits & 0x1 and not self.passwords:  # File is encrypted, no passwords
-                                    self.flags.append('no_archive_passwords')
-                                    return
                                 else:
                                     extract_data = zip_obj.read(name)
 
-                                if extract_data is not None:
+                                if extract_data:
                                     extract_file = strelka.File(
                                         name=name,
                                         source=self.name,
@@ -90,5 +85,5 @@ class ScanZip(strelka.Scanner):
                             except zlib.error:
                                 self.flags.append('zlib_error')
 
-            # except zipfile.BadZipFile:
-            #     self.flags.append('bad_zip_file')
+            except zipfile.BadZipFile:
+                self.flags.append('bad_zip')
