@@ -1,7 +1,6 @@
 // Archive Files
 
-rule _7zip_file
-{
+rule _7zip_file {
     meta:
         type = "archive"
     strings:
@@ -10,16 +9,14 @@ rule _7zip_file
         $a at 0
 }
 
-rule arj_file
-{
+rule arj_file {
     meta:
         type = "archive"
     condition:
         uint16(0) == 0xEA60
 }
 
-rule cab_file
-{
+rule cab_file {
     meta:
         type = "archive"
     strings:
@@ -29,8 +26,7 @@ rule cab_file
         ( uint16(0) == 0x5A4D and $a )
 }
 
-rule cpio_file
-{
+rule cpio_file {
     meta:
         type = "archive"
     strings:
@@ -39,8 +35,7 @@ rule cpio_file
         $a at 0
 }
 
-rule iso_file
-{
+rule iso_file {
     meta:
         type = "archive"
     strings:
@@ -49,8 +44,7 @@ rule iso_file
         $a at 0x8001 and $a at 0x8801 and $a at 0x9001
 }
 
-rule mhtml_file
-{
+rule mhtml_file {
     meta:
         type = "archive"
     strings:
@@ -60,16 +54,14 @@ rule mhtml_file
         $a at 0 and $b
 }
 
-rule rar_file
-{
+rule rar_file {
     meta:
         type = "archive"
     condition:
         uint16(0) == 0x6152 and uint8(2) == 0x72 and uint16(3) == 0x1A21 and uint8(5) == 0x07
 }
 
-rule tar_file
-{
+rule tar_file {
     meta:
         type = "archive"
     strings:
@@ -80,16 +72,14 @@ rule tar_file
         $a at 257
 }
 
-rule xar_file
-{
+rule xar_file {
     meta:
         type = "archive"
     condition:
         uint32(0) == 0x21726178
 }
 
-rule zip_file
-{
+rule zip_file {
     meta:
         type = "archive"
     condition:
@@ -98,8 +88,7 @@ rule zip_file
 
 // Audio Files
 
-rule mp3_file
-{
+rule mp3_file {
     meta:
         type = "audio"
     condition:
@@ -108,8 +97,7 @@ rule mp3_file
 
 // Certificate Files
 
-rule pkcs7_file
-{
+rule pkcs7_file {
     meta:
         type = "certificate"
     strings:
@@ -120,16 +108,14 @@ rule pkcs7_file
         $a at 0
 }
 
-rule x509_der_file
-{
+rule x509_der_file {
     meta:
         type = "certificate"
     condition:
         uint16(0) == 0x8230 and ( uint16(4) == 0x8230 or uint16(4) == 0x8130 )
 }
 
-rule x509_pem_file
-{
+rule x509_pem_file {
     meta:
         type = "certificate"
     strings:
@@ -140,50 +126,53 @@ rule x509_pem_file
 
 // Compressed Files
 
-rule bzip2_file
-{
+rule bzip2_file {
     meta:
         type = "compressed"
     condition:
         uint16(0) == 0x5A42 and uint8(2) == 0x68
 }
 
-rule gzip_file
-{
+rule gzip_file {
     meta:
         type = "compressed"
     condition:
         uint16(0) == 0x8B1F and uint8(2) == 0x08
 }
 
-rule lzma_file
-{
+rule lzma_file {
     meta:
         type = "compressed"
     condition:
         uint16(0) == 0x005D and uint8(2) == 0x00
 }
 
-rule xz_file
-{
+rule xz_file {
     meta:
         type = "compressed"
     condition:
         uint32(0) == 0x587A37FD and uint16(4) == 0x005A
 }
 
+rule zlib_file {
+    meta:
+        type = "compressed"
+    condition:
+        uint16(0) == 0x0178 or
+        uint16(0) == 0x9C78 or
+        uint16(0) == 0xDA78
+}
+
 // Document Files
 
-rule doc_subheader_file
-{
+rule doc_subheader_file {
     meta:
         type = "document"
     condition:
         uint32(0) == 0x00C1A5EC
 }
 
-rule mso_file
-{
+rule mso_file {
     meta:
         type = "document"
     strings:
@@ -194,8 +183,7 @@ rule mso_file
         $b at 0
 }
 
-rule olecf_file
-{
+rule olecf_file {
     meta:
         description = "Object Linking and Embedding (OLE) Compound File (CF)"
         type = "document"
@@ -203,8 +191,7 @@ rule olecf_file
         uint32(0) == 0xE011CFD0 and uint32(4) == 0xE11AB1A1
 }
 
-rule ooxml_file
-{
+rule ooxml_file {
     meta:
         description = "Microsoft Office Open XML Format"
         type  = "document"
@@ -212,8 +199,7 @@ rule ooxml_file
         uint32(0) == 0x04034B50 and uint32(4) == 0x00060014
 }
 
-rule pdf_file
-{
+rule pdf_file {
     meta:
         description = "Portable Document Format"
         type = "document"
@@ -221,8 +207,7 @@ rule pdf_file
         uint32(0) == 0x46445025
 }
 
-rule poi_hpbf_file
-{
+rule poi_hpbf_file {
     meta:
         description = "https://poi.apache.org/components/hpbf/file-format.html"
         type = "document"
@@ -232,16 +217,14 @@ rule poi_hpbf_file
         $a at 0
 }
 
-rule rtf_file
-{
+rule rtf_file {
     meta:
         type = "document"
     condition:
         uint32(0) == 0x74725C7B
 }
 
-rule vbframe_file
-{
+rule vbframe_file {
     meta:
         type = "document"
     strings:
@@ -250,8 +233,7 @@ rule vbframe_file
         $a at 0
 }
 
-rule wordml_file
-{
+rule wordml_file {
     meta:
         description = "Microsoft Office Word 2003 XML format"
         type = "document"
@@ -262,8 +244,7 @@ rule wordml_file
         $a at 0 and $b
 }
 
-rule xfdf_file
-{
+rule xfdf_file {
     meta:
         description = "XML Forms Data Format"
         type = "document"
@@ -275,8 +256,7 @@ rule xfdf_file
 
 // Email Files
 
-rule email_file
-{
+rule email_file {
     meta:
         type = "email"
     strings:
@@ -293,8 +273,7 @@ rule email_file
         $e in (0..2048)
 }
 
-rule tnef_file
-{
+rule tnef_file {
     meta:
         description = "Transport Neutral Encapsulation Format"
         type = "email"
@@ -304,8 +283,7 @@ rule tnef_file
 
 // Encryption Files
 
-rule pgp_file
-{
+rule pgp_file {
     meta:
         type = "encryption"
     strings:
@@ -320,8 +298,7 @@ rule pgp_file
 
 // Executable Files
 
-rule elf_file
-{
+rule elf_file {
     meta:
         description = "Executable and Linkable Format"
         type = "executable"
@@ -329,8 +306,7 @@ rule elf_file
         uint32(0) == 0x464C457F
 }
 
-rule lnk_file
-{
+rule lnk_file {
     meta:
         description = "Windows Shortcut file"
         type = "executable"
@@ -338,8 +314,7 @@ rule lnk_file
         uint32(0) == 0x0000004C
 }
 
-rule macho_file
-{
+rule macho_file {
     meta:
         description = "Mach object"
         type = "executable"
@@ -350,8 +325,7 @@ rule macho_file
         uint32(0) == 0xFEEDFACF
 }
 
-rule mz_file
-{
+rule mz_file {
     meta:
         description = "DOS MZ executable"
         type = "executable"
@@ -361,8 +335,7 @@ rule mz_file
 
 // Image Files
 
-rule bmp_file
-{
+rule bmp_file {
     meta:
         type = "image"
     strings:
@@ -371,8 +344,7 @@ rule bmp_file
         $a at 0
 }
 
-rule cmap_file
-{
+rule cmap_file {
     meta:
         type = "image"
     strings:
@@ -381,8 +353,7 @@ rule cmap_file
         $a at 0
 }
 
-rule gif_file
-{
+rule gif_file {
     meta:
         description = "Graphics Interchange Format"
         type = "image"
@@ -390,8 +361,7 @@ rule gif_file
         uint32(0) == 0x38464947 and ( uint16(4) == 0x6137 or uint16(4) == 0x6139 )
 }
 
-rule jpeg_file
-{
+rule jpeg_file {
     meta:
         type = "image"
     condition:
@@ -401,8 +371,7 @@ rule jpeg_file
         uint32(0) == 0xE8FFD8FF
 }
 
-rule postscript_file
-{
+rule postscript_file {
     meta:
         type = "image"
     strings:
@@ -411,16 +380,14 @@ rule postscript_file
         $a at 0
 }
 
-rule png_file
-{
+rule png_file {
     meta:
         type = "image"
     condition:
         uint32(0) == 0x474E5089
 }
 
-rule psd_file
-{
+rule psd_file {
     meta:
         description = "Photoshop Document"
         type = "image"
@@ -428,8 +395,7 @@ rule psd_file
         uint32(0) == 0x53504238
 }
 
-rule psd_image_file
-{
+rule psd_image_file {
     meta:
         description = "Photoshop Document image resource block"
         type = "image"
@@ -437,8 +403,7 @@ rule psd_image_file
         uint32(0) == 0x4D494238
 }
 
-rule svg_file
-{
+rule svg_file {
     meta:
         type = "image"
     strings:
@@ -447,8 +412,7 @@ rule svg_file
         $a at 0
 }
 
-rule xicc_file
-{
+rule xicc_file {
     meta:
         type = "image"
     strings:
@@ -457,8 +421,7 @@ rule xicc_file
         $a at 0
 }
 
-rule xmp_file
-{
+rule xmp_file {
     meta:
         type = "image"
     strings:
@@ -470,16 +433,14 @@ rule xmp_file
 
 // Metadata Files
 
-rule jar_manifest_file
-{
+rule jar_manifest_file {
     meta:
         type = "metadata"
     condition:
         uint32(0) == 0x696E614D and uint32(4) == 0x74736566
 }
 
-rule bplist_file
-{
+rule bplist_file {
     meta:
         description = "Binary Property List"
         type = "metadata"
@@ -489,16 +450,14 @@ rule bplist_file
 
 // Multimedia Files
 
-rule fws_file
-{
+rule fws_file {
     meta:
         type =  "multimedia"
     condition:
         uint16(0) == 0x5746 and uint8(2) == 0x53
 }
 
-rule cws_file
-{
+rule cws_file {
     meta:
         description = "zlib compressed Flash file"
         type = "multimedia"
@@ -507,8 +466,7 @@ rule cws_file
 }
 
 
-rule zws_file
-{
+rule zws_file {
     meta:
         description = "LZMA compressed Flash file"
         type =  "multimedia"
@@ -518,8 +476,7 @@ rule zws_file
 
 // Package Files
 
-rule debian_package_file
-{
+rule debian_package_file {
     meta:
         type = "package"
     strings:
@@ -528,8 +485,7 @@ rule debian_package_file
         $a at 0
 }
 
-rule rpm_file
-{
+rule rpm_file {
     meta:
         type = "package"
     condition:
@@ -538,8 +494,7 @@ rule rpm_file
 
 // Packer Files
 
-rule upx_file
-{
+rule upx_file {
     meta:
         description = "Ultimate Packer for Executables"
         type = "packer"
@@ -556,8 +511,7 @@ rule upx_file
 
 // Script Files
 
-rule batch_file
-{
+rule batch_file {
     meta:
         type = "script"
     strings:
@@ -566,8 +520,7 @@ rule batch_file
         $a at 0
 }
 
-rule javascript_file
-{
+rule javascript_file {
     meta:
         type = "script"
     strings:
@@ -608,8 +561,7 @@ rule javascript_file
         ( ( $misc1 at 0 or $misc2 at 0 ) and $var and $function1 and $if )
 }
 
-rule vb_file
-{
+rule vb_file {
     meta:
         type = "script"
     strings:
@@ -628,8 +580,7 @@ rule vb_file
 
 // Text Files
 
-rule hta_file
-{
+rule hta_file {
     meta:
         type = "text"
     strings:
@@ -638,8 +589,7 @@ rule hta_file
         $a in (0..2000)
 }
 
-rule html_file
-{
+rule html_file {
     meta:
         type = "text"
     strings:
@@ -674,8 +624,7 @@ rule html_file
         $n at 0
 }
 
-rule ini_file
-{
+rule ini_file {
     meta:
         type = "text"
     strings:
@@ -684,8 +633,7 @@ rule ini_file
         filesize < 1KB and $a at 0
 }
 
-rule json_file
-{
+rule json_file {
     meta:
         type = "text"
     strings:
@@ -694,8 +642,7 @@ rule json_file
         $a at 0
 }
 
-rule php_file
-{
+rule php_file {
     meta:
         type = "text"
     strings:
@@ -704,8 +651,7 @@ rule php_file
         $a at 0
 }
 
-rule soap_file
-{
+rule soap_file {
     meta:
         description = "Simple Object Access Protocol"
         type = "text"
@@ -717,8 +663,7 @@ rule soap_file
         $b at 0
 }
 
-rule xml_file
-{
+rule xml_file {
     meta:
         type = "text"
     strings:
@@ -739,8 +684,7 @@ rule xml_file
 
 // Video Files
 
-rule avi_file
-{
+rule avi_file {
     meta:
         type = "video"
     strings:
@@ -749,8 +693,7 @@ rule avi_file
         $a at 0
 }
 
-rule wmv_file
-{
+rule wmv_file {
     meta:
         type = "video"
     condition:

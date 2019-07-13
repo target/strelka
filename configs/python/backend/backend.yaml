@@ -396,3 +396,9 @@ scanners:
       options:
         limit: 1000
         password_file: '/etc/strelka/passwords.dat'
+  'ScanZlib':
+    - positive:
+        flavors:
+          - 'application/zlib'
+          - 'zlib_file'
+      priority: 5

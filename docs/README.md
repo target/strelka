@@ -539,6 +539,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanXml | Log metadata and extract files from XML files | "extract_tags" -- list of XML tags that will have their text extracted as child files (defaults to empty list)<br>"metadata_tags" -- list of XML tags that will have their text logged as metadata (defaults to empty list) |
 | ScanYara | Scans files with YARA rules | "location" -- location of the YARA rules file or directory (defaults to "/etc/yara/")<br>"metadata_identifiers" -- list of YARA rule metadata identifiers (e.g. "Author") that should be logged as metadata (defaults to empty list) |
 | ScanZip | Extracts files from zip archives | "limit" -- maximum number of files to extract (defaults to 1000)<br>"password_file" -- location of passwords file for zip archives (defaults to etc/strelka/passwords.txt)|
+| ScanZlib | Decompresses gzip files | N/A
 
 ## Use Cases
 Below are some select use cases that show the value Strelka can add to a threat detection tech stack. Keep in mind that these results are parsed in real time without post-processing and are typically correlated with other detection/response tools (e.g. Bro, Volatility, etc.). The file metadata shown below was derived from files found in [VirusShare](https://virusshare.com/) torrent no. 323 and from a test file in the [MaliciousMacroBot (MMBot) repository](https://github.com/egaus/MaliciousMacroBot).
