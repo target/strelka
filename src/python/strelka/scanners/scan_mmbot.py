@@ -24,15 +24,19 @@ class ScanMmbot(strelka.Scanner):
         mmb_dict = json.loads(response.prediction)
         self.event['confidence'] = mmb_dict.get('confidence', None)
         self.event['prediction'] = mmb_dict.get('prediction', None)
-        self.event['function_names'] = mmb_dict.get('function_names', None)
-        self.event['lang_features'] = mmb_dict.get('vba_lang_features', None)
-        self.event['avg_param_per_func'] = mmb_dict.get('vba_avg_param_per_func', None)
-        self.event['cnt_comment_loc_ratio'] = mmb_dict.get('vba_cnt_comment_loc_ratio', None)
-        self.event['cnt_comments'] = mmb_dict.get('vba_cnt_comments', None)
-        self.event['cnt_function_loc_ratio'] = mmb_dict.get('vba_cnt_func_loc_ratio', None)
-        self.event['cnt_functions'] = mmb_dict.get('vba_cnt_functions', None)
-        self.event['cnt_loc'] = mmb_dict.get('vba_cnt_loc', None)
-        self.event['entropy_chars'] = mmb_dict.get('vba_entropy_chars', None)
-        self.event['entropy_func_names'] = mmb_dict.get('vba_entropy_func_names', None)
-        self.event['entropy_words'] = mmb_dict.get('vba_entropy_words', None)
-        self.event['mean_loc_per_func'] = mmb_dict.get('vba_mean_loc_per_func', None)
+        self.event['functions'] = mmb_dict.get('function_names', None)
+        self.event['features'] = mmb_dict.get('vba_lang_features', None)
+        self.event['total'] = {
+            'comments': mmb_dict.get('vba_cnt_comments', None),
+            'functions': mmb_dict.get('vba_cnt_functions', None),
+            'locations': mmb_dict.get('vba_cnt_loc', None),
+        }
+        self.event['ratio'] = {
+            'comments': mmb_dict.get('vba_cnt_comment_loc_ratio', None),
+            'functions': mmb_dict.get('vba_cnt_func_loc_ratio', None),
+        }
+        self.event['entropy'] = {
+            'characters': mmb_dict.get('vba_entropy_chars', None),
+            'functions': mmb_dict.get('vba_entropy_func_names', None),
+            'words': mmb_dict.get('vba_entropy_words', None),
+        }
