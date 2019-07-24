@@ -9,15 +9,14 @@ class ScanGzip(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         with io.BytesIO(data) as gzip_io:
             with gzip.GzipFile(fileobj=gzip_io) as gzip_obj:
-                decompressed_file = gzip_obj.read()
-                decompressed_size = len(decompressed_file)
-                self.event['decompressed_size'] = decompressed_size
+                decompressed = gzip_obj.read()
+                self.event['size'] = len(decompressed)
 
                 extract_file = strelka.File(
                     source=self.name,
                 )
 
-                for c in strelka.chunk_string(decompressed_file):
+                for c in strelka.chunk_string(decompressed):
                     self.upload_to_coordinator(
                         extract_file.pointer,
                         c,
