@@ -11,15 +11,14 @@ class ScanLzma(strelka.Scanner):
             with io.BytesIO(data) as lzma_io:
                 with lzma.LZMAFile(filename=lzma_io) as lzma_obj:
                     try:
-                        decompressed_file = lzma_obj.read()
-                        decompressed_size = len(decompressed_file)
-                        self.event['decompressed_size'] = decompressed_size
+                        decompressed = lzma_obj.read()
+                        self.event['size'] = len(decompressed)
 
                         extract_file = strelka.File(
                             source=self.name,
                         )
 
-                        for c in strelka.chunk_string(decompressed_file):
+                        for c in strelka.chunk_string(decompressed):
                             self.upload_to_coordinator(
                                 extract_file.pointer,
                                 c,
