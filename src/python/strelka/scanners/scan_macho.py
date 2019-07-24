@@ -433,22 +433,22 @@ class ScanMacho(strelka.Scanner):
         if binary.has_dynamic_symbol_command:
             self.event['commands']['dynamic_symbol'] = {
                 'command': {
-                    'offset': binary.dynamic_symbol.command_offset,
-                    'size': binary.dynamic_symbol.size,
+                    'offset': binary.dynamic_symbol_command.command_offset,
+                    'size': binary.dynamic_symbol_command.size,
                 },
                 'offset': {
                     'symbol': {
-                        'external': binary.dynamic_symbol.external_reference_symbol_offset,
-                        'indirect': binary.dynamic_symbol.indirect_symbol_offset,
+                        'external': binary.dynamic_symbol_command.external_reference_symbol_offset,
+                        'indirect': binary.dynamic_symbol_command.indirect_symbol_offset,
                     },
                     'relocation': {
-                        'external': binary.dynamic_symbol.external_relocation_offset,
-                        'local': binary.dynamic_symbol.local_relocation_offset,
+                        'external': binary.dynamic_symbol_command.external_relocation_offset,
+                        'local': binary.dynamic_symbol_command.local_relocation_offset,
                     },
                     'table': {
-                        'module': binary.dynamic_symbol.module_table_offset,
+                        'module': binary.dynamic_symbol_command.module_table_offset,
                     },
-                    'toc': binary.dynamic_symbol.toc_offset,
+                    'toc': binary.dynamic_symbol_command.toc_offset,
                 },
             }
 
