@@ -431,28 +431,24 @@ class ScanMacho(strelka.Scanner):
             }
 
         if binary.has_dynamic_symbol_command:
-            self.event['commands']['dynamic_symbol_command'] = {
+            self.event['commands']['dynamic_symbol'] = {
                 'command': {
                     'offset': binary.dynamic_symbol_command.command_offset,
                     'size': binary.dynamic_symbol_command.size,
                 },
-                'external': {
-                    'reference': {
-                        'symbol_offset': binary.dynamic_symbol_command.external_reference_symbol_offset,
-                        'relocation_offset': binary.dynamic_symbol_command.external_relocation_offset,
+                'offset': {
+                    'symbol': {
+                        'external': binary.dynamic_symbol_command.external_reference_symbol_offset,
+                        'indirect': binary.dynamic_symbol_command.indirect_symbol_offset,
                     },
-                },
-                'indirect': {
-                    'symbol_offset': binary.dynamic_symbol_command.indirect_symbol_offset,
-                },
-                'local': {
-                    'relocation_offset': binary.dynamic_symbol_command.local_relocation_offset,
-                },
-                'module': {
-                    'table_offset': binary.dynamic_symbol_command.module_table_offset,
-                },
-                'toc': {
-                    'offset': binary.dynamic_symbol_command.toc_offset,
+                    'relocation': {
+                        'external': binary.dynamic_symbol_command.external_relocation_offset,
+                        'local': binary.dynamic_symbol_command.local_relocation_offset,
+                    },
+                    'table': {
+                        'module': binary.dynamic_symbol_command.module_table_offset,
+                    },
+                    'toc': binary.dynamic_symbol_command.toc_offset,
                 },
             }
 
