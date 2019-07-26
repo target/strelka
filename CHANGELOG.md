@@ -1,6 +1,31 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2019-07-26
+### Changed
+- Fixed bug in ScanPe when header field is nonexistent (jshlbrd)
+
+## 2019-07-25
+### Changed
+- Improved speed of ScanZip decryption (jshlbrd)
+
+## 2019-07-24
+### Changed
+- ScanMmbot fields are now internally consistent with other event dictionaries (jshlbrd)
+- Fixed bug in ScanMacho dynamic symbols (jshlbrd)
+- Renamed 'decompressed_size' to 'size' across all decompression scanners (jshlbrd)
+
+## 2019-07-12
+### Added
+- Two new fields in ScanIni (comments and sections) (jshlbrd)
+- New scanner ScanZlib can decompress Zlib files (jshlbrd)
+### Changed
+- Fixed unintended CRC exception when decrypting ZIP files (jshlbrd)
+
+## 2019-07-11
+### Added
+- New scanner ScanIni can parse INI files (jshlbrd)
+
 ## 2019-07-09
 ### Changed
 - Renamed strelka-redis to strelka-manager (jshlbrd)
