@@ -293,7 +293,6 @@ class ScanPe(strelka.Scanner):
         self.event['header'] = {
             'address': {
                 'code': pe.OPTIONAL_HEADER.BaseOfCode,
-                'data': pe.OPTIONAL_HEADER.BaseOfData,
                 'entry_point': pe.OPTIONAL_HEADER.AddressOfEntryPoint,
                 'image': pe.OPTIONAL_HEADER.ImageBase,
             },
@@ -340,6 +339,9 @@ class ScanPe(strelka.Scanner):
                 'subsystem': float(f'{pe.OPTIONAL_HEADER.MajorSubsystemVersion}.{pe.OPTIONAL_HEADER.MinorSubsystemVersion}'),
             },
         }
+
+        if hasattr(pe.OPTIONAL_HEADER, 'BaseOfData'):
+            self.event['header']['address']['data'] = pe.OPTIONAL_HEADER.BaseOfData
 
         for o in CHARACTERISTICS_DLL:
             if pe.OPTIONAL_HEADER.DllCharacteristics & o:
