@@ -270,6 +270,21 @@ scanners:
       priority: 5
       options:
         tmp_directory: '/dev/shm/'
+  'ScanPlist':
+    - positive:
+        flavors:
+          - 'bplist_file'
+          - 'plist_file'
+      priority: 5
+      options:
+        keys:
+          - 'KeepAlive'
+          - 'Label'
+          - 'NetworkState'
+          - 'Program'
+          - 'ProgramArguments'
+          - 'RunAtLoad'
+          - 'StartInterval'
   'ScanRar':
     - positive:
         flavors:

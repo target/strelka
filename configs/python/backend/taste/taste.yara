@@ -651,6 +651,18 @@ rule php_file {
         $a at 0
 }
 
+rule plist_file {
+    meta:
+        description =  "Property list (XML)"
+        type = "text"
+    strings:
+        $a = { 3C 3F ( 58 | 78) ( 4D | 6D ) ( 4C | 6C ) 20 76 65 72 73 69 6F 6E 3D } // <?[Xx][Mm][Ll] version=
+        $b = { 3c 21 44 4f 43 54 59 50 45 20 70 6c 69 73 74 } // <!DOCTYPE plist
+    condition:
+        $a at 0 and
+        $b in (0..100)
+}
+
 rule soap_file {
     meta:
         description = "Simple Object Access Protocol"
