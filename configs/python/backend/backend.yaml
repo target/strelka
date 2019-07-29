@@ -90,7 +90,6 @@ scanners:
           - 'type_is_tiff'
           - 'image/x-ms-bmp'
           - 'bmp_file'
-          - 'bplist_file'
           - 'application/x-shockwave-flash'
           - 'fws_file'
           - 'psd_file'
