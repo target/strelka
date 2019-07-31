@@ -12,6 +12,10 @@ tasting:
   mime_db: null
   yara_rules: '/etc/strelka/taste/'
 scanners:
+  'ScanBase64':
+    - positive:
+        filename: '^base64_'
+      priority: 5
   'ScanBatch':
     - positive:
         flavors:
