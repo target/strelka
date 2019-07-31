@@ -1,6 +1,9 @@
+import ast
 import json
 import subprocess
 import tempfile
+
+import inflection
 
 from strelka import strelka
 
@@ -9,10 +12,13 @@ class ScanExiftool(strelka.Scanner):
     """Collects metadata parsed by Exiftool.
 
     Options:
+        keys: exiftool key values to log in the event.
+            Defaults to all.
         tmp_directory: Location where tempfile writes temporary files.
             Defaults to '/tmp/'.
     """
     def scan(self, data, file, options, expire_at):
+        keys = options.get('keys', [])
         tmp_directory = options.get('tmp_directory', '/tmp/')
 
         with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
@@ -27,10 +33,22 @@ class ScanExiftool(strelka.Scanner):
 
             if stdout:
                 exiftool_dictionary = json.loads(stdout)[0]
-                self.event.setdefault('exiftool', [])
-                for (key, value) in exiftool_dictionary.items():
-                    if isinstance(value, str):
-                        value = value.strip()
-                    exiftool_entry = {'field': key, 'value': value}
-                    if exiftool_entry not in self.event['exiftool']:
-                        self.event['exiftool'].append(exiftool_entry)
+                self.event['keys'] = []
+                for k, v in exiftool_dictionary.items():
+                    if k not in self.event['keys']:
+                        self.event['keys'].append(k)
+
+                    if keys and k not in keys:
+                        pass
+
+                    k = inflection.underscore(k)
+                    if isinstance(v, str):
+                        v = v.strip()
+                        v = v.strip('\'"')
+
+                        try:
+                            v = ast.literal_eval(v)
+                        except (ValueError, SyntaxError):
+                            pass
+
+                    self.event[k] = v

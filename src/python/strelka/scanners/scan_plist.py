@@ -6,7 +6,12 @@ from strelka import strelka
 
 
 class ScanPlist(strelka.Scanner):
-    """Collects metadata from JAR manifest files."""
+    """Parses keys found in property list files.
+
+    Options:
+        keys: plist key values to log in the event.
+            Defaults to all.
+    """
     def scan(self, data, file, options, expire_at):
         keys = options.get('keys', ['Label'])
 
@@ -17,6 +22,8 @@ class ScanPlist(strelka.Scanner):
             if k not in self.event['keys']:
                 self.event['keys'].append(k)
 
-            if k in keys:
-                k = inflection.underscore(k)
-                self.event[k] = v
+            if keys and k not in keys:
+                pass
+
+            k = inflection.underscore(k)
+            self.event[k] = v
