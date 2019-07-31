@@ -494,6 +494,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 |--------------|---------------------|-----------------|
 | ScanAntiword | Extracts text from MS Word documents | "tempfile_directory" -- location where tempfile writes temporary files (defaults to "/tmp/") |
 | ScanBatch | Collects metadata from batch script files | N/A |
+| ScanBase64 | Decodes base64-encoded files | N/A |
 | ScanBzip2 | Decompresses bzip2 files | N/A |
 | ScanCuckoo | Sends files to a Cuckoo sandbox | "url" -- URL of the Cuckoo sandbox (defaults to None)<br>"priority" -- Cuckoo priority assigned to the task (defaults to 3)<br>"timeout" -- amount of time (in seconds) to wait for the task to upload (defaults to 10)<br>"unique" -- boolean that tells Cuckoo to only analyze samples that have not been analyzed before (defaults to True)<br>"username" -- username used for authenticating to Cuckoo (defaults to None, optionally read from environment variable "CUCKOO_USERNAME")<br>"password" -- password used for authenticating to Cuckoo (defaults to None, optionally read from environment variable "CUCKOO_PASSWORD") |
 | ScanDocx | Collects metadata and extracts text from docx files | "extract_text" -- boolean that determines if document text should be extracted as a child file (defaults to False) |

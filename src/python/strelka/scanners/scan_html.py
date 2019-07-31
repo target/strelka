@@ -33,8 +33,26 @@ class ScanHtml(strelka.Scanner):
             self.event.setdefault('hyperlinks', [])
             for hyperlink in hyperlinks:
                 link = hyperlink.get('href') or hyperlink.get('src')
-                if link not in self.event['hyperlinks']:
-                    self.event['hyperlinks'].append(link)
+
+                if link.startswith('data:') and ';base64,' in link:
+                    hyperlink_data = link.split(';base64,')[1]
+                    extract_file = strelka.File(
+                        name='base64_hyperlink',
+                        source=self.name,
+                    )
+
+                    for c in strelka.chunk_string(hyperlink_data):
+                        self.upload_to_coordinator(
+                            extract_file.pointer,
+                            c,
+                            expire_at,
+                        )
+
+                    self.files.append(extract_file)
+
+                else:
+                    if link not in self.event['hyperlinks']:
+                        self.event['hyperlinks'].append(link)
 
             forms = soup.find_all('form')
             self.event['total']['forms'] = len(forms)
