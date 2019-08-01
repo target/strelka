@@ -39,7 +39,7 @@ class ScanExiftool(strelka.Scanner):
                         self.event['keys'].append(k)
 
                     if keys and k not in keys:
-                        pass
+                        continue
 
                     k = inflection.underscore(k)
                     if isinstance(v, str):

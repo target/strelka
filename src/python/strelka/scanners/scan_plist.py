@@ -23,7 +23,7 @@ class ScanPlist(strelka.Scanner):
                 self.event['keys'].append(k)
 
             if keys and k not in keys:
-                pass
+                continue
 
             k = inflection.underscore(k)
             self.event[k] = v
