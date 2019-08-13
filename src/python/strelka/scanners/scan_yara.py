@@ -16,8 +16,8 @@ class ScanYara(strelka.Scanner):
     Options:
         location: Location of the YARA rules file or directory.
             Defaults to '/etc/yara/'.
-        metadata_identifiers: List of YARA rule metadata identifiers
-            (e.g. 'Author') that should be logged as metadata.
+        meta: List of YARA rule meta identifiers
+            (e.g. 'Author') that should be logged.
             Defaults to empty list.
     """
     def init(self):
@@ -25,7 +25,7 @@ class ScanYara(strelka.Scanner):
 
     def scan(self, data, file, options, expire_at):
         location = options.get('location', '/etc/yara/')
-        metadata_identifiers = options.get('metadata_identifiers', [])
+        meta = options.get('meta', [])
 
         try:
             if self.compiled_yara is None:
