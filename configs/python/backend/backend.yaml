@@ -57,6 +57,7 @@ scanners:
         flavors:
           - 'application/msword'
           - 'olecf_file'
+          - 'application/vnd.ms-excel'
       priority: 5
       options:
         keys:
@@ -176,6 +177,10 @@ scanners:
         flavors:
           - 'jar_manifest_file'
       priority: 5
+      options:
+        headers:
+          - 'Manifest-Version'
+          - 'Created-By'
   'ScanJavascript':
     - negative:
         flavors:

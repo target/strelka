@@ -1,6 +1,5 @@
+import ast
 import plistlib
-
-import inflection
 
 from strelka import strelka
 
@@ -19,11 +18,15 @@ class ScanPlist(strelka.Scanner):
 
         self.event['keys'] = []
         for k, v in plist.items():
-            if k not in self.event['keys']:
-                self.event['keys'].append(k)
-
             if keys and k not in keys:
                 continue
 
-            k = inflection.underscore(k)
-            self.event[k] = v
+            try:
+                v = ast.literal_eval(v)
+            except (ValueError, SyntaxError):
+                pass
+
+            self.event['keys'].append({
+                'key': k,
+                'value': v,
+            })

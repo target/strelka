@@ -3,8 +3,6 @@ import json
 import subprocess
 import tempfile
 
-import inflection
-
 from strelka import strelka
 
 
@@ -33,15 +31,12 @@ class ScanExiftool(strelka.Scanner):
 
             if stdout:
                 exiftool_dictionary = json.loads(stdout)[0]
+
                 self.event['keys'] = []
                 for k, v in exiftool_dictionary.items():
-                    if k not in self.event['keys']:
-                        self.event['keys'].append(k)
-
                     if keys and k not in keys:
                         continue
 
-                    k = inflection.underscore(k)
                     if isinstance(v, str):
                         v = v.strip()
                         v = v.strip('\'"')
@@ -51,4 +46,7 @@ class ScanExiftool(strelka.Scanner):
                         except (ValueError, SyntaxError):
                             pass
 
-                    self.event[k] = v
+                    self.event['keys'].append({
+                        'key': k,
+                        'value': strelka.normalize_whitespace(v.strip()),
+                    })
