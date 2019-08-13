@@ -12,7 +12,7 @@ class ScanPlist(strelka.Scanner):
             Defaults to all.
     """
     def scan(self, data, file, options, expire_at):
-        keys = options.get('keys', ['Label'])
+        keys = options.get('keys', [])
 
         plist = plistlib.loads(data)
 
