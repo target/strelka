@@ -16,13 +16,13 @@ class ScanEmail(strelka.Scanner):
             )
 
             self.event['headers'] = []
-            for (h, v) in message.items():
+            for h, v in message.items():
                 if headers and h not in headers:
                     continue
 
                 self.event['headers'].append({
                     'header': h,
-                    'value': strelka.normalize_whitespace(v.strip()),
+                    'value': v,
                 })
 
             self.event['parts'] = []

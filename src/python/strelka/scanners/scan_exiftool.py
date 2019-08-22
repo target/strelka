@@ -48,5 +48,5 @@ class ScanExiftool(strelka.Scanner):
 
                     self.event['keys'].append({
                         'key': k,
-                        'value': strelka.normalize_whitespace(v.strip()),
+                        'value': v,
                     })
