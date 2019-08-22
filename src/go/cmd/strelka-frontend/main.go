@@ -237,6 +237,7 @@ func main() {
         cd := redis.NewClient(&redis.Options{
                 Addr:       conf.Coordinator.Addr,
                 DB:         conf.Coordinator.DB,
+                PoolSize:   1000,
         })
         if err := cd.Ping().Err(); err != nil {
                 log.Fatalf("failed to connect to coordinator: %v", err)
@@ -245,6 +246,7 @@ func main() {
         gk := redis.NewClient(&redis.Options{
                 Addr:       conf.Gatekeeper.Addr,
                 DB:         conf.Gatekeeper.DB,
+                PoolSize:   1000,
         })
         if err := gk.Ping().Err(); err != nil {
                 log.Fatalf("failed to connect to gatekeeper: %v", err)
