@@ -1,22 +1,32 @@
+import ast
 import plistlib
-
-import inflection
 
 from strelka import strelka
 
 
 class ScanPlist(strelka.Scanner):
-    """Collects metadata from JAR manifest files."""
+    """Parses keys found in property list files.
+
+    Options:
+        keys: plist key values to log in the event.
+            Defaults to all.
+    """
     def scan(self, data, file, options, expire_at):
-        keys = options.get('keys', ['Label'])
+        keys = options.get('keys', [])
 
         plist = plistlib.loads(data)
 
         self.event['keys'] = []
         for k, v in plist.items():
-            if k not in self.event['keys']:
-                self.event['keys'].append(k)
+            if keys and k not in keys:
+                continue
 
-            if k in keys:
-                k = inflection.underscore(k)
-                self.event[k] = v
+            try:
+                v = ast.literal_eval(v)
+            except (ValueError, SyntaxError):
+                pass
+
+            self.event['keys'].append({
+                'key': k,
+                'value': v,
+            })

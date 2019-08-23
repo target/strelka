@@ -60,30 +60,64 @@ scanners:
     - positive:
         flavors:
           - 'application/msword'
-          - 'application/vnd.openxmlformats-officedocument'
-          - 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-          - 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-          - 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
           - 'olecf_file'
-          - 'ooxml_file'
-          - 'audio/mpeg'
-          - 'mp3_file'
-          - 'mhtml_file'
+          - 'application/vnd.ms-excel'
+      priority: 5
+      options:
+        keys:
+          - 'Author'
+          - 'Characters'
+          - 'Company'
+          - 'CreateDate'
+          - 'LastModifiedBy'
+          - 'Lines'
+          - 'ModifyDate'
+          - 'Pages'
+          - 'Paragraphs'
+          - 'RevisionNumber'
+          - 'Software'
+          - 'Template'
+          - 'Title'
+          - 'TotalEditTime'
+          - 'Words'
+        tmp_directory: '/dev/shm/'
+    - positive:
+        flavors:
           - 'application/pdf'
           - 'pdf_file'
-          - 'text/rtf'
-          - 'rtf_file'
-          - 'wordml_file'
-          - 'application/x-dosexec'
-          - 'mz_file'
-          - 'application/x-object'
-          - 'application/x-executable'
-          - 'application/x-sharedlib'
-          - 'application/x-coredump'
-          - 'elf_file'
+      priority: 5
+      options:
+        keys:
+          - 'Author'
+          - 'CreateDate'
+          - 'Creator'
+          - 'CreatorTool'
+          - 'Linearized'
+          - 'ModifyDate'
+          - 'PageCount'
+          - 'PDFVersion'
+          - 'Producer'
+          - 'Title'
+        tmp_directory: '/dev/shm/'
+    - positive:
+        flavors:
           - 'lnk_file'
-          - 'application/x-mach-binary'
-          - 'macho_file'
+      priority: 5
+      options:
+        keys:
+          - 'CommandLineArguments'
+          - 'Description'
+          - 'FileAttributes'
+          - 'Flags'
+          - 'HotKey'
+          - 'IconFileName'
+          - 'IconIndex'
+          - 'RunWindow'
+          - 'TargetFileSize'
+          - 'WorkingDirectory'
+        tmp_directory: '/dev/shm/'
+    - positive:
+        flavors:
           - 'image/gif'
           - 'gif_file'
           - 'image/jpeg'
@@ -96,15 +130,11 @@ scanners:
           - 'bmp_file'
           - 'application/x-shockwave-flash'
           - 'fws_file'
-          - 'psd_file'
-          - 'video/mp4'
-          - 'video/quicktime'
-          - 'video/x-msvideo'
-          - 'avi_file'
-          - 'video/x-ms-wmv'
-          - 'wmv_file'
       priority: 5
       options:
+        keys:
+          - 'ImageHeight'
+          - 'ImageWidth'
         tmp_directory: '/dev/shm/'
   'ScanGif':
     - positive:
@@ -151,6 +181,10 @@ scanners:
         flavors:
           - 'jar_manifest_file'
       priority: 5
+      options:
+        headers:
+          - 'Manifest-Version'
+          - 'Created-By'
   'ScanJavascript':
     - negative:
         flavors:

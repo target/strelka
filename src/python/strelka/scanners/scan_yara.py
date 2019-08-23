@@ -16,8 +16,8 @@ class ScanYara(strelka.Scanner):
     Options:
         location: Location of the YARA rules file or directory.
             Defaults to '/etc/yara/'.
-        metadata_identifiers: List of YARA rule metadata identifiers
-            (e.g. 'Author') that should be logged as metadata.
+        meta: List of YARA rule meta identifiers
+            (e.g. 'Author') that should be logged.
             Defaults to empty list.
     """
     def init(self):
@@ -25,7 +25,7 @@ class ScanYara(strelka.Scanner):
 
     def scan(self, data, file, options, expire_at):
         location = options.get('location', '/etc/yara/')
-        metadata_identifiers = options.get('metadata_identifiers', [])
+        meta = options.get('meta', [])
 
         try:
             if self.compiled_yara is None:
@@ -42,24 +42,24 @@ class ScanYara(strelka.Scanner):
         except (yara.Error, yara.SyntaxError):
             self.flags.append('compiling_error')
 
-        self.event.setdefault('matches', [])
-        self.event.setdefault('metadata', [])
+        self.event['matches'] = []
+        self.event['meta'] = []
 
         try:
             if self.compiled_yara is not None:
                 yara_matches = self.compiled_yara.match(data=data)
                 for match in yara_matches:
                     self.event['matches'].append(match.rule)
-                    if metadata_identifiers and match.meta:
-                        for (key, value) in match.meta.items():
-                            if key in metadata_identifiers:
-                                yara_entry = {
-                                    'rule': match.rule,
-                                    'identifier': key,
-                                    'value': value,
-                                }
-                                if yara_entry not in self.event['metadata']:
-                                    self.event['metadata'].append(yara_entry)
+
+                    for k, v in match.meta.items():
+                        if meta and k not in meta:
+                            continue
+
+                        self.event['meta'].append({
+                            'rule': match.rule,
+                            'identifier': k,
+                            'value': v,
+                        })
 
         except (yara.Error, yara.TimeoutError):
             self.flags.append('scanning_error')

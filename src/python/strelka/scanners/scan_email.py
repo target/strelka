@@ -6,6 +6,8 @@ from strelka import strelka
 class ScanEmail(strelka.Scanner):
     """Collects metadata and extract files from email messages."""
     def scan(self, data, file, options, expire_at):
+        headers = options.get('headers', [])
+
         self.event['total'] = {'parts': 0, 'extracted': 0}
 
         try:
@@ -13,14 +15,17 @@ class ScanEmail(strelka.Scanner):
                 data.decode('UTF-8', 'replace')
             )
 
-            self.event.setdefault('headers', [])
-            for (key, value) in message.items():
-                normalized_value = strelka.normalize_whitespace(value.strip())
-                header_entry = {'header': key, 'value': normalized_value}
-                if header_entry not in self.event['headers']:
-                    self.event['headers'].append(header_entry)
+            self.event['headers'] = []
+            for h, v in message.items():
+                if headers and h not in headers:
+                    continue
 
-            self.event.setdefault('parts', [])
+                self.event['headers'].append({
+                    'header': h,
+                    'value': v,
+                })
+
+            self.event['parts'] = []
             for (index, part) in enumerate(message.walk()):
                 self.event['total']['parts'] += 1
                 extract_data = part.get_payload(decode=True)
