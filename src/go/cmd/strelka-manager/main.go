@@ -32,8 +32,10 @@ func main() {
         }
 
         cd := redis.NewClient(&redis.Options{
-                Addr:       conf.Coordinator.Addr,
-                DB:         conf.Coordinator.DB,
+                Addr:         conf.Coordinator.Addr,
+                DB:           conf.Coordinator.DB,
+                PoolSize:     conf.Coordinator.Pool,
+                ReadTimeout:  conf.Coordinator.Read,
         })
         if err := cd.Ping().Err(); err != nil {
                 log.Fatalf("failed to connect to coordinator: %v", err)
