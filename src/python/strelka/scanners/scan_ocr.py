@@ -51,5 +51,5 @@ class ScanOcr(strelka.Scanner):
                                 self.files.append(extract_file)
 
                 else:
-                    self.flags.append('return_code_{tess_return}')
+                    self.flags.append(f'return_code_{tess_return}')
                 os.remove(tess_txt_name)
