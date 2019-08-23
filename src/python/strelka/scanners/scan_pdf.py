@@ -109,7 +109,7 @@ class ScanPdf(strelka.Scanner):
                         laparams=la_params,
                     )
                     interpreter = pdfinterp.PDFPageInterpreter(rsrcmgr, device)
-                    for page in pdfpage.PDFPage.get_pages(data, set()):
+                    for page in pdfpage.PDFPage.get_pages(pdf_io, set()):
                         try:
                             interpreter.process_page(page)
 
