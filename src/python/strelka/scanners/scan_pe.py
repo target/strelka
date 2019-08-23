@@ -307,7 +307,7 @@ class ScanPe(strelka.Scanner):
             'checksum': pe.OPTIONAL_HEADER.CheckSum,
             'machine': {
                 'id': pe.FILE_HEADER.Machine,
-                'type': pefile.MACHINE_TYPE.get(pe.FILE_HEADER.Machine).replace('IMAGE_FILE_', ''),
+                'type': pefile.MACHINE_TYPE.get(pe.FILE_HEADER.Machine).replace('IMAGE_FILE_MACHINE_', ''),
             },
             'magic': {
                 'dos': MAGIC_DOS.get(pe.DOS_HEADER.e_magic, ''),
