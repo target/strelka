@@ -35,11 +35,15 @@ type ConfFiles struct {
 type ConfCoordinator struct {
         Addr            string                      // required
         DB              int                         // required
+        Pool            int                         // required
+        Read            time.Duration               // required
 }
 
 type ConfGatekeeper struct {
         Addr            string                      // required
         DB              int                         // required
+        Pool            int                         // required
+        Read            time.Duration               // required
         TTL             time.Duration               //required
 }
 

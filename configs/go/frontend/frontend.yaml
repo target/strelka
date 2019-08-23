@@ -2,9 +2,13 @@ server: ":57314"
 coordinator:
   addr: 'strelka_coordinator_1:6379'
   db: 0
+  pool: 100
+  read: 10s
 gatekeeper:
   addr: 'strelka_gatekeeper_1:6379'
   db: 0
+  pool: 100
+  read: 10s
   ttl: 1h
 response:
   log: "/var/log/strelka/strelka.log"
