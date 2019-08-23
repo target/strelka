@@ -34,7 +34,7 @@ class ScanHtml(strelka.Scanner):
             for hyperlink in hyperlinks:
                 link = hyperlink.get('href') or hyperlink.get('src')
 
-                if link.startswith('data:') and ';base64,' in link:
+                if link and link.startswith('data:') and ';base64,' in link:
                     hyperlink_data = link.split(';base64,')[1]
                     extract_file = strelka.File(
                         name='base64_hyperlink',
