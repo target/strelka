@@ -25,7 +25,7 @@ class ScanHtml(strelka.Scanner):
             soup = bs4.BeautifulSoup(data, parser)
 
             if soup.title:
-                self.event['title'] = strelka.normalize_whitespace(soup.title.text)
+                self.event['title'] = soup.title.text
 
             hyperlinks = []
             hyperlinks.extend(soup.find_all('a', href=True))
