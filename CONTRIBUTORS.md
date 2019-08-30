@@ -6,7 +6,8 @@ git log -p <file>
 ```
 
 # Target Team
-- Josh Liburdi ([@jshlbrd](https://twitter.com/jshlbrd)) - Lead
-- Thao Vo ([@ttttv0](https://twitter.com/ttttv0)) - Maintainer
-- Annalise Pucel ([anpucel](https://github.com/anpucel)) - Maintainer
-- Justin Bovee ([thehybridtechnician](https://github.com/thehybridtechnician)) - Maintainer
+- Paul Hutelmyer - Lead
+
+# External Collaborators
+- Josh Liburdi ([@jshlbrd](https://twitter.com/jshlbrd))
+- Thao Vo ([@ttttv0](https://twitter.com/ttttv0))
