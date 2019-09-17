@@ -1,4 +1,5 @@
 import io
+import os
 import rarfile
 
 from strelka import strelka
@@ -13,46 +14,93 @@ HOST_OS_MAPPING = {
     5: 'RAR_OS_BEOS',
 }
 
+rarfile.UNRAR_TOOL = "unrar"
+rarfile.PATH_SEP= '/'
 
 class ScanRar(strelka.Scanner):
     """Extracts files from RAR archives.
 
+    Attributes:
+        password: List of passwords to use when bruteforcing encrypted files.
+
     Options:
         limit: Maximum number of files to extract.
             Defaults to 1000.
+        password_file: Location of passwords file for rar archives.
+            Defaults to /etc/strelka/passwords.dat
     """
+    def init(self):
+        self.passwords = []
+
     def scan(self, data, file, options, expire_at):
         file_limit = options.get('limit', 1000)
+        password_file = options.get('password_file', '/etc/strelka/passwords.dat')
 
         self.event['total'] = {'files': 0, 'extracted': 0}
 
+        if not self.passwords:
+            if os.path.isfile(password_file):
+                with open(password_file, 'rb') as f:
+                    for line in f:
+                        self.passwords.append(line.strip())
+
         with io.BytesIO(data) as rar_io:
-            with rarfile.RarFile(rar_io) as rar_obj:
-                rf_info_list = rar_obj.infolist()
-                self.event['total']['files'] = len(rf_info_list)
-                for rf_object in rf_info_list:
-                    if not rf_object.isdir():
-                        if self.event['total']['extracted'] >= file_limit:
-                            break
+            try:
+                with rarfile.RarFile(rar_io) as rar_obj:
+                    rf_info_list = rar_obj.infolist()
+                    self.event['total']['files'] = len(rf_info_list)
 
-                        file_info = rar_obj.getinfo(rf_object)
-                        if not file_info.needs_password():
-                            self.event['host_os'] = HOST_OS_MAPPING[file_info.host_os]
+                    password = 'password'
+                    for rf_object in rf_info_list:
+                        if not rf_object.isdir():
+                            if self.event['total']['extracted'] >= file_limit:
+                                break
 
-                            extract_file = strelka.File(
-                                name=f'{file_info.filename}',
-                                source=self.name,
-                            )
+                            try:
+                                extract_data = b''
+                                file_info = rar_obj.getinfo(rf_object)
+                                self.event['host_os'] = HOST_OS_MAPPING[file_info.host_os]
 
-                            for c in strelka.chunk_string(rar_obj.read(rf_object)):
-                                self.upload_to_coordinator(
-                                    extract_file.pointer,
-                                    c,
-                                    expire_at,
-                                )
+                                if not file_info.needs_password():
+                                    extract_data = rar_obj.read(rf_object)
+                                else:
+                                    if not password:
+                                        for pw in self.passwords:
+                                            try:
+                                                extract_data = rar_obj.read(rf_object, str(pw))
+                                                if not extract_data.lstrip().startswith(b'Failed'):
+                                                    password = str(pw)
+                                                    break
 
-                            self.files.append(extract_file)
-                            self.event['total']['extracted'] += 1
+                                            except (RuntimeError, rarfile.BadRarFile):
+                                                pass
+                                    else:
+                                        extract_data = rar_obj.read(rf_object, password)
+                                    
+                                    self.flags.append('password_protected')            
 
-                        else:
-                            self.flags.append('password_protected')
+                                if extract_data:
+                                    extract_file = strelka.File(
+                                        name=f'{file_info.filename}',
+                                        source=self.name,
+                                    )
+
+                                    for c in strelka.chunk_string(extract_data):
+                                        self.upload_to_coordinator(
+                                            extract_file.pointer,
+                                            c,
+                                            expire_at,
+                                        )
+
+                                    self.files.append(extract_file)
+                                    self.event['total']['extracted'] += 1
+
+                            except NotImplementedError:
+                                self.flags.append('unsupport_compression')
+                            except RuntimeError:
+                                self.flags.append('runtime_error')
+                            except ValueError:
+                                self.flags.append('value_error')
+         
+            except rarfile.BadRarFile:
+                self.flags.append('bad_rar')
