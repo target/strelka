@@ -50,7 +50,7 @@ class ScanRar(strelka.Scanner):
                     rf_info_list = rar_obj.infolist()
                     self.event['total']['files'] = len(rf_info_list)
 
-                    password = 'password'
+                    password = ''
                     for rf_object in rf_info_list:
                         if not rf_object.isdir():
                             if self.event['total']['extracted'] >= file_limit:
@@ -67,11 +67,9 @@ class ScanRar(strelka.Scanner):
                                     if not password:
                                         for pw in self.passwords:
                                             try:
-                                                extract_data = rar_obj.read(rf_object, str(pw))
-                                                if not extract_data.lstrip().startswith(b'Failed'):
-                                                    password = str(pw)
+                                                extract_data = rar_obj.read(rf_object, pw.decode('utf-8'))
+                                                if extract_data:
                                                     break
-
                                             except (RuntimeError, rarfile.BadRarFile):
                                                 pass
                                     else:
