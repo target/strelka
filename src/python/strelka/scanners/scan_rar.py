@@ -64,18 +64,24 @@ class ScanRar(strelka.Scanner):
                                 if not file_info.needs_password():
                                     extract_data = rar_obj.read(rf_object)
                                 else:
+                                    if not 'password_protected' in self.flags:
+                                        self.flags.append('password_protected')  
+                                    
                                     if not password:
                                         for pw in self.passwords:
                                             try:
                                                 extract_data = rar_obj.read(rf_object, pw.decode('utf-8'))
                                                 if extract_data:
+                                                    self.event['password'] = pw.decode('utf-8')
                                                     break
                                             except (RuntimeError, rarfile.BadRarFile):
                                                 pass
                                     else:
                                         extract_data = rar_obj.read(rf_object, password)
-                                    
-                                    self.flags.append('password_protected')            
+
+                                    if not extract_data and not 'no_password_match_found' in self.flags:
+                                        self.flags.append('no_password_match_found')
+                                              
 
                                 if extract_data:
                                     extract_file = strelka.File(
