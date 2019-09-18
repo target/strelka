@@ -1,6 +1,11 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2019-09-18
+### Changes
+- Fixed bug in ScanTnef where key is not present, an exception is thrown.
+- Added olecf flavor to ScanIni default
+
 ## 2019-07-26
 ### Changed
 - Fixed bug in ScanPe when header field is nonexistent (jshlbrd)
