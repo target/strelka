@@ -16,7 +16,11 @@ class ScanTnef(strelka.Scanner):
             if descriptive_name not in self.event['object_names']:
                 self.event['object_names'].append(descriptive_name)
 
-            object_data = tnef_object.data.strip(b'\0') or None
+            try:
+                object_data = tnef_object.data.strip(b'\0') or None
+            except:
+                object_data = tnef_object.data
+
             if object_data is not None:
                 if descriptive_name == 'Subject':
                     self.event['subject'] = object_data
@@ -50,7 +54,7 @@ class ScanTnef(strelka.Scanner):
                 source=self.name,
             )
 
-            for c in strelka.chunk_string(tnef_html.data):
+            for c in strelka.chunk_string(tnef_html):
                 self.upload_to_coordinator(
                     extract_file.pointer,
                     c,
