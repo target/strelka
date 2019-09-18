@@ -175,6 +175,7 @@ scanners:
         filename: '(\.([Cc][Ff][Gg]|[Ii][Nn][Ii])|PROJECT)$'
         flavors:
           - 'ini_file'
+          - 'olecf_file'
       priority: 5
   'ScanJarManifest':
     - positive:
