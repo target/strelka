@@ -51,37 +51,45 @@ class ScanRar(strelka.Scanner):
                     self.event['total']['files'] = len(rf_info_list)
 
                     password = ''
-                    for rf_object in rf_info_list:
-                        if not rf_object.isdir():
+                    for i, name in enumerate(rf_info_list):
+                        if not name.isdir():
                             if self.event['total']['extracted'] >= file_limit:
                                 break
 
                             try:
                                 extract_data = b''
-                                file_info = rar_obj.getinfo(rf_object)
+                                file_info = rar_obj.getinfo(name)
                                 self.event['host_os'] = HOST_OS_MAPPING[file_info.host_os]
 
                                 if not file_info.needs_password():
-                                    extract_data = rar_obj.read(rf_object)
+                                    extract_data = rar_obj.read(name)
                                 else:
-                                    if not 'password_protected' in self.flags:
+                                    if i == 0:
                                         self.flags.append('password_protected')  
                                     
-                                    if not password:
+                                    if not password and i == 0:
                                         for pw in self.passwords:
                                             try:
-                                                extract_data = rar_obj.read(rf_object, pw.decode('utf-8'))
-                                                if extract_data:
+                                                data = rar_obj.open(name, mode='r', psw=pw.decode('utf-8'))
+                                                if data.readable():
+                                                    extract_data = data.readall()
+                                                    password = pw.decode('utf-8')
                                                     self.event['password'] = pw.decode('utf-8')
                                                     break
-                                            except (RuntimeError, rarfile.BadRarFile):
+                                            except (RuntimeError, rarfile.BadRarFile, rarfile.RarCRCError, rarfile.RarWrongPassword):
                                                 pass
+                                    elif not password and i > 0:
+                                        break
                                     else:
-                                        extract_data = rar_obj.read(rf_object, password)
+                                        try:
+                                            data = rar_obj.open(name, mode='r', psw=password)
+                                            if data.readable():
+                                                extract_data = data.readall()
+                                        except (RuntimeError, rarfile.BadRarFile, rarfile.RarCRCError, rarfile.RarWrongPassword):
+                                            pass
 
-                                    if not extract_data and not 'no_password_match_found' in self.flags:
-                                        self.flags.append('no_password_match_found')
-                                              
+                                if not extract_data and not 'no_password_match_found' in self.flags:
+                                    self.flags.append('no_password_match_found')                        
 
                                 if extract_data:
                                     extract_file = strelka.File(
