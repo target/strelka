@@ -211,7 +211,11 @@ VAR_FILE_INFO_CHARS = {
 class ScanPe(strelka.Scanner):
     """Collects metadata from PE files."""
     def scan(self, data, file, options, expire_at):
-        pe = pefile.PE(data=data)
+        try:
+            pe = pefile.PE(data=data)
+        except pefile.PEFormatError:
+            self.flags.append('pe_format_error')
+            return
 
         self.event['total'] = {
             'libraries': 0,
