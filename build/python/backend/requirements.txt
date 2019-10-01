@@ -9,6 +9,7 @@ interruptingcow==0.8
 jsbeautifier==1.8.9
 libarchive-c==2.8
 lxml==4.3.0
+msoffcrypto-tool==4.10.1
 olefile==0.46
 oletools==0.53.1
 M2Crypto==0.33.0

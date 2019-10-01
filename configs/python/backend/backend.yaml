@@ -51,6 +51,11 @@ scanners:
           - 'message/rfc822'
           - 'email_file'
       priority: 5
+  'ScanEncryptedDoc':
+    - positive:
+        flavors:
+          - 'application/encrypted'
+      priority: 5
   'ScanEntropy':
     - positive:
         flavors:

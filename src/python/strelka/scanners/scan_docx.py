@@ -1,7 +1,9 @@
 import io
+import os
 from bs4 import BeautifulSoup
 import docx
 import zipfile
+import msoffcrypto
 
 from strelka import strelka
 
@@ -14,10 +16,11 @@ class ScanDocx(strelka.Scanner):
             extracted as a child file.
             Defaults to False.
     """
+
     def scan(self, data, file, options, expire_at):
         extract_text = options.get('extract_text', False)
-
         with io.BytesIO(data) as docx_io:
+
             try:
                 docx_doc = docx.Document(docx_io)
                 self.event['author'] = docx_doc.core_properties.author
@@ -83,5 +86,7 @@ class ScanDocx(strelka.Scanner):
 
                     self.files.append(extract_file)
 
-            except (ValueError, zipfile.BadZipFile):
-                pass
+            except ValueError:
+                self.flags.append('value_error')
+            except zipfile.BadZipFile:
+                self.flags.append('bad_zip')
