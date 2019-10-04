@@ -1,9 +1,11 @@
 import io
 import os
-import zipfile
 import msoffcrypto
+import logging
 
 from strelka import strelka
+
+logging.getLogger('msoffcrypto').setLevel(logging.CRITICAL)
 
 class ScanEncryptedDoc(strelka.Scanner):
 

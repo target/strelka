@@ -501,6 +501,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanDocx | Collects metadata and extracts text from docx files | "extract_text" -- boolean that determines if document text should be extracted as a child file (defaults to False) |
 | ScanElf | Collects metadata from ELF files | N/A |
 | ScanEmail | Collects metadata and extract files from email messages | N/A |
+| ScanEncryptedDoc | Attempts to extract decrypted Office documents through brute force password cracking | "password_file" -- location of passwords file for encrypted documents (defaults to etc/strelka/passwords.txt) |
 | ScanEntropy | Calculates entropy of files | N/A |
 | ScanExiftool | Collects metadata parsed by Exiftool | "tempfile_directory" -- location where tempfile writes temporary files (defaults to "/tmp/")<br>"keys" -- list of keys to log (defaults to all) |
 | ScanFalconSandbox | Sends files to an instance of Falcon Sandbox | "server" -- URL of the Falcon Sandbox API inteface <br>"priority" -- Falcon Sandbox priority assigned to the task (defaults to 3)<br>"timeout" -- amount of time (in seconds) to wait for the task to upload (defaults to 60)<br>"envID" -- list of numeric envrionment IDs that tells Falcon Sandbox which sandbox to submit a sample to (defaults to [100])<br>"api_key" -- API key used for authenticating to Falcon Sandbox (defaults to None, optionally read from environment variable "FS_API_KEY")<br>"api_secret" --  API secret key used for authenticating to Falcon Sandbox (defaults to None, optionally read from environment variable "FS_API_SECKEY") |
@@ -526,7 +527,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanPhp | Collects metadata from PHP files | N/A |
 | ScanPkcs7 | Extracts files from PKCS7 certificate files | N/A |
 | ScanPlist | Collects attributes from binary and XML property list files | "keys" -- list of keys to log (defaults to all) |
-| ScanRar | Extracts files from RAR archives | "limit" -- maximum number of files to extract (defaults to 1000)<br>"password_file" -- location of passwords file for zip archives (defaults to etc/strelka/passwords.txt) |
+| ScanRar | Extracts files from RAR archives | "limit" -- maximum number of files to extract (defaults to 1000)<br>"password_file" -- location of passwords file for RAR archives (defaults to etc/strelka/passwords.txt) |
 | ScanRpm | Collects metadata and extracts files from RPM files | "tempfile_directory" -- location where `tempfile` will write temporary files (defaults to "/tmp/") |
 | ScanRtf | Extracts embedded files from RTF files | "limit" -- maximum number of files to extract (defaults to 1000) |
 | ScanSelf | Collects metadata from the file's internal attributes | N/A |
