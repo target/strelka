@@ -1,9 +1,7 @@
 import io
-import os
 from bs4 import BeautifulSoup
 import docx
 import zipfile
-import msoffcrypto
 
 from strelka import strelka
 
