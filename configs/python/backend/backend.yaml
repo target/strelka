@@ -12,6 +12,12 @@ tasting:
   mime_db: null
   yara_rules: '/etc/strelka/taste/'
 scanners:
+  #'ScanAntiword':
+  #  - positive:
+  #      flavors:
+  #        - 'application/msword'
+  #        - 'olecf_file'
+  #    priority: 5
   'ScanBase64':
     - positive:
         filename: '^base64_'
