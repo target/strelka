@@ -530,7 +530,6 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanRar | Extracts files from RAR archives | "limit" -- maximum number of files to extract (defaults to 1000)<br>"password_file" -- location of passwords file for RAR archives (defaults to etc/strelka/passwords.txt) |
 | ScanRpm | Collects metadata and extracts files from RPM files | "tempfile_directory" -- location where `tempfile` will write temporary files (defaults to "/tmp/") |
 | ScanRtf | Extracts embedded files from RTF files | "limit" -- maximum number of files to extract (defaults to 1000) |
-| ScanSelf | Collects metadata from the file's internal attributes | N/A |
 | ScanStrings | Collects strings from file data | "limit" -- maximum number of strings to collect, starting from the beginning of the file (defaults to 0, collects all strings) |
 | ScanSwf | Decompresses swf (Flash) files | N/A |
 | ScanTar | Extract files from tar archives | "limit" -- maximum number of files to extract (defaults to 1000) |
@@ -631,7 +630,6 @@ Below is a partial scan result for an HTML file that contains a malicious VBScri
       ]
     },
     "scanner_list": [
-      "ScanSelf",
       "ScanYara",
       "ScanHash",
       "ScanEntropy",
@@ -794,7 +792,6 @@ Below is a partial scan result for an HTML file that contains a malicious VBScri
     },
     "source": "ScanHtml",
     "scanner_list": [
-      "ScanSelf",
       "ScanYara",
       "ScanHash",
       "ScanEntropy",
@@ -878,7 +875,6 @@ Below is a partial scan result for an MZ file that shows PE metadata.
   "filename": "VirusShare_0b937eb777e92d13fb583c4a992208dd",
   "depth": 0,
   "scanner_list": [
-    "ScanSelf",
     "ScanYara",
     "ScanHash",
     "ScanEntropy",
@@ -1280,7 +1276,6 @@ Below is a complete scan result for a text file that appears to be a shell scrip
       ]
     },
     "scanner_list": [
-      "ScanSelf",
       "ScanYara",
       "ScanHash",
       "ScanEntropy",
@@ -1322,7 +1317,6 @@ Below is a partial scan result for a document file that contains VBA/VBScript, t
     "filename": "/samples/benign.xlsm",
     "depth": 0,      
     "scanner_list": [
-      "ScanSelf",
       "ScanYara",
       "ScanHash",
       "ScanEntropy",
@@ -1350,7 +1344,6 @@ Below is a partial scan result for a document file that contains VBA/VBScript, t
     },
     "source": "ScanVba",
     "scanner_list": [
-      "ScanSelf",
       "ScanYara",
       "ScanHash",
       "ScanEntropy",
