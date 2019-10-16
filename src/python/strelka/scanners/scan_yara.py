@@ -43,6 +43,7 @@ class ScanYara(strelka.Scanner):
             self.flags.append('compiling_error')
 
         self.event['matches'] = []
+        self.event['tags'] = []
         self.event['meta'] = []
 
         try:
@@ -50,6 +51,10 @@ class ScanYara(strelka.Scanner):
                 yara_matches = self.compiled_yara.match(data=data)
                 for match in yara_matches:
                     self.event['matches'].append(match.rule)
+                    if match.tags:
+                        for tag in match.tags:
+                            if not tag in self.event['matches']:
+                                self.event['matches'].append(tag)
 
                     for k, v in match.meta.items():
                         if meta and k not in meta:
