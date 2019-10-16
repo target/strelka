@@ -53,8 +53,8 @@ class ScanYara(strelka.Scanner):
                     self.event['matches'].append(match.rule)
                     if match.tags:
                         for tag in match.tags:
-                            if not tag in self.event['matches']:
-                                self.event['matches'].append(tag)
+                            if not tag in self.event['tags']:
+                                self.event['tags'].append(tag)
 
                     for k, v in match.meta.items():
                         if meta and k not in meta:
