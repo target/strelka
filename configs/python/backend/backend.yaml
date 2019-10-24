@@ -18,9 +18,10 @@ scanners:
   #        - 'application/msword'
   #        - 'olecf_file'
   #    priority: 5
-  'ScanBase64':
+  'ScanBase64PE':
     - positive:
-        filename: '^base64_'
+        flavors:
+          - 'base64_pe'
       priority: 5
   'ScanBatch':
     - positive:
@@ -363,6 +364,11 @@ scanners:
         flavors:
           - 'text/x-ruby'
       priority: 5
+  # 'ScanStrings':
+  #   - positive:
+  #       flavors:
+  #         - 'mz_file'
+  #     priority: 5
   'ScanSwf':
     - positive:
         flavors:
