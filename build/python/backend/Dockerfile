@@ -1,8 +1,8 @@
 FROM ubuntu:18.04
 LABEL maintainer "Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
-ARG YARA_VERSION=3.10.0
-ARG YARA_PYTHON_VERSION=3.10.0
+ARG YARA_VERSION=3.11.0
+ARG YARA_PYTHON_VERSION=3.11.0
 
 # Copy Strelka files
 COPY ./src/python/ /strelka/
