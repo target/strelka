@@ -30,12 +30,9 @@ class ScanYara(strelka.Scanner):
         try:
             if self.compiled_yara is None:
                 if os.path.isdir(location):
-                    yara_filepaths = {}
                     globbed_yara_paths = glob.iglob(f'{location}/**/*.yar*', recursive=True)
-                    for (idx, entry) in enumerate(globbed_yara_paths):
-                        yara_filepaths[f'namespace_{idx}'] = entry
+                    yara_filepaths = {f'namespace_{i}':entry for (i, entry) in enumerate(globbed_yara_paths)}
                     self.compiled_yara = yara.compile(filepaths=yara_filepaths)
-
                 else:
                     self.compiled_yara = yara.compile(filepath=location)
 
