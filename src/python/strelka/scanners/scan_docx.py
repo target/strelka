@@ -1,5 +1,6 @@
 import io
 from bs4 import BeautifulSoup
+from zlib import error
 import docx
 import zipfile
 
@@ -88,3 +89,5 @@ class ScanDocx(strelka.Scanner):
                 self.flags.append('value_error')
             except zipfile.BadZipFile:
                 self.flags.append('bad_zip')
+            except error:
+                self.flags.append('bad_doc')
