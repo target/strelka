@@ -1,10 +1,46 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2019-12-18
+### Added
+- Added additional error handling for corrupt documents in ScanDocx
+
+## 2019-12-2
+### Changed
+- Updated YARA version from 3.10 to 3.11
+
+## 2019-10-26
+### Changed
+- Removed logging reference in ScanEncryptedDoc
+
+## 2019-10-09
+### Changed
+- Modified error handling for ScanPlist
+### Added
+- Added ScanAntiword into backend scanner configuration file (commented out)
+
+## 2019-10-01
+### Added
+- Added ScanEncryptedDoc which allows users to decrypt documents.
+- Added additional error handling for ScanDocx
+
+## 2019-09-30
+### Changed
+- Modified ScanPE to include additional error handling.
+
+## 2019-09-25
+### Added
+- Added ScanDoc support for additional metadata extraction.
+
+## 2019-09-19
+### Added
+- Added support for ScanRar RAR extraction with passwords.
+
 ## 2019-09-18
-### Changes
-- Fixed bug in ScanTnef where key is not present, an exception is thrown.
+### Added
 - Added olecf flavor to ScanIni default
+### Changed
+- Fixed bug in ScanTnef where key is not present, an exception is thrown.
 
 ## 2019-07-26
 ### Changed
