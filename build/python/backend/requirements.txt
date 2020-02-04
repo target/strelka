@@ -28,3 +28,4 @@ requests==2.21.0
 rpmfile==0.1.4
 ssdeep==3.3
 tnefparse==1.3.0
+construct==2.10.56
