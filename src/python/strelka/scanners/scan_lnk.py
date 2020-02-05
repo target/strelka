@@ -5,7 +5,7 @@ from construct import Struct, Int16ul, GreedyRange, Bytes, StringEncoded, this, 
 from strelka import strelka
 
 class ScanLNK(strelka.Scanner):
-    #Collects metadata and extracts text from lnk files.
+    #Collects metadata from lnk files.
 
     def scan(self, data, file, options, expire_at):
         with io.BytesIO(data) as lnk_io:
@@ -401,8 +401,6 @@ class ScanLNK(strelka.Scanner):
             header = ShellLinkHeader.parse(lnk_data)
             offset = header.HeaderSize
 
-            self.event['CLSID'] = str(uuid.UUID(bytes_le=header.LinkCLSID))
-
             try:
                 if header.LinkFlags.HasLinkTargetIDList:
                     linktargetidlist = LinkTargetIDList.parse(lnk_data[offset:])
@@ -457,8 +455,6 @@ class ScanLNK(strelka.Scanner):
                         self.event['IconTarget'] = extradata.IconEnvironmentDataBlock.TargetAnsi
                     if extradata.KnownFolderDataBlock:
                         self.event['KnownFolderID'] = str(uuid.UUID(bytes_le=extradata.KnownFolderDataBlock.KnownFolderID))
-                    if extradata.PropertyStoreDataBlock:
-                        self.event['PropertyStoreDataBlock'] = extradata.PropertyStoreDataBlock.PropertyStore.SerializedPropertyStorage.StringName.Value
                     if extradata.TrackerDataBlock:
                         self.event['MachineID'] = extradata.TrackerDataBlock.MachineID.strip(b'\x00')
                         self.event['MAC'] = str(uuid.UUID(bytes_le=extradata.TrackerDataBlock.Droid[16:])).split('-')[-1]
