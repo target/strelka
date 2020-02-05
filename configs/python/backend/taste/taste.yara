@@ -281,6 +281,22 @@ rule tnef_file {
         uint32(0) == 0x223E9F78
 }
 
+// Encoded Files
+
+rule base64_pe {
+    meta:
+		description = "Detects base64 encoded executable"
+    strings:
+        $s1 = "TVpTAQEAAAAEAAAA//8AALgAAAA" wide ascii
+        $s2 = "TVoAAAAAAAAAAAAAAAAAAAAAAAA" wide ascii
+        $s3 = "TVqAAAEAAAAEABAAAAAAAAAAAAA" wide ascii
+        $s4 = "TVpQAAIAAAAEAA8A//8AALgAAAA" wide ascii
+        $s5 = "TVqQAAMAAAAEAAAA//8AALgAAAA" wide ascii
+    condition:
+        not uint16(0) == 0x5a4d and 
+        any of them
+}
+
 // Encryption Files
 
 rule pgp_file {
