@@ -1,4 +1,4 @@
-from oletools import olevba3
+from oletools import olevba
 
 from strelka import strelka
 
@@ -16,7 +16,7 @@ class ScanVba(strelka.Scanner):
         self.event['total'] = {'files': 0, 'extracted': 0}
 
         try:
-            vba = olevba3.VBA_Parser(filename=file.name, data=data)
+            vba = olevba.VBA_Parser(filename=file.name, data=data)
             if vba.detect_vba_macros():
                 extract_macros = list(vba.extract_macros())
                 self.event['total']['files'] = len(extract_macros)
@@ -58,7 +58,7 @@ class ScanVba(strelka.Scanner):
                         elif macro_type == 'Suspicious':
                             self.event['suspicious'].append(keyword)
 
-        except olevba3.FileOpenError:
+        except olevba.FileOpenError:
             self.flags.append('file_open_error')
         finally:
             # TODO referenced before potential assignment as vba is opened in a try / catch block
