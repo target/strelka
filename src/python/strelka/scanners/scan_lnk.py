@@ -5,7 +5,7 @@ from construct import Struct, Int16ul, GreedyRange, Bytes, StringEncoded, this, 
 from strelka import strelka
 
 class ScanLNK(strelka.Scanner):
-        """Collects metadata from lnk files."""
+    """Collects metadata from lnk files."""
     def scan(self, data, file, options, expire_at):
         with io.BytesIO(data) as lnk_io:
             lnk_data = lnk_io.read()
