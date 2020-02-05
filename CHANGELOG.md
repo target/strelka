@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2020-02-05
+### Added
+- Added `tree.root` metadata to `tree` object
+
 ## 2019-12-18
 ### Added
 - Added additional error handling for corrupt documents in ScanDocx
