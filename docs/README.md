@@ -89,7 +89,7 @@ Maybe! Strelka's client applications provide opportunities for users to use as m
 No! Strelka clusters run CPU-intensive processes that will negatively impact system-critical applications like Bro and Suricata. If you want to integrate a network sensor with Strelka, then use the [`filestream`] client application. This utility is capable of sending millions of files per day from a single network sensor to a Strelka cluster without impacting system-critical applications.
 
 ### "I have other questions!"
-Please file an issue or contact the project team at [TTS-CFC-OpenSource@target.com](mailto:TTS-CFC-OpenSource@target.com). The project lead can also be reached on Twitter at [@jshlbrd](https://twitter.com/jshlbrd).
+Please file an issue or contact the project team at [TTS-CFC-OpenSource@target.com](mailto:TTS-CFC-OpenSource@target.com).
 
 ## Installation
 Strelka can be installed on any system that can run [containers](https://www.docker.com/resources/what-container). For convenience, the project ships with [docker-compse](https://docs.docker.com/compose/) configuration files for standing up a "quickstart" cluster (found under the `build/` directory). We do not recommend using and do not plan to support OS-native installations.
@@ -548,7 +548,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 Below are some select use cases that show the value Strelka can add to a threat detection tech stack. Keep in mind that these results are parsed in real time without post-processing and are typically correlated with other detection/response tools (e.g. Bro, Volatility, etc.). The file metadata shown below was derived from files found in [VirusShare](https://virusshare.com/) torrent no. 323 and from a test file in the [MaliciousMacroBot (MMBot) repository](https://github.com/egaus/MaliciousMacroBot).
 
 ### Extracting nested files
-Strelka scanners can decompress and unarchive child files from a wide variety of common file formats, including gzip, ISO, RAR, tar, and ZIP. Child files can also be extracted from files that are not typically thought of as file containers, including MZ, HTML, and XML. Child files are recursively scanned by the system and retain their relationship to parent files via unique identifiers (`uid`, `parent_uid`, and `root_uid`).
+Strelka scanners can decompress and unarchive child files from a wide variety of common file formats, including gzip, ISO, RAR, tar, and ZIP. Child files can also be extracted from files that are not typically thought of as file containers, including MZ, HTML, and XML. Child files are recursively scanned by the system and retain their relationship to parent files via unique identifiers (`tree.node`, `tree.parent`, and `tree.root`).
 
 Below is a partial scan result for a ZIP file that contains DLLs, MZ, and text files -- this shows which scanner extracted the child files and the order in which Strelka extracted them.
 ```json

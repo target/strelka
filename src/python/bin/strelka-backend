@@ -154,7 +154,14 @@ class Backend(object):
                     tree_dict = {
                         'node': file.uid,
                         'parent': file.parent,
+                        'root': root_id,
                     }
+
+                    if file.depth == 0:
+                        tree_dict['node'] = root_id
+                    if file.depth == 1:
+                        tree_dict['parent'] = root_id
+
                     file_dict = {
                         'depth': file.depth,
                         'name': file.name,
