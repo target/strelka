@@ -639,7 +639,8 @@ Below is a partial scan result for an HTML file that contains a malicious VBScri
     "size": 472513
   },
   "tree": {
-    "node": "7b9b9460-7943-4f9b-b7e0-c48653a1adbd"
+    "node": "7b9b9460-7943-4f9b-b7e0-c48653a1adbd",
+    "root": "7b9b9460-7943-4f9b-b7e0-c48653a1adbd",
   },
   "hash": {
     "md5": "af8188122b7580b8907c76352d565616",
@@ -803,7 +804,8 @@ Below is a partial scan result for an HTML file that contains a malicious VBScri
   },
   "tree": {
     "node": "153e9833-3d47-4a4d-a098-41efcc6f799e",
-    "parent": "7b9b9460-7943-4f9b-b7e0-c48653a1adbd"
+    "parent": "7b9b9460-7943-4f9b-b7e0-c48653a1adbd",
+    "root": "7b9b9460-7943-4f9b-b7e0-c48653a1adbd",
   },
   "hash": {
     "md5": "64659f52fd89e89171af1f7d9441f2f2",
@@ -1285,7 +1287,8 @@ Below is a complete scan result for a text file that appears to be a shell scrip
     "size": 1856
   },
   "tree": {
-    "node": "c65e5d0a-3a7d-4747-93bd-7d02cb68e164"
+    "node": "c65e5d0a-3a7d-4747-93bd-7d02cb68e164",
+    "root": "c65e5d0a-3a7d-4747-93bd-7d02cb68e164"
   },
   "hash": {
     "md5": "1860271b6d530f8e120637f8248e8c88",
@@ -1327,7 +1330,8 @@ Below is a partial scan result for a document file that contains VBA/VBScript, t
     "size": 10906
   },
   "tree": {
-    "node": "12db8e8b-cfea-4290-85e0-8314ec00289f"
+    "node": "12db8e8b-cfea-4290-85e0-8314ec00289f",
+    "root": "12db8e8b-cfea-4290-85e0-8314ec00289f"
   }
 },
 {
@@ -1357,6 +1361,7 @@ Below is a partial scan result for a document file that contains VBA/VBScript, t
   "tree": {
     "node": "c32ae623-9f48-4d0e-ac48-2ca68770863c",
     "parent": "13cb69ec-c7ce-433d-bd2e-14ebbfee1e3f",
+    "root": "13cb69ec-c7ce-433d-bd2e-14ebbfee1e3f"
 },
   "hash": {
     "md5": "b59c5dbc9757e748ff31c4ef3478af98",
