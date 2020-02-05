@@ -4,6 +4,11 @@ Changes to the project will be tracked in this file via the date of change.
 ## 2020-02-05
 ### Added
 - Added `tree.root` metadata to `tree` object
+- Added `scan_base64_pe` scanner which decodes base64-encoded files
+- Added `yara.tags` to `yara` scanner which collects Tags from YARA matches
+
+### Changed
+- Changed scanner imports in `scan_vba`. Changed olevba3 package to olevba due to deprecation.
 
 ## 2019-12-18
 ### Added
