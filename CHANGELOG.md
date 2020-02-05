@@ -5,6 +5,7 @@ Changes to the project will be tracked in this file via the date of change.
 ### Added
 - Added `tree.root` metadata to `tree` object
 - Added `scan_base64_pe` scanner which decodes base64-encoded files
+- Added `scan_lnk` scanner which provides metadata for LNK files
 - Added `yara.tags` to `yara` scanner which collects Tags from YARA matches
 
 ### Changed
