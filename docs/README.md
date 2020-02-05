@@ -516,7 +516,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanJpeg | Extracts data embedded in JPEG files | N/A |
 | ScanJson | Collects keys from JSON files | N/A |
 | ScanLibarchive | Extracts files from libarchive-compatible archives. | "limit" -- maximum number of files to extract (defaults to 1000) |
-| ScanLnk | Collects metadata from lnk files. | N/A | [Ryan Borre](https://github.com/ronbarrey), [DerekT2](https://github.com/Derekt2), [Nathan Icart](https://github.com/nateicart)
+| ScanLnk | Collects metadata from lnk files. | N/A | Ryan Borre, [DerekT2](https://github.com/Derekt2), [Nathan Icart](https://github.com/nateicart)
 | ScanLzma | Decompresses lzma files | N/A |
 | ScanMacho | Collects metadata from Mach-O files | "tempfile_directory" -- location where tempfile writes temporary files (defaults to "/tmp/") |
 | ScanMmbot | Collects VB results from a server running mmbotd | "server" -- network address and network port of the mmbotd server (defaults to "127.0.0.1:33907")<br>"timeout" -- amount of time (in milliseconds) to wait for a response from the server (defaults to 10000) |
