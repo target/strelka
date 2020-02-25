@@ -391,7 +391,7 @@ The tall stack pattern is intended for large-to-huuuuuuge environments. With thi
 The following recommendations apply to all clusters:
 * Do not over-allocate backend CPUs
     * .75 backend per CPU is recommended
-        * On a server with 4 CPUs, 3 are used by backednds
+        * On a server with 4 CPUs, 3 are used by backends
         * On a server with 8 CPUs, 6 are used by backends
 * Allocate at least 1GB RAM per backend
     * If backends do not have enough RAM, then there will be excessive memory errors
