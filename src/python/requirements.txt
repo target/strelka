@@ -11,7 +11,7 @@ libarchive-c==2.8
 lxml==4.3.0
 git+https://github.com/aaronst/macholibre.git       # v1.0 as of this freeze
 olefile==0.46
-oletools==0.53.1
+oletools==0.55
 pdfminer.six==20181108
 pefile==2018.8.8
 pgpdump3==1.5.2
