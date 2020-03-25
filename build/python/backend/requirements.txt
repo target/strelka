@@ -11,7 +11,7 @@ libarchive-c==2.8
 lxml==4.3.0
 msoffcrypto-tool==4.10.1
 olefile==0.46
-oletools==0.53.1
+oletools==0.55
 M2Crypto==0.33.0
 pdfminer.six==20181108
 pefile==2019.4.18
