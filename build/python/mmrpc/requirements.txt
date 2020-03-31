@@ -1,3 +1,3 @@
-grpcio==1.19.0
-grpcio-tools==1.19.0
+grpcio==1.27.2
+grpcio-tools==1.27.2
 git+https://github.com/egaus/MaliciousMacroBot
