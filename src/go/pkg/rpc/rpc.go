@@ -1,30 +1,30 @@
 package rpc
 
 import (
-        "context"
-        "fmt"
-        "io"
-        "log"
-        "os"
-        "runtime"
-        "time"
+	"context"
+	"fmt"
+	"io"
+	"log"
+	"os"
+	"runtime"
+	"time"
 
-        "google.golang.org/grpc"
-        "google.golang.org/grpc/credentials"
-        "google.golang.org/grpc/status"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 
-        "github.com/target/strelka/src/go/api/strelka"
-        "github.com/target/strelka/src/go/pkg/structs"
+	"github.com/target/strelka/src/go/api/strelka"
+	"github.com/target/strelka/src/go/pkg/structs"
 )
 
 // Formats rpc errors into easily read messages
 func errToMsg(err error) string {
-        st, _ := status.FromError(err)
-        return fmt.Sprintf(
-                "rpc err:\n\t\t\t code: %v: \n\t\t\t message: %v",
-                st.Code(),
-                st.Message(),
-        )
+	st, _ := status.FromError(err)
+	return fmt.Sprintf(
+		"rpc err:\n\t\t\t code: %v: \n\t\t\t message: %v",
+		st.Code(),
+		st.Message(),
+	)
 }
 
 func min(a, b int) int {
@@ -37,142 +37,161 @@ func min(a, b int) int {
 // Identifies operating system and returns the appropriate
 // newline character(s) for the operating system
 func osNewline() string {
-        nl := ""
-        switch os := runtime.GOOS; os {
-        case "darwin":
-                nl = "\n"
-        case "linux":
-                nl = "\n"
-        case "windows":
-                nl = "\r\n"
-        default:
-                nl = "\n"
-        }
+	nl := ""
+	switch os := runtime.GOOS; os {
+	case "darwin":
+		nl = "\n"
+	case "linux":
+		nl = "\n"
+	case "windows":
+		nl = "\r\n"
+	default:
+		nl = "\n"
+	}
 
-        return nl
+	return nl
 }
 
 // Establishes insecure or secure gRPC transport based
 // on the presence of a server certificate
 func SetAuth(cert string) grpc.DialOption {
-        if cert != "" {
-                creds, err := credentials.NewClientTLSFromFile(cert, "")
-                if err != nil {
-                        log.Printf("failed to load server certificate file %s: %v", cert, err)
-                }
+	if cert != "" {
+		creds, err := credentials.NewClientTLSFromFile(cert, "")
+		if err != nil {
+			log.Printf("failed to load server certificate file %s: %v", cert, err)
+		}
 
-                return grpc.WithTransportCredentials(creds)
-        } else {
-                return grpc.WithInsecure()
-        }
+		return grpc.WithTransportCredentials(creds)
+	} else {
+		return grpc.WithInsecure()
+	}
 }
 
 // Reports number of responses received according to a delta
 func ReportResponses(responses <-chan *strelka.ScanResponse, delta time.Duration) {
-        t := time.Now()
-        recv := 0
+	t := time.Now()
+	recv := 0
 
-        for r := range responses {
-                if r != nil {
-                        recv++
-                        if time.Now().Sub(t) >= delta {
-                                log.Printf("responses received: %d", recv)
-                                t = time.Now()
-                                recv = 0
-                        }
-                        continue
-                }
-                log.Printf("responses received: %d", recv)
-                break
-        }
+	for r := range responses {
+		if r != nil {
+			recv++
+			if time.Now().Sub(t) >= delta {
+				log.Printf("responses received: %d", recv)
+				t = time.Now()
+				recv = 0
+			}
+			continue
+		}
+		log.Printf("responses received: %d", recv)
+		break
+	}
 }
 
 // Logs events in responses to local disk
 func LogResponses(responses <-chan *strelka.ScanResponse, path string) {
-        f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-        if err != nil {
-                log.Fatalf("failed to create file %s: %v", path, err)
-        }
-        defer f.Close()
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("failed to create file %s: %v", path, err)
+	}
+	defer f.Close()
 
-        nl := osNewline()
-        for r := range responses {
-                if r != nil {
-                        f.WriteString(fmt.Sprintf("%s%s", r.Event, nl))
-                        continue
-                }
-                break
-        }
+	nl := osNewline()
+	for r := range responses {
+		if r != nil {
+			f.WriteString(fmt.Sprintf("%s%s", r.Event, nl))
+			continue
+		}
+		break
+	}
+}
+
+// Logs events in responses to provided reader
+func ReadResponses(responses <-chan *strelka.ScanResponse, writer *io.Writer) {
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("failed to create file %s: %v", path, err)
+	}
+	defer f.Close()
+
+	nl := osNewline()
+	for r := range responses {
+		if r != nil {
+			reader.
+				f.WriteString(fmt.Sprintf("%s%s", r.Event, nl))
+			continue
+		}
+		break
+	}
 }
 
 // Discards responses
 func DiscardResponses(responses <-chan *strelka.ScanResponse) {
-        for r := range responses {
-                if r != nil {
-                        continue
-                }
-                break
-        }
+	for r := range responses {
+		if r != nil {
+			continue
+		}
+		break
+	}
 }
 
-func ScanFile(client strelka.FrontendClient, timeout time.Duration, req structs.ScanFileRequest, responses chan <- *strelka.ScanResponse) {
-        deadline := time.Now().Add(timeout)
-        ctx, cancel := context.WithDeadline(context.Background(), deadline)
-        defer cancel()
+func ScanFile(client strelka.FrontendClient, timeout time.Duration, req structs.ScanFileRequest, responses chan<- *strelka.ScanResponse) {
+	deadline := time.Now().Add(timeout)
+	ctx, cancel := context.WithDeadline(context.Background(), deadline)
+	defer cancel()
 
-        file, err := os.Open(req.Attributes.Filename)
-        if err != nil {
-                log.Printf("failed to open file %s: %v", req.Attributes.Filename, err)
-                return
-        }
-        if req.Delete {
-                defer os.Remove(req.Attributes.Filename)
-        }
-        defer file.Close()
+	file, err := os.Open(req.Attributes.Filename)
+	if err != nil {
+		log.Printf("failed to open file %s: %v", req.Attributes.Filename, err)
+		return
+	}
+	if req.Delete {
+		defer os.Remove(req.Attributes.Filename)
+	}
+	defer file.Close()
 
-        scanFile, err := client.ScanFile(ctx, grpc.WaitForReady(true))
-        if err != nil {
-                log.Println(errToMsg(err))
-                return
-        }
+	scanFile, err := client.ScanFile(ctx, grpc.WaitForReady(true))
+	if err != nil {
+		log.Println(errToMsg(err))
+		return
+	}
 
-        buffer := make([]byte, req.Chunk)
-        for {
-                n, err := file.Read(buffer)
-                if err != nil {
-                        if err != io.EOF {
-                                log.Printf("failed to read file %s: %v", req.Attributes.Filename, err)
-                                return
-                        }
+	buffer := make([]byte, req.Chunk)
+	for {
+		n, err := file.Read(buffer)
+		if err != nil {
+			if err != io.EOF {
+				log.Printf("failed to read file %s: %v", req.Attributes.Filename, err)
+				return
+			}
 
-                        break
-                }
-
-                time.Sleep(req.Delay)
-                scanFile.Send(
-                        &strelka.ScanFileRequest{
-                                Data:buffer[:n],
-                                Request:req.Request,
-                                Attributes:req.Attributes,
-                        },
-                )
-        }
-
-        if err := scanFile.CloseSend(); err != nil {
-                log.Printf("failed to close stream: %v", err)
-                return
-        }
-
-        for {
-                resp, err := scanFile.Recv()
-                if err == io.EOF {
-                        break
-                }
-                if err != nil {
-                        log.Println(errToMsg(err))
-                        break
-                }
-
-                responses <- resp
+			break
 		}
+
+		time.Sleep(req.Delay)
+		scanFile.Send(
+			&strelka.ScanFileRequest{
+				Data:       buffer[:n],
+				Request:    req.Request,
+				Attributes: req.Attributes,
+			},
+		)
+	}
+
+	if err := scanFile.CloseSend(); err != nil {
+		log.Printf("failed to close stream: %v", err)
+		return
+	}
+
+	for {
+		resp, err := scanFile.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Println(errToMsg(err))
+			break
+		}
+
+		responses <- resp
+	}
 }

@@ -19,6 +19,7 @@ Strelka differs from its sibling projects in a few significant ways:
 * [Deployment](#deployment)
     * [Client Apps](#client-apps)
         * [strelka-fileshot](#strelka-fileshot)
+        * [strelka-oneshot](#strelka-oneshot)
         * [strelka-filestream](#strelka-filestream)
         * [strelka-webscrape](#strelka-webscrape)
     * [Server Components](#server-components)
@@ -127,6 +128,24 @@ Strelka's core client apps are written in Go and can be run natively on a host o
     docker build -f build/go/fileshot/Dockerfile -t strelka-fileshot .
     ```
 
+#### strelka-oneshot (gettable)
+1. Install the binary
+    ```sh
+    go get github.com/target/strelka/src/go/cmd/strelka-oneshot
+    ```
+
+#### strelka-oneshot (build)
+1. Clone this repository
+    ```sh
+    git clone https://github.com/target/strelka.git /opt/strelka/
+    ```
+
+2. Build the application
+    ```sh
+    cd /opt/strelka/src/go/cmd/strelka-oneshot/
+    go build -o strelka-oneshot .
+    ```
+
 
 #### strelka-filestream (gettable)
 1. Install the binary
@@ -195,6 +214,17 @@ Strelka's core client apps are designed to efficiently integrate a wide-range of
 
 #### strelka-fileshot
 This client app is designed to one-shot upload files and retrieve their results. This app can be applied in many scenarios, including on-demand file scanning from analysts triaging malware, scheduled file scanning on remote systems, and one-time file scanning on during incident response.
+
+#### strelka-oneshot
+This client app is designed to be used to submit a single file from command line and receive the result for it immediately.
+This is useful if you want to test the functionality of strelka without having to write a config file (like with strelka-fileshot).
+
+An example execution could look like:
+
+```bash
+$ strelka-oneshot -f foo.exe
+$ cat strelka-oneshot.log | jq .
+```
 
 #### strelka-filestream
 This client app is designed to continuously stream files and retrieves their results. This app is intended for use on systems that continuously generate files, such as network security monitoring (NSM) sensors, email gateways, and web proxies. Note that this client application *moves files on the filesystem* before sending files for scanning.
@@ -1319,7 +1349,7 @@ Below is a partial scan result for a document file that contains VBA/VBScript, t
 {
   "file": {
     "filename": "/samples/benign.xlsm",
-    "depth": 0,      
+    "depth": 0,
     "scanner_list": [
       "ScanYara",
       "ScanHash",
