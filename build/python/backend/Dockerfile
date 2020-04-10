@@ -20,6 +20,7 @@ RUN apt-get -qq update && \
     git \
     libtool \
     make \
+    swig \
     python3-dev \
     python3-pip \
     python3-wheel \
