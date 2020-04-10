@@ -1,6 +1,15 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2020-04-10
+### Added
+- `strelka-oneshot` cli app to allow for submission of a file for testing without the need for a config file. (@rhaist)
+- `swig` as build/wheel dependency for M2Crypto (@rhaist)
+
+### Changed
+- Updating dependencies for various packages (@rhaist)
+- Formatting all go source files to match official guidelines (@rhaist)
+
 ## 2020-02-05
 ### Changed
 - Added additional error handling for `scan_lnk` scanner (@Derekt2) 
