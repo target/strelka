@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2020-04-13
+### Changed
+- Fixed bug causing path issue when building container.
+
 ## 2020-04-10
 ### Added
 - `strelka-oneshot` cli app to allow for submission of a file for testing without the need for a config file. (@rhaist)
