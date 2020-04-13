@@ -105,25 +105,6 @@ func LogResponses(responses <-chan *strelka.ScanResponse, path string) {
 	}
 }
 
-// Logs events in responses to provided reader
-func ReadResponses(responses <-chan *strelka.ScanResponse, writer *io.Writer) {
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatalf("failed to create file %s: %v", path, err)
-	}
-	defer f.Close()
-
-	nl := osNewline()
-	for r := range responses {
-		if r != nil {
-			reader.
-				f.WriteString(fmt.Sprintf("%s%s", r.Event, nl))
-			continue
-		}
-		break
-	}
-}
-
 // Discards responses
 func DiscardResponses(responses <-chan *strelka.ScanResponse) {
 	for r := range responses {
