@@ -14,8 +14,9 @@ Strelka's ZeroMQ architecture is retired and was migrated to the [archive/zeromq
 ## Community
 ### Slack
 
-[![Slack Invitation](https://img.shields.io/badge/slack-CFC-green.svg?logo=slack)](https://join.slack.com/t/cfc-open-source/shared_invite/zt-e54crchh-a6x4iDy18D5lVwFKQoEeEQ)
-[![Target’s CFC-Open-Source Slack](https://img.shields.io/badge/slack-Invite-green.svg?logo=slack)](https://cfc-open-source.slack.com/)
+[![Target’s CFC-Open-Source Slack](https://img.shields.io/badge/slack-Slack-green.svg?logo=slack)](https://cfc-open-source.slack.com/)
+
+[![Slack Invitation](https://img.shields.io/badge/slack-Invite-green.svg?logo=slack)](https://join.slack.com/t/cfc-open-source/shared_invite/zt-e54crchh-a6x4iDy18D5lVwFKQoEeEQ)
 
 
 ## Contributing
