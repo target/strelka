@@ -9,10 +9,13 @@ Strelka differs from its sibling projects in a few significant ways:
 
 Strelka's ZeroMQ architecture is retired and was migrated to the [archive/zeromq](https://github.com/target/strelka/tree/archive/zeromq) branch. This branch is now considered legacy code, is no longer actively supported, and will only receive bugfix updates.
 
-[![Target’s CFC-Open-Source Slack](https://cfc-slack-inv.herokuapp.com/badge.svg?colorA=155799&colorB=159953)](https://cfc-slack-inv.herokuapp.com/)
-* [Target's CFC Slack Room](https://cfc-open-source.slack.com)
-
 ### [Read the documentation](https://target.github.io/strelka/)
+
+## Community
+### Slack
+[![Join Target’s CFC-Open-Source Slack](https://cfc-slack-inv.herokuapp.com/badge.svg?colorA=155799&colorB=159953)](https://join.slack.com/t/cfc-open-source/shared_invite/zt-e54crchh-a6x4iDy18D5lVwFKQoEeEQ)
+
+[Target's CFC Slack Room](https://cfc-open-source.slack.com)
 
 ## Contributing
 Guidelines for contributing can be found [here](https://github.com/target/strelka/blob/master/CONTRIBUTING.md).
