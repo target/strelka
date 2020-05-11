@@ -19,7 +19,7 @@ class ScanXml(strelka.Scanner):
             'extract_tags': options.get('extract_tags', []),
             'metadata_tags': options.get('metadata_tags', []),
         }
-
+        self.expire_at = expire_at
         self.event.setdefault('tags', [])
         self.event.setdefault('tag_data', [])
         self.event.setdefault('namespaces', [])
@@ -83,7 +83,7 @@ class ScanXml(strelka.Scanner):
                             self.upload_to_coordinator(
                                 extract_file.pointer,
                                 c,
-                                expire_at,
+                                self.expire_at,
                             )
 
                         self.files.append(extract_file)
