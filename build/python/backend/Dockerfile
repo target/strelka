@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 LABEL maintainer "Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
 ARG YARA_VERSION=3.11.0
@@ -12,7 +12,7 @@ COPY ./build/python/backend/setup.py /strelka/setup.py
 # Update packages
 RUN apt-get -qq update && \
 # Install build packages
-    apt-get install --no-install-recommends -qq \
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -qq \
     automake \
     build-essential \
     curl \

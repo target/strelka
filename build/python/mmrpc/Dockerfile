@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 LABEL maintainer "Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
 # Copy Strelka files
@@ -8,9 +8,10 @@ COPY ./build/python/mmrpc/setup.py /strelka/setup.py
 
 # Update packages
 RUN apt-get -qq update && \
-    apt-get install --no-install-recommends -qq \
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -qq \
 # Install build packages
     git \
+    gcc \
     python3-dev \
     python3-pip \
     python3-setuptools \
@@ -27,6 +28,7 @@ RUN apt-get -qq update && \
     pip3 uninstall -y grpcio-tools && \
     apt-get autoremove -qq --purge \
     git \
+    gcc \
     python3-dev \
     python3-pip \
     python3-wheel && \
