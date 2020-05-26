@@ -83,9 +83,9 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		hash.Write(in.Data)
 
 		p := s.coordinator.cli.Pipeline()
-		p.RPush(keyd, in.Data)
-		p.ExpireAt(keyd, deadline)
-		if _, err := p.Exec(); err != nil {
+		p.RPush(stream.Context(), keyd, in.Data)
+		p.ExpireAt(stream.Context(), keyd, deadline)
+		if _, err := p.Exec(stream.Context()); err != nil {
 			return err
 		}
 	}
@@ -108,7 +108,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 	}
 
 	if req.Gatekeeper {
-		lrange := s.gatekeeper.cli.LRange(sha, 0, -1).Val()
+		lrange := s.gatekeeper.cli.LRange(stream.Context(), sha, 0, -1).Val()
 		if len(lrange) > 0 {
 			for _, e := range lrange {
 				if err := json.Unmarshal([]byte(e), &em); err != nil {
@@ -131,7 +131,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 				}
 			}
 
-			if err := s.coordinator.cli.Del(keyd).Err(); err != nil {
+			if err := s.coordinator.cli.Del(stream.Context(), keyd).Err(); err != nil {
 				return err
 			}
 
@@ -140,6 +140,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 	}
 
 	if err := s.coordinator.cli.ZAdd(
+	    stream.Context(),
 		"tasks",
 		&redis.Z{
 			Score:  float64(deadline.Unix()),
@@ -150,10 +151,10 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 	}
 
 	tx := s.gatekeeper.cli.TxPipeline()
-	tx.Del(sha)
+	tx.Del(stream.Context(), sha)
 
 	for {
-		lpop, err := s.coordinator.cli.LPop(keye).Result()
+		lpop, err := s.coordinator.cli.LPop(stream.Context(), keye).Result()
 		if err != nil {
 			time.Sleep(250 * time.Millisecond)
 			continue
@@ -162,7 +163,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 			break
 		}
 
-		tx.RPush(sha, lpop)
+		tx.RPush(stream.Context(), sha, lpop)
 		if err := json.Unmarshal([]byte(lpop), &em); err != nil {
 			return err
 		}
@@ -183,8 +184,8 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		}
 	}
 
-	tx.Expire(sha, s.gatekeeper.ttl)
-	if _, err := tx.Exec(); err != nil {
+	tx.Expire(stream.Context(), sha, s.gatekeeper.ttl)
+	if _, err := tx.Exec(stream.Context()); err != nil {
 		return err
 	}
 
@@ -240,7 +241,7 @@ func main() {
 		PoolSize:    conf.Coordinator.Pool,
 		ReadTimeout: conf.Coordinator.Read,
 	})
-	if err := cd.Ping().Err(); err != nil {
+	if err := cd.Ping(cd.Context()).Err(); err != nil {
 		log.Fatalf("failed to connect to coordinator: %v", err)
 	}
 
@@ -250,7 +251,7 @@ func main() {
 		PoolSize:    conf.Gatekeeper.Pool,
 		ReadTimeout: conf.Gatekeeper.Read,
 	})
-	if err := gk.Ping().Err(); err != nil {
+	if err := gk.Ping(gk.Context()).Err(); err != nil {
 		log.Fatalf("failed to connect to gatekeeper: %v", err)
 	}
 
