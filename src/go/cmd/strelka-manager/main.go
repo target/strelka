@@ -37,13 +37,14 @@ func main() {
 		PoolSize:    conf.Coordinator.Pool,
 		ReadTimeout: conf.Coordinator.Read,
 	})
-	if err := cd.Ping().Err(); err != nil {
+	if err := cd.Ping(cd.Context()).Err(); err != nil {
 		log.Fatalf("failed to connect to coordinator: %v", err)
 	}
 
 	// TODO: this should be a goroutine
 	for {
 		zrem, err := cd.ZRemRangeByScore(
+		    cd.Context(),
 			"tasks",
 			"-inf",
 			fmt.Sprintf("(%v", time.Now().Unix()),
