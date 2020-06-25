@@ -6,7 +6,7 @@ from strelka import strelka
 class ScanElf(strelka.Scanner):
     """Collects metadata from ELF files."""
     def scan(self, data, file, options, expire_at):
-        elf = ELF.parse(raw=data)
+        elf = ELF.parse(io=data)
 
         self.event['total'] = {
             'libraries': len(elf.libraries),
