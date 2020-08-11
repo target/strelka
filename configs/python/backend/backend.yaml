@@ -35,6 +35,15 @@ scanners:
           - 'application/x-bzip2'
           - 'bzip2_file'
       priority: 5
+#  'ScanCapa':
+#    - positive:
+#        flavors:
+#          - 'application/x-dosexec'
+#          - 'mz_file'
+#      priority: 5
+#      options:
+#        tmp_directory: '/dev/shm/'
+#        location: '/etc/capa/'
   'ScanDocx':
     - positive:
         flavors:
