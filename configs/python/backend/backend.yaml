@@ -157,6 +157,15 @@ scanners:
           - 'ImageHeight'
           - 'ImageWidth'
         tmp_directory: '/dev/shm/'
+#  'ScanFloss':
+#    - positive:
+#        flavors:
+#          - 'application/x-dosexec'
+#          - 'mz_file'
+#      priority: 5
+#      options:
+#        tmp_directory: '/dev/shm/'
+#        limit: 100
   'ScanGif':
     - positive:
         flavors:
