@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2020-08-13
+### Added
+- FireEye capa scanner
+
 ## 2020-05-26
 ### Changed
 - Fixed bug caused by update to go-redis, requiring Context objects to be added to redis commands
