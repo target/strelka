@@ -47,6 +47,12 @@ RUN apt-get -qq update && \
     chmod +x /tmp/capa-linux && \
     mkdir /.viv/ && \
     chmod -R a+rw /.viv && \
+# Install FireEye FLOSS
+#   - Binary installation, not supported as Python 3 plugin
+#   - Requires binary to be executable
+    cd /tmp/ && \
+    curl -OL https://s3.amazonaws.com/build-artifacts.floss.flare.fireeye.com/travis/linux/dist/floss && \
+    chmod +x /tmp/floss && \
 # Install Python packages
     pip3 install -r /strelka/requirements.txt && \
     pip3 install --index-url https://lief-project.github.io/packages --trusted-host lief.quarkslab.com lief && \
