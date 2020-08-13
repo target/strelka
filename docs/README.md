@@ -527,7 +527,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanBatch | Collects metadata from batch script files | N/A |
 | ScanBase64 | Decodes base64-encoded files | N/A | [Nathan Icart](https://github.com/nateicart)
 | ScanBzip2 | Decompresses bzip2 files | N/A |
-| ScanCapa | Analyzes files with FireEye [capa](https://github.com/fireeye/capa) | "tempfile_directory" -- location where `tempfile` will write temporary files (defaults to "/tmp/")<br>"location" -- location of the capa rules file or directory (defaults to "/etc/capa/") |
+| ScanCapa | Analyzes executable files with FireEye [capa](https://github.com/fireeye/capa) | "tempfile_directory" -- location where `tempfile` will write temporary files (defaults to "/tmp/")<br>"location" -- location of the capa rules file or directory (defaults to "/etc/capa/") |
 | ScanCuckoo | Sends files to a Cuckoo sandbox | "url" -- URL of the Cuckoo sandbox (defaults to None)<br>"priority" -- Cuckoo priority assigned to the task (defaults to 3)<br>"timeout" -- amount of time (in seconds) to wait for the task to upload (defaults to 10)<br>"unique" -- boolean that tells Cuckoo to only analyze samples that have not been analyzed before (defaults to True)<br>"username" -- username used for authenticating to Cuckoo (defaults to None, optionally read from environment variable "CUCKOO_USERNAME")<br>"password" -- password used for authenticating to Cuckoo (defaults to None, optionally read from environment variable "CUCKOO_PASSWORD") |
 | ScanDocx | Collects metadata and extracts text from docx files | "extract_text" -- boolean that determines if document text should be extracted as a child file (defaults to False) |
 | ScanElf | Collects metadata from ELF files | N/A |
@@ -536,6 +536,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanEntropy | Calculates entropy of files | N/A |
 | ScanExiftool | Collects metadata parsed by Exiftool | "tempfile_directory" -- location where tempfile writes temporary files (defaults to "/tmp/")<br>"keys" -- list of keys to log (defaults to all) |
 | ScanFalconSandbox | Sends files to an instance of Falcon Sandbox | "server" -- URL of the Falcon Sandbox API inteface <br>"priority" -- Falcon Sandbox priority assigned to the task (defaults to 3)<br>"timeout" -- amount of time (in seconds) to wait for the task to upload (defaults to 60)<br>"envID" -- list of numeric envrionment IDs that tells Falcon Sandbox which sandbox to submit a sample to (defaults to [100])<br>"api_key" -- API key used for authenticating to Falcon Sandbox (defaults to None, optionally read from environment variable "FS_API_KEY")<br>"api_secret" --  API secret key used for authenticating to Falcon Sandbox (defaults to None, optionally read from environment variable "FS_API_SECKEY") |
+| ScanFloss | Analyzes executable files with FireEye [floss](https://github.com/fireeye/flare-floss) | "tempfile_directory" -- location where `tempfile` will write temporary files (defaults to "/tmp/")<br>"limit" -- Maximum amount of strings to collect. (defaults to 100) |
 | ScanGif | Extracts data embedded in GIF files | N/A |
 | ScanGzip | Decompresses gzip files | N/A
 | ScanHash | Calculates file hash values | N/A |
