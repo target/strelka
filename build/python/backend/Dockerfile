@@ -3,6 +3,7 @@ LABEL maintainer "Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
 ARG YARA_VERSION=3.11.0
 ARG YARA_PYTHON_VERSION=3.11.0
+ARG CAPA_VERSION=1.1.0
 
 # Copy Strelka files
 COPY ./src/python/ /strelka/
@@ -37,6 +38,15 @@ RUN apt-get -qq update && \
     unrar \
     upx \
     jq && \
+# Install FireEye CAPA
+#   - Binary installation, not supported as Python 3 plugin
+#   - Requires binary to be executable
+#   - Vivisect dependency requires available /.viv/ folder.
+    cd /tmp/ && \
+    curl -OL https://github.com/fireeye/capa/releases/download/v$CAPA_VERSION/capa-linux && \
+    chmod +x /tmp/capa-linux && \
+    mkdir /.viv/ && \
+    chmod -R a+rw /.viv && \
 # Install Python packages
     pip3 install -r /strelka/requirements.txt && \
     pip3 install --index-url https://lief-project.github.io/packages --trusted-host lief.quarkslab.com lief && \
