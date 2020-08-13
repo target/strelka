@@ -4,6 +4,7 @@ Changes to the project will be tracked in this file via the date of change.
 ## 2020-08-13
 ### Added
 - FireEye capa scanner
+- FireEye FLOSS scanner
 
 ## 2020-05-26
 ### Changed
