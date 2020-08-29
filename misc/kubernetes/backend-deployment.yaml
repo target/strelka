@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    strelka.service: backend
+  name: backend
+  namespace: strelka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      strelka.service: backend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        strelka.network/strelka_net: "true"
+        strelka.service: backend
+    spec:
+      containers:
+      - image: strelka_backend
+        imagePullPolicy: Never
+        name: backend
+        args:
+        - strelka-backend
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/strelka/
+          name: backend-config
+          readOnly: true
+        - mountPath: /etc/yara/
+          name: yara
+          readOnly: true
+        - mountPath: /dev/shm
+          name: shm
+      restartPolicy: Always
+      serviceAccountName: ""
+      volumes:
+      - name: backend-config
+        configMap:
+            name: backend-configmap
+            items:
+            - key: "backend.yaml"
+              path: "backend.yaml"
+            - key: "logging.yaml"
+              path: "logging.yaml"
+            - key: "taste.yara"
+              path: "taste/taste.yara"
+            - key: "passwords.dat"
+              path: "passwords.dat"
+      - name: yara
+        persistentVolumeClaim:
+          claimName: yara
+      - name: shm
+        emptyDir:
+          medium: Memory
+        

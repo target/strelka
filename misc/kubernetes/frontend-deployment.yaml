@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    strelka.service: frontend
+  name: frontend
+  namespace: strelka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      strelka.service: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        strelka.network/strelka_net: "true"
+        strelka.service: frontend
+    spec:
+      containers:
+      - image: strelka_frontend
+        imagePullPolicy: Never
+        name: frontend
+        args:
+        - strelka-frontend
+        ports:
+        - containerPort: 57314
+        resources:
+          limits: {}
+        volumeMounts:
+        - mountPath: /etc/strelka/
+          name: frontend-config
+          readOnly: true
+        - mountPath: /var/log/strelka/
+          name: logs
+      restartPolicy: Always
+      volumes:
+      - name: frontend-config
+        configMap:
+          name: frontend-configmap
+          items:
+          - key: frontend.yaml
+            path: frontend.yaml
+      - name: logs
+        persistentVolumeClaim:
+          claimName: logs
+

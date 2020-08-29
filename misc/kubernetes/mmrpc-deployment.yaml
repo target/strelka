@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    strelka.service: mmrpc
+  name: mmrpc
+  namespace: strelka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      strelka.service: mmrpc
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        strelka.network/strelka_net: "true"
+        strelka.service: mmrpc
+    spec:
+      containers:
+      - image: strelka_mmrpc
+        imagePullPolicy: Never
+        name: mmrpc
+        args:
+        - strelka-mmrpc
+        - --threads
+        - "2"
+        - --address
+        - '[::]:33907'
+        resources: {}
+        ports:
+        - containerPort: 33907
+      restartPolicy: Always
+status: {}

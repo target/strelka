@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    strelka.service: coordinator
+  name: coordinator
+  namespace: strelka
+spec:
+  clusterIP: None
+  selector:
+    strelka.service: coordinator
+  ports:
+    - name: coordinator
+      port: 6379

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    strelka.service: frontend
+  name: frontend
+  namespace: strelka
+spec:
+  type: LoadBalancer
+  ports:
+  - name: frontend
+    port: 57314
+    targetPort: 57314
+  selector:
+    strelka.service: frontend

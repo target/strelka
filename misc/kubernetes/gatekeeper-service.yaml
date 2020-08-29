@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    strelka.service: gatekeeper
+  name: gatekeeper
+  namespace: strelka
+spec:
+  clusterIP: None
+  selector:
+    strelka.service: gatekeeper
+  ports:
+    - name: gatekeeper
+      port: 6379
