@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"gopkg.in/yaml.v2"
 
 	"github.com/target/strelka/src/go/pkg/structs"
