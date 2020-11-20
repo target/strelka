@@ -16,6 +16,20 @@ rule arj_file {
         uint16(0) == 0xEA60
 }
 
+rule browser_manifest
+{
+    meta:
+        type = "browser manifest"
+    strings:
+        $ = "manifest_version"
+        $ = "name"
+        $ = "version"
+    condition:
+        uint8be(0) == 0x7b and
+        filesize < 25KB and
+        all of them
+}
+
 rule cab_file {
     meta:
         type = "archive"

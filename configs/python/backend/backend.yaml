@@ -279,6 +279,11 @@ scanners:
       priority: 5
       options:
         tmp_directory: '/dev/shm/'
+  'ScanManifest':
+    - positive:
+        flavors:
+          - 'browser_manifest'
+      priority: 5
   'ScanMmbot':
     - positive:
         flavors:
