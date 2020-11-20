@@ -551,6 +551,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanLnk | Collects metadata from lnk files. | N/A | Ryan Borre, [DerekT2](https://github.com/Derekt2), [Nathan Icart](https://github.com/nateicart)
 | ScanLzma | Decompresses lzma files | N/A |
 | ScanMacho | Collects metadata from Mach-O files | "tempfile_directory" -- location where tempfile writes temporary files (defaults to "/tmp/") |
+| ScanManifest | Collects metadata from Chrome Manifest files | N/A | [DerekT2](https://github.com/Derekt2)
 | ScanMmbot | Collects VB results from a server running mmbotd | "server" -- network address and network port of the mmbotd server (defaults to "127.0.0.1:33907")<br>"timeout" -- amount of time (in milliseconds) to wait for a response from the server (defaults to 10000) |
 | ScanOcr | Collects metadata and extracts optical text from image files | "extract_text" -- boolean that determines if document text should be extracted as a child file (defaults to False)<br>"tempfile_directory" -- location where `tempfile` will write temporary files (defaults to "/tmp/") |
 | ScanOle | Extracts files from OLECF files | N/A |
