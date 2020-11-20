@@ -12,7 +12,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"gopkg.in/yaml.v2"

@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2020-11-20
+### Changed
+- Pinned redis module to version 8 due to bug causing frontend and manager to fail compilation (https://github.com/target/strelka/issues/142) (phutelmyer)
+
 ## 2020-08-13
 ### Added
 - FireEye capa scanner

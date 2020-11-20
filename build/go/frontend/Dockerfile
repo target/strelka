@@ -1,10 +1,13 @@
 FROM golang AS build
 LABEL maintainer "Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
+ENV GO111MODULE=on
+
 COPY ./src/go/ /go/src/github.com/target/strelka/src/go/
-RUN cd /go/src/github.com/target/strelka/src/go/cmd/strelka-frontend/ && \
-    go get . && \
-    CGO_ENABLED=0 go build -o /tmp/strelka-frontend .
+WORKDIR /go/src/github.com/target/strelka/src/go/
+
+RUN go mod init && cd /go/src/github.com/target/strelka/src/go/cmd/strelka-frontend/ && \
+ CGO_ENABLED=0 go build -o /tmp/strelka-frontend .
 
 FROM alpine
 COPY --from=build /tmp/strelka-frontend /usr/local/bin/strelka-frontend
