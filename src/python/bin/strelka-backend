@@ -59,10 +59,11 @@ class Backend(object):
         work_expire = work_start + self.limits.get('time_to_live')
 
         while 1:
-            if count >= self.limits.get('max_files'):
-                break
-            if time.time() >= work_expire:
-                break
+            if self.limits.get('max_files') != "0" or self.limits.get('time_to_live') != "0":
+                if count >= self.limits.get('max_files'):
+                    break
+                if time.time() >= work_expire:
+                    break
 
             task = self.coordinator.zpopmin('tasks', count=1)
             if len(task) == 0:
