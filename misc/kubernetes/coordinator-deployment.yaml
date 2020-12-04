@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    strelka.service: coordinator
+  name: coordinator
+  namespace: strelka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      strelka.service: coordinator
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        strelka.network/strelka_net: "true"
+        strelka.service: coordinator
+    spec:
+      containers:
+      - image: redis:alpine
+        name: coordinator
+        args:
+        - redis-server
+        - --save
+        - ""
+        - --appendonly
+        - "no"
+        resources: {}
+        ports:
+        - containerPort: 6379
+      restartPolicy: Always

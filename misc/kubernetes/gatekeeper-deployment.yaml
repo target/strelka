@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    strelka.service: gatekeeper
+  name: gatekeeper
+  namespace: strelka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      strelka.service: gatekeeper
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        strelka.network/strelka_net: "true"
+        strelka.service: gatekeeper
+    spec:
+      containers:
+      - image: redis:alpine
+        name: gatekeeper
+        args:
+        - redis-server
+        - --save
+        - ""
+        - --appendonly
+        - "no"
+        - --maxmemory-policy
+        - allkeys-lru
+        resources: {}
+        ports:
+        - containerPort: 6379
+      restartPolicy: Always
+status: {}

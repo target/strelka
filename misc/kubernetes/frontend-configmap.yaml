@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-configmap
+  namespace: strelka
+data:
+  frontend.yaml: |
+    server: ":57314"
+    coordinator:
+      addr: 'coordinator.strelka:6379'
+      db: 0
+      pool: 100
+      read: 10s
+    gatekeeper:
+      addr: 'gatekeeper.strelka:6379'
+      db: 0
+      pool: 100
+      read: 10s
+      ttl: 1h
+    response:
+      log: "/var/log/strelka/strelka.log"

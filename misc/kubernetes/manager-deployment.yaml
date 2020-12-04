@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    strelka.service: manager
+  name: manager
+  namespace: strelka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      strelka.service: manager
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        strelka.network/strelka_net: "true"
+        strelka.service: manager
+    spec:
+      containers:
+      - image: strelka_manager
+        imagePullPolicy: Never
+        name: manager
+        args:
+        - strelka-manager
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/strelka/
+          name: manager-config
+          readOnly: true
+      restartPolicy: Always
+      volumes:
+      - name: manager-config
+        configMap:
+          name: manager-configmap
+          items:
+          - key: "manager.yaml"
+            path: "manager.yaml"

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    strelka.service: mmrpc
+  name: mmrpc
+  namespace: strelka
+spec:
+  clusterIP: None
+  selector:
+    strelka.service: mmrpc
+  ports:
+    - name: mmrpc
+      port: 33907
