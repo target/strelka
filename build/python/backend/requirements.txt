@@ -8,7 +8,7 @@ inflection==0.3.1
 interruptingcow==0.8
 jsbeautifier==1.10.3
 libarchive-c==2.9
-lxml==4.5.0
+lxml==4.6.2
 msoffcrypto-tool==4.10.1
 olefile==0.46
 oletools==0.55.1
