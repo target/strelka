@@ -1,6 +1,19 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2020-1-13
+### Changed
+- `ubuntu` versions for `strelka-backend` and `strelka-mmrpc` updated to `20.04`
+- Accepted `dependabot` pull request, updating dependency `lxml` from `4.5.0` to `4.6.2`
+
+## 2020-12-4
+### Added
+- `kubernetes` deployment example added. (@scottpas)
+
+## 2020-12-2
+### Added
+- Added option to disable Strelka Backend shutdown (@weslambert)
+
 ## 2020-11-20
 ### Added
 - `scan_manifest` scanner (@Derekt2)
