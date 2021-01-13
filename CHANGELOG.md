@@ -1,7 +1,7 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
-## 2020-1-13
+## 2021-1-13
 ### Changed
 - `ubuntu` versions for `strelka-backend` and `strelka-mmrpc` updated to `20.04`
 - Accepted `dependabot` pull request, updating dependency `lxml` from `4.5.0` to `4.6.2`
