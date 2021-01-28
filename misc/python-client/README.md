@@ -18,5 +18,5 @@ Or it can be used as the `StrelkaFrontend` class:
 ``` python
 from client import StrelkaFrontend
 client = StrelkaFrontend(server="localhost:51314",gatekeeper=False)
-result = client.ScanFile(open("filename.bin","rb").read())
+result = client.ScanFile("filename.bin")
 ```
