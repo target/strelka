@@ -1,6 +1,8 @@
 name: strelka-daily-builder
 on:
-  [push]
+  push:
+    branches:
+      - 'pin-cryptography' # Run on a specific branch
 #  schedule:
 #    - cron: '0 2 * * *'
 jobs:
@@ -9,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       #- uses: actions/checkout@master
-      - uses: actions/strelka@pin-cryptography
+      - uses: actions/checkout@v2
       - name: Builds Strelka
         run: docker-compose -f build/docker-compose.yaml build
   slack:
