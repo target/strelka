@@ -5,6 +5,7 @@ on:
 #    - cron: '0 2 * * *'
 jobs:
   strelka:
+    name: Strelka
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
@@ -12,8 +13,8 @@ jobs:
         run: docker-compose -f build/docker-compose.yaml build
   slack:
       name: Slack
-      needs: strelka
       runs-on: ubuntu-latest
+      needs: strelka
       if: always()
       steps:
         - uses: technote-space/workflow-conclusion-action@v2
