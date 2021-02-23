@@ -2,7 +2,7 @@ name: strelka-daily-builder
 on:
   push:
     branches:
-      - 'pin-cryptography' # Run on a specific branch
+      - 'pin-cryptography' #  Run on a specific branch
 #  schedule:
 #    - cron: '0 2 * * *'
 jobs:
