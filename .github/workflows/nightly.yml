@@ -4,9 +4,22 @@ on:
 #  schedule:
 #    - cron: '0 2 * * *'
 jobs:
-  test:
+  strelka:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
       - name: Builds Strelka
         run: docker-compose -f build/docker-compose.yaml build
+  slack:
+      name: Slack
+      needs: strelka
+      runs-on: ubuntu-latest
+      if: always()
+      steps:
+        - uses: technote-space/workflow-conclusion-action@v2
+        - uses: 8398a7/action-slack@v3
+          with:
+            status: failure
+          env:
+            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          if: env.WORKFLOW_CONCLUSION == 'failure'
