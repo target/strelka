@@ -1,8 +1,6 @@
 name: strelka-daily-builder
 on:
-  push:
-    branches:
-      - '*'
+  push
 #  schedule:
 #    - cron: '0 2 * * *'
 jobs:
@@ -10,18 +8,7 @@ jobs:
     name: Strelka
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@master
       - name: Builds Strelka
         run: docker-compose -f build/docker-compose.yaml build
-  slack:
-      name: Slack
-      runs-on: ubuntu-latest
-      needs: strelka
-      if: always()
-      steps:
-        - uses: technote-space/workflow-conclusion-action@v2
-        - uses: 8398a7/action-slack@v3
-          with:
-            status: failure
-          env:
-            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          if: env.WORKFLOW_CONCLUSION == 'failure'
+        
