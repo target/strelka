@@ -10,8 +10,6 @@ jobs:
     name: Strelka
     runs-on: ubuntu-latest
     steps:
-      #- uses: actions/checkout@master
-      - uses: actions/checkout@v2
       - name: Builds Strelka
         run: docker-compose -f build/docker-compose.yaml build
   slack:
