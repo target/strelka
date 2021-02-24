@@ -1,9 +1,9 @@
-name: "build"
+name: "Build Strelka On Push"
 on:
   push
 jobs:
   strelka:
-    name: "build main push"
+    name: "Build Strelka On Push"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
