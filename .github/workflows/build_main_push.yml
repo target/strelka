@@ -1,9 +1,9 @@
-name: "Build Strelka Master"
+name: "build main"
 on:
   push
 jobs:
   strelka:
-    name: "Build Strelka Master"
+    name: "build main"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
