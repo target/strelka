@@ -14,5 +14,8 @@ RUN go mod init && \
 # Move build, install additional packages, and initialize non-root user
 FROM alpine
 COPY --from=build /tmp/strelka-filestream /usr/local/bin/strelka-filestream
+RUN addgroup -g 939 strelka && \
+    adduser -u 939 -G strelka strelka --disabled-password \
+    -h /etc/strelka --no-create-home strelka
 RUN apk add --no-cache jq
-USER 1001
+USER strelka
