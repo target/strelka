@@ -1,0 +1,12 @@
+name: "Build Strelka Daily"
+on:
+  schedule:
+    - cron: '0 2 * * *'
+jobs:
+  strelka:
+    name: "Build Strelka"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Builds Strelka
+        run: docker-compose -f build/docker-compose.yaml build
