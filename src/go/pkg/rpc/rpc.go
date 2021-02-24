@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime"
 	"time"
+	"path/filepath"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -127,7 +128,16 @@ func ScanFile(client strelka.FrontendClient, timeout time.Duration, req structs.
 	}
 	if req.Delete {
 		defer os.Remove(req.Attributes.Filename)
-	}
+	} else if req.ProcessedDir != "" {
+                defer func() {
+                        _, name := filepath.Split(req.Attributes.Filename)
+                        m := filepath.Join(req.ProcessedDir, name)
+                        err := os.Rename(req.Attributes.Filename, m)
+                        if err != nil {
+                                log.Printf("failed to move file %s to directory %s: %v", name, req.ProcessedDir, err)
+                        }
+                }()
+        }
 	defer file.Close()
 
 	scanFile, err := client.ScanFile(ctx, grpc.WaitForReady(true))

@@ -30,6 +30,7 @@ type ConfFiles struct {
 	Patterns   []string // required
 	Delete     bool     // optional
 	Gatekeeper bool     // required
+	ProcessedDir string // optional
 }
 
 type ConfCoordinator struct {
@@ -96,4 +97,5 @@ type ScanFileRequest struct {
 	Chunk      int                 // required
 	Delay      time.Duration       // optional
 	Delete     bool                // optional, only use if files must be deleted!
+	ProcessedDir     string        // optional
 }
