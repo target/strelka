@@ -1,6 +1,6 @@
 FROM ubuntu:20.04
 ARG DEBIAN_FRONTEND=noninteractive
-LABEL maintainer "Target Brands, Inc. TTS-CFC-OpenSource@target.com"
+LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
 # Copy Strelka files
 COPY ./src/python/ /strelka/
