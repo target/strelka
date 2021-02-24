@@ -1,10 +1,10 @@
-name: "Build Strelka Daily"
+name: "build main daily"
 on:
   schedule:
     - cron: '0 2 * * *'
 jobs:
   strelka:
-    name: "Build Strelka"
+    name: "build mail daily"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
