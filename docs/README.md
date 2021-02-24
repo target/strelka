@@ -281,6 +281,7 @@ For the options below, only one response setting may be configured.
 * "files.chunk": size of file chunks that will be sent to the frontend server (defaults to 32768b / 32kb)
 * "files.patterns": list of glob patterns that determine which files will be sent for scanning (defaults to example glob pattern)
 * "files.delete": boolean that determines if files should be deleted after being sent for scanning (defaults to false -- does not delete files)
+* "files.processed": directory where files will be moved after being submitted for scanning (defaults to "", and files stay in staging directory)
 * "response.log": location where worker scan results are logged to (defaults to /var/log/strelka/strelka.log)
 * "response.report": frequency at which the frontend reports the number of files processed (no default)
 * "delta": time value that determines how much time must pass since a file was last modified before it is sent for scanning (defaults to 5 seconds)
