@@ -1,6 +1,17 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2021-2-24
+### Added
+- `GitHub Actions` Strelka builder and badge to test main branch on push and each day
+
+### Changed
+- Updated `go` Dockerfiles with module fixes
+
+## 2021-2-23
+### Changed
+- Pinned python versions for module `cryptography`
+
 ## 2021-1-13
 ### Changed
 - `ubuntu` versions for `strelka-backend` and `strelka-mmrpc` updated to `20.04`
