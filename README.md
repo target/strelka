@@ -1,6 +1,9 @@
 # Strelka
 
-[![Build](https://github.com/target/strelka/actions/workflows/build.yml/badge.svg)](https://github.com/target/strelka/actions/workflows/build.yml)
+[![Build](https://github.com/target/strelka/actions/workflows/build.yml/badge.svg)](https://github.com/target/strelka/actions/workflows/build.yml) [![Daily Build](https://github.com/target/strelka/actions/workflows/build_daily.yml/badge.svg)](https://github.com/target/strelka/actions/workflows/build_daily.yml)
+
+[![Target’s CFC-Open-Source Slack](https://img.shields.io/badge/slack-Slack-blue.svg?logo=slack)](https://cfc-open-source.slack.com/)
+[![Slack Invitation](https://img.shields.io/badge/slack-Invite-blue.svg?logo=slack)](https://join.slack.com/t/cfc-open-source/shared_invite/zt-e54crchh-a6x4iDy18D5lVwFKQoEeEQ)
 
 Strelka is a real-time, container-based file scanning system used for threat hunting, threat detection, and incident response. Originally based on the design established by Lockheed Martin's [Laika BOSS](https://github.com/lmco/laikaboss) and similar projects (see: [related projects](#related-projects)), Strelka's purpose is to perform file extraction and metadata collection at enterprise scale.
 
@@ -14,15 +17,8 @@ Strelka's ZeroMQ architecture is retired and was migrated to the [archive/zeromq
 
 ### [Read the documentation](https://target.github.io/strelka/)
 
-## Community
-### Slack
 
-[![Target’s CFC-Open-Source Slack](https://img.shields.io/badge/slack-Slack-green.svg?logo=slack)](https://cfc-open-source.slack.com/)
-
-[![Slack Invitation](https://img.shields.io/badge/slack-Invite-green.svg?logo=slack)](https://join.slack.com/t/cfc-open-source/shared_invite/zt-e54crchh-a6x4iDy18D5lVwFKQoEeEQ)
-
-
-## Contributing
+## Contribute
 Guidelines for contributing can be found [here](https://github.com/target/strelka/blob/master/CONTRIBUTING.md).
 
 ## Related Projects
