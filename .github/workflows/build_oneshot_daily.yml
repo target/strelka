@@ -1,0 +1,12 @@
+name: "build strelka oneshot daily"
+on:
+  schedule:
+    - cron: '0 4 * * *'
+jobs:
+  strelka:
+    name: "build strelka onshot daily"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Builds Strelka Oneshot
+        run: docker build -f build/go/oneshot/Dockerfile .

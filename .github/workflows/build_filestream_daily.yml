@@ -1,0 +1,12 @@
+name: "build strelka filestream daily"
+on:
+  schedule:
+    - cron: '0 2 * * *'
+jobs:
+  strelka:
+    name: "build strelka filestream daily"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Builds Strelka Filestream
+        run: docker build -f build/go/filestream/Dockerfile .
