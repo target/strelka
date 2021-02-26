@@ -3,7 +3,7 @@ on:
   push
 jobs:
   strelka:
-    name: "Build"
+    name: "Strelka Push Build"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master

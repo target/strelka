@@ -4,7 +4,7 @@ on:
     - cron: '0 2 * * *'
 jobs:
   strelka:
-    name: "Daily Build"
+    name: "Strelka Daily Build"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
