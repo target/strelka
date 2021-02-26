@@ -1,6 +1,19 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2021-2-26
+### Added
+- `Python-Client` Strelka standalone python file submission client (@scottpas)
+- `Strelka Oneshot` Dockerfile
+- `GitHub Actions` additional workflows for client builds
+
+### Changed
+- Updated `filestream` sample config
+
+## 2021-2-25
+### Added
+- `Filestream Processed Directory` Added ability to move files from a staging directory to a processed directory on completion. (@weslambert)
+
 ## 2021-2-24
 ### Added
 - `GitHub Actions` Strelka builder and badge to test main branch on push and each day
