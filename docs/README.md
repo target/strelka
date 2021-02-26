@@ -145,8 +145,19 @@ Strelka's core client apps are written in Go and can be run natively on a host o
     cd /opt/strelka/src/go/cmd/strelka-oneshot/
     go build -o strelka-oneshot .
     ```
+   
+#### strelka-oneshot (container)
+1. Clone this repository
+    ```sh
+    git clone https://github.com/target/strelka.git /opt/strelka/
+    ```
 
-
+2. Build the container
+    ```sh
+    cd /opt/strelka/
+    docker build -f build/go/oneshot/Dockerfile -t strelka-oneshot .
+    ```
+   
 #### strelka-filestream (gettable)
 1. Install the binary
     ```sh
