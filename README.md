@@ -1,6 +1,10 @@
 # Strelka
 
-[![Build](https://github.com/target/strelka/actions/workflows/build.yml/badge.svg)](https://github.com/target/strelka/actions/workflows/build.yml) [![Daily Build](https://github.com/target/strelka/actions/workflows/build_daily.yml/badge.svg)](https://github.com/target/strelka/actions/workflows/build_daily.yml)
+[![Push Build](https://github.com/target/strelka/actions/workflows/build_strelka_on_push.yml/badge.svg)](https://github.com/target/strelka/actions/workflows/build_strelka_on_push.yml)
+[![Daily Build](https://github.com/target/strelka/actions/workflows/build_strelka_daily.yml/badge.svg)](https://github.com/target/strelka/actions/workflows/build_strelka_daily.yml)
+[![Fileshot](https://github.com/target/strelka/actions/workflows/build_fileshot_daily.yml/badge.svg)](https://github.com/target/strelka/actions/workflows/build_fileshot_daily.yml)
+[![Filestream](https://github.com/target/strelka/actions/workflows/build_filestream_daily.yml/badge.svg)](https://github.com/target/strelka/actions/workflows/build_filestream_daily.yml)
+[![Oneshot](https://github.com/target/strelka/actions/workflows/build_oneshot_daily.yml/badge.svg)](https://github.com/target/strelka/actions/workflows/build_oneshot_daily.yml)
 
 [![Target’s CFC-Open-Source Slack](https://img.shields.io/badge/slack-Slack-blue.svg?logo=slack)](https://cfc-open-source.slack.com/)
 [![Slack Invitation](https://img.shields.io/badge/slack-Invite-blue.svg?logo=slack)](https://join.slack.com/t/cfc-open-source/shared_invite/zt-e54crchh-a6x4iDy18D5lVwFKQoEeEQ)
