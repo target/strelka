@@ -11,6 +11,7 @@ throughput:
 files:
   patterns:
     - '/glob/to/your/files/*'
+  processed: '/path/to/your/processed/directory/'
   delete: false
   gatekeeper: true
 response:
