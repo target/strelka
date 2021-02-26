@@ -141,6 +141,7 @@ func main() {
 				Chunk:  conf.Throughput.Chunk,
 				Delay:  conf.Throughput.Delay,
 				Delete: conf.Files.Delete,
+				Processed:   conf.Files.Processed,
 			}
 
 			sem <- 1
@@ -197,6 +198,7 @@ func main() {
 					Chunk:  conf.Throughput.Chunk,
 					Delay:  conf.Throughput.Delay,
 					Delete: conf.Files.Delete,
+					Processed:   conf.Files.Processed,
 				}
 
 				sem <- 1
