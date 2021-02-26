@@ -1,4 +1,4 @@
-name: "build strelka filestream daily"
+name: "Filestream"
 on:
   schedule:
     - cron: '0 2 * * *'

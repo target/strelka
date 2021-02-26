@@ -1,4 +1,4 @@
-name: "build strelka oneshot daily"
+name: "Oneshot"
 on:
   schedule:
     - cron: '0 4 * * *'

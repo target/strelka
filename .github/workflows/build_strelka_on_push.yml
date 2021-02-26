@@ -1,4 +1,4 @@
-name: "Build"
+name: "Push Build"
 on:
   push
 jobs:
