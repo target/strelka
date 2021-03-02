@@ -45,6 +45,10 @@ Guidelines for contributing can be found [here](https://github.com/target/strelk
 ## Licensing
 Strelka and its associated code is released under the terms of the [Apache 2.0 License](https://github.com/phutelmyer/strelka/blob/master/LICENSE).
 
+<h1 align="center">
+  <img src="./misc/assets/target_banner.png" alt="Target Banner" />
+</h1>
+
 <!--
 Links
 -->
