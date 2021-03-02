@@ -6,7 +6,7 @@
 
 [Releases][release]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Documentation][wiki]
 
-[![GitHub release][img-version-badge]][repo] [![Build Status][img-actions-badge]][actions-ci] [![Pull Requests][img-pr-badge]][pr]  [![Docker][img-docker-badge]][docker] [![Slack][img-slack-badge]][slack]  [![License][img-license-badge]][license]
+[![GitHub release][img-version-badge]][repo] [![Build Status][img-actions-badge]][actions-ci] [![Pull Requests][img-pr-badge]][pr] [![Slack][img-slack-badge]][slack]  [![License][img-license-badge]][license]
 
 </div>
 
