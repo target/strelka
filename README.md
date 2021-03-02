@@ -18,7 +18,7 @@ Strelka differs from its sibling projects in a few significant ways:
 * OS-native client applications for Windows, Mac, and Linux
 * Built using [libraries and formats](#architecture) that allow cross-platform, cross-language support
 
-## Key Features
+## Features
 Strelka is a modular data scanning platform, allowing users or systems to submit files for the purpose of analyzing, extracting, and reporting file content and metadata. Coupled with a [SIEM](https://en.wikipedia.org/wiki/Security_information_and_event_management), Strelka is able to aggregate, alert, and provide analysts with the capability to better understand their environment without having to perform direct data gathering or time-consuming file analysis.
 
 ![Strelka Features](./misc/assets/strelka_features.png)
