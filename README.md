@@ -24,11 +24,7 @@ Strelka is a modular data scanning platform, allowing users or systems to submit
 ![Strelka Features](./misc/assets/strelka_features.png)
 
 ## Quickstart
-<div align="center">
-  
 *This section should be used as a demonstration of Strelka. Please review the [documentation](https://target.github.io/strelka/) for details on how to properly install and deploy Strelka.*
-
-</div>
 
 ## Additional Documentation
 More documentation about Strelka can be found in the [README](https://target.github.io/strelka/), including:
