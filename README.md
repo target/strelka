@@ -4,12 +4,16 @@
 
 <div align="center">
 
-[Releases][release]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Issues](#patched-fonts)&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Font Patcher](#font-patcher)&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Wiki Documentation][wiki]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Stickers][stickers]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[VimDevIcons][vim-devicons]
+[Releases][release]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Issues](issues)&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Pull Requests](pull-requests)&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Documentation][wiki]
 
-[![GitHub release][img-version-badge]][repo] [![Slack][img-slack-badge]][gitter] [![Build Status][img-travis-ci]][travis-ci] [![Code of Conduct][coc-badge]][coc] [![PRs Welcome][prs-badge]][prs]  <a href="#patched-fonts" title=""><img src="https://raw.githubusercontent.com/wiki/ryanoasis/nerd-fonts/images/faux-shield-badge-os-logos.svg?sanitize=true" alt="Nerd Fonts - OS Support"></a> [![Twitter][twitter-badge]][twitter-intent]
+[![GitHub release][img-version-badge]][repo] [![Slack][img-slack-badge]][slack] [![Build Status][img-actions-badge]][actions-ci] [![Code of Conduct][coc-badge]][coc] [![PRs Welcome][prs-badge]][prs]  <a href="#patched-fonts" title=""><img src="https://raw.githubusercontent.com/wiki/ryanoasis/nerd-fonts/images/faux-shield-badge-os-logos.svg?sanitize=true" alt="Nerd Fonts - OS Support"></a> [![Twitter][twitter-badge]][twitter-intent]
+
+</div>
+
+[![GitHub release][img-version-badge]][repo] [![Slack][img-slack-badge]][slack] [![Build Status][img-travis-ci]][travis-ci] [![License][license-badge]][license] [![PRs Welcome][prs-badge]][prs]  <a href="#patched-fonts" title=""><img src="https://raw.githubusercontent.com/wiki/ryanoasis/nerd-fonts/images/faux-shield-badge-os-logos.svg?sanitize=true" alt="Nerd Fonts - OS Support"></a> [![Twitter][twitter-badge]][twitter-intent]
 
 [![Current Build](https://github.com/target/strelka/actions/workflows/build_strelka_on_push.yml/badge.svg)](https://github.com/target/strelka/actions/workflows/build_strelka_on_push.yml)
-[![Slack](https://img.shields.io/badge/slack-join-blue.svg?logo=slack)](https://join.slack.com/t/cfc-open-source/shared_invite/zt-e54crchh-a6x4iDy18D5lVwFKQoEeEQ)
+
 </div>
 **Strelka** is a real-time, container-based file scanning system used for threat hunting, threat detection, and incident response. Originally based on the design established by Lockheed Martin's [Laika BOSS](https://github.com/lmco/laikaboss) and similar projects (see: [related projects](#related-projects)), Strelka's purpose is to perform file extraction and metadata collection at enterprise scale.
 
@@ -86,3 +90,26 @@ Guidelines for contributing can be found [here](https://github.com/target/strelk
 
 ## Licensing
 Strelka and its associated code is released under the terms of the Apache 2.0 license (see the LICENSE file in the project root for more information).
+
+<!--
+Links
+-->
+[release]:https://github.com/target/strelka/releases/latest "Latest Release (external link) ➶"
+[issues]:https://github.com/target/strelka/issues "Issues (external link) ➶"
+[pull-requests]:https://github.com/target/strelka/pulls "Pull Requests (external link) ➶"
+[wiki]:https://target.github.io/strelka/#/ "Wiki (external link) ➶"
+[repo]:https://github.com/target/strelka "Repository (external link) ➶"
+[slack]:https://join.slack.com/t/cfc-open-source/shared_invite/zt-e54crchh-a6x4iDy18D5lVwFKQoEeEQ
+[actions-ci]:https://github.com/target/strelka/actions/workflows/build_strelka_daily.yml
+
+<!--
+Badges
+-->
+[img-version-badge]:https://img.shields.io/github/release/target/strelka.svg?style=for-the-badge
+[img-slack-badge]:https://img.shields.io/badge/slack-join-brightgreen.svg?style=for-the-badge&logo=slack
+[img-actions-badge]:https://img.shields.io/github/workflow/status/target/strelka/Daily%20Build?&style=for-the-badge
+
+
+
+
+
