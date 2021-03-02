@@ -6,13 +6,9 @@
 
 [Releases][release]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Issues](issues)&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Pull Requests](pull-requests)&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Documentation][wiki]
 
-[![GitHub release][img-version-badge]][repo] [![Slack][img-slack-badge]][slack] [![Build Status][img-actions-badge]][actions-ci] [![Code of Conduct][coc-badge]][coc] [![PRs Welcome][prs-badge]][prs]  <a href="#patched-fonts" title=""><img src="https://raw.githubusercontent.com/wiki/ryanoasis/nerd-fonts/images/faux-shield-badge-os-logos.svg?sanitize=true" alt="Nerd Fonts - OS Support"></a> [![Twitter][twitter-badge]][twitter-intent]
+[![GitHub release][img-version-badge]][repo] [![Slack][img-slack-badge]][slack] [![Build Status][img-actions-badge]][actions-ci] [![License][img-license-badge]][license] [![Pull Requests][img-pr-badge]][pr] [![Docker][img-docker-badge]][docker]
 
 </div>
-
-[![GitHub release][img-version-badge]][repo] [![Slack][img-slack-badge]][slack] [![Build Status][img-travis-ci]][travis-ci] [![License][license-badge]][license] [![PRs Welcome][prs-badge]][prs]  <a href="#patched-fonts" title=""><img src="https://raw.githubusercontent.com/wiki/ryanoasis/nerd-fonts/images/faux-shield-badge-os-logos.svg?sanitize=true" alt="Nerd Fonts - OS Support"></a> [![Twitter][twitter-badge]][twitter-intent]
-
-[![Current Build](https://github.com/target/strelka/actions/workflows/build_strelka_on_push.yml/badge.svg)](https://github.com/target/strelka/actions/workflows/build_strelka_on_push.yml)
 
 </div>
 **Strelka** is a real-time, container-based file scanning system used for threat hunting, threat detection, and incident response. Originally based on the design established by Lockheed Martin's [Laika BOSS](https://github.com/lmco/laikaboss) and similar projects (see: [related projects](#related-projects)), Strelka's purpose is to perform file extraction and metadata collection at enterprise scale.
@@ -99,8 +95,11 @@ Links
 [pull-requests]:https://github.com/target/strelka/pulls "Pull Requests (external link) ➶"
 [wiki]:https://target.github.io/strelka/#/ "Wiki (external link) ➶"
 [repo]:https://github.com/target/strelka "Repository (external link) ➶"
-[slack]:https://join.slack.com/t/cfc-open-source/shared_invite/zt-e54crchh-a6x4iDy18D5lVwFKQoEeEQ
-[actions-ci]:https://github.com/target/strelka/actions/workflows/build_strelka_daily.yml
+[slack]:https://join.slack.com/t/cfc-open-source/shared_invite/zt-e54crchh-a6x4iDy18D5lVwFKQoEeEQ "Slack (external link) ➶"
+[actions-ci]:https://github.com/target/strelka/actions/workflows/build_strelka_daily.yml "Github Actions (external link) ➶"
+[pr]:https://github.com/phutelmyer/strelka/pulls "Pull Requests (external link) ➶"
+[license]:https://github.com/phutelmyer/strelka/blob/master/LICENSE "License (external link) ➶"
+[docker]:https://www.docker.com/ "Docker (external link) ➶"
 
 <!--
 Badges
@@ -108,6 +107,9 @@ Badges
 [img-version-badge]:https://img.shields.io/github/release/target/strelka.svg?style=for-the-badge
 [img-slack-badge]:https://img.shields.io/badge/slack-join-brightgreen.svg?style=for-the-badge&logo=slack
 [img-actions-badge]:https://img.shields.io/github/workflow/status/target/strelka/Daily%20Build?&style=for-the-badge
+[img-pr-badge]:https://img.shields.io/badge/PRs-welcome-orange.svg?style=for-the-badge&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJzdmcyIiB3aWR0aD0iNjQ1IiBoZWlnaHQ9IjU4NSIgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPiA8ZyBpZD0ibGF5ZXIxIj4gIDxwYXRoIGlkPSJwYXRoMjQxNyIgZD0ibTI5Ny4zIDU1MC44N2MtMTMuNzc1LTE1LjQzNi00OC4xNzEtNDUuNTMtNzYuNDM1LTY2Ljg3NC04My43NDQtNjMuMjQyLTk1LjE0Mi03Mi4zOTQtMTI5LjE0LTEwMy43LTYyLjY4NS01Ny43Mi04OS4zMDYtMTE1LjcxLTg5LjIxNC0xOTQuMzQgMC4wNDQ1MTItMzguMzg0IDIuNjYwOC01My4xNzIgMTMuNDEtNzUuNzk3IDE4LjIzNy0zOC4zODYgNDUuMS02Ni45MDkgNzkuNDQ1LTg0LjM1NSAyNC4zMjUtMTIuMzU2IDM2LjMyMy0xNy44NDUgNzYuOTQ0LTE4LjA3IDQyLjQ5My0wLjIzNDgzIDUxLjQzOSA0LjcxOTcgNzYuNDM1IDE4LjQ1MiAzMC40MjUgMTYuNzE0IDYxLjc0IDUyLjQzNiA2OC4yMTMgNzcuODExbDMuOTk4MSAxNS42NzIgOS44NTk2LTIxLjU4NWM1NS43MTYtMTIxLjk3IDIzMy42LTEyMC4xNSAyOTUuNSAzLjAzMTYgMTkuNjM4IDM5LjA3NiAyMS43OTQgMTIyLjUxIDQuMzgwMSAxNjkuNTEtMjIuNzE1IDYxLjMwOS02NS4zOCAxMDguMDUtMTY0LjAxIDE3OS42OC02NC42ODEgNDYuOTc0LTEzNy44OCAxMTguMDUtMTQyLjk4IDEyOC4wMy01LjkxNTUgMTEuNTg4LTAuMjgyMTYgMS44MTU5LTI2LjQwOC0yNy40NjF6IiBmaWxsPSIjZGQ1MDRmIi8%2BIDwvZz48L3N2Zz4%3D
+[img-license-badge]:https://img.shields.io/badge/license-orange.svg?style=for-the-badge
+[img-docker-badge]:https://img.shields.io/badge/Supports-Docker-brightblue.svg?style=for-the-badge&logo=docker
 
 
 
