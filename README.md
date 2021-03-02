@@ -4,9 +4,9 @@
 
 <div align="center">
 
-[Releases][release]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Documentation][wiki]
-
 [![GitHub release][img-version-badge]][repo] [![Slack][img-slack-badge]][slack] [![Build Status][img-actions-badge]][actions-ci] [![License][img-license-badge]][license] [![Pull Requests][img-pr-badge]][pr] [![Docker][img-docker-badge]][docker]
+
+[Releases][release]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Documentation][wiki]
 
 </div>
 <h1 align="center"></h1>
