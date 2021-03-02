@@ -4,7 +4,7 @@
 
 <div align="center">
 
-[Releases][release]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Documentation][wiki]
+[Releases][release]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Documentation][wiki]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Pull Requests][pr]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Issues][issues]
 
 [![GitHub release][img-version-badge]][repo] [![Build Status][img-actions-badge]][actions-ci] [![Pull Requests][img-pr-badge]][pr] [![Slack][img-slack-badge]][slack]  [![License][img-license-badge]][license]
 
@@ -48,15 +48,15 @@ Strelka and its associated code is released under the terms of the [Apache 2.0 L
 <!--
 Links
 -->
-[release]:https://github.com/target/strelka/releases/latest "Latest Release (external link) ➶"
-[issues]:https://github.com/target/strelka/issues "Issues (external link) ➶"
-[pull-requests]:https://github.com/target/strelka/pulls "Pull Requests (external link) ➶"
-[wiki]:https://target.github.io/strelka/#/ "Wiki (external link) ➶"
-[repo]:https://github.com/target/strelka "Repository (external link) ➶"
+[release]:https://github.com/target/strelka/releases/latest "Strelka Latest Release ➶"
+[issues]:https://github.com/target/strelka/issues "Strelka Issues ➶"
+[pull-requests]:https://github.com/target/strelka/pulls "Strelka Pull Requests ➶"
+[wiki]:https://target.github.io/strelka/#/ "Strelka Documentation ➶"
+[repo]:https://github.com/target/strelka "Strelka Repository ➶"
 [slack]:https://join.slack.com/t/cfc-open-source/shared_invite/zt-e54crchh-a6x4iDy18D5lVwFKQoEeEQ "Slack (external link) ➶"
-[actions-ci]:https://github.com/target/strelka/actions/workflows/build_strelka_daily.yml "Github Actions (external link) ➶"
-[pr]:https://github.com/phutelmyer/strelka/pulls "Pull Requests (external link) ➶"
-[license]:https://github.com/phutelmyer/strelka/blob/master/LICENSE "License (external link) ➶"
+[actions-ci]:https://github.com/target/strelka/actions/workflows/build_strelka_daily.yml "Github Actions ➶"
+[pr]:https://github.com/phutelmyer/strelka/pulls "Strelka Pull Requests ➶"
+[license]:https://github.com/phutelmyer/strelka/blob/master/LICENSE "Strelka License File ➶"
 [docker]:https://www.docker.com/ "Docker (external link) ➶"
 
 <!--
