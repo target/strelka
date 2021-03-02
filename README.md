@@ -9,7 +9,7 @@
 [![GitHub release][img-version-badge]][repo] [![Slack][img-slack-badge]][slack] [![Build Status][img-actions-badge]][actions-ci] [![License][img-license-badge]][license] [![Pull Requests][img-pr-badge]][pr] [![Docker][img-docker-badge]][docker]
 
 </div>
-
+<h1 align="center"></h1>
 </div>
 **Strelka** is a real-time, container-based file scanning system used for threat hunting, threat detection, and incident response. Originally based on the design established by Lockheed Martin's [Laika BOSS](https://github.com/lmco/laikaboss) and similar projects (see: [related projects](#related-projects)), Strelka's purpose is to perform file extraction and metadata collection at enterprise scale.
 
