@@ -23,57 +23,16 @@ Strelka is a modular data scanning platform, allowing users or systems to submit
 
 ![Strelka Features](./misc/assets/strelka_features.png)
 
+## Quickstart
+*This section should be used as a demonstration of Strelka. Please review the [documentation](https://target.github.io/strelka/) for details on how to properly install and deploy Strelka.*
 
-## File Content
-The easiest way to understand Strelka is by observing its foundation: **Scanners**. Scanners are Python scripts whose role is to perform data analysis per filetype. These scanners are provided files by Strelka based on the type, or signature, of an identified file. For example, if Strelka has a signature for Executable file identification, it executes the Strelka Executable scanner. This specific scanner handles the extraction of both metadata and content such as: filename, description, libraries, and more before passing it back to Strelka for response. 
-
-![File Metadata](./misc/assets/strelka_content.png)
-
-## Response Data
-The following, also available in the [Readme](https://github.com/target/strelka/blob/f87d2ca15c38d54a4b4401e0a56d6e6d46212eb9/docs/README.md#identifying-suspicious-text), is a response example from Strelka showing how a typical response object is generated. This example shows a scan result for a text file that appears to be a shell script containing an IP address. The IP address is redacted to prevent accidental navigation.
-
-```
-{
-  "file": {
-    "filename": "VirusShare_1860271b6d530f8e120637f8248e8c88",
-    "depth": 0,
-    "flavors": {
-      "mime": [
-        "text/plain"
-      ]
-    },
-    "scanner_list": [
-      "ScanYara",
-      "ScanHash",
-      "ScanEntropy",
-      "ScanHeader",
-      "ScanUrl"
-    ],
-    "size": 1856
-  },
-  "tree": {
-    "node": "c65e5d0a-3a7d-4747-93bd-7d02cb68e164",
-    "root": "c65e5d0a-3a7d-4747-93bd-7d02cb68e164"
-  },
-  "hash": {
-    "md5": "1860271b6d530f8e120637f8248e8c88",
-    "sha1": "ca5aaae089a21dea271a4a5f436589492615eac9",
-    "sha256": "779e4ae1ac987b1be582b8f33a300564f6b3a3410641e27752d35f61055bbc4f",
-    "ssdeep": "24:cCEDx8CPP9C7graWH0CdCBrCkxcCLlACCyzECDxHCfCqyCM:g9LPnPWesnV"
-  },
-  "entropy": {
-    "entropy": 4.563745722228093
-  },
-  "header": {
-    "header": "cd /tmp || cd /var/run || cd /mnt || cd /root || c"
-  },
-  "url": {
-    "urls": [
-      "[redacted]"
-    ]
-  }
-}
-```
+## Additional Documentation
+More documentation about Strelka can be found in the [README](https://target.github.io/strelka/), including:
+- Installation
+- Deployment
+- Configurations
+- Architecture
+- FAQ
 
 ## Contribute
 Guidelines for contributing can be found [here](https://github.com/target/strelka/blob/master/CONTRIBUTING.md).
@@ -84,7 +43,7 @@ Guidelines for contributing can be found [here](https://github.com/target/strelk
 * [Assemblyline](https://bitbucket.org/cse-assemblyline/)
 
 ## Licensing
-Strelka and its associated code is released under the terms of the Apache 2.0 license (see the LICENSE file in the project root for more information).
+Strelka and its associated code is released under the terms of the [Apache 2.0 License](https://github.com/phutelmyer/strelka/blob/master/LICENSE).
 
 <!--
 Links
