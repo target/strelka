@@ -63,11 +63,11 @@ $ cat strelka.log | jq .
 
 ## Additional Documentation
 More documentation about Strelka can be found in the [README](https://target.github.io/strelka/), including:
-- Installation
-- Deployment
-- Configurations
-- Architecture
-- FAQ
+- [Installation](https://target.github.io/strelka/#/?id=installation)
+- [Deployment](https://target.github.io/strelka/#/?id=deployment)
+- [Design](https://target.github.io/strelka/#/?id=design)
+- [Architecture](https://target.github.io/strelka/#/?id=architecture)
+- [FAQ](https://target.github.io/strelka/#/?id=frequently-asked-questions)
 
 ## Contribute
 Guidelines for contributing can be found [here](https://github.com/target/strelka/blob/master/CONTRIBUTING.md).
