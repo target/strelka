@@ -60,6 +60,10 @@ $ cat strelka.log | jq .
 
 **Terminal 1** runs a full Strelka cluster with logs printed to stdout and **Terminal 2** is used to *send files to the cluster*. `fileshot.yaml` will need the `patterns` field updated to identify files to scan, by default scan results will be written to `./strelka.log`.
 
+## Potential Uses
+With over 50 file scanners for the most common file types (e.g., exe, docx, js, zip), Strelka provides users with the ability to gain new insights into files on their host, network, or enterprise. While Strelka *is not* a detection engine itself (although it does utilize [YARA](https://virustotal.github.io/yara/), it can provide enough metadata to identify suspicious or malicious files. Some potential uses for Strelka include:
+
+![Strelka Uses](./misc/assets/strelka_uses.png)
 
 ## Additional Documentation
 More documentation about Strelka can be found in the [README](https://target.github.io/strelka/), including:
