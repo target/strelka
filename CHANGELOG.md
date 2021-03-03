@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2021-3-2
+### Changed
+- `README` updated with formatting and images
+
 ## 2021-2-26
 ### Added
 - `Python-Client` Strelka standalone python file submission client (@scottpas)
