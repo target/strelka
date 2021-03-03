@@ -24,7 +24,66 @@ Strelka is a modular data scanning platform, allowing users or systems to submit
 ![Strelka Features](./misc/assets/strelka_features.png)
 
 ## Quickstart
-*This section should be used as a demonstration of Strelka. Please review the [documentation](https://target.github.io/strelka/) for details on how to properly install and deploy Strelka.*
+*This section should be used as a demonstration of Strelka. Please review the [documentation](https://target.github.io/strelka/) for details on how to properly build and deploy Strelka.*
+
+By default, Strelka is configured to use a minimal "quickstart" deployment that allows users to test the system. As noted above, this configuration **is not recommended** for production deployments, but may suffice for environments with very low file volume (<50k files per day). Using two Terminal windows, do the following:
+
+
+### Step 1: Build and Start Strelka Cluster (Docker)
+```
+# Terminal 1
+$ docker-compose -f build/docker-compose.yaml up
+```
+
+
+### Step 2: Build [Strelka-Fileshot](https://github.com/target/strelka/blob/master/docs/README.md#strelka-fileshot) (File Submitter)
+```
+# Terminal 2
+$ docker build -f build/go/fileshot/Dockerfile -t strelka-fileshot .
+```
+
+
+### Step 3: Add File Paths / Patterns to be Scanned to [fileshot.yaml](https://github.com/target/strelka/blob/master/docs/README.md#fileshot)
+```
+  ...
+  files:
+    patterns:
+      - '/glob/to/your/files/*.doc'
+      - '/glob/to/your/files/*.exe'
+  ...
+```
+
+
+### Step 4: Run Strelka-Fileshot
+```
+# Terminal 2
+$ strelka-fileshot -c fileshot.yaml
+$ cat strelka.log | jq .
+```
+
+
+### Step 5: Review Output
+```
+{
+  ...
+  "hash": {
+    "md5": "1860271b6d530f8e120637f8248e8c88",
+    "sha1": "ca5aaae089a21dea271a4a5f436589492615eac9",
+    "sha256": "779e4ae1ac987b1be582b8f33a300564f6b3a3410641e27752d35f61055bbc4f",
+    "ssdeep": "24:cCEDx8CPP9C7graWH0CdCBrCkxcCLlACCyzECDxHCfCqyCM:g9LPnPWesnV"
+  },
+  "entropy": {
+    "entropy": 4.563745722228093
+  },
+  "header": {
+    "header": "cd /tmp || cd /var/run || cd /mnt || cd /root || c"
+  },
+  ...
+```
+
+
+**Terminal 1** runs a full Strelka cluster with logs printed to stdout and **Terminal 2** is used to *send files to the cluster*. `fileshot.yaml` will need the `patterns` field updated to identify files to scan, by default scan results will be written to `./strelka.log`.
+
 
 ## Additional Documentation
 More documentation about Strelka can be found in the [README](https://target.github.io/strelka/), including:
