@@ -553,7 +553,7 @@ data:
         propagate: 0
       oletools:
         propagate: 0
-      pdfminer:
+      pymupdf:
         propagate: 0
       pefile:
         propagate: 0

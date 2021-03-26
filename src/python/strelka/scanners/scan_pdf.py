@@ -1,16 +1,10 @@
 import io
-import struct
-
-from pdfminer import converter
-from pdfminer import layout
-from pdfminer import pdfdocument
-from pdfminer import pdfinterp
-from pdfminer import pdfpage
-from pdfminer import pdfparser
-from pdfminer import pdftypes
-from pdfminer import psparser
+import fitz
 
 from strelka import strelka
+
+# Hide PyMuPDF Warnings
+fitz.TOOLS.mupdf_display_errors(value=False)
 
 
 class ScanPdf(strelka.Scanner):
@@ -32,113 +26,80 @@ class ScanPdf(strelka.Scanner):
 
         try:
             with io.BytesIO(data) as pdf_io:
-                parsed = pdfparser.PDFParser(pdf_io)
-                pdf = pdfdocument.PDFDocument(parsed)
 
-                self.event.setdefault('annotated_uris', [])
-                for xref in pdf.xrefs:
-                    for object_id in xref.get_objids():
-                        self.event['total']['objects'] += 1
+                # Open file as with PyMuPDF as file object
+                reader = fitz.open(stream=pdf_io, filetype="pdf")
 
+                # Get length of xrefs to be used in xref / annotation iteration
+                xreflen = reader.xref_length()
+
+                # Iterate through xrefs and collect annotations
+                i = 0
+                for xref in range(1, xreflen):
+
+                    # PDF Annotation Flags
+                    xref_object = reader.xref_object(i, compressed=False)
+                    if any(obj in xref_object for obj in ["/AA", "/OpenAction"]):
+                        self.flags.append('auto_action')
+                    if any(obj in xref_object for obj in ["/JS", "/JavaScript"]):
+                        self.flags.append('javascript_embedded')
+
+                    # PDF Object Resubmission
+                    # If xref is a stream, add that object back into the analysis pipeline
+                    if reader.is_stream(xref):
                         try:
-                            pdf_object = pdf.getobj(object_id)
-                            if isinstance(pdf_object, dict):
-                                for (key, value) in pdf_object.items():
-                                    if key in ['AA', 'OpenAction']:
-                                        self.flags.append('auto_action')
-                                    if key in ['JS', 'Javascript']:
-                                        self.flags.append('javascript_embedded')
+                            if xref not in extracted_objects:
+                                extract_file = strelka.File(
+                                    name=f'object_{xref}',
+                                    source=self.name,
+                                )
 
-                                    try:
-                                        if key == 'A':
-                                            uri = value.get('URI')
-                                            if uri not in self.event['annotated_uris']:
-                                                self.event['annotated_uris'].append(uri)
+                                for c in strelka.chunk_string(reader.xref_stream(xref)):
+                                    self.upload_to_coordinator(
+                                        extract_file.pointer,
+                                        c,
+                                        expire_at,
+                                    )
 
-                                    except AttributeError:
-                                        pass
+                                self.files.append(extract_file)
+                                self.event['total']['extracted'] += 1
+                                extracted_objects.add(xref)
 
-                            if self.event['total']['extracted'] >= file_limit:
-                                continue
-                            if isinstance(pdf_object, pdftypes.PDFStream):
-                                try:
-                                    if object_id not in extracted_objects:
-                                        extract_file = strelka.File(
-                                            name=f'object_{object_id}',
-                                            source=self.name,
-                                        )
+                        except Exception as e:
+                            self.flags.append(f'stream exception {e}')
+                    i += 1
 
-                                        for c in strelka.chunk_string(pdf_object.get_data()):
-                                            self.upload_to_coordinator(
-                                                extract_file.pointer,
-                                                c,
-                                                expire_at,
-                                            )
-
-                                        self.files.append(extract_file)
-                                        self.event['total']['extracted'] += 1
-                                        extracted_objects.add(object_id)
-
-                                except TypeError:
-                                    self.flags.append(f'type_error_{object_id}')
-                                except struct.error:
-                                    self.flags.append(f'struct_error_{object_id}')
-
-                        except ValueError:
-                            self.flags.append(f'value_error_{object_id}')
-                        except pdftypes.PDFObjectNotFound:
-                            self.flags.append(f'object_not_found_{object_id}')
-                        except pdftypes.PDFNotImplementedError:
-                            self.flags.append(f'not_implemented_error_{object_id}')
-                        except psparser.PSSyntaxError:
-                            self.flags.append(f'ps_syntax_error_{object_id}')
-
+                # Iterate through pages and collect links and text
                 if extract_text:
-                    rsrcmgr = pdfinterp.PDFResourceManager(caching=True)
-                    retstr = io.StringIO()
-                    la_params = layout.LAParams(
-                        detect_vertical=True,
-                        char_margin=1.0,
-                        line_margin=0.3,
-                        word_margin=0.3,
-                    )
-                    device = converter.TextConverter(
-                        rsrcmgr,
-                        retstr,
-                        codec='utf-8',
-                        laparams=la_params,
-                    )
-                    interpreter = pdfinterp.PDFPageInterpreter(rsrcmgr, device)
-                    for page in pdfpage.PDFPage.get_pages(pdf_io, set()):
-                        try:
-                            interpreter.process_page(page)
+                    extracted_text = ""
 
-                        except struct.error:
-                            self.flags.append('text_struct_error')
+                for page in reader:
 
+                    # PDF Link Extraction
+                    self.event.setdefault('annotated_uris', [])
+                    links = page.get_links()
+                    if links:
+                        for link in links:
+                            if 'uri' in link:
+                                self.event['annotated_uris'].append(link["uri"])
+                    if extract_text:
+                        extracted_text += page.getText()
+
+                # PDF Text Extraction
+                # Caution: Will increase time and object storage size
+                if extract_text:
                     extract_file = strelka.File(
                         name='text',
                         source=self.name,
                     )
-                    for c in strelka.chunk_string(retstr.getvalue()):
+                    for c in strelka.chunk_string(extracted_text):
                         self.upload_to_coordinator(
                             extract_file.pointer,
                             c,
                             expire_at,
                         )
                     self.files.append(extract_file)
-
                     self.flags.append('extracted_text')
-                    device.close()
-                    retstr.close()
 
-        except IndexError:
-            self.flags.append('index_error')
-        except pdfdocument.PDFEncryptionError:
-            self.flags.append('encrypted_pdf')
-        except pdfparser.PDFSyntaxError:
-            self.flags.append('pdf_syntax_error')
-        except psparser.PSEOF:
-            self.flags.append('ps_eof')
-        except psparser.PSSyntaxError:
-            self.flags.append('ps_syntax_error')
+        except Exception as e:
+            self.flags.append(f'general exception {e}')
