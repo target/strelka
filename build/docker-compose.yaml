@@ -20,6 +20,7 @@ services:
       - ../configs/go/frontend/:/etc/strelka/:ro
       - logs:/var/log/strelka/
     restart: unless-stopped
+    container_name: strelka_frontend_1
     depends_on:
       - coordinator
       - gatekeeper
@@ -35,6 +36,7 @@ services:
     volumes:
       - ../configs/python/backend/:/etc/strelka/:ro
     restart: unless-stopped
+    container_name: strelka_backend_1
     depends_on:
       - coordinator
 
@@ -44,6 +46,7 @@ services:
       dockerfile: build/go/manager/Dockerfile
     command: strelka-manager
     restart: unless-stopped
+    container_name: strelka_manager_1
     networks:
       - net
     volumes:
@@ -56,17 +59,20 @@ services:
       context: ..
       dockerfile: build/python/mmrpc/Dockerfile
     command: strelka-mmrpc --threads 2 --address [::]:33907
+    container_name: strelka_mmrpc_1
     networks:
       - net
 
   coordinator:
     image: redis:alpine
     command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
+    container_name: strelka_coordinator_1
     networks:
       - net
 
   gatekeeper:
     image: redis:alpine
     command: redis-server --save "" --appendonly no --maxmemory-policy allkeys-lru  # alt: use config file via volume mapping
+    container_name: strelka_gatekeeper_1
     networks:
       - net
