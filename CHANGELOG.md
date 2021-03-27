@@ -1,6 +1,13 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2021-3-26
+### Changed
+- Refactored `go` Dockerfiles
+- Hardcoded container names
+- Changed ScanPDF scanner from `pdfminer.six` to `PyMuPDF`
+- Accepted `dependabot` pull request, updating dependency `lxml` from `4.6.2` to `4.6.3`
+
 ## 2021-3-2
 ### Changed
 - `README` updated with formatting and images
