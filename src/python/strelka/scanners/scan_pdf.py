@@ -17,11 +17,12 @@ class ScanPdf(strelka.Scanner):
         limit: Maximum number of files to extract.
             Defaults to 2000.
     """
-    def scan(self, data, file, options, expire_at):
-        extract_text = options.get('extract_text', False)
-        file_limit = options.get('limit', 2000)
 
-        self.event['total'] = {'objects': 0, 'extracted': 0}
+    def scan(self, data, file, options, expire_at):
+        extract_text = options.get("extract_text", False)
+        file_limit = options.get("limit", 2000)
+
+        self.event["total"] = {"objects": 0, "extracted": 0}
         extracted_objects = set()
 
         try:
@@ -40,9 +41,9 @@ class ScanPdf(strelka.Scanner):
                     # PDF Annotation Flags
                     xref_object = reader.xref_object(i, compressed=False)
                     if any(obj in xref_object for obj in ["/AA", "/OpenAction"]):
-                        self.flags.append('auto_action')
+                        self.flags.append("auto_action")
                     if any(obj in xref_object for obj in ["/JS", "/JavaScript"]):
-                        self.flags.append('javascript_embedded')
+                        self.flags.append("javascript_embedded")
 
                     # PDF Object Resubmission
                     # If xref is a stream, add that object back into the analysis pipeline
@@ -50,7 +51,7 @@ class ScanPdf(strelka.Scanner):
                         try:
                             if xref not in extracted_objects:
                                 extract_file = strelka.File(
-                                    name=f'object_{xref}',
+                                    name=f"object_{xref}",
                                     source=self.name,
                                 )
 
@@ -62,44 +63,46 @@ class ScanPdf(strelka.Scanner):
                                     )
 
                                 self.files.append(extract_file)
-                                self.event['total']['extracted'] += 1
+                                self.event["total"]["extracted"] += 1
                                 extracted_objects.add(xref)
 
-                        except Exception as e:
-                            self.flags.append(f'stream exception {e}')
+                        except Exception:
+                            self.flags.append("stream_read_exception")
                     i += 1
 
                 # Iterate through pages and collect links and text
                 if extract_text:
                     extracted_text = ""
 
-                for page in reader:
+                try:
+                    for page in reader:
 
-                    # PDF Link Extraction
-                    self.event.setdefault('annotated_uris', [])
-                    links = page.get_links()
-                    if links:
-                        for link in links:
-                            if 'uri' in link:
-                                self.event['annotated_uris'].append(link["uri"])
+                        # PDF Link Extraction
+                        self.event.setdefault("annotated_uris", [])
+                        links = page.get_links()
+                        if links:
+                            for link in links:
+                                if "uri" in link:
+                                    self.event["annotated_uris"].append(link["uri"])
+                        if extract_text:
+                            extracted_text += page.getText()
+
+                    # PDF Text Extraction
+                    # Caution: Will increase time and object storage size
                     if extract_text:
-                        extracted_text += page.getText()
-
-                # PDF Text Extraction
-                # Caution: Will increase time and object storage size
-                if extract_text:
-                    extract_file = strelka.File(
-                        name='text',
-                        source=self.name,
-                    )
-                    for c in strelka.chunk_string(extracted_text):
-                        self.upload_to_coordinator(
-                            extract_file.pointer,
-                            c,
-                            expire_at,
+                        extract_file = strelka.File(
+                            name="text",
+                            source=self.name,
                         )
-                    self.files.append(extract_file)
-                    self.flags.append('extracted_text')
-
-        except Exception as e:
-            self.flags.append(f'general exception {e}')
+                        for c in strelka.chunk_string(extracted_text):
+                            self.upload_to_coordinator(
+                                extract_file.pointer,
+                                c,
+                                expire_at,
+                            )
+                        self.files.append(extract_file)
+                        self.flags.append("extracted_text")
+                except:
+                    self.flags.append("page_parsing_failure")
+        except Exception:
+            self.flags.append("pdf_load_error")
