@@ -17,7 +17,7 @@ M2Crypto==0.35.2
 pefile==2019.4.18
 pgpdump3==1.5.2
 pylzma==0.5.0
-pygments==2.6.1
+pygments==2.7.4
 python-docx==0.8.10
 git+https://github.com/jshlbrd/python-entropy.git   # v0.11 as of this freeze (package installed as 'entropy')
 python-magic==0.4.15
