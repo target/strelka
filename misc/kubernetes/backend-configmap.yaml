@@ -173,6 +173,13 @@ data:
       #    options:
       #      tmp_directory: '/dev/shm/'
       #      limit: 100
+    'ScanFooter':
+      - positive:
+          flavors:
+            - '*'
+        priority: 5
+        options:
+          length: 50
       'ScanGif':
         - positive:
             flavors:
