@@ -11,4 +11,4 @@ class ScanFooter(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         length = options.get('length', 50)
 
-        self.event['footer'] = data[:length]
+        self.event['footer'] = data[-length:]
