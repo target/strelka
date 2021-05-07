@@ -573,6 +573,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanPhp | Collects metadata from PHP files | N/A |
 | ScanPkcs7 | Extracts files from PKCS7 certificate files | N/A |
 | ScanPlist | Collects attributes from binary and XML property list files | "keys" -- list of keys to log (defaults to all) |
+| ScanQr | Collects QR code metadata from image files | N/A | [Aaron Herman](https://github.com/aaronherman)
 | ScanRar | Extracts files from RAR archives | "limit" -- maximum number of files to extract (defaults to 1000)<br>"password_file" -- location of passwords file for RAR archives (defaults to etc/strelka/passwords.txt) |
 | ScanRpm | Collects metadata and extracts files from RPM files | "tempfile_directory" -- location where `tempfile` will write temporary files (defaults to "/tmp/") |
 | ScanRtf | Extracts embedded files from RTF files | "limit" -- maximum number of files to extract (defaults to 1000) |

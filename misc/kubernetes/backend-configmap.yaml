@@ -372,6 +372,18 @@ data:
               - 'ProgramArguments'
               - 'RunAtLoad'
               - 'StartInterval'
+      'ScanQr':
+        - positive:
+            flavors:
+              - 'image/jpeg'
+              - 'jpeg_file'
+              - 'image/png'
+              - 'png_file'
+              - 'image/tiff'
+              - 'type_is_tiff'
+              - 'image/x-ms-bmp'
+              - 'bmp_file'
+          priority: 5
       'ScanRar':
         - positive:
             flavors:

@@ -30,15 +30,23 @@ RUN apt-get -qq update && \
     antiword \
     libarchive-dev \
     libfuzzy-dev \
-    libimage-exiftool-perl \
     libmagic-dev \
     libssl-dev \
+    libzbar0 \
     python3-setuptools \
     redis-server \
     tesseract-ocr \
     unrar \
     upx \
     jq && \
+# Download and compile exiftool
+    cd /tmp/ && \
+    curl -OL https://exiftool.org/Image-ExifTool-12.25.tar.gz && \
+    tar -zxvf Image-ExifTool-12.25.tar.gz && \
+    cd Image-ExifTool-12.25/ && \
+    perl Makefile.PL && \
+    make && \
+    make install && \
 # Install FireEye CAPA
 #   - Binary installation, not supported as Python 3 plugin
 #   - Requires binary to be executable
