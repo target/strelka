@@ -2,8 +2,8 @@ FROM ubuntu:20.04
 ARG DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
-ARG YARA_VERSION=3.11.0
-ARG YARA_PYTHON_VERSION=3.11.0
+ARG YARA_VERSION=4.0.5
+ARG YARA_PYTHON_VERSION=4.0.3
 ARG CAPA_VERSION=1.1.0
 
 # Copy Strelka files
@@ -26,6 +26,7 @@ RUN apt-get -qq update && \
     python3-dev \
     python3-pip \
     python3-wheel \
+    pkg-config \
 # Install runtime packages
     antiword \
     libarchive-dev \
