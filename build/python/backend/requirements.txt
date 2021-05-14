@@ -31,6 +31,7 @@ pytesseract==0.3.7
 python-docx==0.8.10
 python-magic==0.4.22
 pyyaml>=5.4.1
+pyzbar==0.1.8
 rarfile==4.0
 redis==3.5.3
 requests==2.25.1
