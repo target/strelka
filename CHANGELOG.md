@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2021-5-14
+### Changed
+- Updated YARA from 3.11.0 to 4.0.5
+
 ## 2021-3-26
 ### Changed
 - Refactored `go` Dockerfiles
