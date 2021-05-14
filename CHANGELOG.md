@@ -2,8 +2,27 @@
 Changes to the project will be tracked in this file via the date of change.
 
 ## 2021-5-14
+### Added
+- `scan_qr` QR code scanner (@aaronherman)
+
 ### Changed
-- Updated YARA from 3.11.0 to 4.0.5
+- Updated `YARA` from 3.11.0 to 4.0.5
+
+## 2021-5-6
+### Changed
+- Updated various `python` dependencies
+
+## 2021-4-19
+### Changed
+- Bug fix for `scan_footer`
+
+## 2021-4-7
+### Added
+- `scan_footer` file footer scanner
+
+## 2021-3-29
+### Changed
+- Updated `pygments` dependency
 
 ## 2021-3-26
 ### Changed
