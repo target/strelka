@@ -79,6 +79,7 @@ COPY ./build/python/backend/requirements.txt /strelka/requirements.txt
 RUN pip3 install --no-cache-dir -r /strelka/requirements.txt && \
     pip3 install --index-url https://lief-project.github.io/packages --trusted-host lief.quarkslab.com lief
 
+# Copy Strelka files
 COPY ./src/python/ /strelka/
 COPY ./build/python/backend/setup.py /strelka/setup.py
 
@@ -109,6 +110,5 @@ RUN cd /strelka/ && \
     chgrp -R 0 /var/log/strelka/ && \
     chmod -R g=u /var/log/strelka/
 
-# Copy Strelka files
 
 USER 1001
