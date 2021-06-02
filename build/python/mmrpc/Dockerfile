@@ -2,11 +2,6 @@ FROM ubuntu:20.04
 ARG DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
-# Copy Strelka files
-COPY ./src/python/ /strelka/
-COPY ./build/python/mmrpc/requirements.txt /strelka/requirements.txt
-COPY ./build/python/mmrpc/setup.py /strelka/setup.py
-
 # Update packages
 RUN apt-get -qq update && \
     apt-get install --no-install-recommends -qq \
@@ -15,11 +10,17 @@ RUN apt-get -qq update && \
     python3-dev \
     python3-pip \
     python3-setuptools \
-    python3-wheel && \
-# Install Python packages
-    pip3 install -r /strelka/requirements.txt && \
+    python3-wheel
+
+#Install Strelka Requirements
+COPY ./build/python/mmrpc/requirements.txt /strelka/requirements.txt
+RUN pip3 install --no-cache-dir -r /strelka/requirements.txt
+
+COPY ./src/python/ /strelka/
+COPY ./build/python/mmrpc/setup.py /strelka/setup.py
+
 # Install Strelka
-    cd /strelka/ && \
+RUN cd /strelka/ && \
     python3 setup.py -q build && \
     python3 setup.py -q install && \
 # Remove build packages
@@ -34,4 +35,5 @@ RUN apt-get -qq update && \
     apt-get purge -qq python3-setuptools  && \
     apt-get clean -qq && \
     rm -rf /var/lib/apt/lists/* /strelka/
+
 USER 1001

@@ -6,11 +6,6 @@ ARG YARA_VERSION=4.0.5
 ARG YARA_PYTHON_VERSION=4.0.3
 ARG CAPA_VERSION=1.1.0
 
-# Copy Strelka files
-COPY ./src/python/ /strelka/
-COPY ./build/python/backend/requirements.txt /strelka/requirements.txt
-COPY ./build/python/backend/setup.py /strelka/setup.py
-
 # Update packages
 RUN apt-get -qq update && \
 # Install build packages
@@ -63,9 +58,6 @@ RUN apt-get -qq update && \
     cd /tmp/ && \
     curl -OL https://s3.amazonaws.com/build-artifacts.floss.flare.fireeye.com/travis/linux/dist/floss && \
     chmod +x /tmp/floss && \
-# Install Python packages
-    pip3 install -r /strelka/requirements.txt && \
-    pip3 install --index-url https://lief-project.github.io/packages --trusted-host lief.quarkslab.com lief && \
 # Install YARA
     cd /tmp/ && \
     curl -OL https://github.com/VirusTotal/yara/archive/v$YARA_VERSION.tar.gz && \
@@ -80,9 +72,19 @@ RUN apt-get -qq update && \
     tar -zxvf v$YARA_PYTHON_VERSION.tar.gz && \
     cd yara-python-$YARA_PYTHON_VERSION/ && \
     python3 setup.py build --dynamic-linking && \
-    python3 setup.py install && \
+    python3 setup.py install
+
+# Install Python packages
+COPY ./build/python/backend/requirements.txt /strelka/requirements.txt
+RUN pip3 install --no-cache-dir -r /strelka/requirements.txt && \
+    pip3 install --index-url https://lief-project.github.io/packages --trusted-host lief.quarkslab.com lief
+
+# Copy Strelka files
+COPY ./src/python/ /strelka/
+COPY ./build/python/backend/setup.py /strelka/setup.py
+
 # Install Strelka
-    cd /strelka/ && \
+RUN cd /strelka/ && \
     python3 setup.py -q build && \
     python3 setup.py -q install && \
 # Remove build packages
@@ -107,4 +109,6 @@ RUN apt-get -qq update && \
     mkdir /var/log/strelka/ && \
     chgrp -R 0 /var/log/strelka/ && \
     chmod -R g=u /var/log/strelka/
+
+
 USER 1001
