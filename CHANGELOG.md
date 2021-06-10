@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2021-6-10
+### Added
+- `scan_pe` refactor / additions (@swackhamer)
+
 ## 2021-5-14
 ### Added
 - `scan_qr` QR code scanner (@aaronherman)
