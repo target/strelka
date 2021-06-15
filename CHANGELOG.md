@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2021-06-15
+### Added
+- Default YARA volume mount and placeholder test YARA rule to verify ScanYARA functionality. (@Derekt2)
+
 ## 2021-6-10
 ### Added
 - `scan_pe` refactor / additions (@swackhamer)
