@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2021-06-23
+### Changed
+- Updated `exiftool` from version `12.25` to `12.28`
+
 ## 2021-06-15
 ### Added
 - Default YARA volume mount and placeholder test YARA rule to verify ScanYARA functionality. (@Derekt2)
