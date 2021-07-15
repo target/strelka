@@ -228,7 +228,7 @@ This client app is designed to one-shot upload files and retrieve their results.
 
 #### strelka-oneshot
 This client app is designed to be used to submit a single file from command line and receive the result for it immediately.
-This is useful if you want to test the functionality of strelka without having to write a config file (like with strelka-fileshot).
+This is useful if you want to test the functionality of Strelka without having to write a config file (like with strelka-fileshot).
 
 An example execution could look like:
 
@@ -501,7 +501,7 @@ Frontend-to-gatekeeper communication relies on one Redis server, referred to as 
 The gatekeeper is a temporary event cache from which the frontend can optionally retrieve events. As file chunks stream into the frontend, they are hashed with SHA256 and, when the file is complete, the frontend checks the gatekeeper to see if it has any events related to the requested file. If events exist and the client has not set the option to bypass the gatekeeper, then the cached file events are sent back to the client.
 
 ### File Distribution, Scanners, Flavors, and Tastes
-Strelka's file distribution assigns scanners (`src/python/strelka//scanners/`) to files based on a system of "flavors" and "tastes". Flavors describe the type of file being distributed through the system and come in three types:
+Strelka's file distribution assigns scanners (`src/python/strelka/scanners/`) to files based on a system of "flavors" and "tastes". Flavors describe the type of file being distributed through the system and come in three types:
 * MIME flavors -- assigned by libmagic (e.g. "application/zip")
 * YARA flavors -- assigned by YARA rule matches (e.g. "zip_file")
 * External flavors -- assigned by a parent file (e.g. "zip")
