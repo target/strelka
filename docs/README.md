@@ -506,7 +506,7 @@ Strelka's file distribution assigns scanners (`src/python/strelka/scanners/`) to
 * YARA flavors -- assigned by YARA rule matches (e.g. "zip_file")
 * External flavors -- assigned by a parent file (e.g. "zip")
 
-As files enter the system, they are tasted (e.g. scanned with YARA), their flavor is identified, and the flavor is checked for a corresponding mapping in the scan configuration (`configs/python/backend/strelka.yaml`, see [Scan Configuration](#scan-configuration) for more details) -- flavors are the primary method through which scanners are assigned to files.
+As files enter the system, they are tasted (e.g. scanned with YARA), their flavor is identified, and the flavor is checked for a corresponding mapping in the scanners configuration (`configs/python/backend/backend.yaml`, see [scanners](#scanners) for more details) -- flavors are the primary method through which scanners are assigned to files.
 
 ### protobuf
 #### `ScanFileRequest` protobuf
