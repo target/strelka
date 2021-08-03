@@ -21,7 +21,7 @@ numpy==1.20.2
 olefile==0.46
 oletools==0.56.1
 opencv-python==4.5.1.48
-pdfminer.six==20201018
+PyMuPDF==1.18.15
 pefile==2019.4.18
 pgpdump3==1.5.2
 pyelftools==0.27
