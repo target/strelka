@@ -98,8 +98,8 @@ Links
 [repo]:https://github.com/target/strelka "Strelka Repository ➶"
 [slack]:https://join.slack.com/t/cfc-open-source/shared_invite/zt-e54crchh-a6x4iDy18D5lVwFKQoEeEQ "Slack (external link) ➶"
 [actions-ci]:https://github.com/target/strelka/actions/workflows/build_strelka_daily.yml "Github Actions ➶"
-[pr]:https://github.com/phutelmyer/strelka/pulls "Strelka Pull Requests ➶"
-[license]:https://github.com/phutelmyer/strelka/blob/master/LICENSE "Strelka License File ➶"
+[pr]:https://github.com/target/strelka/pulls "Strelka Pull Requests ➶"
+[license]:https://github.com/target/strelka/blob/master/LICENSE "Strelka License File ➶"
 [docker]:https://www.docker.com/ "Docker (external link) ➶"
 
 <!--
