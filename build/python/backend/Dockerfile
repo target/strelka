@@ -74,6 +74,20 @@ RUN apt-get -qq update && \
     python3 setup.py build --dynamic-linking && \
     python3 setup.py install
 
+
+# Install JTR
+RUN apt-get -qq update \
+  && apt-get install -qq --no-install-recommends -y git python build-essential ca-certificates libssl-dev zlib1g-dev yasm libgmp-dev libpcap-dev libbz2-dev libgomp1
+RUN git clone https://github.com/magnumripper/JohnTheRipper.git /jtr \
+  && rm -rf /jtr/.git \
+  && cd /jtr/src \
+  && ./configure \
+  && make -s clean \
+  && make -sj4 \
+  && make install \
+  && cp -Tr /jtr/run/ /jtr && rm -rf /jtr/run \
+  && chmod -R 777 /jtr
+
 # Install Python packages
 COPY ./build/python/backend/requirements.txt /strelka/requirements.txt
 RUN pip3 install --no-cache-dir -r /strelka/requirements.txt && \

@@ -49,6 +49,39 @@ rule cpio_file {
         $a at 0
 }
 
+
+rule encrypted_zip
+{
+    meta:
+        author = "thudak@korelogic.com"
+        comment = "Solution 7 - encrypted zip file"
+
+    strings:
+        $local_file = { 50 4b 03 04 }
+
+    condition:
+        // look for the ZIP header
+        uint32(0) == 0x04034b50 and
+        // make sure we have a local file header
+        $local_file and
+        // go through each local file header and see if the encrypt bits are set
+        for any i in (1..#local_file): (uint16(@local_file[i]+6) & 0x1 == 0x1)		
+}
+
+rule encrypted_word_document
+{
+    meta:
+        author = "Derek Thomas"
+    strings:
+        $ = "EncryptionInfo" wide
+        $ = "Microsoft.Container.EncryptionTransform" wide
+        $ = "StrongEncryptionDataSpace" wide
+        $ = "StrongEncryptionTransform" wide
+    condition:
+        uint32be(0) == 0xd0cf11e0 and
+        any of them		
+}
+
 rule iso_file {
     meta:
         type = "archive"
