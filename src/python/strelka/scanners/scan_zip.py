@@ -18,20 +18,11 @@ class ScanZip(strelka.Scanner):
         password_file: Location of passwords file for zip archives.
             Defaults to /etc/strelka/passwords.dat.
     """
-    def init(self):
-        self.passwords = []
 
     def scan(self, data, file, options, expire_at):
         file_limit = options.get('limit', 1000)
-        password_file = options.get('password_file', '/etc/strelka/passwords.dat')
 
         self.event['total'] = {'files': 0, 'extracted': 0}
-
-        if not self.passwords:
-            if os.path.isfile(password_file):
-                with open(password_file, 'rb') as f:
-                    for line in f:
-                        self.passwords.append(line.strip())
 
         with io.BytesIO(data) as zip_io:
             try:
@@ -39,7 +30,6 @@ class ScanZip(strelka.Scanner):
                     name_list = zip_obj.namelist()
                     self.event['total']['files'] = len(name_list)
 
-                    password = b''
                     for i, name in enumerate(name_list):
                         if not name.endswith('/'):
                             if self.event['total']['extracted'] >= file_limit:
@@ -52,19 +42,6 @@ class ScanZip(strelka.Scanner):
                                 if zinfo.flag_bits & 0x1:
                                     if i == 0:
                                         self.flags.append('encrypted')
-
-                                    if not password:
-                                        for pw in self.passwords:
-                                            try:
-                                                extract_data = zip_obj.read(name, pw)
-                                                if extract_data:
-                                                    password = pw
-                                                    break
-
-                                            except (RuntimeError, zipfile.BadZipFile, zlib.error):
-                                                pass
-                                    else:
-                                        extract_data = zip_obj.read(name, password)
 
                                 else:
                                     extract_data = zip_obj.read(name)
