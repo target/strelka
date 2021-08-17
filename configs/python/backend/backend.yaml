@@ -70,8 +70,23 @@ scanners:
   'ScanEncryptedDoc':
     - positive:
         flavors:
-          - 'application/encrypted'
+          - 'encrypted_word_document'
       priority: 5
+      options:
+        max_length: 5
+        scanner_timeout: 150
+        log_pws: True
+        # brute_force: True
+  'ScanEncryptedZip':
+    - positive:
+        flavors:
+          - 'encrypted_zip'
+      priority: 5
+      options:
+        max_length: 5
+        scanner_timeout: 150
+        log_pws: True
+        # brute_force: True
   'ScanEntropy':
     - positive:
         flavors:

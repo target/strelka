@@ -82,7 +82,7 @@ class ScanEncryptedZip(strelka.Scanner):
 				tmp_directory = options.get('tmp_file_directory', '/tmp/')
 				file_limit = options.get('limit', 1000)
 				password_file = options.get('password_file', '/etc/strelka/passwords.dat')
-				log_extracted_pws = options.get('log_pws', True)
+				log_extracted_pws = options.get('log_pws', False)
 				scanner_timeout = options.get('scanner_timeout', 150)
 				brute = options.get('brute_force', False)
 				max_length = options.get('max_length', 5)

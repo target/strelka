@@ -78,9 +78,8 @@ class ScanEncryptedDoc(strelka.Scanner):
 		
 		jtr_path = options.get('jtr_path', '/jtr/')
 		tmp_directory = options.get('tmp_file_directory', '/tmp/')
-		file_limit = options.get('limit', 1000)
 		password_file = options.get('password_file', '/etc/strelka/passwords.dat')
-		log_extracted_pws = options.get('log_pws', True)
+		log_extracted_pws = options.get('log_pws', False)
 		scanner_timeout = options.get('scanner_timeout', 150)
 		brute = options.get('brute_force', False)
 		max_length = options.get('max_length', 5)
@@ -90,7 +89,8 @@ class ScanEncryptedDoc(strelka.Scanner):
 			msoff_doc = msoffcrypto.OfficeFile(doc_io)
 			output_doc = io.BytesIO()
 			if extracted_pw := crack_word(self, data, jtr_path, tmp_directory, brute=brute, scanner_timeout=scanner_timeout, max_length=max_length, password_file=password_file):
-				self.event['cracked_password'] = extracted_pw
+				if log_extracted_pws:
+					self.event['cracked_password'] = extracted_pw
 				try:
 					msoff_doc.load_key(password=extracted_pw.decode('utf-8'))
 					msoff_doc.decrypt(output_doc)
