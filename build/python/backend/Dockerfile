@@ -37,9 +37,9 @@ RUN apt-get -qq update && \
     jq && \
 # Download and compile exiftool
     cd /tmp/ && \
-    curl -OL https://exiftool.org/Image-ExifTool-12.28.tar.gz && \
-    tar -zxvf Image-ExifTool-12.28.tar.gz && \
-    cd Image-ExifTool-12.28/ && \
+    curl -OL https://exiftool.org/Image-ExifTool-12.30.tar.gz && \
+    tar -zxvf Image-ExifTool-12.30.tar.gz && \
+    cd Image-ExifTool-12.30/ && \
     perl Makefile.PL && \
     make && \
     make install && \
