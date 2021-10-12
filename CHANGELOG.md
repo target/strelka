@@ -1,9 +1,13 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2021-10-12
+### Changed
+- Fix K8S backend configmap yaml (@cameron-dunn-sublime)
+
 ## 2021-10-04
 ### Changed
-- Updated `exiftool` from version `12.28` to `12.30`
+- Updated `exiftool` from version `12.28` to `12.30` (@cameron-dunn-sublime)
 
 ## 2021-06-23
 ### Changed
