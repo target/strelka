@@ -42,15 +42,15 @@ data:
               - 'application/x-bzip2'
               - 'bzip2_file'
           priority: 5
-      #'ScanCapa':
-      #  - positive:
-      #      flavors:
-      #        - 'application/x-dosexec'
-      #        - 'mz_file'
-      #    priority: 5
-      #    options:
-      #      tmp_directory: '/dev/shm/'
-      #      location: '/etc/capa/'
+      #  'ScanCapa':
+      #    - positive:
+      #        flavors:
+      #          - 'application/x-dosexec'
+      #          - 'mz_file'
+      #      priority: 5
+      #      options:
+      #        tmp_directory: '/dev/shm/'
+      #        location: '/etc/capa/'
       'ScanDocx':
         - positive:
             flavors:
@@ -164,22 +164,22 @@ data:
               - 'ImageHeight'
               - 'ImageWidth'
             tmp_directory: '/dev/shm/'
-      #'ScanFloss':
-      #  - positive:
-      #      flavors:
-      #        - 'application/x-dosexec'
-      #        - 'mz_file'
-      #    priority: 5
-      #    options:
-      #      tmp_directory: '/dev/shm/'
-      #      limit: 100
-    'ScanFooter':
-      - positive:
-          flavors:
-            - '*'
-        priority: 5
-        options:
-          length: 50
+      #  'ScanFloss':
+      #    - positive:
+      #        flavors:
+      #          - 'application/x-dosexec'
+      #          - 'mz_file'
+      #      priority: 5
+      #      options:
+      #        tmp_directory: '/dev/shm/'
+      #        limit: 100
+      'ScanFooter':
+        - positive:
+            flavors:
+              - '*'
+          priority: 5
+          options:
+            length: 50
       'ScanGif':
         - positive:
             flavors:
