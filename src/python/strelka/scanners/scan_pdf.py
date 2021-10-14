@@ -3,9 +3,6 @@ import fitz
 
 from strelka import strelka
 
-# Hide PyMuPDF Warnings
-fitz.TOOLS.mupdf_display_errors(value=False)
-
 
 class ScanPdf(strelka.Scanner):
     """Collects metadata and extracts files from PDF files.
@@ -68,6 +65,22 @@ class ScanPdf(strelka.Scanner):
 
                         except Exception:
                             self.flags.append("stream_read_exception")
+
+                    as_image = reader.extract_image(xref)
+                    if as_image is not None:
+                        extract_file = strelka.File(
+                            name=f"object_{xref}",
+                            source=self.name,
+                        )
+                        for c in strelka.chunk_string(as_image["image"]):
+                            self.upload_to_coordinator(
+                                extract_file.pointer,
+                                c,
+                                expire_at,
+                            )
+
+                        self.files.append(extract_file)
+                        self.event['total']['extracted'] += 1
                     i += 1
 
                 # Iterate through pages and collect links and text
