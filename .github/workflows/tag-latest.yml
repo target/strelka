@@ -1,0 +1,111 @@
+
+name: Set Latest Tag to Existing Release Version
+
+on:
+  create:
+
+jobs:
+  update_latest_tag:
+    name: Build & Push to Registries
+    if: ${{ startsWith(github.ref, 'refs/tags/latest-v') }}
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@036a4a1ddf2c0e7a782dca6e083c6c53e5d90321 # No released version with OIDC
+        with:
+          # Use a role instead of including credentials in secrets, but still hide that role name to be gated by GH environments.
+          role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
+          aws-region: us-east-1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # If this workflow runs for a semver that hasn't been released, then we'll fail below. This workflow is only
+      # meant to add the `latest` tag onto an existing release.
+
+      - name: Determine the version from the tag
+        id: get_ver
+        run: |
+          SEM_VER=$(echo "${{ github.ref }}" | grep -E -o "[0-9]+\.[0-9]+.[0-9]*")
+          if [ -z $SEM_VER ]; then
+            exit 1
+          fi
+          echo "::set-output name=SEM_VER::$SEM_VER"
+
+      # Right now just pull the image in order to tag it. There might be alternatives:
+      # https://stackoverflow.com/questions/37134929/how-to-tag-image-in-docker-registry-v2/38362476#38362476 (auth unclear)
+      # Use a shared context with original workflow?
+
+      - name: Pull, Tag, Push FrontEnd
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          VERSION: ${{ steps.get_ver.outputs.SEM_VER }}
+        run: |
+          docker pull $ECR_REGISTRY/strelka-frontend:$VERSION
+          docker tag $ECR_REGISTRY/strelka-frontend:$VERSION $ECR_REGISTRY/strelka-frontend:latest
+          docker tag $ECR_REGISTRY/strelka-frontend:$VERSION sublimesec/strelka-frontend:latest
+
+          docker push $ECR_REGISTRY/strelka-frontend:latest
+          docker push sublimesec/strelka-frontend:latest
+
+      - name: Pull, Tag, Push BackEnd
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          VERSION: ${{ steps.get_ver.outputs.SEM_VER }}
+        run: |
+          docker pull $ECR_REGISTRY/strelka-backend:$VERSION
+          docker tag $ECR_REGISTRY/strelka-backend:$VERSION $ECR_REGISTRY/strelka-backend:latest
+          docker tag $ECR_REGISTRY/strelka-backend:$VERSION sublimesec/strelka-backend:latest
+
+          docker push $ECR_REGISTRY/strelka-backend:latest
+          docker push sublimesec/strelka-backend:latest
+
+      - name: Pull, Tag, Push Manager
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          VERSION: ${{ steps.get_ver.outputs.SEM_VER }}
+        run: |
+          docker pull $ECR_REGISTRY/strelka-manager:$VERSION
+          docker tag $ECR_REGISTRY/strelka-manager:$VERSION $ECR_REGISTRY/strelka-manager:latest
+          docker tag $ECR_REGISTRY/strelka-manager:$VERSION sublimesec/strelka-manager:latest
+
+          docker push $ECR_REGISTRY/strelka-manager:latest
+          docker push sublimesec/strelka-manager:latest
+
+      - name: Pull, Tag, Push MMRPC
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          VERSION: ${{ steps.get_ver.outputs.SEM_VER }}
+        run: |
+          docker pull $ECR_REGISTRY/strelka-mmrpc:$VERSION
+          docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION $ECR_REGISTRY/strelka-mmrpc:latest
+          docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION sublimesec/strelka-mmrpc:latest
+
+          docker push $ECR_REGISTRY/strelka-mmrpc:latest
+          docker push sublimesec/strelka-mmrpc:latest
+
+      - name: Validate All X-Region Replication
+        run: |
+          .github/workflows/check_images_x_region.sh latest
+          if [ $? != 0 ]; then
+            exit 1
+          fi
+
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_Z_LOG_DOCKER_BUILDS }}
+          SLACK_TITLE: Strelka Images latest tag updated to ${{ steps.get_ver.outputs.SEM_VER }}
