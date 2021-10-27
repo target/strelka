@@ -31,7 +31,14 @@ class Backend(object):
         self.backend_cfg = backend_cfg
         self.coordinator = coordinator
         self.limits = backend_cfg.get('limits')
-        self.scanners = backend_cfg.get('scanners')
+
+        scanners = backend_cfg.get('scanners')
+        if isinstance(scanners, str):
+            logging.info(f'found scanners as string {scanners}')
+            with open(scanners) as f:
+                self.scanners = yaml.safe_load(f.read()).get('scanners')
+        else:
+            self.scanners = backend_cfg.get('scanners')
 
         self.compiled_magic = magic.Magic(
             magic_file=backend_cfg.get('tasting').get('mime_db'),
