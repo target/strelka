@@ -507,7 +507,7 @@ scanners:
           - '*'
       priority: 5
       options:
-        location: '/etc/yara/'
+        location: '/strelka/config/'
   'ScanZip':
     - positive:
         flavors:
