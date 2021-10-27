@@ -34,8 +34,9 @@ class ScanExiftool(strelka.Scanner):
 
                 self.event['keys'] = []
                 for k, v in exiftool_dictionary.items():
-                    if keys and k not in keys:
-                        continue
+                    # Include all, at least to start and see what's available.
+                    # if keys and k not in keys:
+                    #     continue
 
                     if isinstance(v, str):
                         v = v.strip()
