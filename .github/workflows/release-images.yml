@@ -1,13 +1,9 @@
 
-name: Update ECR & DockerHub Images with a semver pattern. Does not update latest.
+name: Update Strelka Docker Images
 
-#on:
-#  release:
-#    types: [published]
 on:
-  push:
-    branches: [ "**" ]
-  workflow_dispatch: {}
+  release:
+    types: [published]
 
 jobs:
   push_to_registry:
@@ -45,10 +41,9 @@ jobs:
           flavor: |
             latest=false
           tags: |
-             gha-testing
-#            type=semver,pattern={{version}}
-#            type=semver,pattern={{major}}.{{minor}}
-#            type=semver,pattern={{major}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
 
       - name: Determine Tags BackEnd
         id: meta_backend
@@ -60,10 +55,10 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            gha-testing
-#            type=semver,pattern={{version}}
-#            type=semver,pattern={{major}}.{{minor}}
-#            type=semver,pattern={{major}}
+            release-candidate
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
 
       - name: Determine Tags Manager
         id: meta_manager
@@ -75,10 +70,10 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            gha-testing
-#            type=semver,pattern={{version}}
-#            type=semver,pattern={{major}}.{{minor}}
-#            type=semver,pattern={{major}}
+            release-candidate
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
 
       - name: Determine Tags MMRPC
         id: meta_mmrpc
@@ -90,10 +85,10 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            gha-testing
-#            type=semver,pattern={{version}}
-#            type=semver,pattern={{major}}.{{minor}}
-#            type=semver,pattern={{major}}
+            release-candidate
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -167,7 +162,7 @@ jobs:
 
       - name: Validate All X-Region Replication
         run: |
-          .github/workflows/check_images_x_region.sh gha-testing
+          .github/workflows/check_images_x_region.sh release-candidate
           if [ $? != 0 ]; then
             exit 1
           fi
