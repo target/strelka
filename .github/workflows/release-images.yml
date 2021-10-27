@@ -167,7 +167,7 @@ jobs:
 
       - name: Validate All X-Region Replication
         run: |
-          .github/workflows/check_images.sh latest
+          .github/workflows/check_images_x_region.sh gha-testing
           if [ $? != 0 ]; then
             exit 1
           fi
