@@ -2,9 +2,13 @@
 
 name: Update ECR & DockerHub Images with a semver pattern. Does not update latest.
 
+#on:
+#  release:
+#    types: [published]
 on:
-  release:
-    types: [published]
+  push:
+    branches: [ "**" ]
+  workflow_dispatch: {}
 
 jobs:
   push_to_registry:
@@ -43,9 +47,10 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+             gha-testing
+#            type=semver,pattern={{version}}
+#            type=semver,pattern={{major}}.{{minor}}
+#            type=semver,pattern={{major}}
 
       - name: Determine Tags BackEnd
         id: meta_backend
@@ -57,9 +62,10 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            gha-testing
+#            type=semver,pattern={{version}}
+#            type=semver,pattern={{major}}.{{minor}}
+#            type=semver,pattern={{major}}
 
       - name: Determine Tags Manager
         id: meta_manager
@@ -71,9 +77,10 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            gha-testing
+#            type=semver,pattern={{version}}
+#            type=semver,pattern={{major}}.{{minor}}
+#            type=semver,pattern={{major}}
 
       - name: Determine Tags MMRPC
         id: meta_mmrpc
@@ -85,9 +92,10 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            gha-testing
+#            type=semver,pattern={{version}}
+#            type=semver,pattern={{major}}.{{minor}}
+#            type=semver,pattern={{major}}
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
