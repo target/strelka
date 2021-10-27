@@ -124,5 +124,9 @@ RUN cd /strelka/ && \
     chgrp -R 0 /var/log/strelka/ && \
     chmod -R g=u /var/log/strelka/
 
+RUN mkdir -p /strelka/config
+COPY ./build/configs/taste.yara /strelka/config
+COPY ./build/configs/passwords.dat /strelka/config
+COPY ./build/configs/scanners.yaml /strelka/config
 
 USER 1001
