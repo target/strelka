@@ -1,0 +1,174 @@
+
+name: Update Strelka Docker Images
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  push_to_registry:
+    name: Build & Push to Registries
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@036a4a1ddf2c0e7a782dca6e083c6c53e5d90321 # No released version with OIDC
+        with:
+          # Use a role instead of including credentials in secrets, but still hide that role name to be gated by GH environments.
+          role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Determine Tags FrontEnd
+        id: meta_frontend
+        uses: crazy-max/ghaction-docker-meta@v2
+        with:
+          images: |
+            ${{ steps.login-ecr.outputs.registry }}/strelka-frontend
+            sublimesec/strelka-frontend
+          flavor: |
+            latest=false
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+
+      - name: Determine Tags BackEnd
+        id: meta_backend
+        uses: crazy-max/ghaction-docker-meta@v2
+        with:
+          images: |
+            ${{ steps.login-ecr.outputs.registry }}/strelka-backend
+            sublimesec/strelka-backend
+          flavor: |
+            latest=false
+          tags: |
+            release-candidate
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+
+      - name: Determine Tags Manager
+        id: meta_manager
+        uses: crazy-max/ghaction-docker-meta@v2
+        with:
+          images: |
+            ${{ steps.login-ecr.outputs.registry }}/strelka-manager
+            sublimesec/strelka-manager
+          flavor: |
+            latest=false
+          tags: |
+            release-candidate
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+
+      - name: Determine Tags MMRPC
+        id: meta_mmrpc
+        uses: crazy-max/ghaction-docker-meta@v2
+        with:
+          images: |
+            ${{ steps.login-ecr.outputs.registry }}/strelka-mmrpc
+            sublimesec/strelka-mmrpc
+          flavor: |
+            latest=false
+          tags: |
+            release-candidate
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build FrontEnd
+        uses: docker/build-push-action@v2
+        with:
+          file: build/go/frontend/Dockerfile
+          context: .
+          load: true
+          tags: ${{ steps.meta_frontend.outputs.tags }}
+          labels: ${{ steps.meta_frontend.outputs.labels }}
+
+      - name: Build BackEnd
+        uses: docker/build-push-action@v2
+        with:
+          file: build/python/backend/Dockerfile
+          context: .
+          load: true
+          tags: ${{ steps.meta_backend.outputs.tags }}
+          labels: ${{ steps.meta_backend.outputs.labels }}
+
+      - name: Build Manager
+        uses: docker/build-push-action@v2
+        with:
+          file: build/go/manager/Dockerfile
+          context: .
+          load: true
+          tags: ${{ steps.meta_manager.outputs.tags }}
+          labels: ${{ steps.meta_manager.outputs.labels }}
+
+      - name: Build Manager
+        uses: docker/build-push-action@v2
+        with:
+          file: build/python/mmrpc/Dockerfile
+          context: .
+          load: true
+          tags: ${{ steps.meta_mmrpc.outputs.tags }}
+          labels: ${{ steps.meta_mmrpc.outputs.labels }}
+
+      - name: Push FrontEnd
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker push --all-tags $ECR_REGISTRY/strelka-frontend
+          docker push --all-tags sublimesec/strelka-frontend
+
+      - name: Push BackEnd
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker push --all-tags $ECR_REGISTRY/strelka-backend
+          docker push --all-tags sublimesec/strelka-backend
+
+      - name: Push Manager
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker push --all-tags $ECR_REGISTRY/strelka-manager
+          docker push --all-tags sublimesec/strelka-manager
+
+      - name: Push MMRPC
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker push --all-tags $ECR_REGISTRY/strelka-mmrpc
+          docker push --all-tags sublimesec/strelka-mmrpc
+
+      - name: Validate All X-Region Replication
+        run: |
+          .github/workflows/check_images_x_region.sh release-candidate
+          if [ $? != 0 ]; then
+            exit 1
+          fi
+
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_Z_LOG_DOCKER_BUILDS }}
+          SLACK_TITLE: Strelka Images Updated
