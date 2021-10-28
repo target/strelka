@@ -441,6 +441,16 @@ scanners:
     - positive:
         flavors:
           - 'mz_file'
+          - 'application/msword'
+          - 'text/plan'
+          - 'xml_file'
+          - 'soap_file'
+          - 'plist_file'
+          - 'php_file'
+          - 'json_file'
+          - 'ini_file'
+          - 'html_file'
+          - 'hta_file'
       priority: 5
   'ScanSwf':
     - positive:
