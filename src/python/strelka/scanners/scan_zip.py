@@ -9,14 +9,9 @@ from strelka import strelka
 class ScanZip(strelka.Scanner):
     """Extracts files from ZIP archives.
 
-    Attributes:
-        passwords: List of passwords to use when bruteforcing encrypted files.
-
     Options:
         limit: Maximum number of files to extract.
             Defaults to 1000.
-        password_file: Location of passwords file for zip archives.
-            Defaults to /etc/strelka/passwords.dat.
     """
 
     def scan(self, data, file, options, expire_at):
