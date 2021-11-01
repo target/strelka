@@ -55,7 +55,6 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            release-candidate
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
@@ -70,7 +69,6 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            release-candidate
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
@@ -85,7 +83,6 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            release-candidate
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
@@ -162,7 +159,8 @@ jobs:
 
       - name: Validate All X-Region Replication
         run: |
-          .github/workflows/check_images_x_region.sh release-candidate
+          SEM_VER=$(echo "${{ github.ref }}" | grep -E -o "[0-9]+\.[0-9]+.[0-9]*")
+          .github/workflows/check_images_x_region.sh $SEM_VER
           if [ $? != 0 ]; then
             exit 1
           fi

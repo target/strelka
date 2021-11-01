@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 tag=$1
 
 function checkImages() {

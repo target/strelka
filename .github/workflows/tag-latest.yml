@@ -15,6 +15,9 @@ jobs:
       contents: read
 
     steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@036a4a1ddf2c0e7a782dca6e083c6c53e5d90321 # No released version with OIDC
         with:
