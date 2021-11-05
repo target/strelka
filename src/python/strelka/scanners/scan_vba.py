@@ -57,9 +57,11 @@ class ScanVba(strelka.Scanner):
                             self.event['ioc'].append(keyword)
                         elif macro_type == 'Suspicious':
                             self.event['suspicious'].append(keyword)
+                        elif macro_type == 'VBA obfuscated Strings':
+                            self.event['vba_obfuscated'].append(keyword)
 
         except olevba.FileOpenError:
             self.flags.append('file_open_error')
         finally:
-            # TODO referenced before potential assignment as vba is opened in a try / catch block
-            vba.close()
+            if vba is not None:
+                vba.close()

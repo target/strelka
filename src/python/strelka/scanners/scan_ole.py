@@ -2,6 +2,7 @@ import re
 
 import olefile
 import oletools
+import sys
 
 from strelka import strelka
 
@@ -58,7 +59,9 @@ class ScanOle(strelka.Scanner):
                 self.event['total']['extracted'] += 1
 
         except OSError:
+            type, value, traceback = sys.exc_info()
             self.flags.append('os_error')
+            self.flags.append(f' {type} {value} {traceback}')
         finally:
-            # TODO this should be wrapped with another try / catch as the variable assignment is not guaranteed
-            ole.close()
+            if ole is not None:
+                ole.close()
