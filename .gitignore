@@ -143,3 +143,6 @@ cython_debug/
 
 # MacOS Attributes File
 *.DS_Store
+
+# Vendored/downloaded go dependencies
+vendor

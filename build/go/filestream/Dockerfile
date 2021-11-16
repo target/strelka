@@ -6,6 +6,8 @@ LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
 # Copy source files and set the working directory
 COPY ./src/go/ /go/src/github.com/target/strelka/src/go/
+COPY go.mod /go/src/github.com/target/strelka
+COPY go.sum /go/src/github.com/target/strelka
 WORKDIR /go/src/github.com/target/strelka/src/go/cmd/strelka-filestream
 
 # Statically compile and output to tmp
