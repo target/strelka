@@ -1,5 +1,8 @@
 
-name: Set Latest Tag to Existing Release Version
+name: Finalize Tags
+# Workflow this will update various mutable tags to match the full semver given in the input tag.
+# E.g. if an image is tagged 0.1.2 and this workflow is triggered with a tag `latest-v0.1.2` then it will update tags:
+# latest, 0, and 0.1 to point to the 0.1.2 image.
 
 on:
   create:
@@ -48,6 +51,12 @@ jobs:
           fi
           echo "::set-output name=SEM_VER::$SEM_VER"
 
+          MAJOR_VERSION=$(echo "$SEM_VER" | grep -E -o "^[0-9]+")
+          echo "::set-output name=MAJOR_VERSION::$MAJOR_VERSION"
+
+          MINOR_VERSION=$(echo "$SEM_VER" | grep -E -o "^[0-9]+\.[0-9]+")
+          echo "::set-output name=MINOR_VERSION::$MINOR_VERSION"
+
       # Right now just pull the image in order to tag it. There might be alternatives:
       # https://stackoverflow.com/questions/37134929/how-to-tag-image-in-docker-registry-v2/38362476#38362476 (auth unclear)
       # Use a shared context with original workflow?
@@ -56,49 +65,85 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           VERSION: ${{ steps.get_ver.outputs.SEM_VER }}
+          MAJOR_VERSION: ${{ steps.get_ver.outputs.MAJOR_VERSION }}
+          MINOR_VERSION: ${{ steps.get_ver.outputs.MINOR_VERSION }}
         run: |
           docker pull $ECR_REGISTRY/strelka-frontend:$VERSION
+
           docker tag $ECR_REGISTRY/strelka-frontend:$VERSION $ECR_REGISTRY/strelka-frontend:latest
           docker tag $ECR_REGISTRY/strelka-frontend:$VERSION sublimesec/strelka-frontend:latest
 
-          docker push $ECR_REGISTRY/strelka-frontend:latest
-          docker push sublimesec/strelka-frontend:latest
+          docker tag $ECR_REGISTRY/strelka-frontend:$VERSION $ECR_REGISTRY/strelka-frontend:$MAJOR_VERSION
+          docker tag $ECR_REGISTRY/strelka-frontend:$VERSION sublimesec/strelka-frontend:$MAJOR_VERSION
+
+          docker tag $ECR_REGISTRY/strelka-frontend:$VERSION $ECR_REGISTRY/strelka-frontend:$MINOR_VERSION
+          docker tag $ECR_REGISTRY/strelka-frontend:$VERSION sublimesec/strelka-frontend:$MINOR_VERSION
+
+          docker push --all-tags $ECR_REGISTRY/strelka-frontend:latest
+          docker push --all-tags sublimesec/strelka-frontend:latest
 
       - name: Pull, Tag, Push BackEnd
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           VERSION: ${{ steps.get_ver.outputs.SEM_VER }}
+          MAJOR_VERSION: ${{ steps.get_ver.outputs.MAJOR_VERSION }}
+          MINOR_VERSION: ${{ steps.get_ver.outputs.MINOR_VERSION }}
         run: |
           docker pull $ECR_REGISTRY/strelka-backend:$VERSION
+
           docker tag $ECR_REGISTRY/strelka-backend:$VERSION $ECR_REGISTRY/strelka-backend:latest
           docker tag $ECR_REGISTRY/strelka-backend:$VERSION sublimesec/strelka-backend:latest
 
-          docker push $ECR_REGISTRY/strelka-backend:latest
-          docker push sublimesec/strelka-backend:latest
+          docker tag $ECR_REGISTRY/strelka-backend:$VERSION $ECR_REGISTRY/strelka-backend:$MAJOR_VERSION
+          docker tag $ECR_REGISTRY/strelka-backend:$VERSION sublimesec/strelka-backend:$MAJOR_VERSION
+
+          docker tag $ECR_REGISTRY/strelka-backend:$VERSION $ECR_REGISTRY/strelka-backend:$MINOR_VERSION
+          docker tag $ECR_REGISTRY/strelka-backend:$VERSION sublimesec/strelka-backend:$MINOR_VERSION
+
+          docker push --all-tags $ECR_REGISTRY/strelka-backend:latest
+          docker push --all-tags sublimesec/strelka-backend:latest
 
       - name: Pull, Tag, Push Manager
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           VERSION: ${{ steps.get_ver.outputs.SEM_VER }}
+          MAJOR_VERSION: ${{ steps.get_ver.outputs.MAJOR_VERSION }}
+          MINOR_VERSION: ${{ steps.get_ver.outputs.MINOR_VERSION }}
         run: |
           docker pull $ECR_REGISTRY/strelka-manager:$VERSION
+
           docker tag $ECR_REGISTRY/strelka-manager:$VERSION $ECR_REGISTRY/strelka-manager:latest
           docker tag $ECR_REGISTRY/strelka-manager:$VERSION sublimesec/strelka-manager:latest
 
-          docker push $ECR_REGISTRY/strelka-manager:latest
-          docker push sublimesec/strelka-manager:latest
+          docker tag $ECR_REGISTRY/strelka-manager:$VERSION $ECR_REGISTRY/strelka-manager:$MAJOR_VERSION
+          docker tag $ECR_REGISTRY/strelka-manager:$VERSION sublimesec/strelka-manager:$MAJOR_VERSION
+
+          docker tag $ECR_REGISTRY/strelka-manager:$VERSION $ECR_REGISTRY/strelka-manager:$MINOR_VERSION
+          docker tag $ECR_REGISTRY/strelka-manager:$VERSION sublimesec/strelka-manager:$MINOR_VERSION
+
+          docker push --all-tags $ECR_REGISTRY/strelka-manager:latest
+          docker push --all-tags sublimesec/strelka-manager:latest
 
       - name: Pull, Tag, Push MMRPC
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           VERSION: ${{ steps.get_ver.outputs.SEM_VER }}
+          MAJOR_VERSION: ${{ steps.get_ver.outputs.MAJOR_VERSION }}
+          MINOR_VERSION: ${{ steps.get_ver.outputs.MINOR_VERSION }}
         run: |
           docker pull $ECR_REGISTRY/strelka-mmrpc:$VERSION
+
           docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION $ECR_REGISTRY/strelka-mmrpc:latest
           docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION sublimesec/strelka-mmrpc:latest
 
-          docker push $ECR_REGISTRY/strelka-mmrpc:latest
-          docker push sublimesec/strelka-mmrpc:latest
+          docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION $ECR_REGISTRY/strelka-mmrpc:$MAJOR_VERSION
+          docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION sublimesec/strelka-mmrpc:$MAJOR_VERSION
+
+          docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION $ECR_REGISTRY/strelka-mmrpc:$MINOR_VERSION
+          docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION sublimesec/strelka-mmrpc:$MINOR_VERSION
+
+          docker push --all-tags $ECR_REGISTRY/strelka-mmrpc:latest
+          docker push --all-tags sublimesec/strelka-mmrpc:latest
 
       - name: Validate All X-Region Replication
         run: |
