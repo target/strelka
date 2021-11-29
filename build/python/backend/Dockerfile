@@ -1,10 +1,11 @@
-FROM ubuntu:20.04
+FROM ubuntu:21.10
 ARG DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
-ARG YARA_VERSION=4.0.5
-ARG YARA_PYTHON_VERSION=4.0.3
-ARG CAPA_VERSION=1.1.0
+ARG YARA_VERSION=4.1.3
+ARG YARA_PYTHON_VERSION=4.1.3
+ARG CAPA_VERSION=3.0.1
+ARG EXIFTOOL_VERSION=12.36
 
 # Update packages
 RUN apt-get -qq update && \
@@ -37,9 +38,9 @@ RUN apt-get -qq update && \
     jq && \
 # Download and compile exiftool
     cd /tmp/ && \
-    curl -OL https://exiftool.org/Image-ExifTool-12.30.tar.gz && \
-    tar -zxvf Image-ExifTool-12.30.tar.gz && \
-    cd Image-ExifTool-12.30/ && \
+    curl -OL https://github.com/exiftool/exiftool/archive/refs/tags/$EXIFTOOL_VERSION.tar.gz && \
+    tar -zxvf $EXIFTOOL_VERSION.tar.gz && \
+    cd exiftool-$EXIFTOOL_VERSION/ && \
     perl Makefile.PL && \
     make && \
     make install && \
