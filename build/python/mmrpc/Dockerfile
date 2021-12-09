@@ -6,6 +6,7 @@ LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 RUN apt-get -qq update && \
     apt-get install --no-install-recommends -qq \
 # Install build packages
+    build-essential \
     git \
     python3-dev \
     python3-pip \
@@ -28,6 +29,7 @@ RUN cd /strelka/ && \
     rm -rf dist/ strelka.egg-info && \
     pip3 uninstall -y grpcio-tools && \
     apt-get autoremove -qq --purge \
+    build-essential \
     git \
     python3-dev \
     python3-pip \
