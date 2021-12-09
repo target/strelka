@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2021-12-09
+### Changed
+- Modified `mmrpc` Dockerfile to fix compilation build issues on ARM architecture. 
+
 ## 2021-11-29
 ### Changed
 - Modified `exiftool` repository reference to increase stability
