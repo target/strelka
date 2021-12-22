@@ -14,6 +14,8 @@ class ScanPdf(strelka.Scanner):
         limit: Maximum number of files to extract.
             Defaults to 2000.
     """
+    def init(self):
+        fitz.TOOLS.mupdf_display_errors(False)
 
     def scan(self, data, file, options, expire_at):
         extract_text = options.get("extract_text", False)
