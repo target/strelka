@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@036a4a1ddf2c0e7a782dca6e083c6c53e5d90321 # No released version with OIDC
+        uses: aws-actions/configure-aws-credentials@1.6
         with:
           # Use a role instead of including credentials in secrets, but still hide that role name to be gated by GH environments.
           role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
@@ -79,8 +79,8 @@ jobs:
           docker tag $ECR_REGISTRY/strelka-frontend:$VERSION $ECR_REGISTRY/strelka-frontend:$MINOR_VERSION
           docker tag $ECR_REGISTRY/strelka-frontend:$VERSION sublimesec/strelka-frontend:$MINOR_VERSION
 
-          docker push --all-tags $ECR_REGISTRY/strelka-frontend:latest
-          docker push --all-tags sublimesec/strelka-frontend:latest
+          docker push --all-tags $ECR_REGISTRY/strelka-frontend
+          docker push --all-tags sublimesec/strelka-frontend
 
       - name: Pull, Tag, Push BackEnd
         env:
@@ -100,8 +100,8 @@ jobs:
           docker tag $ECR_REGISTRY/strelka-backend:$VERSION $ECR_REGISTRY/strelka-backend:$MINOR_VERSION
           docker tag $ECR_REGISTRY/strelka-backend:$VERSION sublimesec/strelka-backend:$MINOR_VERSION
 
-          docker push --all-tags $ECR_REGISTRY/strelka-backend:latest
-          docker push --all-tags sublimesec/strelka-backend:latest
+          docker push --all-tags $ECR_REGISTRY/strelka-backend
+          docker push --all-tags sublimesec/strelka-backend
 
       - name: Pull, Tag, Push Manager
         env:
@@ -121,8 +121,8 @@ jobs:
           docker tag $ECR_REGISTRY/strelka-manager:$VERSION $ECR_REGISTRY/strelka-manager:$MINOR_VERSION
           docker tag $ECR_REGISTRY/strelka-manager:$VERSION sublimesec/strelka-manager:$MINOR_VERSION
 
-          docker push --all-tags $ECR_REGISTRY/strelka-manager:latest
-          docker push --all-tags sublimesec/strelka-manager:latest
+          docker push --all-tags $ECR_REGISTRY/strelka-manager
+          docker push --all-tags sublimesec/strelka-manager
 
       - name: Pull, Tag, Push MMRPC
         env:
@@ -142,8 +142,8 @@ jobs:
           docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION $ECR_REGISTRY/strelka-mmrpc:$MINOR_VERSION
           docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION sublimesec/strelka-mmrpc:$MINOR_VERSION
 
-          docker push --all-tags $ECR_REGISTRY/strelka-mmrpc:latest
-          docker push --all-tags sublimesec/strelka-mmrpc:latest
+          docker push --all-tags $ECR_REGISTRY/strelka-mmrpc
+          docker push --all-tags sublimesec/strelka-mmrpc
 
       - name: Validate All X-Region Replication
         run: |
