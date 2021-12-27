@@ -3,7 +3,9 @@ Changes to the project will be tracked in this file via the date of change.
 
 ## 2021-12-27
 ### Changed
-- Updating `lxml` dependency. 
+- Updating `lxml` from version `4.6.3` to `4.6.5`.
+- Updating `CAPA` from version `3.0.1` to `3.0.3`.
+- Updating `exiftool` from version `12.36` to `12.38`.
 
 ## 2021-12-09
 ### Changed
