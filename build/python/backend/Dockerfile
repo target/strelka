@@ -4,8 +4,8 @@ LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
 ARG YARA_VERSION=4.1.3
 ARG YARA_PYTHON_VERSION=4.1.3
-ARG CAPA_VERSION=3.0.1
-ARG EXIFTOOL_VERSION=12.36
+ARG CAPA_VERSION=3.0.3
+ARG EXIFTOOL_VERSION=12.38
 
 # Update packages
 RUN apt-get -qq update && \
