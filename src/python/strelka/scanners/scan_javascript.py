@@ -54,6 +54,6 @@ class ScanJavascript(strelka.Scanner):
             if t.type == 'Identifier':
                 if t.value not in self.event['identifiers']:
                     self.event['identifiers'].append(t.value)
-            if type == 'RegularExpression':
+            if t.type == 'RegularExpression':
                 if t.value not in self.event['regular_expressions']:
                     self.event['regular_expressions'].append(t.value)
