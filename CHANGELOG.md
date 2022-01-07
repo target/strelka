@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2022-01-07
+### Changed
+- Fix bug with `scan_javascript` pertaining to regular expression identification. (@cawalch)
+
 ## 2021-12-27
 ### Changed
 - Updating `lxml` from version `4.6.3` to `4.6.5`.
