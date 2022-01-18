@@ -480,6 +480,7 @@ scanners:
       positive:
         flavors:
           - 'text/plain'
+          - 'text/html'
       priority: 5
 #  'ScanVb': revisit
 #    - positive:
