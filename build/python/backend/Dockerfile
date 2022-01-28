@@ -79,7 +79,9 @@ RUN apt-get -qq update && \
 # Install JTR
 RUN apt-get -qq update \
   && apt-get install -qq --no-install-recommends -y git python build-essential ca-certificates libssl-dev zlib1g-dev yasm libgmp-dev libpcap-dev libbz2-dev libgomp1
-RUN git clone https://github.com/magnumripper/JohnTheRipper.git /jtr \
+# The maintainer isn't big on releases or tags so grab an arbitrary, but consistent, commit.
+# Additionally jump through some extra hoops to get the single commit to save some download time.
+RUN mkdir jtr && cd jtr && git init && git remote add origin https://github.com/openwall/john.git && git fetch --depth 1 origin b5c10480f56ff1b5d76c6cbdaf9c817582ee2228 && git reset --hard FETCH_HEAD \
   && rm -rf /jtr/.git \
   && cd /jtr/src \
   && ./configure \
