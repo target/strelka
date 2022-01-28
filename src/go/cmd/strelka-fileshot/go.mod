@@ -1,4 +1,4 @@
-module strelka-fileshot
+module github.com/target/strelka/src/go/cmd/strelka-fileshot
 
 go 1.16
 
