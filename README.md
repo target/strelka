@@ -37,11 +37,10 @@ $ docker-compose -f build/docker-compose.yaml up
 #### Step 2: Build [Strelka-Fileshot](https://github.com/target/strelka/blob/master/docs/README.md#strelka-fileshot) (File Submitter)
 ```
 # Terminal 2
-$ docker build -f build/go/fileshot/Dockerfile -t strelka-fileshot .
+$ go build github.com/target/strelka/src/go/cmd/strelka-fileshot
 ```
 
-
-#### Step 3: Add File Paths / Patterns to be Scanned to [fileshot.yaml](https://github.com/target/strelka/blob/master/docs/README.md#fileshot)
+#### Step 3: Add File Paths / Patterns to be Scanned to a [fileshot.yaml] file (https://github.com/target/strelka/blob/master/docs/README.md#fileshot)
 ```
   ...
   files:
@@ -54,7 +53,7 @@ $ docker build -f build/go/fileshot/Dockerfile -t strelka-fileshot .
 #### Step 4: Run Strelka-Fileshot and Review Output
 ```
 # Terminal 2
-$ strelka-fileshot -c fileshot.yaml
+$ ./strelka-fileshot -c fileshot.yaml
 $ cat strelka.log | jq .
 ```
 
