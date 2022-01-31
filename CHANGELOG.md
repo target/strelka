@@ -1,6 +1,13 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2022-01-31
+### Changed
+- Pinned and updated all `go` build dockerfiles to `1.17.6`
+- Updated all `go mod` files to match `go` requirements.
+- Updated `numpy` dependency.
+- Updated `readme` with new client application build instructions.
+
 ## 2022-01-07
 ### Changed
 - Fix bug with `scan_javascript` pertaining to regular expression identification. (@cawalch)
