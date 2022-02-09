@@ -89,6 +89,10 @@ scanners:
         flavors:
           - 'application/msword'
           - 'olecf_file'
+          - 'ooxml_file'
+          - 'wordml_file'
+          - 'vbframe_file'
+          - 'mso_file'
           - 'application/vnd.ms-excel'
       priority: 5
       options:
