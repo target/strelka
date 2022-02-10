@@ -36,6 +36,14 @@ RUN apt-get -qq update && \
     unrar \
     upx \
     jq && \
+# Download and compile Archive library, needed for exiftool to work best
+    cd /tmp/ && \
+    curl -OL https://cpan.metacpan.org/authors/id/P/PH/PHRED/Archive-Zip-1.68.tar.gz && \
+    tar -xzf Archive-Zip-1.68.tar.gz && \
+    cd Archive-Zip-1.68/ && \
+    perl Makefile.PL && \
+    make && \
+    make install && \
 # Download and compile exiftool
     cd /tmp/ && \
     curl -OL https://github.com/exiftool/exiftool/archive/refs/tags/$EXIFTOOL_VERSION.tar.gz && \
