@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2022-03-02
+### Changed
+- Updating build to include `exiftool` dependency. (@cameron-dunn-sublime)
+
 ## 2022-01-31
 ### Changed
 - Pinned and updated all `go` build dockerfiles to `1.17.6`
