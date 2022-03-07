@@ -1,6 +1,37 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2022-03-02
+### Changed
+- Updating build to include `exiftool` dependency. (@cameron-dunn-sublime)
+
+## 2022-01-31
+### Changed
+- Pinned and updated all `go` build dockerfiles to `1.17.6`
+- Updated all `go mod` files to match `go` requirements.
+- Updated `numpy` dependency.
+- Updated `readme` with new client application build instructions.
+
+## 2022-01-07
+### Changed
+- Fix bug with `scan_javascript` pertaining to regular expression identification. (@cawalch)
+
+## 2021-12-27
+### Changed
+- Updating `lxml` from version `4.6.3` to `4.6.5`.
+- Updating `CAPA` from version `3.0.1` to `3.0.3`.
+- Updating `exiftool` from version `12.36` to `12.38`.
+
+## 2021-12-09
+### Changed
+- Modified `mmrpc` Dockerfile to fix compilation build issues on ARM architecture. 
+
+## 2021-11-29
+### Changed
+- Modified `exiftool` repository reference to increase stability
+- Updating `backend` dependencies
+- Updating `go` dependencies
+
 ## 2021-10-12
 ### Changed
 - Fix K8S backend configmap yaml (@cameron-dunn-sublime)

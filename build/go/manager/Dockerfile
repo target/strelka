@@ -1,7 +1,7 @@
 # Strelka Manager
 # Manages portions of Strelka's Redis database.
 # For more information, please see: https://target.github.io/strelka/#/?id=strelka-manager
-FROM golang AS build
+FROM golang:1.17.6 AS build
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
 # Copy source files and set the working directory

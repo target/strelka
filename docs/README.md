@@ -96,12 +96,12 @@ Please file an issue or contact the project team at [TTS-CFC-OpenSource@target.c
 Strelka can be installed on any system that can run [containers](https://www.docker.com/resources/what-container). For convenience, the project ships with [docker-compse](https://docs.docker.com/compose/) configuration files for standing up a "quickstart" cluster (found under the `build/` directory). We do not recommend using and do not plan to support OS-native installations.
 
 ### Client Install
-Strelka's core client apps are written in Go and can be run natively on a host or inside of a container.
+Strelka's core client apps are written in Go and can be run natively on a host or inside of a container. The following are multiple ways to install each of the apps.
 
-#### strelka-fileshot (gettable)
-1. Install the binary
+#### strelka-fileshot (build)
+1. Build the binary directly from github
     ```sh
-    go get github.com/target/strelka/src/go/cmd/strelka-fileshot
+    go build github.com/target/strelka/src/go/cmd/strelka-fileshot
     ```
 
 #### strelka-fileshot (build)
@@ -128,10 +128,10 @@ Strelka's core client apps are written in Go and can be run natively on a host o
     docker build -f build/go/fileshot/Dockerfile -t strelka-fileshot .
     ```
 
-#### strelka-oneshot (gettable)
-1. Install the binary
+#### strelka-oneshot (Build the binary directly from github)
+1. Build the binary
     ```sh
-    go get github.com/target/strelka/src/go/cmd/strelka-oneshot
+    go build github.com/target/strelka/src/go/cmd/strelka-oneshot
     ```
 
 #### strelka-oneshot (build)
@@ -158,10 +158,10 @@ Strelka's core client apps are written in Go and can be run natively on a host o
     docker build -f build/go/oneshot/Dockerfile -t strelka-oneshot .
     ```
    
-#### strelka-filestream (gettable)
-1. Install the binary
+#### strelka-filestream (Build the binary directly from github)
+1. Build the binary
     ```sh
-    go get github.com/target/strelka/src/go/cmd/strelka-filestream
+    go build github.com/target/strelka/src/go/cmd/strelka-filestream
     ```
 
 #### strelka-filestream (build)

@@ -37,11 +37,10 @@ $ docker-compose -f build/docker-compose.yaml up
 #### Step 2: Build [Strelka-Fileshot](https://github.com/target/strelka/blob/master/docs/README.md#strelka-fileshot) (File Submitter)
 ```
 # Terminal 2
-$ docker build -f build/go/fileshot/Dockerfile -t strelka-fileshot .
+$ go build github.com/target/strelka/src/go/cmd/strelka-fileshot
 ```
 
-
-#### Step 3: Add File Paths / Patterns to be Scanned to [fileshot.yaml](https://github.com/target/strelka/blob/master/docs/README.md#fileshot)
+#### Step 3: Add File Paths / Patterns to be Scanned to a [fileshot.yaml] file (https://github.com/target/strelka/blob/master/docs/README.md#fileshot)
 ```
   ...
   files:
@@ -54,7 +53,7 @@ $ docker build -f build/go/fileshot/Dockerfile -t strelka-fileshot .
 #### Step 4: Run Strelka-Fileshot and Review Output
 ```
 # Terminal 2
-$ strelka-fileshot -c fileshot.yaml
+$ ./strelka-fileshot -c fileshot.yaml
 $ cat strelka.log | jq .
 ```
 
@@ -75,6 +74,10 @@ More documentation about Strelka can be found in the [README](https://target.git
 
 ## Contribute
 Guidelines for contributing can be found [here](https://github.com/target/strelka/blob/master/CONTRIBUTING.md).
+
+## Known Issues
+There is currently a known issue with compilation on ARM based hosts (e.g., Apple M1). Attempting to compile the current version of Strelka will lead to the following issue:
+https://github.com/target/strelka/issues/188. You can bypass this compilation issue by removing `pymupdf` from the backend Python `requriements.txt` file and commenting out ScanPDF in the `backend.yml` file. Doing this will allow you to compile the current version of Strelka at the expense of being unable to scan PDF files.
 
 ## Related Projects
 * [Laika BOSS](https://github.com/lmco/laikaboss)

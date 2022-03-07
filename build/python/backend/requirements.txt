@@ -6,18 +6,18 @@ cryptography==3.4.7
 docker==5.0.0
 esprima==4.0.1
 git+https://github.com/jshlbrd/python-entropy.git   # v0.11 as of this freeze (package installed as 'entropy')
-grpcio-tools==1.35.0
-grpcio==1.35.0
+grpcio==1.42.0
+grpcio-tools==1.42.0
 html5lib==1.1
 inflection==0.5.1
 interruptingcow==0.8
 jsbeautifier==1.13.13
 libarchive-c==2.9
 lief==0.11.4
-lxml==4.6.3
+lxml==4.6.5
 M2Crypto==0.37.1
 nested-lookup==0.2.22
-numpy==1.20.2
+numpy==1.21.0
 olefile==0.46
 oletools==0.56.1
 opencv-python==4.5.1.48
