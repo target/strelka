@@ -251,24 +251,25 @@ scanners:
 #          - 'application/json'
 #          - 'json_file'
 #      priority: 5
-#  'ScanLibarchive':
-#    - positive:
-#        flavors:
-#          - 'application/vnd.ms-cab-compressed'
-#          - 'cab_file'
-#          - 'application/x-7z-compressed'
-#          - '_7zip_file'
-#          - 'application/x-cpio'
-#          - 'cpio_file'
-#          - 'application/x-xar'
-#          - 'xar_file'
-#          - 'arj_file'
-#          - 'iso_file'
-#          - 'application/x-debian-package'
-#          - 'debian_package_file'
-#      priority: 5
-#      options:
-#        limit: 1000
+  'ScanLibarchive':
+    - positive:
+        flavors:
+          - 'application/vnd.ms-cab-compressed'
+          - 'cab_file'
+          - 'application/x-7z-compressed'
+          - '_7zip_file'
+          - 'application/x-cpio'
+          - 'cpio_file'
+          - 'application/x-xar'
+          - 'xar_file'
+          - 'arj_file'
+          - 'iso_file'
+          - 'application/x-debian-package'
+          - 'debian_package_file'
+          - 'application/x-iso9660-image'
+      priority: 5
+      options:
+        limit: 1000
 #  'ScanLNK':
 #    - positive:
 #        flavors:
