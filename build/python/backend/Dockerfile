@@ -92,7 +92,7 @@ RUN apt-get -qq update \
 RUN mkdir jtr && cd jtr && git init && git remote add origin https://github.com/openwall/john.git && git fetch --depth 1 origin b5c10480f56ff1b5d76c6cbdaf9c817582ee2228 && git reset --hard FETCH_HEAD \
   && rm -rf /jtr/.git \
   && cd /jtr/src \
-  && ./configure \
+  && ./configure --disable-native-tests \
   && make -s clean \
   && make -sj4 \
   && make install \
