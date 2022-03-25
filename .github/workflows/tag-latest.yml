@@ -124,27 +124,6 @@ jobs:
           docker push --all-tags $ECR_REGISTRY/strelka-manager
           docker push --all-tags sublimesec/strelka-manager
 
-      - name: Pull, Tag, Push MMRPC
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          VERSION: ${{ steps.get_ver.outputs.SEM_VER }}
-          MAJOR_VERSION: ${{ steps.get_ver.outputs.MAJOR_VERSION }}
-          MINOR_VERSION: ${{ steps.get_ver.outputs.MINOR_VERSION }}
-        run: |
-          docker pull $ECR_REGISTRY/strelka-mmrpc:$VERSION
-
-          docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION $ECR_REGISTRY/strelka-mmrpc:latest
-          docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION sublimesec/strelka-mmrpc:latest
-
-          docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION $ECR_REGISTRY/strelka-mmrpc:$MAJOR_VERSION
-          docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION sublimesec/strelka-mmrpc:$MAJOR_VERSION
-
-          docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION $ECR_REGISTRY/strelka-mmrpc:$MINOR_VERSION
-          docker tag $ECR_REGISTRY/strelka-mmrpc:$VERSION sublimesec/strelka-mmrpc:$MINOR_VERSION
-
-          docker push --all-tags $ECR_REGISTRY/strelka-mmrpc
-          docker push --all-tags sublimesec/strelka-mmrpc
-
       - name: Validate All X-Region Replication
         run: |
           .github/workflows/check_images_x_region.sh latest

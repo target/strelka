@@ -67,18 +67,6 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
 
-      - name: Determine Tags MMRPC
-        id: meta_mmrpc
-        uses: crazy-max/ghaction-docker-meta@v2
-        with:
-          images: |
-            ${{ steps.login-ecr.outputs.registry }}/strelka-mmrpc
-            sublimesec/strelka-mmrpc
-          flavor: |
-            latest=false
-          tags: |
-            type=semver,pattern={{version}}
-
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
@@ -112,15 +100,6 @@ jobs:
           tags: ${{ steps.meta_manager.outputs.tags }}
           labels: ${{ steps.meta_manager.outputs.labels }}
 
-      - name: Build Manager
-        uses: docker/build-push-action@v2
-        with:
-          file: build/python/mmrpc/Dockerfile
-          context: .
-          load: true
-          tags: ${{ steps.meta_mmrpc.outputs.tags }}
-          labels: ${{ steps.meta_mmrpc.outputs.labels }}
-
       - name: Push FrontEnd
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -141,13 +120,6 @@ jobs:
         run: |
           docker push --all-tags $ECR_REGISTRY/strelka-manager
           docker push --all-tags sublimesec/strelka-manager
-
-      - name: Push MMRPC
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: |
-          docker push --all-tags $ECR_REGISTRY/strelka-mmrpc
-          docker push --all-tags sublimesec/strelka-mmrpc
 
       - name: Validate All X-Region Replication
         run: |
