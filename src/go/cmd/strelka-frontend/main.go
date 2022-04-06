@@ -158,8 +158,16 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 	}
 
 	for {
+		if err := stream.Context().Err(); err != nil {
+			return err
+		}
+
 		res, err := s.coordinator.cli.BLPop(stream.Context(), 5*time.Second, keye).Result()
 		if err != nil {
+			if err != redis.Nil {
+				// Delay to prevent fast looping over errors
+				time.Sleep(250 * time.Millisecond)
+			}
 			continue
 		}
 		// first element will be the name of queue/event, second element is event itself
