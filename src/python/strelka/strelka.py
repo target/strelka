@@ -1,13 +1,12 @@
 import json
 import logging
 import re
+import signal
 import time
 import uuid
 
 from boltons import iterutils
 import inflection
-import interruptingcow
-
 
 class RequestTimeout(Exception):
     """Raised when request times out."""
@@ -143,10 +142,10 @@ class Scanner(object):
                                            self.scanner_timeout)
 
         try:
-            with interruptingcow.timeout(self.scanner_timeout,
-                                         ScannerTimeout):
-                self.scan(data, file, options, expire_at)
-
+            self.signal = signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(self.scanner_timeout)
+            self.scan(data, file, options, expire_at)
+            signal.alarm(0)
         except ScannerTimeout:
             self.flags.append('timed_out')
         except (DistributionTimeout, RequestTimeout):
@@ -249,3 +248,7 @@ def format_event(metadata):
         lambda p, k, v: v != '' and v != [] and v != {} and v is not None,
     )
     return json.dumps(remap2)
+
+def timeout_handler(signum, frame):
+    """Signal ScannerTimeout"""
+    raise ScannerTimeout

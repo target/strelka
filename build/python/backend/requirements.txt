@@ -10,7 +10,6 @@ grpcio==1.42.0
 grpcio-tools==1.42.0
 html5lib==1.1
 inflection==0.5.1
-interruptingcow==0.8
 jsbeautifier==1.13.13
 libarchive-c==2.9
 lief==0.11.4
