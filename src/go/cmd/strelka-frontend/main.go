@@ -15,6 +15,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
+	_ "google.golang.org/grpc/encoding/gzip"
 	"gopkg.in/yaml.v2"
 
 	grpc_health_v1 "github.com/target/strelka/src/go/api/health"
