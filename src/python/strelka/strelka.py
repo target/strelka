@@ -148,9 +148,10 @@ class Scanner(object):
             signal.alarm(0)
         except ScannerTimeout:
             self.flags.append('timed_out')
-        except (DistributionTimeout, RequestTimeout):
-            raise
-        except Exception:
+        except Exception as e:
+            signal.alarm(0)
+            if isinstance(e, DeprecationWarning) or (e, RequestTimeout):
+                raise
             logging.exception(f'{self.name}: exception while scanning'
                               f' uid {file.uid} (see traceback below)')
             self.flags.append('uncaught_exception')
