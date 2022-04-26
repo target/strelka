@@ -1,9 +1,13 @@
-from pyzbar.pyzbar import decode
-from PIL import Image
 import io
 import re
+import logging
+
+from pyzbar.pyzbar import decode
+from PIL import Image
 
 from strelka import strelka
+
+logging.getLogger('PIL').setLevel(logging.WARNING)
 
 
 class ScanQr(strelka.Scanner):
