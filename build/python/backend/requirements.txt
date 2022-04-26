@@ -13,7 +13,7 @@ inflection==0.5.1
 interruptingcow==0.8
 jsbeautifier==1.13.13
 libarchive-c==2.9
-lief==0.11.4
+lief==0.12.1
 lxml==4.6.5
 M2Crypto==0.37.1
 nested-lookup==0.2.22
