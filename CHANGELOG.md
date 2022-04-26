@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2022-04-26
+### Changed
+- Fixed / updated `ScanPdf` with new functionality. May require current implementations to change parsing. (Ryan Borre)
+
 ## 2022-03-02
 ### Changed
 - Updating build to include `exiftool` dependency. (@cameron-dunn-sublime)
