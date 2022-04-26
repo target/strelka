@@ -343,8 +343,17 @@ scanners:
           - 'pdf_file'
       priority: 5
       options:
-        extract_text: False
-        limit: 2000
+        objects:
+          - 'AA'
+          - 'EmbeddedFiles'
+          - 'JavaScript'
+          - 'JS'
+          - 'Launch'
+          - 'Macrosheet'
+          - 'MediaBox'
+          - 'OpenAction'
+          - 'URI'
+          - 'XObject'
   'ScanPe':
     - positive:
         flavors:
