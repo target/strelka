@@ -7,7 +7,7 @@ Changes to the project will be tracked in this file via the date of change.
 - Removed `[DEBUG]` warnings from `ScanQR`.
 - Updated `ScanELF` with bug fix.
 - Removed error logging from `ScanELF`
-- 
+
 ## 2022-03-02
 ### Changed
 - Updating build to include `exiftool` dependency. (@cameron-dunn-sublime)
