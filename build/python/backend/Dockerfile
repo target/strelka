@@ -16,6 +16,7 @@ RUN apt-get -qq update && \
     curl \
     gcc \
     git \
+    libglu1-mesa \
     libtool \
     make \
     swig \
