@@ -4,6 +4,7 @@ Changes to the project will be tracked in this file via the date of change.
 ## 2022-05-02
 ### Changed
 - Updated `ScanLNK` with additional fields and new scanner structure. (Ryan Borre / @Derekt2 / @swackhamer)
+- Added Github CodeQL vulnerability identification Action
  
 ## 2022-04-26
 ### Changed
