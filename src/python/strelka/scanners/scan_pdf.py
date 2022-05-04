@@ -1,3 +1,4 @@
+# https://pymupdf.readthedocs.io/en/latest/index.html
 # https://www.osti.gov/servlets/purl/1030303
 
 import datetime
@@ -36,25 +37,33 @@ class ScanPdf(strelka.Scanner):
             self.event['author'] = reader.metadata['author']
             self.event['creator'] = reader.metadata['creator']
             self.event['creation_date'] = self._convert_timestamp(reader.metadata['creationDate'])
-            self.event['dirty'] = bool(reader.is_dirty)
-            self.event['encrypted'] = bool(reader.is_encrypted)
+            self.event['dirty'] = reader.is_dirty
+            self.event['embedded_files'] = {
+                'count': reader.embfile_count(),
+                'names': reader.embfile_names()
+            }
+            self.event['encrypted'] = reader.is_encrypted
+            self.event['needs_pass'] = reader.needs_pass
             self.event['format'] = reader.metadata['format']
             self.event['keywords'] = reader.metadata['keywords']
             self.event['language'] = reader.language
             self.event['modify_date'] = self._convert_timestamp(reader.metadata['modDate'])
             self.event['old_xrefs'] = reader.has_old_style_xrefs
-            self.event['pages'] = len(reader)
+            self.event['pages'] = reader.page_count
             self.event['producer'] = reader.metadata['producer']
-            self.event['repaired'] = bool(reader.is_repaired)
+            self.event['repaired'] = reader.is_repaired
             self.event['subject'] = reader.metadata['subject']
             self.event['title'] = reader.metadata['title']
             self.event['xrefs'] = reader.xref_length() - 1
 
             # iterate through xref objects
             for xref in range(1, reader.xref_length()):
-                for key in reader.xref_get_keys(xref):
-                    if key in options.get('objects', []):
-                        keys.append(key)
+                for obj in options.get('objects', []):
+                    key, val = reader.xref_get_key(xref, obj)
+                    if key in ['array', 'dict', 'xref']:
+                        keys.append(obj.lower())
+                    if key in ['name']:
+                        keys.append(val.lstrip('/').lower())
                 xref_object = reader.xref_object(xref, compressed=True)
                 # extract urls from xref
                 self.event['links'].extend(re.findall('\"(https?://.*?)\"', xref_object))
@@ -100,24 +109,28 @@ class ScanPdf(strelka.Scanner):
 
             # parse data from each page
             try:
+                text = ""
                 for page in reader:
                     self.event['lines'] += len(page.get_text().split('\n'))
                     self.event['words'] += len(list(filter(None, page.get_text().split(' '))))
                     # extract links
                     for link in page.get_links():
                         self.event['links'].append(link.get('uri'))
-                    # submit extracted text to strelka
-                    extract_file = strelka.File(
-                        name="text",
-                        source=self.name,
+
+                    text += page.get_text()
+
+                # submit extracted text to strelka
+                extract_file = strelka.File(
+                    name="text",
+                    source=self.name,
+                )
+                for c in strelka.chunk_string(text):
+                    self.upload_to_coordinator(
+                        extract_file.pointer,
+                        c,
+                        expire_at,
                     )
-                    for c in strelka.chunk_string(page.get_text()):
-                        self.upload_to_coordinator(
-                            extract_file.pointer,
-                            c,
-                            expire_at,
-                        )
-                    self.files.append(extract_file)
+                self.files.append(extract_file)
             except:
                 self.flags.append("page_parsing_failure")
         except Exception:
