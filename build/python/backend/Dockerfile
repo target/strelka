@@ -7,8 +7,13 @@ ARG YARA_PYTHON_VERSION=4.1.3
 ARG CAPA_VERSION=3.0.3
 ARG EXIFTOOL_VERSION=12.38
 
-# expat: CVE-2022-23852 & CVE-2022-23990; mount & util-linux: CVE-2021-3996 & CVE-2021-3995
-RUN apt-get update -y && apt-get install -y expat=2.4.1-2ubuntu0.3 mount=2.36.1-8ubuntu2.2 util-linux=2.36.1-8ubuntu2.2
+RUN apt-get update -y && apt-get install -y \
+    # expat: CVE-2022-23852 & CVE-2022-23990;
+    expat=2.4.1-2ubuntu0.3 \
+    # mount & util-linux: CVE-2021-3996 & CVE-2021-3995
+    mount=2.36.1-8ubuntu2.2 util-linux=2.36.1-8ubuntu2.2 \
+    # libsepol: CVE-2021-36087 & USN-5391-1 & CVE-2021-36084 & CVE-2021-36086
+    libsepol1=3.1-1ubuntu2.1 sepol-utils=3.1-1ubuntu2.1
 
 # Update packages
 RUN apt-get -qq update && \
