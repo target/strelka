@@ -29,6 +29,12 @@ scanners:
           - 'text/x-msdos-batch'
           - 'batch_file'
       priority: 5
+  'ScanBmpEof':
+    - positive:
+        flavors:
+          - 'image/x-ms-bmp'
+          - 'bmp_file'
+      priority: 5
   'ScanBzip2':
     - positive:
         flavors:
@@ -285,6 +291,16 @@ scanners:
         flavors:
           - 'lnk_file'
       priority: 5
+  'ScanLsb':
+    - positive:
+        flavors:
+          - 'image/png'
+          - 'png_file'
+          - 'image/jpeg'
+          - 'jpeg_file'
+          - 'image/x-ms-bmp'
+          - 'bmp_file'
+      priority: 5
   'ScanLzma':
     - positive:
         flavors:
@@ -314,6 +330,16 @@ scanners:
       priority: 5
       options:
         server: 'strelka_mmrpc_1:33907'
+  'ScanNf':
+    - positive:
+        flavors:
+          - 'image/png'
+          - 'png_file'
+          - 'image/jpeg'
+          - 'jpeg_file'
+          - 'image/x-ms-bmp'
+          - 'bmp_file'
+      priority: 5
   'ScanOcr':
     - positive:
         flavors:
@@ -394,6 +420,12 @@ scanners:
           - 'ProgramArguments'
           - 'RunAtLoad'
           - 'StartInterval'
+  'ScanPngEof':
+    - positive:
+        flavors:
+          - 'image/png'
+          - 'png_file'
+      priority: 5
   'ScanQr':
     - positive:
         flavors:
