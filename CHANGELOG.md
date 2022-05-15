@@ -8,6 +8,15 @@ Changes to the project will be tracked in this file via the date of change.
 - Added `ScanNF` steganalysis scanner.  (University of Minnesota)
 - Added `ScanPNGEoF` steganalysis scanner.  (University of Minnesota)
 
+## 2022-05-04
+### Changed
+- Adding `embedded_files` and `needs_pass` fields to `ScanPDF`
+
+## 2022-05-02
+### Changed
+- Updated `ScanLNK` with additional fields and new scanner structure. (Ryan Borre / @Derekt2 / @swackhamer)
+- Added Github CodeQL vulnerability identification Action
+ 
 ## 2022-04-26
 ### Changed
 - Fixed / updated `ScanPdf` with new functionality. May require current implementations to change parsing. (Ryan Borre)
