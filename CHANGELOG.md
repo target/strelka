@@ -1,6 +1,13 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2022-05-15
+### Added
+- Added `ScanBMPEoF` steganalysis scanner. (University of Minnesota)
+- Added `ScanLSB` steganalysis scanner.  (University of Minnesota)
+- Added `ScanNF` steganalysis scanner.  (University of Minnesota)
+- Added `ScanPNGEoF` steganalysis scanner.  (University of Minnesota)
+
 ## 2022-04-26
 ### Changed
 - Fixed / updated `ScanPdf` with new functionality. May require current implementations to change parsing. (Ryan Borre)
