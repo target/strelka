@@ -30,6 +30,16 @@ rule browser_manifest
         all of them
 }
 
+rule bits_file
+{
+    meta:
+        type = "BITSAdmin DB File"
+    strings:
+        $a = { B6 BC 93 04 EF CD AB 89 }
+    condition:
+        $a at 0
+}
+
 rule cab_file {
     meta:
         type = "archive"

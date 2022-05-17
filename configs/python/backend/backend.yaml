@@ -41,6 +41,11 @@ scanners:
           - 'application/x-bzip2'
           - 'bzip2_file'
       priority: 5
+  'ScanBITS':
+    - positive:
+        flavors:
+          - 'bits_file'
+      priority: 5
 #  'ScanCapa':
 #    - positive:
 #        flavors:

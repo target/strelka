@@ -1,7 +1,8 @@
 arc4==0.0.4
 beautifulsoup4==4.9.3
+bits_parser==1.0.1
 boltons==20.2.1
-construct==2.10.67
+construct==2.8.12
 cryptography==3.4.7
 docker==5.0.0
 esprima==4.0.1
