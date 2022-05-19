@@ -80,7 +80,11 @@ class Backend(object):
                 continue
 
             try:
-                self.signal = signal.signal(signal.SIGALRM, request_timeout_handler)
+                self.signal
+                self.signal = signal.signal(
+                        signal.SIGALRM,
+                        timeout_handler(strelka.RequestTimeout)
+                    )
                 signal.alarm(timeout)
                 self.distribute(root_id, file, expire_at)
                 p = self.coordinator.pipeline(transaction=False)
@@ -116,7 +120,10 @@ class Backend(object):
             files = []
 
             try:
-                self.signal = signal.signal(signal.SIGALRM, distribution_timeout_handler)
+                self.signal = signal.signal(
+                        signal.SIGALRM,
+                        timeout_handler(strelka.DistributionTimeout)
+                    )
                 signal.alarm(self.limits.get('distribution'))
                 if file.depth > self.limits.get('max_depth'):
                     logging.info(f'request {root_id} exceeded maximum depth')
@@ -326,14 +333,11 @@ def main():
     backend = Backend(backend_cfg, coordinator)
     backend.work()
 
-def request_timeout_handler(signum, frame):
-    """Signal RequestTimeout"""
-    raise strelka.RequestTimeout
-
-def distribution_timeout_handler(signum, frame):
-    """Signal DistributionTimeout"""
-    raise strelka.DistributionTimeout
-
+def timeout_handler(ex):
+    """Signal timeout handler"""
+    def fn(signum, frame):
+        raise ex
+    return fn
 
 if __name__ == '__main__':
     main()
