@@ -80,7 +80,6 @@ class Backend(object):
                 continue
 
             try:
-                self.signal
                 self.signal = signal.signal(
                         signal.SIGALRM,
                         timeout_handler(strelka.RequestTimeout)
