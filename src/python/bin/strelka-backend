@@ -13,10 +13,10 @@ import os
 import re
 import string
 import sys
+import signal
 import time
 
 import inflection
-import interruptingcow
 import magic
 import redis
 import yaml
@@ -80,17 +80,22 @@ class Backend(object):
                 continue
 
             try:
-                with interruptingcow.timeout(timeout,
-                                             strelka.RequestTimeout):
-                    self.distribute(root_id, file, expire_at)
-                    p = self.coordinator.pipeline(transaction=False)
-                    p.rpush(f'event:{root_id}', 'FIN')
-                    p.expireat(f'event:{root_id}', expire_at)
-                    p.execute()
-
+                self.signal
+                self.signal = signal.signal(
+                        signal.SIGALRM,
+                        timeout_handler(strelka.RequestTimeout)
+                    )
+                signal.alarm(timeout)
+                self.distribute(root_id, file, expire_at)
+                p = self.coordinator.pipeline(transaction=False)
+                p.rpush(f'event:{root_id}', 'FIN')
+                p.expireat(f'event:{root_id}', expire_at)
+                p.execute()
+                signal.alarm(0)
             except strelka.RequestTimeout:
                 logging.debug(f'request {root_id} timed out')
             except Exception:
+                signal.alarm(0)
                 logging.exception('unknown exception (see traceback below)')
 
             count += 1
@@ -115,101 +120,105 @@ class Backend(object):
             files = []
 
             try:
-                with interruptingcow.timeout(self.limits.get('distribution'),
-                                             exception=strelka.DistributionTimeout):
-                    if file.depth > self.limits.get('max_depth'):
-                        logging.info(f'request {root_id} exceeded maximum depth')
-                        return
-
-                    data = b''
-                    while 1:
-                        pop = self.coordinator.lpop(f'data:{file.pointer}')
-                        if pop is None:
-                            break
-                        data += pop
-
-                    file.add_flavors({'mime': self.taste_mime(data)})
-                    file.add_flavors({'yara': self.taste_yara(data)})
-                    flavors = (
-                        file.flavors.get('external', [])
-                        + file.flavors.get('mime', [])
-                        + file.flavors.get('yara', [])
+                self.signal = signal.signal(
+                        signal.SIGALRM,
+                        timeout_handler(strelka.DistributionTimeout)
                     )
+                signal.alarm(self.limits.get('distribution'))
+                if file.depth > self.limits.get('max_depth'):
+                    logging.info(f'request {root_id} exceeded maximum depth')
+                    return
 
-                    scanner_list = []
-                    for name in self.scanners:
-                        mappings = self.scanners.get(name, {})
-                        assigned = self.assign_scanner(
-                            name,
-                            mappings,
-                            flavors,
+                data = b''
+                while 1:
+                    pop = self.coordinator.lpop(f'data:{file.pointer}')
+                    if pop is None:
+                        break
+                    data += pop
+
+                file.add_flavors({'mime': self.taste_mime(data)})
+                file.add_flavors({'yara': self.taste_yara(data)})
+                flavors = (
+                    file.flavors.get('external', [])
+                    + file.flavors.get('mime', [])
+                    + file.flavors.get('yara', [])
+                )
+
+                scanner_list = []
+                for name in self.scanners:
+                    mappings = self.scanners.get(name, {})
+                    assigned = self.assign_scanner(
+                        name,
+                        mappings,
+                        flavors,
+                        file,
+                    )
+                    if assigned is not None:
+                        scanner_list.append(assigned)
+                scanner_list.sort(
+                    key=lambda k: k.get('priority', 5),
+                    reverse=True,
+                )
+
+                p = self.coordinator.pipeline(transaction=False)
+                tree_dict = {
+                    'node': file.uid,
+                    'parent': file.parent,
+                    'root': root_id,
+                }
+
+                if file.depth == 0:
+                    tree_dict['node'] = root_id
+                if file.depth == 1:
+                    tree_dict['parent'] = root_id
+
+                file_dict = {
+                    'depth': file.depth,
+                    'name': file.name,
+                    'flavors': file.flavors,
+                    'scanners': [s.get('name') for s in scanner_list],
+                    'size': len(data),
+                    'source': file.source,
+                    'tree': tree_dict,
+                }
+                scan = {}
+
+                for scanner in scanner_list:
+                    try:
+                        name = scanner['name']
+                        und_name = inflection.underscore(name)
+                        scanner_import = f'strelka.scanners.{und_name}'
+                        module = importlib.import_module(scanner_import)
+                        if und_name not in self.scanner_cache:
+                            attr = getattr(module, name)(self.backend_cfg, self.coordinator)
+                            self.scanner_cache[und_name] = attr
+                        options = scanner.get('options', {})
+                        plugin = self.scanner_cache[und_name]
+                        (f, s) = plugin.scan_wrapper(
+                            data,
                             file,
+                            options,
+                            expire_at,
                         )
-                        if assigned is not None:
-                            scanner_list.append(assigned)
-                    scanner_list.sort(
-                        key=lambda k: k.get('priority', 5),
-                        reverse=True,
-                    )
+                        files.extend(f)
 
-                    p = self.coordinator.pipeline(transaction=False)
-                    tree_dict = {
-                        'node': file.uid,
-                        'parent': file.parent,
-                        'root': root_id,
-                    }
+                        scan = {
+                            **scan,
+                            **s,
+                        }
 
-                    if file.depth == 0:
-                        tree_dict['node'] = root_id
-                    if file.depth == 1:
-                        tree_dict['parent'] = root_id
+                    except ModuleNotFoundError:
+                        logging.exception(f'scanner {name} not found')
 
-                    file_dict = {
-                        'depth': file.depth,
-                        'name': file.name,
-                        'flavors': file.flavors,
-                        'scanners': [s.get('name') for s in scanner_list],
-                        'size': len(data),
-                        'source': file.source,
-                        'tree': tree_dict,
-                    }
-                    scan = {}
+                event = {
+                    **{'file': file_dict},
+                    **{'scan': scan},
+                }
 
-                    for scanner in scanner_list:
-                        try:
-                            name = scanner['name']
-                            und_name = inflection.underscore(name)
-                            scanner_import = f'strelka.scanners.{und_name}'
-                            module = importlib.import_module(scanner_import)
-                            if und_name not in self.scanner_cache:
-                                attr = getattr(module, name)(self.backend_cfg, self.coordinator)
-                                self.scanner_cache[und_name] = attr
-                            options = scanner.get('options', {})
-                            plugin = self.scanner_cache[und_name]
-                            (f, s) = plugin.scan_wrapper(
-                                data,
-                                file,
-                                options,
-                                expire_at,
-                            )
-                            files.extend(f)
-
-                            scan = {
-                                **scan,
-                                **s,
-                            }
-
-                        except ModuleNotFoundError:
-                            logging.exception(f'scanner {name} not found')
-
-                    event = {
-                        **{'file': file_dict},
-                        **{'scan': scan},
-                    }
-
-                    p.rpush(f'event:{root_id}', strelka.format_event(event))
-                    p.expireat(f'event:{root_id}', expire_at)
-                    p.execute()
+                p.rpush(f'event:{root_id}', strelka.format_event(event))
+                p.expireat(f'event:{root_id}', expire_at)
+                p.execute()
+                signal.alarm(0)
 
             except strelka.DistributionTimeout:
                 logging.exception(f'node {file.uid} timed out')
@@ -220,6 +229,7 @@ class Backend(object):
                 self.distribute(root_id, f, expire_at)
 
         except strelka.RequestTimeout:
+            signal.alarm(0)
             raise
 
     def assign_scanner(self, scanner, mappings, flavors, file):
@@ -323,6 +333,11 @@ def main():
     backend = Backend(backend_cfg, coordinator)
     backend.work()
 
+def timeout_handler(ex):
+    """Signal timeout handler"""
+    def fn(signum, frame):
+        raise ex
+    return fn
 
 if __name__ == '__main__':
     main()
