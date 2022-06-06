@@ -50,13 +50,13 @@ scanners:
 #          - 'application/x-coredump'
 #          - 'elf_file'
 #      priority: 5
-#  'ScanEmail':
-#    - positive:
-#        flavors:
-#          - 'application/vnd.ms-outlook'
-#          - 'message/rfc822'
-#          - 'email_file'
-#      priority: 5
+  'ScanEmail':
+    - positive:
+        flavors:
+          - 'application/vnd.ms-outlook'
+          - 'message/rfc822'
+          - 'email_file'
+      priority: 5
   'ScanEncryptedDoc':
     - positive:
         flavors:
@@ -270,11 +270,11 @@ scanners:
       priority: 5
       options:
         limit: 1000
-#  'ScanLNK':
-#    - positive:
-#        flavors:
-#          - 'lnk_file'
-#      priority: 5
+  'ScanLNK':
+    - positive:
+        flavors:
+          - 'lnk_file'
+      priority: 5
   'ScanLzma':
     - positive:
         flavors:
@@ -414,14 +414,14 @@ scanners:
 #      priority: 5
 #      options:
 #        tmp_directory: '/dev/shm/'
-#  'ScanRtf': revisit
-#    - positive:
-#        flavors:
-#          - 'text/rtf'
-#          - 'rtf_file'
-#      priority: 5
-#      options:
-#        limit: 1000
+  'ScanRtf':
+    - positive:
+        flavors:
+          - 'text/rtf'
+          - 'rtf_file'
+      priority: 5
+      options:
+        limit: 1000
 #  'ScanRuby': Does this scanner exist?
 #    - positive:
 #        flavors:
@@ -448,6 +448,8 @@ scanners:
           - 'ini_file'
           - 'html_file'
           - 'hta_file'
+          - 'text/rtf'
+          - 'rtf_file'
       priority: 5
 #  'ScanSwf':
 #    - positive:
@@ -486,6 +488,8 @@ scanners:
         flavors:
           - 'text/plain'
           - 'text/html'
+          - 'text/rtf'
+          - 'rtf_file'
       priority: 5
 #  'ScanVb': revisit
 #    - positive:

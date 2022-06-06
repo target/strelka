@@ -17,9 +17,9 @@ class ScanRtf(strelka.Scanner):
 
         rtf = rtfobj.RtfObjParser(data)
         rtf.parse()
-        self.event['total']['rtf_objects'] = len(rtf.rtf_objects)
+        self.event['total']['rtf_objects'] = len(rtf.objects)
 
-        for rtf_object in rtf.rtf_objects:
+        for rtf_object in rtf.objects:
             if self.event['total']['extracted'] >= file_limit:
                 break
 
