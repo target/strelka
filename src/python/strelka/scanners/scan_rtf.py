@@ -23,7 +23,6 @@ class ScanRtf(strelka.Scanner):
             if self.event['total']['extracted'] >= file_limit:
                 break
 
-            index = rtf.server.index(rtf_object)
             if rtf_object.is_package:
                 extract_file = strelka.File(
                     name=rtf_object.filename,
@@ -39,7 +38,7 @@ class ScanRtf(strelka.Scanner):
 
             elif rtf_object.is_ole:
                 extract_file = strelka.File(
-                    name=f'rtf_object_{index}',
+                    name='rtf_object',
                     source=self.name,
                 )
 
@@ -52,7 +51,7 @@ class ScanRtf(strelka.Scanner):
 
             else:
                 extract_file = strelka.File(
-                    name=f'rtf_object_{index}',
+                    name='rtf_object',
                     source=self.name,
                 )
 
