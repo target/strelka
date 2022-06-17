@@ -82,7 +82,7 @@ https://github.com/target/strelka/issues/188. You can bypass this compilation is
 ## Related Projects
 * [Laika BOSS](https://github.com/lmco/laikaboss)
 * [File Scanning Framework](https://github.com/EmersonElectricCo/fsf)
-* [Assemblyline](https://bitbucket.org/cse-assemblyline/)
+* [Assemblyline](https://cybercentrecanada.github.io/assemblyline4_docs/)
 
 ## Licensing
 Strelka and its associated code is released under the terms of the [Apache 2.0 License](https://github.com/phutelmyer/strelka/blob/master/LICENSE).

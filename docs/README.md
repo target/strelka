@@ -1476,7 +1476,7 @@ Guidelines for contributing can be found [here](https://github.com/target/strelk
 ## Related Projects
 * [Laika BOSS](https://github.com/lmco/laikaboss)
 * [File Scanning Framework](https://github.com/EmersonElectricCo/fsf)
-* [Assemblyline](https://bitbucket.org/cse-assemblyline/)
+* [Assemblyline](https://cybercentrecanada.github.io/assemblyline4_docs/)
 
 ## Licensing
 Strelka and its associated code is released under the terms of the Apache 2.0 license.
