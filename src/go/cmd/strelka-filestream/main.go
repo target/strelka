@@ -115,7 +115,7 @@ func main() {
 
 	staging := conf.Staging
 	if _, err := os.Stat(staging); os.IsNotExist(err) {
-		os.Mkdir(staging, 0755)
+		os.Mkdir(staging, 0600)
 	} else {
 		match, err := filepath.Glob(filepath.Join(staging, "*"))
 		if err != nil {
