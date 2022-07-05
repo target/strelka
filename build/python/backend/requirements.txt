@@ -5,6 +5,7 @@ construct==2.10.67
 cryptography==3.4.7
 docker==5.0.0
 esprima==4.0.1
+eml-parser>=1.17
 git+https://github.com/jshlbrd/python-entropy.git   # v0.11 as of this freeze (package installed as 'entropy')
 grpcio==1.42.0
 grpcio-tools==1.42.0
@@ -21,7 +22,7 @@ olefile==0.46
 oletools==0.56.1
 opencv-python==4.5.1.48
 opencv-contrib-python==4.5.3.56 
-PyMuPDF==1.18.0 
+PyMuPDF==1.19.6
 pefile==2019.4.18
 pgpdump3==1.5.2
 pyelftools==0.27
@@ -32,6 +33,7 @@ python-docx==0.8.10
 python-magic==0.4.22
 pyyaml>=5.4.1
 pyzbar==0.1.8
+pytz>=2022.1
 rarfile==4.0
 redis==3.5.3
 requests==2.25.1
