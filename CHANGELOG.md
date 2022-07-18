@@ -1,6 +1,44 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2022-07-18
+### Added
+- Added `TLSH` hashing to `ScanHash`
+
+## 2022-07-07
+### Changed
+- Updated `lxml` dependency.
+
+## 2022-07-06
+### Changed
+- Updated `lxml` dependency.
+
+## 2022-07-05
+### Changed
+- Updated Filesetream to decrease privilege access. (@cawalch)
+- Updated `ScanEmail` with new logic and collection fields.
+- Updated `numpy` dependency.
+
+## 2022-06-22
+### Changed
+- Updated `numpy` dependency.
+
+## 2022-06-20
+### Changed
+- Updated Readme.
+
+## 2022-06-17
+### Changed
+- Updated Readme.
+
+## 2022-05-29
+### Changed
+- Bug fix for `signal` timeout functionality.
+
+## 2022-05-19
+### Changed
+- Updated backend timeout functionality, replacing `interruptingcow` with `signal` (@cawalch)
+
 ## 2022-05-15
 ### Added
 - Added `ScanBMPEoF` steganalysis scanner. (University of Minnesota)
