@@ -21,7 +21,7 @@ numpy==1.22.1
 olefile==0.46
 oletools==0.56.1
 opencv-python==3.4.18.65
-opencv-contrib-python==3.4.18.65
+opencv-contrib-python==4.2.0.32
 PyMuPDF==1.19.6
 pefile==2019.4.18
 pgpdump3==1.5.2
