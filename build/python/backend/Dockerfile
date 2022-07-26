@@ -1,11 +1,11 @@
-FROM ubuntu:21.10
+FROM ubuntu:22.10
 ARG DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
-ARG YARA_VERSION=4.1.3
-ARG YARA_PYTHON_VERSION=4.1.3
-ARG CAPA_VERSION=3.0.3
-ARG EXIFTOOL_VERSION=12.38
+ARG YARA_VERSION=4.2.2
+ARG YARA_PYTHON_VERSION=4.2.0
+ARG CAPA_VERSION=3.2.1
+ARG EXIFTOOL_VERSION=12.44
 
 # Update packages
 RUN apt-get -qq update && \
@@ -31,6 +31,7 @@ RUN apt-get -qq update && \
     libmagic-dev \
     libssl-dev \
     libzbar0 \
+    libgl1 \
     python3-setuptools \
     redis-server \
     tesseract-ocr \
@@ -87,7 +88,15 @@ RUN apt-get -qq update && \
 
 # Install JTR
 RUN apt-get -qq update \
-  && apt-get install -qq --no-install-recommends -y git python build-essential ca-certificates libssl-dev zlib1g-dev yasm libgmp-dev libpcap-dev libbz2-dev libgomp1
+  && apt-get install -qq --no-install-recommends -y  \
+    ca-certificates \
+    libssl-dev \
+    zlib1g-dev \
+    yasm \
+    libgmp-dev \
+    libpcap-dev \
+    libbz2-dev \
+    libgomp1
 # The maintainer isn't big on releases or tags so grab an arbitrary, but consistent, commit.
 # Additionally jump through some extra hoops to get the single commit to save some download time.
 RUN mkdir jtr && cd jtr && git init && git remote add origin https://github.com/openwall/john.git && git fetch --depth 1 origin b5c10480f56ff1b5d76c6cbdaf9c817582ee2228 && git reset --hard FETCH_HEAD \
