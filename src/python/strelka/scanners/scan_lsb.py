@@ -3,6 +3,7 @@ import numpy as np
 
 from strelka import strelka
 
+
 class ScanLsb(strelka.Scanner):
     """This scanner checks if there is any hidden strings at the end of each RGB value"""
 
