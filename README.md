@@ -76,8 +76,10 @@ More documentation about Strelka can be found in the [README](https://target.git
 Guidelines for contributing can be found [here](https://github.com/target/strelka/blob/master/CONTRIBUTING.md).
 
 ## Known Issues
-There is currently a known issue with compilation on ARM based hosts (e.g., Apple M1). Attempting to compile the current version of Strelka will lead to the following issue:
-https://github.com/target/strelka/issues/188. You can bypass this compilation issue by removing `pymupdf` from the backend Python `requriements.txt` file and commenting out ScanPDF in the `backend.yml` file. Doing this will allow you to compile the current version of Strelka at the expense of being unable to scan PDF files.
+
+None currently.
+
+See [issues labeled `bug`](https://github.com/target/strelka/issues?q=is%3Aissue+is%3Aopen+label%3Abug) in the tracker for any potential known issues.
 
 ## Related Projects
 * [Laika BOSS](https://github.com/lmco/laikaboss)
