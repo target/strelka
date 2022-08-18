@@ -87,7 +87,7 @@ See [issues labeled `bug`](https://github.com/target/strelka/issues?q=is%3Aissue
 * [Assemblyline](https://cybercentrecanada.github.io/assemblyline4_docs/)
 
 ## Licensing
-Strelka and its associated code is released under the terms of the [Apache 2.0 License](https://github.com/phutelmyer/strelka/blob/master/LICENSE).
+Strelka and its associated code is released under the terms of the [Apache 2.0 License](https://github.com/target/strelka/blob/master/LICENSE).
 
 <div align="center">
   <img src="./misc/assets/target_banner.png" alt="Target Banner" />
