@@ -1,7 +1,11 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
-##2022-07-26
+## 2022-08-18
+### Changed
+- Updated README.
+
+## 2022-07-26
 ### Changed
 - Updated base docker image for `backend` and `mmrpc`.
 - Updated various dependencies.
