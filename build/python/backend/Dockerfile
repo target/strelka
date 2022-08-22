@@ -1,19 +1,19 @@
-FROM ubuntu:21.10
+FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
-ARG YARA_VERSION=4.1.3
-ARG YARA_PYTHON_VERSION=4.1.3
-ARG CAPA_VERSION=3.0.3
-ARG EXIFTOOL_VERSION=12.38
+ARG YARA_VERSION=4.2.2
+ARG YARA_PYTHON_VERSION=4.2.0
+ARG CAPA_VERSION=3.2.1
+ARG EXIFTOOL_VERSION=12.44
 
 RUN apt-get update -y && apt-get install -y \
     # expat: CVE-2022-23852 & CVE-2022-23990;
-    expat=2.4.1-2ubuntu0.3 \
+    expat=2.4.7-1 \
     # mount & util-linux: CVE-2021-3996 & CVE-2021-3995
-    mount=2.36.1-8ubuntu2.2 util-linux=2.36.1-8ubuntu2.2 \
+    mount=2.37.2-4ubuntu3 util-linux=2.37.2-4ubuntu3 \
     # libsepol: CVE-2021-36087 & USN-5391-1 & CVE-2021-36084 & CVE-2021-36086
-    libsepol1=3.1-1ubuntu2.1 sepol-utils=3.1-1ubuntu2.1
+    libsepol2=3.3-1build1 sepol-utils=3.3-1build1
 
 # Update packages
 RUN apt-get -qq update && \
@@ -24,6 +24,7 @@ RUN apt-get -qq update && \
     curl \
     gcc \
     git \
+    libglu1-mesa \
     libtool \
     make \
     swig \
@@ -38,6 +39,7 @@ RUN apt-get -qq update && \
     libmagic-dev \
     libssl-dev \
     libzbar0 \
+    libgl1 \
     python3-setuptools \
     redis-server \
     tesseract-ocr \
@@ -94,7 +96,15 @@ RUN apt-get -qq update && \
 
 # Install JTR
 RUN apt-get -qq update \
-  && apt-get install -qq --no-install-recommends -y git python build-essential ca-certificates libssl-dev zlib1g-dev yasm libgmp-dev libpcap-dev libbz2-dev libgomp1
+  && apt-get install -qq --no-install-recommends -y  \
+    ca-certificates \
+    libssl-dev \
+    zlib1g-dev \
+    yasm \
+    libgmp-dev \
+    libpcap-dev \
+    libbz2-dev \
+    libgomp1
 # The maintainer isn't big on releases or tags so grab an arbitrary, but consistent, commit.
 # Additionally jump through some extra hoops to get the single commit to save some download time.
 RUN mkdir jtr && cd jtr && git init && git remote add origin https://github.com/openwall/john.git && git fetch --depth 1 origin b5c10480f56ff1b5d76c6cbdaf9c817582ee2228 && git reset --hard FETCH_HEAD \
@@ -147,5 +157,6 @@ RUN mkdir -p /strelka/config
 COPY ./build/configs/taste.yara /strelka/config
 COPY ./build/configs/passwords.dat /strelka/config
 COPY ./build/configs/scanners.yaml /strelka/config
+
 
 USER 1001
