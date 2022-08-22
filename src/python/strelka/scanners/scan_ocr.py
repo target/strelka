@@ -32,7 +32,7 @@ class ScanOcr(strelka.Scanner):
                 tess_txt_name = f'{tmp_tess.name}.txt'
                 if tess_return == 0:
                     with open(tess_txt_name, 'rb') as tess_txt:
-                        ocr_file = tess_txt.read()
+                        ocr_file = tess_txt.read().rstrip()
 
                         if ocr_file:
                             self.event['raw'] = ocr_file

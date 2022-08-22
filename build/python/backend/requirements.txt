@@ -20,7 +20,7 @@ M2Crypto==0.38.0
 nested-lookup==0.2.22
 numpy==1.22.1
 olefile==0.46
-oletools==0.56.1
+oletools==0.60.1
 opencv-python==4.6.0.66
 opencv-contrib-python==4.6.0.66
 PyMuPDF==1.19.6
@@ -30,7 +30,7 @@ pyelftools==0.27
 pygments==2.9.0
 pylzma==0.5.0
 pytesseract==0.3.7
-python-docx==0.8.10
+python-docx==0.8.11
 python-magic==0.4.22
 py-tlsh==4.7.2
 pyyaml>=5.4.1
