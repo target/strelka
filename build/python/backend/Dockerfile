@@ -21,6 +21,7 @@ RUN apt-get -qq update && \
     apt-get install --no-install-recommends -qq \
     automake \
     build-essential \
+    cmake \
     curl \
     gcc \
     git \
