@@ -57,15 +57,15 @@ scanners:
       priority: 5
       options:
         extract_text: False
-  'ScanElf':
-    - positive:
-        flavors:
-          - 'application/x-object'
-          - 'application/x-executable'
-          - 'application/x-sharedlib'
-          - 'application/x-coredump'
-          - 'elf_file'
-      priority: 5
+#  'ScanElf':
+#    - positive:
+#        flavors:
+#          - 'application/x-object'
+#          - 'application/x-executable'
+#          - 'application/x-sharedlib'
+#          - 'application/x-coredump'
+#          - 'elf_file'
+#      priority: 5
   'ScanEmail':
     - positive:
         flavors:
@@ -235,6 +235,13 @@ scanners:
           - 'ini_file'
           - 'olecf_file'
       priority: 5
+  'ScanIso':
+    - positive:
+        flavors:
+          - 'iso_file'
+      priority: 5
+      options:
+        limit: 0
   'ScanJarManifest':
     - positive:
         flavors:
@@ -280,7 +287,6 @@ scanners:
           - 'application/x-xar'
           - 'xar_file'
           - 'arj_file'
-          - 'iso_file'
           - 'application/x-debian-package'
           - 'debian_package_file'
       priority: 5
