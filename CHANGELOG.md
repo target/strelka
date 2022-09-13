@@ -5,7 +5,7 @@ Changes to the project will be tracked in this file via the date of change.
 ### Added
 - Added `ScanISO` for ISO metadata collection and file extraction.
 - Updated `ScanLibarchive` in `backend.yml` to remove `iso_file`
-- 
+
 ### Changed
 - Updated `ScanLibarchive` in `backend.yml` to remove `iso_file`.
 - Disabled `ScanELF` in `backend.yml` after observing excessive data extraction issues.
