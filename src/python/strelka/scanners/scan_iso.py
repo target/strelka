@@ -17,12 +17,14 @@ class ScanIso(strelka.Scanner):
         self.event['files'] = []
 
         try:
+            # ISO must be opened as a byte stream
             with io.BytesIO(data) as iso_io:
                 iso = pycdlib.PyCdlib()
                 iso.open_fp(iso_io)
 
                 root_entry = iso.get_record(**{'iso_path': '/'})
 
+                # Iterate through ISO file tree
                 dirs = collections.deque([root_entry])
                 while dirs:
                     dir_record = dirs.popleft()
@@ -37,9 +39,12 @@ class ScanIso(strelka.Scanner):
                             dirs.append(child)
                     else:
                         try:
+                            # Collect File Metadata
                             self.event['files'].append({'filename': ident_to_here,
                                             'size': iso.get_entry(ident_to_here).data_length,
                                             'date_utc': self._datetime_from_iso_date(iso.get_entry(ident_to_here).date)})
+
+                            # Extract ISO Files (If Below Option Limit)
                             if self.event['total']['extracted'] < file_limit:
                                 try:
                                     file_io = io.BytesIO()
@@ -68,6 +73,7 @@ class ScanIso(strelka.Scanner):
 
     @staticmethod
     def _datetime_from_iso_date(iso_date):
+        """Helper method for converting DirectoryRecordDate to string ISO8601 time."""
         try:
             if isinstance(iso_date, DirectoryRecordDate):
                 year = 1900 + iso_date.years_since_1900
