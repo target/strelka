@@ -58,13 +58,11 @@ class ScanPdf(strelka.Scanner):
 
             # iterate through xref objects
             for xref in range(1, reader.xref_length()):
-                for obj in options.get('objects', []):
-                    key, val = reader.xref_get_key(xref, obj)
-                    if key in ['array', 'dict', 'xref']:
-                        keys.append(obj.lower())
-                    if key in ['name']:
-                        keys.append(val.lstrip('/').lower())
                 xref_object = reader.xref_object(xref, compressed=True)
+                for obj in options.get('objects', []):
+                    pattern = f"/{obj}"
+                    if pattern in xref_object:
+                        keys.append(obj.lower())
                 # extract urls from xref
                 self.event['links'].extend(re.findall('\"(https?://.*?)\"', xref_object))
             self.event['objects'] = dict(Counter(keys))
