@@ -1,6 +1,15 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2022-09-23
+### Added
+- Added `ScanBITS` Windows BITS file scanner.
+- Added `ScanXL4MA` Excel 4 macro scanner. (Ryan Borre)
+- Added `AddIOC` IOC parsing to allow for IOC storage in root files. (Ryan Borre)
+
+### Changed
+- Updated `ScanPDF` with small fix. (Ryan Borre)
+
 ## 2022-09-13
 ### Added
 - Added `ScanISO` for ISO metadata collection and file extraction.
