@@ -7,6 +7,10 @@ import uuid
 
 from boltons import iterutils
 import inflection
+from tldextract import TLDExtract
+import ipaddress
+import validators
+
 
 class RequestTimeout(Exception):
     """Raised when request times out."""
@@ -62,6 +66,21 @@ class File(object):
         self.flavors = {**self.flavors, **flavors}
 
 
+class IocOptions(object):
+    """
+    Defines an ioc options object that can be used to specify the ioc_type for developers as opposed to using a
+    string.
+    """
+
+    domain = 'domain'
+    url = 'url'
+    md5 = 'md5'
+    sha1 = 'sha1'
+    sha256 = 'sha256'
+    email = 'email'
+    ip = 'ip'
+
+
 class Scanner(object):
     """Defines a scanner that scans File objects.
 
@@ -85,6 +104,9 @@ class Scanner(object):
         self.key = inflection.underscore(self.name.replace('Scan', ''))
         self.scanner_timeout = backend_cfg.get('limits').get('scanner')
         self.coordinator = coordinator
+        self.iocs = []
+        self.type = IocOptions
+        self.extract = TLDExtract(suffix_list_urls=None)
         self.init()
 
     def init(self):
@@ -184,6 +206,68 @@ class Scanner(object):
         p.expireat(f'data:{pointer}', expire_at)
         p.execute()
 
+    def process_ioc(self, ioc, ioc_type, scanner_name, description='', malicious=False):
+        if not ioc:
+            return
+        if ioc_type == 'url':
+            if validators.ipv4(self.extract(ioc).domain):
+                self.process_ioc(self.extract(ioc).domain, 'ip', scanner_name, description, malicious)
+            else:
+                self.process_ioc(self.extract(ioc).registered_domain, 'domain', scanner_name, description, malicious)
+            if not validators.url(ioc):
+                logging.warning(f"{ioc} is not a valid url")
+                return
+        elif ioc_type == 'ip':
+            try:
+                ipaddress.ip_address(ioc)
+            except ValueError:
+                logging.warning(f"{ioc} is not a valid IP")
+                return
+        elif ioc_type == 'domain':
+            if not validators.domain(ioc):
+                logging.warning(f"{ioc} is not a valid domain")
+                return
+        elif ioc_type == 'email':
+            if not validators.email(ioc):
+                logging.warning(f"{ioc} is not a valid email")
+                return
+
+        if malicious:
+            self.iocs.append({'ioc': ioc, 'ioc_type': ioc_type, 'scanner': scanner_name, 'description': description,
+                              'malicious': True})
+        else:
+            self.iocs.append({'ioc': ioc, 'ioc_type': ioc_type, 'scanner': scanner_name, 'description': description})
+
+    def add_iocs(self, ioc, ioc_type, description='', malicious=False):
+        """Adds ioc to the iocs.
+        :param ioc: The IOC or list of IOCs to be added. All iocs must be of the same type. Must be type String or Bytes.
+        :param ioc_type: Must be one of md5, sha1, sha256, domain, url, email, ip, either as string or type object (e.g. self.type.domain).
+        :param description (Optional): Description of the IOCs.
+        :param malicious (Optional): Reasonable determination whether the indicator is or would be used maliciously. Example:
+          Malware Command and Control. Should not be used solely for determining maliciousness since testing values may be present.
+        """
+        try:
+            accepted_iocs = ['md5', 'sha1', 'sha256', 'domain', 'url', 'email', 'ip']
+            if ioc_type not in accepted_iocs:
+                logging.warning(f"{ioc_type} not in accepted range. Acceptable ioc types are: {accepted_iocs}")
+                return
+            if isinstance(ioc, list):
+                for i in ioc:
+                    if isinstance(i, bytes):
+                        i = i.decode()
+                    if not isinstance(i, str):
+                        logging.warning(f"Could not process {i} from {self.name}: Type {type(i)} is not type Bytes or String")
+                        continue
+                    self.process_ioc(i, ioc_type, self.name, description=description, malicious=malicious)
+            else:
+                if isinstance(ioc, bytes):
+                    ioc = ioc.decode()
+                if not isinstance(ioc, str):
+                    logging.warning(f"Could not process {ioc} from {self.name}: Type {type(ioc)} is not type Bytes or String")
+                    return
+                self.process_ioc(ioc, ioc_type, self.name, description=description, malicious=malicious)
+        except Exception as e:
+            logging.error(f"Failed to add {ioc} from {self.name}: {e}")
 
 def chunk_string(s, chunk=1024 * 16):
     """Takes an input string and turns it into smaller byte pieces.
