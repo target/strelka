@@ -544,6 +544,11 @@ scanners:
       priority: 5
       options:
         type: 'pem'
+  'ScanXl4ma':
+    - positive:
+        flavors:
+          - 'excel4_file'
+      priority: 5
   'ScanXml':
     - positive:
         flavors:
