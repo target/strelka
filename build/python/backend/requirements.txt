@@ -15,7 +15,7 @@ html5lib==1.1
 inflection==0.5.1
 jsbeautifier==1.13.13
 libarchive-c==2.9
-lief==0.12.1
+lief==0.12.2
 lxml==4.9.1
 M2Crypto==0.38.0
 nested-lookup==0.2.22
