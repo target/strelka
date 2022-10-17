@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2022-10-17
+### Changed
+- Updated verisons / dependencies
+
 ## 2022-09-23
 ### Added
 - Added `ScanBITS` Windows BITS file scanner.
