@@ -45,7 +45,6 @@ redis==3.5.3
 requests==2.25.1
 rpmfile==1.0.8
 signify==0.3.0
-speakeasy-emulator==1.5.2
 ssdeep==3.4
 tldextract==3.2.0
 tnefparse==1.4.0
