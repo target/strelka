@@ -6,7 +6,7 @@ scanners:
   'ScanBase64':
     - positive:
         flavors:
-          - 'base64' # Unknown?
+          - 'base64' # External type emitted by some scanners
       priority: 5
   'ScanBase64PE':
     - positive:
@@ -428,6 +428,9 @@ scanners:
 #          - 'text/x-ruby'
 #      priority: 5
   'ScanStrings':
+    - negative:
+        flavors:
+          - 'base64' # External type emitted by some scanners
     - positive:
         flavors:
           - 'mz_file'

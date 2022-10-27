@@ -1,7 +1,9 @@
 import bs4
+import re
 
 from strelka import strelka
 
+base64Re = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
 
 class ScanHtml(strelka.Scanner):
     """Collects metadata and extracts embedded scripts from HTML files.
@@ -40,6 +42,7 @@ class ScanHtml(strelka.Scanner):
                         name='base64_hyperlink',
                         source=self.name,
                     )
+                    extract_file.add_flavors({'external': ['base64']})
 
                     for c in strelka.chunk_string(hyperlink_data):
                         self.upload_to_coordinator(
@@ -49,6 +52,7 @@ class ScanHtml(strelka.Scanner):
                         )
 
                     self.files.append(extract_file)
+                    self.event['total']['extracted'] += 1
 
                 else:
                     if link not in self.event['hyperlinks']:
@@ -138,6 +142,31 @@ class ScanHtml(strelka.Scanner):
                 }
                 if span_entry not in self.event['spans']:
                     self.event['spans'].append(span_entry)
+
+            divs = soup.find_all('div')
+            for div in divs:
+                div_content = div.string
+                if div_content is None:
+                    continue
+
+                maybeBase64 = base64Re.search(div_content)
+
+                if maybeBase64:
+                    extract_file = strelka.File(
+                        name='base64_div',
+                        source=self.name,
+                    )
+                    extract_file.add_flavors({'external': ['base64']})
+
+                    for c in strelka.chunk_string(div_content):
+                        self.upload_to_coordinator(
+                            extract_file.pointer,
+                            c,
+                            expire_at,
+                        )
+
+                    self.files.append(extract_file)
+                    self.event['total']['extracted'] += 1
 
         except TypeError:
             self.flags.append('type_error')
