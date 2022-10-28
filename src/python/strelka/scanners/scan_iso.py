@@ -22,16 +22,25 @@ class ScanIso(strelka.Scanner):
                 iso = pycdlib.PyCdlib()
                 iso.open_fp(iso_io)
 
-                root_entry = iso.get_record(**{'iso_path': '/'})
+                if iso.has_udf():
+                    pathname = 'udf_path'
+                elif iso.has_rock_ridge():
+                    pathname = 'rr_path'
+                elif iso.has_joliet():
+                    pathname = 'joliet_path'
+                else:
+                    pathname = 'iso_path'
+
+                root_entry = iso.get_record(**{pathname: '/'})
 
                 # Iterate through ISO file tree
                 dirs = collections.deque([root_entry])
                 while dirs:
                     dir_record = dirs.popleft()
                     ident_to_here = iso.full_path_from_dirrecord(dir_record,
-                                                                 rockridge='iso_path' == 'rr_path')
+                                                                 rockridge=pathname == 'rr_path')
                     if dir_record.is_dir():
-                        child_lister = iso.list_children(**{'iso_path': ident_to_here})
+                        child_lister = iso.list_children(**{pathname: ident_to_here})
 
                         for child in child_lister:
                             if child is None or child.is_dot() or child.is_dotdot():
@@ -41,14 +50,16 @@ class ScanIso(strelka.Scanner):
                         try:
                             # Collect File Metadata
                             self.event['files'].append({'filename': ident_to_here,
-                                            'size': iso.get_entry(ident_to_here).data_length,
-                                            'date_utc': self._datetime_from_iso_date(iso.get_entry(ident_to_here).date)})
+                                                        'size': iso.get_record(**{pathname: ident_to_here}).data_length,
+                                                        'date_utc': self._datetime_from_iso_date(
+                                                            iso.get_record(**{pathname: ident_to_here}).date)})
 
                             # Extract ISO Files (If Below Option Limit)
                             if self.event['total']['extracted'] < file_limit:
                                 try:
+                                    self.event['total']['files'] += 1
                                     file_io = io.BytesIO()
-                                    iso.get_file_from_iso_fp(file_io, iso_path=ident_to_here)
+                                    iso.get_file_from_iso_fp(file_io, **{pathname: ident_to_here})
                                     extract_file = strelka.File(
                                         name=ident_to_here,
                                         source=self.name,

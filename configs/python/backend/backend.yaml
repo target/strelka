@@ -246,7 +246,7 @@ scanners:
           - 'iso_file'
       priority: 5
       options:
-        limit: 0
+        limit: 50
   'ScanJarManifest':
     - positive:
         flavors:
