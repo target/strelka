@@ -64,7 +64,7 @@ scanners:
       priority: 5
       options:
         max_length: 10
-        scanner_timeout: 150 #In seconds
+        scanner_timeout: 20 #In seconds
         log_pws: True
         password_file: '/strelka/config/passwords.dat'
         brute_force: True
@@ -75,7 +75,7 @@ scanners:
       priority: 5
       options:
         max_length: 10
-        scanner_timeout: 150 #In seconds
+        scanner_timeout: 20 #In seconds
         log_pws: True
         password_file: '/strelka/config/passwords.dat'
         brute_force: True

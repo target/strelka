@@ -24,9 +24,16 @@ class ScanZip(strelka.Scanner):
                 with zipfile.ZipFile(zip_io) as zip_obj:
                     name_list = zip_obj.namelist()
                     self.event['total']['files'] = len(name_list)
+                    self.event['all_paths'] = name_list
+                    self.event['attempted_files'] = []
 
-                    for i, name in enumerate(name_list):
+                    has_flagged_encrypted = False
+
+                    for name in name_list:
+
                         if not name.endswith('/'):
+                            self.event['attempted_files'].append(name)
+
                             if self.event['total']['extracted'] >= file_limit:
                                 break
 
@@ -35,9 +42,9 @@ class ScanZip(strelka.Scanner):
                                 zinfo = zip_obj.getinfo(name)
 
                                 if zinfo.flag_bits & 0x1:
-                                    if i == 0:
+                                    if not has_flagged_encrypted:
                                         self.flags.append('encrypted')
-
+                                        has_flagged_encrypted = True
                                 else:
                                     extract_data = zip_obj.read(name)
 
