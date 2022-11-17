@@ -18,6 +18,11 @@ scanners:
   #        - 'application/msword'
   #        - 'olecf_file'
   #    priority: 5
+#  'ScanBase64':
+#    - positive:
+#        flavors:
+#          - 'base64_file'
+#      priority: 5
   'ScanBase64PE':
     - positive:
         flavors:
