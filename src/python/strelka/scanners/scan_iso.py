@@ -15,12 +15,24 @@ class ScanIso(strelka.Scanner):
 
         self.event['total'] = {'files': 0, 'extracted': 0}
         self.event['files'] = []
+        self.event['hidden_dirs'] = []
+        self.event['meta'] = {}
 
         try:
             # ISO must be opened as a byte stream
             with io.BytesIO(data) as iso_io:
                 iso = pycdlib.PyCdlib()
                 iso.open_fp(iso_io)
+
+                # Attempt to get Meta
+                try:
+                    self.event['meta']['date_created'] = self._datetime_from_volume_date(iso.pvd.volume_creation_date)
+                    self.event['meta']['date_effective'] = self._datetime_from_volume_date(iso.pvd.volume_creation_date)
+                    self.event['meta']['date_expiration'] = self._datetime_from_volume_date(iso.pvd.volume_creation_date)
+                    self.event['meta']['date_modification'] = self._datetime_from_volume_date(iso.pvd.volume_creation_date)
+                    self.event['meta']['volume_identifier'] = iso.pvd.volume_identifier.decode()
+                except:
+                    pass
 
                 if iso.has_udf():
                     pathname = 'udf_path'
@@ -40,6 +52,13 @@ class ScanIso(strelka.Scanner):
                     ident_to_here = iso.full_path_from_dirrecord(dir_record,
                                                                  rockridge=pathname == 'rr_path')
                     if dir_record.is_dir():
+                        # Try to get hidden files, not applicable to all iso types
+                        try:
+                            if dir_record.file_flags == 3:
+                                self.event['hidden_dirs'].append(ident_to_here)
+                        except:
+                            pass
+
                         child_lister = iso.list_children(**{pathname: ident_to_here})
 
                         for child in child_lister:
@@ -81,6 +100,29 @@ class ScanIso(strelka.Scanner):
                 iso.close()
         except Exception:
             self.flags.append('iso_read_error')
+
+    @staticmethod
+    def _datetime_from_volume_date(volume_date):
+        """Helper method for converting VolumeRecordDate to string time."""
+        try:
+            year = volume_date.year
+            month = volume_date.month
+            day = volume_date.dayofmonth
+            hour = volume_date.hour
+            minute = volume_date.minute
+            second = volume_date.second
+
+            dt = datetime.datetime(
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+            )
+            return dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+        except:
+            return
 
     @staticmethod
     def _datetime_from_iso_date(iso_date):
