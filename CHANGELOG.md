@@ -1,6 +1,15 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2022-11-18
+### Changed
+- Updated `ScanISO` to include additional metadata (e.g., Creation Date)
+- Updated `ScanISO` to include bucketing of of hidden directories.
+- Updated `ScanZip` to include known password extraction.
+- Updated `ScanZip` to display file names, sizes, and compression metrics.
+- Updated `ScanPE` to fix issues with security certificate parsing.
+- Updated verisons / dependencies
+
 ## 2022-10-17
 ### Changed
 - Updated verisons / dependencies
