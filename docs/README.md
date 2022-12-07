@@ -53,6 +53,8 @@ Strelka differs from its sibling projects in a few significant ways:
     * [Protobuf](#protobuf)
 * [Scanners](#scanners)
     * [Scanner List](#scanner-list)
+* [Tests](#tests)
+    * [Setup](#tests-setup)
 * [Use Cases](#use-cases)
 * [Contributing](#contributing)
 * [Related Projects](#related-projects)
@@ -593,6 +595,46 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanYara          | Scans files with YARA rules                                                            | "location" -- location of the YARA rules file or directory (defaults to "/etc/yara/")<br>"metadata_identifiers" -- list of YARA rule metadata identifiers (e.g. "Author") that should be logged as metadata (defaults to empty list)                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ScanZip           | Extracts files from zip archives                                                       | "limit" -- maximum number of files to extract (defaults to 1000)<br>"password_file" -- location of passwords file for zip archives (defaults to etc/strelka/passwords.txt)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ScanZlib          | Decompresses gzip files                                                                | N/A                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+
+## Tests
+As Strelka consists of many scanners and dependencies for those scanners, Pytests are particularly valuable for testing the ongoing functionality of Strelka and it's scanners. Tests allow users to write test cases that verify the correct behavior of Strelka scanners to ensure that the scanners remain reliable and accurate. Additionally, using pytests can help streamline the development process, allowing developers to focus on writing new features and improvements for the scanners. The following section details how to setup Pytests.
+
+If using Strelka on Github, this repository supports Github Actions which runs on Pull Requests
+
+### Tests Setup
+Here are the steps for setting up a virtualenv virtual environment, installing requirements from src/python/requirements.txt, and running pytest:
+
+1. Install virtualenv, if it is not already installed:
+
+```
+pip install virtualenv
+```
+2. Create a new virtual environment:
+
+```
+virtualenv <environment-name>
+```
+
+3. Activate the virtual environment:
+
+```
+source <environment-name>/bin/activate
+```
+
+4. Install the requirements from src/python/requirements.txt:
+
+```
+pip install -r src/python/requirements.txt
+```
+
+5. Run pytest to execute the test cases:
+
+```
+pytest
+```
+
+Upon execution, you will be provided the successes and failures for any available scanner test.
+
 
 ## Use Cases
 Below are some select use cases that show the value Strelka can add to a threat detection tech stack. Keep in mind that these results are parsed in real time without post-processing and are typically correlated with other detection/response tools (e.g. Bro, Volatility, etc.). The file metadata shown below was derived from files found in [VirusShare](https://virusshare.com/) torrent no. 323 and from a test file in the [MaliciousMacroBot (MMBot) repository](https://github.com/egaus/MaliciousMacroBot).
