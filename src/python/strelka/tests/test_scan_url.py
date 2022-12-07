@@ -2,7 +2,6 @@ import pytest
 import datetime
 from strelka.scanners.scan_url import ScanUrl
 
-
 scanner = ScanUrl(
     {
         "name": "ScanUrl",
@@ -23,7 +22,14 @@ tests = [
 
 @pytest.mark.parametrize("data,expected", tests)
 def test_scan_simple_url(data, expected):
-    # Extract URLs from payloads
+    """
+    This tests the ScanURL scanner.
+    It attempts to validate the extraction of several URLs against
+    their URLs extracted from the ScanURL scanner.
+
+    Pass: All URLs successfully extracted or tests passed.
+    Failure: Unable to extract URLs successfully or extracts undefined URLs.
+    """
 
     scanner.scan_wrapper(
         data,

@@ -3,7 +3,13 @@ from strelka.scanners.scan_footer import ScanFooter
 
 
 def test_scan_footer():
-    """Attach file footer"""
+    """
+    This tests the ScanFooter scanner.
+    It attempts to validate the extraction of a string from a file's content.
+
+    Pass: File is loaded, scanned, and footer value "mcee" is successfully extracted.
+    Failure: Unable to load, scan, or extract value "mcee"
+    """
 
     scanner = ScanFooter(
         {

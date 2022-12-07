@@ -4,7 +4,13 @@ from strelka.scanners.scan_gif import ScanGif
 
 
 def test_scan_gif(mocker):
-    # Attach trailer index
+    """
+    This tests the ScanGif scanner.
+    It attempts to validate a given GIFs "trailer index" value.
+
+    Pass: Trailer index matches specified value.
+    Failure: Unable to load file or trailer index does not match specified value.
+    """
 
     scanner = ScanGif(
         {
