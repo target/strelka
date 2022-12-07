@@ -1,6 +1,12 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2022-12-07
+### Added
+- Added PyTest scanner testing functionality (@cawalch)
+- Added several scanner tests (`ScanFooter, `ScanGif`, `ScanURL`) (@cawalch)
+- Added documentation for test execution.
+
 ## 2022-11-18
 ### Added
 - Updated `ScanPDF` to include phone number collection (@Derekt2)
