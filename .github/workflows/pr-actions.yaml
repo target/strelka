@@ -40,7 +40,13 @@ jobs:
             libtool \
             pkg-config \
             swig \
-            tesseract-ocr 
+            tesseract-ocr \
+          curl -OL https://github.com/exiftool/exiftool/archive/refs/tags/12.52.tar.gz && \
+          tar -zxvf 12.52.tar.gz && \
+          cd exiftool-12.52/ && \
+          perl Makefile.PL && \
+          make && \
+          make install && \
           python -m pip install --upgrade pip
           pip install validators setuptools --upgrade
           pip install --no-cache-dir -r src/python/requirements.txt
