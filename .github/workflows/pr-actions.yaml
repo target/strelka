@@ -17,30 +17,33 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get -q update
-          sudo apt-get install --no-install-recommends -qq automake \
-            build-essential \
-            libfuzzy-dev \
-            gcc \
-            git \
-            libarchive-dev \
-            libmagic-dev \
-            libssl-dev \
-            libzbar0 \
-            libgl1 \
-            python3-setuptools \
-            libgmp-dev \
-            libpcap-dev \
-            libbz2-dev \
-            libgomp1 \
-            python3-dev \
-            python3-wheel \
-            mupdf-tools \
-            mupdf \
-            libglu1-mesa \
-            libtool \
-            pkg-config \
-            swig \
-            tesseract-ocr \
+          sudo apt-get install --no-install-recommends -qq \
+          automake \
+          build-essential \
+          curl \
+          gcc \
+          git \
+          libglu1-mesa \
+          libtool \
+          make \
+          swig \
+          python3-dev \
+          python3-pip \
+          python3-wheel \
+          pkg-config \
+          antiword \
+          libarchive-dev \
+          libfuzzy-dev \
+          libmagic-dev \
+          libssl-dev \
+          libzbar0 \
+          libgl1 \
+          python3-setuptools \
+          redis-server \
+          tesseract-ocr \
+          unrar \
+          upx \
+          jq && \
           curl -OL https://github.com/exiftool/exiftool/archive/refs/tags/12.52.tar.gz && \
           tar -zxvf 12.52.tar.gz && \
           cd exiftool-12.52/ && \
