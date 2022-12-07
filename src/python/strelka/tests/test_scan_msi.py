@@ -5,11 +5,11 @@ from strelka.scanners.scan_msi import ScanMsi
 
 def test_scan_msi(mocker):
     """
-    This tests the ScanGif scanner.
-    It attempts to validate a given GIFs "trailer index" value.
+    This tests the ScanMsi scanner.
+    It attempts to validate several given MSI metadata values.
 
-    Pass: Trailer index matches specified value.
-    Failure: Unable to load file or trailer index does not match specified value.
+    Pass: Metadata values from file match specified values.
+    Failure: Unable to load file or metadata values do not match specified values.
     """
 
     scanner = ScanMsi(

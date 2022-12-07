@@ -346,6 +346,22 @@ scanners:
       priority: 5
       options:
         tmp_directory: '/dev/shm/'
+        keys:
+          - 'Author'
+          - 'Characters'
+          - 'Company'
+          - 'CreateDate'
+          - 'LastModifiedBy'
+          - 'Lines'
+          - 'ModifyDate'
+          - 'Pages'
+          - 'Paragraphs'
+          - 'RevisionNumber'
+          - 'Software'
+          - 'Template'
+          - 'Title'
+          - 'TotalEditTime'
+          - 'Words'
   'ScanMmbot':
     - positive:
         flavors:

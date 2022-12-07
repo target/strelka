@@ -9,33 +9,15 @@ class ScanMsi(strelka.Scanner):
     """Collects metadata parsed by Exiftool.
 
     Options:
+        keys: exiftool key values to log in the event.
+            Defaults to all.
         tmp_directory: Location where tempfile writes temporary files.
             Defaults to '/tmp/'.
     """
 
     def scan(self, data, file, options, expire_at):
-        # List of keys to collect from the MSI file
-        keys = [
-            "FileType",
-            "FileTypeExtension",
-            "MIMEType",
-            "CodePage",
-            "Title",
-            "Subject",
-            "Author",
-            "Keywords",
-            "Comments",
-            "CreateDate",
-            "Software",
-            "Author",
-            "Keyworkds",
-            "Security",
-            "Template",
-            "LastModifiedBy",
-            "RevisionNumber",
-            "Pages",
-            "Characters"
-        ]
+        # Get a list of keys to collect from the MSI file
+        keys = options.get('keys', [])
 
         # Get the temporary directory to write the MSI file to
         tmp_directory = options.get('tmp_directory', '/tmp/')
