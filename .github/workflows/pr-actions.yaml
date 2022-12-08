@@ -43,13 +43,8 @@ jobs:
           tesseract-ocr \
           unrar \
           upx \
-          jq && \
-          sudo curl -OL https://github.com/exiftool/exiftool/archive/refs/tags/12.52.tar.gz && \
-          sudo tar -zxvf 12.52.tar.gz && \
-          sudo cd exiftool-12.52/ && \
-          sudo perl Makefile.PL && \
-          sudo make && \
-          sudo make install && \
+          jq \
+          exiftool && \
           python -m pip install --upgrade pip
           pip install validators setuptools --upgrade
           pip install --no-cache-dir -r src/python/requirements.txt
@@ -57,4 +52,3 @@ jobs:
         run: |
           pytest
       
-
