@@ -1,10 +1,15 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2022-12-08
+### Added
+- Added `ScanMsi` Scanner.
+- Added `ScanMsi` Scanner test.
+
 ## 2022-12-07
 ### Added
 - Added PyTest scanner testing functionality (@cawalch)
-- Added several scanner tests (`ScanFooter, `ScanGif`, `ScanURL`) (@cawalch)
+- Added several scanner tests (`ScanFooter`, `ScanGif`, `ScanURL`) (@cawalch)
 - Added documentation for test execution.
 
 ## 2022-11-18
