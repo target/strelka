@@ -238,13 +238,13 @@ scanners:
       priority: 5
       options:
         parser: "html5lib"
-  'ScanIni':
-    - positive:
-        filename: '(\.([Cc][Ff][Gg]|[Ii][Nn][Ii])|PROJECT)$'
-        flavors:
-          - 'ini_file'
-          - 'olecf_file'
-      priority: 5
+#  'ScanIni':
+#    - positive:
+#        filename: '(\.([Cc][Ff][Gg]|[Ii][Nn][Ii])|PROJECT)$'
+#        flavors:
+#          - 'ini_file'
+#          - 'olecf_file'
+#      priority: 5
   'ScanIso':
     - positive:
         flavors:
@@ -338,6 +338,30 @@ scanners:
         flavors:
           - 'browser_manifest'
       priority: 5
+  'ScanMsi':
+    - positive:
+        flavors:
+          - 'image/vnd.fpx'
+          - 'application/x-msi'
+      priority: 5
+      options:
+        tmp_directory: '/dev/shm/'
+        keys:
+          - 'Author'
+          - 'Characters'
+          - 'Company'
+          - 'CreateDate'
+          - 'LastModifiedBy'
+          - 'Lines'
+          - 'ModifyDate'
+          - 'Pages'
+          - 'Paragraphs'
+          - 'RevisionNumber'
+          - 'Software'
+          - 'Template'
+          - 'Title'
+          - 'TotalEditTime'
+          - 'Words'
   'ScanMmbot':
     - positive:
         flavors:
