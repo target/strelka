@@ -150,7 +150,7 @@ RUN cd /strelka/ && \
 RUN set -x && \
     echo '[+] Run checks' && \
     cd /strelka/strelka/ && \
-    python3 -m pytest && \
+    python3 -m pytest tests/ && \
     echo '[+] Done'
 
 # Remove python build directory
