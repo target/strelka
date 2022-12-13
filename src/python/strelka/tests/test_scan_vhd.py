@@ -22,17 +22,17 @@ def test_scan_vhd(mocker):
             {
                 "filename": "System Volume Information/WPSettings.dat",
                 "size": "12",
-                "datetime": "2022-12-11 21:12:12",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "lorem.txt",
                 "size": "4015",
-                "datetime": "2022-12-11 21:12:55",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "$RECYCLE.BIN/S-1-5-21-3712961497-200595429-3248382696-1000/desktop.ini",
                 "size": "129",
-                "datetime": "2022-12-11 21:13:31",
+                "datetime": mock.ANY,
             },
         ],
         "hidden_dirs": [
@@ -49,7 +49,7 @@ def test_scan_vhd(mocker):
                     "type": "NTFS",
                     "label": "New Volume",
                     "file_system": "NTFS 3.1",
-                    "created": "2022-12-11 21:12:11.6656282",
+                    "created": mock.ANY,
                 },
             ]
         },
@@ -68,6 +68,7 @@ def test_scan_vhd(mocker):
         datetime.date.today(),
     )
 
+    TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_vhd_event, scanner.event)
 
 
@@ -88,17 +89,17 @@ def test_scan_vhdx(mocker):
             {
                 "filename": "System Volume Information/WPSettings.dat",
                 "size": "12",
-                "datetime": "2022-12-11 21:21:48",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "lorem.txt",
                 "size": "4015",
-                "datetime": "2022-12-11 21:12:55",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "$RECYCLE.BIN/S-1-5-21-3712961497-200595429-3248382696-1000/desktop.ini",
                 "size": "129",
-                "datetime": "2022-12-11 21:22:04",
+                "datetime": mock.ANY,
             },
         ],
         "hidden_dirs": [
@@ -120,7 +121,7 @@ def test_scan_vhdx(mocker):
                     "type": "NTFS",
                     "label": "New Volume",
                     "file_system": "NTFS 3.1",
-                    "created": "2022-12-11 21:21:47.4094722",
+                    "created": mock.ANY,
                 },
             ]
         },
@@ -139,4 +140,5 @@ def test_scan_vhdx(mocker):
         datetime.date.today(),
     )
 
+    TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_vhd_event, scanner.event)
