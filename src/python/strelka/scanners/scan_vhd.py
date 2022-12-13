@@ -1,6 +1,7 @@
 import os
 import pathlib
 import re
+import shutil
 import subprocess
 import tempfile
 
@@ -23,13 +24,20 @@ class ScanVhd(strelka.Scanner):
         self.event["meta"] = {}
 
         try:
-            self.extract_7z(data, tmp_directory, scanner_timeout, expire_at, file_limit)
+            self.extract_7zip(
+                data, tmp_directory, scanner_timeout, expire_at, file_limit
+            )
 
         except Exception:
-            self.flags.append("vhd_7z_extract_error")
+            self.flags.append("vhd_7zip_extract_error")
 
-    def extract_7z(self, data, tmp_dir, scanner_timeout, expire_at, file_limit):
+    def extract_7zip(self, data, tmp_dir, scanner_timeout, expire_at, file_limit):
         """Decompress input file to /tmp with 7zz"""
+
+        # Check if 7zip package is installed
+        if not shutil.which("7zz"):
+            self.flags.append("vhd_7zip_not_installed_error")
+            return
 
         with tempfile.TemporaryDirectory() as tmp_extract:
 
@@ -39,6 +47,7 @@ class ScanVhd(strelka.Scanner):
                 tmp_data.seek(0)
 
                 if tmp_data:
+
                     try:
                         (stdout, stderr) = subprocess.Popen(
                             ["7zz", "x", tmp_data.name, f"-o{tmp_extract}"],
@@ -82,8 +91,8 @@ class ScanVhd(strelka.Scanner):
                                         )
 
                     except Exception:
-                        self.flags.append("vhd_7z_extract_error")
-                        raise
+                        self.flags.append("vhd_7zip_extract_error")
+                        return
 
                     try:
                         (stdout, stderr) = subprocess.Popen(
@@ -92,12 +101,13 @@ class ScanVhd(strelka.Scanner):
                             stderr=subprocess.DEVNULL,
                         ).communicate(timeout=scanner_timeout)
 
-                        self.parse_7z_stdout(stdout.decode("utf-8"), file_limit)
+                        self.parse_7zip_stdout(stdout.decode("utf-8"), file_limit)
 
                     except Exception:
-                        self.flags.append("vhd_7z_output_error")
+                        self.flags.append("vhd_7zip_output_error")
+                        return
 
-    def parse_7z_stdout(self, output_7z, file_limit):
+    def parse_7zip_stdout(self, output_7zip, file_limit):
         """Parse 7zz output, create metadata"""
 
         # Ubuntu
@@ -111,7 +121,7 @@ class ScanVhd(strelka.Scanner):
         mode = None
 
         try:
-            output_lines = output_7z.splitlines()
+            output_lines = output_7zip.splitlines()
 
             # 7-Zip (z) 22.01 (x64) : Copyright (c) 1999-2022 Igor Pavlov : 2022-07-15
             regex_7zip_version = re.compile(r"^7-Zip[^\d]+(\d+\.\d+)")
@@ -183,12 +193,9 @@ class ScanVhd(strelka.Scanner):
                         if match:
                             version = regex_7zip_version.match(output_line).group(1)
 
+                            # Check returned 7zip version for compatibility
                             if float(version) < _7ZIP_MIN_VERSION:
-                                # TODO: Check version in tests
-                                self.flags.append("vhd_7z_version_error")
-                                raise Exception(
-                                    f"7Zip version is not >= {_7ZIP_MIN_VERSION}"
-                                )
+                                return
 
                             continue
 
@@ -242,4 +249,5 @@ class ScanVhd(strelka.Scanner):
                                 )
 
         except Exception:
-            raise
+            self.flags.append("vhd_7zip_parse_error")
+            return
