@@ -169,9 +169,9 @@ class ScanVhd(strelka.Scanner):
                     match = regex_mode_properties.match(output_line)
                     if match:
                         if "path" in partition.keys():
-                            if not self.event.get("meta", {}).get("paritions", []):
-                                self.event["meta"]["paritions"] = []
-                            self.event["meta"]["paritions"].append(partition)
+                            if not self.event.get("meta", {}).get("partitions", []):
+                                self.event["meta"]["partitions"] = []
+                            self.event["meta"]["partitions"].append(partition)
                         partition = {}
                         mode = "properties"
 
@@ -180,9 +180,9 @@ class ScanVhd(strelka.Scanner):
                     if match:
                         # Wrap up final partition
                         if "path" in partition.keys():
-                            if not self.event.get("meta", {}).get("paritions", []):
-                                self.event["meta"]["paritions"] = []
-                            self.event["meta"]["paritions"].append(partition)
+                            if not self.event.get("meta", {}).get("partitions", []):
+                                self.event["meta"]["partitions"] = []
+                            self.event["meta"]["partitions"].append(partition)
                         partition = {}
                         mode = "files"
 

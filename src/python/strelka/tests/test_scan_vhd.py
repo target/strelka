@@ -42,7 +42,7 @@ def test_scan_vhd(mocker):
         ],
         "meta": {
             "7zip_version": "21.07",
-            "paritions": [
+            "partitions": [
                 {"path": mock.ANY, "type": "GPT"},
                 {"path": "0.Basic data partition.img", "file_system": "Windows BDP"},
                 {
@@ -110,7 +110,7 @@ def test_scan_vhdx(mocker):
         ],
         "meta": {
             "7zip_version": "21.07",
-            "paritions": [
+            "partitions": [
                 {
                     "path": mock.ANY,
                     "type": "VHDX",
