@@ -252,6 +252,15 @@ scanners:
       priority: 5
       options:
         limit: 50
+  'ScanVhd':
+    - positive:
+        flavors:
+          - 'application/x-vhd'
+          - 'vhd_file'
+          - 'vhdx_file'
+      priority: 5
+      options:
+        limit: 100
   'ScanJarManifest':
     - positive:
         flavors:

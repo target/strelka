@@ -129,6 +129,24 @@ rule tar_file {
         $a at 257
 }
 
+rule vhd_file {
+    meta:
+        type = "archive"
+    strings:
+        $a = { 63 6F 6E 65 63 74 69 78 }
+    condition:
+        $a at 0 or $a at filesize-512
+}
+
+rule vhdx_file {
+    meta:
+        type = "archive"
+    strings:
+        $a = { 76 68 64 78 66 69 6C 65 }
+    condition:
+        $a at 0
+}
+
 rule xar_file {
     meta:
         type = "archive"
