@@ -192,6 +192,7 @@ class ScanVhd(strelka.Scanner):
                         match = regex_7zip_version.match(output_line)
                         if match:
                             version = regex_7zip_version.match(output_line).group(1)
+                            self.event["meta"]["7zip_version"] = version
 
                             # Check returned 7zip version for compatibility
                             if float(version) < _7ZIP_MIN_VERSION:

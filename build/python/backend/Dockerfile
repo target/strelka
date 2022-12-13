@@ -25,7 +25,7 @@ RUN apt-get -qq update && \
     python3-wheel \
     pkg-config \
 # Install runtime packages
-    7zip \
+    7zip=22.01+dfsg-2 \
     antiword \
     libarchive-dev \
     libfuzzy-dev \
