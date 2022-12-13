@@ -4,7 +4,7 @@ on: [pull_request]
 jobs:
   backend-strelka-test:
 
-    runs-on: ubuntu-22.10
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v3
@@ -31,7 +31,7 @@ jobs:
           python3-pip \
           python3-wheel \
           pkg-config \
-          7zip=22.01+dfsg-2 \
+          7zip=21.07+dfsg-4 \
           antiword \
           libarchive-dev \
           libfuzzy-dev \
