@@ -31,6 +31,7 @@ jobs:
           python3-pip \
           python3-wheel \
           pkg-config \
+          7zip \
           antiword \
           libarchive-dev \
           libfuzzy-dev \
