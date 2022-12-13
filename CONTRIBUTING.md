@@ -22,6 +22,28 @@ Development builds can tested using the default docker-compose.yaml file (`build
 ## Testing
 We rely on contributors to test any changes before they are submitted as pull requests. Any components added or changed should be tested and tests documented in the pull request. To assist in testing, the project maintainers may ask for file samples.
 
+### PyTest
+
+New scanners should be accompanied by a [pytest](https://docs.pytest.org/) based test in `src/python/strelka/tests`, along with **non-malicous** and reasonably sized sample files in `src/python/strelka/tests/fixtures`.
+
+pytest is run when the docker container is built to assure scanners will work at runtime.
+
+Run pytest manually:
+
+```bash
+cd src/python/strelka/
+python -m pytest tests/
+============================= test session starts ==============================
+platform linux -- Python 3.10.7, pytest-7.2.0, pluggy-1.0.0
+rootdir: /strelka/src/python
+plugins: mock-3.10.0
+collected 9 items
+
+...
+
+============================== 9 passed in 0.48s ===============================
+```
+
 ## Style Guides
 ### Python
 Python code should attempt to adhere as closely to [PEP8](https://www.python.org/dev/peps/pep-0008/) as possible. We may ask authors to refactor code for better PEP8 compliance, but we do not enforce 100% compliance.

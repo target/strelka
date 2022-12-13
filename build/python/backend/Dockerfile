@@ -25,6 +25,7 @@ RUN apt-get -qq update && \
     python3-wheel \
     pkg-config \
 # Install runtime packages
+    7zip \
     antiword \
     libarchive-dev \
     libfuzzy-dev \
@@ -139,11 +140,21 @@ RUN cd /strelka/ && \
     python3-wheel && \
     apt-get purge -qq python3-setuptools  && \
     apt-get clean -qq && \
-    rm -rf /var/lib/apt/lists/* /strelka/ /tmp/yara* && \
+    rm -rf /var/lib/apt/lists/* /tmp/yara* && \
 # Assign permissions to Strelka scan result logging directory
     mkdir /var/log/strelka/ && \
     chgrp -R 0 /var/log/strelka/ && \
     chmod -R g=u /var/log/strelka/
 
+# Run build checks
+RUN set -x && \
+    echo '[+] Run checks' && \
+    cd /strelka/strelka/ && \
+    python3 -m pytest tests/ && \
+    echo '[+] Done'
+
+# Remove python build directory
+RUN cd /strelka/ && \
+    rm -rf /strelka/
 
 USER 1001
