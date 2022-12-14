@@ -239,12 +239,12 @@ class ScanVhd(strelka.Scanner):
             return
 
     def upload(self, name, expire_at):
+        """Send extracted file to coordinator"""
         with open(name, "rb") as extracted_file:
             extract_file = strelka.File(
                 source=self.name,
             )
 
-            # Send extracted file to coordinator
             for c in strelka.chunk_string(extracted_file.read()):
                 self.upload_to_coordinator(
                     extract_file.pointer,
