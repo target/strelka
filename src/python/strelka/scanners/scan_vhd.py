@@ -32,21 +32,24 @@ class ScanVhd(strelka.Scanner):
             self.flags.append("vhd_7zip_extract_error")
 
     def extract_7zip(self, data, tmp_dir, scanner_timeout, expire_at, file_limit):
-        """Decompress input file to /tmp with 7zz"""
+        """Decompress input file to /tmp with 7zz, send files to coordinator"""
 
         # Check if 7zip package is installed
         if not shutil.which("7zz"):
             self.flags.append("vhd_7zip_not_installed_error")
             return
 
-        with tempfile.TemporaryDirectory() as tmp_extract:
+        with tempfile.NamedTemporaryFile(dir=tmp_dir, mode="wb") as tmp_data:
+            tmp_data.write(data)
+            tmp_data.flush()
+            tmp_data.seek(0)
 
-            with tempfile.NamedTemporaryFile(dir=tmp_dir, mode="wb") as tmp_data:
-                tmp_data.write(data)
-                tmp_data.flush()
-                tmp_data.seek(0)
+            if not tmp_data:
+                self.flags.append("vhd_7zip_tmp_error")
+                return
 
-                if tmp_data:
+            try:
+                with tempfile.TemporaryDirectory() as tmp_extract:
 
                     try:
                         (stdout, stderr) = subprocess.Popen(
@@ -54,76 +57,62 @@ class ScanVhd(strelka.Scanner):
                             stdout=subprocess.PIPE,
                             stderr=subprocess.DEVNULL,
                         ).communicate(timeout=scanner_timeout)
-
-                        def get_all_items(root, exclude=None):
-                            """Iterates through filesystem paths"""
-                            if exclude is None:
-                                exclude = []
-                            for item in root.iterdir():
-                                if item.name in exclude:
-                                    continue
-                                yield item
-                                if item.is_dir():
-                                    yield from get_all_items(item)
-
-                        # Iterate over extracted files, except excluded paths
-                        for name in get_all_items(
-                            pathlib.Path(tmp_extract), self.EXCLUDED_ROOT_DIRS
-                        ):
-                            if name.is_file():
-                                if self.event["total"]["extracted"] >= file_limit:
-                                    break
-                                self.event["total"]["extracted"] += 1
-
-                                with open(name, "rb") as extracted_file:
-                                    extract_file = strelka.File(
-                                        source=self.name,
-                                    )
-
-                                    # Send extracted file to coordinator
-                                    for c in strelka.chunk_string(
-                                        extracted_file.read()
-                                    ):
-                                        self.upload_to_coordinator(
-                                            extract_file.pointer,
-                                            c,
-                                            expire_at,
-                                        )
-
                     except Exception:
-                        self.flags.append("vhd_7zip_extract_error")
-                        return
+                        self.flags.append("vhd_7zip_extract_process_error")
 
-                    try:
-                        (stdout, stderr) = subprocess.Popen(
-                            ["7zz", "l", tmp_data.name],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.DEVNULL,
-                        ).communicate(timeout=scanner_timeout)
+                    def get_all_items(root, exclude=None):
+                        """Iterates through filesystem paths"""
+                        if exclude is None:
+                            exclude = []
+                        for item in root.iterdir():
+                            if item.name in exclude:
+                                continue
+                            yield item
+                            if item.is_dir():
+                                yield from get_all_items(item)
 
-                        self.parse_7zip_stdout(stdout.decode("utf-8"), file_limit)
+                    # Iterate over extracted files, except excluded paths
+                    for name in get_all_items(
+                        pathlib.Path(tmp_extract), self.EXCLUDED_ROOT_DIRS
+                    ):
+                        if not name.is_file():
+                            continue
 
-                    except Exception:
-                        self.flags.append("vhd_7zip_output_error")
-                        return
+                        if self.event["total"]["extracted"] >= file_limit:
+                            self.flags.append("vhd_file_limit_error")
+                            break
+
+                        try:
+                            self.upload(name, expire_at)
+                            self.event["total"]["extracted"] += 1
+                        except Exception:
+                            self.flags.append("vhd_file_upload_error")
+
+            except Exception:
+                self.flags.append("vhd_7zip_extract_error")
+
+            try:
+                (stdout, stderr) = subprocess.Popen(
+                    ["7zz", "l", tmp_data.name],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                ).communicate(timeout=scanner_timeout)
+
+                self.parse_7zip_stdout(stdout.decode("utf-8"), file_limit)
+
+            except Exception:
+                self.flags.append("vhd_7zip_output_error")
+                return
 
     def parse_7zip_stdout(self, output_7zip, file_limit):
         """Parse 7zz output, create metadata"""
-
-        # Ubuntu
-        # jammy (22.04LTS) (utils): 7-Zip file archiver with a high compression ratio [universe]
-        # 21.07+dfsg-4: amd64 arm64 armhf ppc64el s390x
-        # kinetic (utils): 7-Zip file archiver with a high compression ratio [universe]
-        # 22.01+dfsg-2: amd64 arm64 armhf ppc64el s390x
-
-        _7ZIP_MIN_VERSION = 21.07
 
         mode = None
 
         try:
             output_lines = output_7zip.splitlines()
 
-            # 7-Zip (z) 22.01 (x64) : Copyright (c) 1999-2022 Igor Pavlov : 2022-07-15
+            # 7-Zip (z) 21.07 (x64) : Copyright (c) 1999-2021 Igor Pavlov : 2021-12-26
             regex_7zip_version = re.compile(r"^7-Zip[^\d]+(\d+\.\d+)")
 
             # --/----
@@ -194,10 +183,6 @@ class ScanVhd(strelka.Scanner):
                             version = regex_7zip_version.match(output_line).group(1)
                             self.event["meta"]["7zip_version"] = version
 
-                            # Check returned 7zip version for compatibility
-                            if float(version) < _7ZIP_MIN_VERSION:
-                                return
-
                             continue
 
                     elif mode == "properties":
@@ -252,3 +237,17 @@ class ScanVhd(strelka.Scanner):
         except Exception:
             self.flags.append("vhd_7zip_parse_error")
             return
+
+    def upload(self, name, expire_at):
+        with open(name, "rb") as extracted_file:
+            extract_file = strelka.File(
+                source=self.name,
+            )
+
+            # Send extracted file to coordinator
+            for c in strelka.chunk_string(extracted_file.read()):
+                self.upload_to_coordinator(
+                    extract_file.pointer,
+                    c,
+                    expire_at,
+                )
