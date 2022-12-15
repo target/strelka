@@ -1,4 +1,4 @@
-FROM ubuntu:22.10
+FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
@@ -25,7 +25,7 @@ RUN apt-get -qq update && \
     python3-wheel \
     pkg-config \
 # Install runtime packages
-    7zip \
+    7zip=21.07+dfsg-4 \
     antiword \
     libarchive-dev \
     libfuzzy-dev \

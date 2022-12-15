@@ -5,7 +5,7 @@ on:
 jobs:
   strelka:
     name: "build strelka onshot daily"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@master
       - name: Builds Strelka Oneshot

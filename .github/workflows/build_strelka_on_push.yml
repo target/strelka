@@ -4,7 +4,7 @@ on:
 jobs:
   strelka:
     name: "Strelka Push Build"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@master
       - name: Builds Strelka
