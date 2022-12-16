@@ -49,7 +49,5 @@ def test_scan_docx(mocker):
         datetime.date.today(),
     )
 
-    print(scanner.event)
-
     TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_docx_event, scanner.event)
