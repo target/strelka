@@ -49,6 +49,28 @@ jobs:
           python -m pip install --upgrade pip
           pip install validators setuptools --upgrade
           pip install --no-cache-dir -r src/python/requirements.txt
+      - name: Install JTR
+        run: |
+          sudo apt-get install --no-install-recommends -qq \
+          ca-certificates \
+          libssl-dev \
+          zlib1g-dev \
+          yasm \
+          libgmp-dev \
+          libpcap-dev \
+          libbz2-dev \
+          libgomp1
+      - name: Install JTR
+        run: |
+          mkdir jtr && cd jtr && git init && git remote add origin https://github.com/openwall/john.git && git fetch --depth 1 origin b5c10480f56ff1b5d76c6cbdaf9c817582ee2228 && git reset --hard FETCH_HEAD \
+          && rm -rf /jtr/.git \
+          && cd /jtr/src \
+          && ./configure \
+          && make -s clean \
+          && make -sj4 \
+          && make install \
+          && cp -Tr /jtr/run/ /jtr && rm -rf /jtr/run \
+          && chmod -R 777 /jtr
       - name: Test with pytest
         run: |
           pytest
