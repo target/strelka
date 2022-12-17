@@ -9,9 +9,7 @@ cryptography==3.4.7
 docker==5.0.0
 eml-parser>=1.17
 esprima==4.0.1
-fitz==0.0.1.dev2
 formulas==1.2.2
-frontend==0.0.3
 git+https://github.com/jshlbrd/python-entropy.git   # v0.11 as of this freeze (package installed as 'entropy')
 grpcio-tools==1.42.0
 grpcio==1.42.0
