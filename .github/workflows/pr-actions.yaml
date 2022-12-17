@@ -70,7 +70,7 @@ jobs:
           libgomp1
       - name: Install JTR
         run: |
-          mkdir jtr && cd jtr && git init && git remote add origin https://github.com/openwall/john.git && git fetch --depth 1 origin b5c10480f56ff1b5d76c6cbdaf9c817582ee2228 && git reset --hard FETCH_HEAD \
+          mkdir /jtr && cd /jtr && git init && git remote add origin https://github.com/openwall/john.git && git fetch --depth 1 origin b5c10480f56ff1b5d76c6cbdaf9c817582ee2228 && git reset --hard FETCH_HEAD \
           && rm -rf /jtr/.git \
           && cd /jtr/src \
           && ./configure \
