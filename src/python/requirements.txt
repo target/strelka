@@ -37,7 +37,7 @@ rarfile==4.0
 redis==3.5.3
 requests==2.25.1
 rpmfile==1.0.8
-signify==0.3.0
+signify==0.4.0
 speakeasy-emulator==1.5.2
 ssdeep==3.4
 tldextract==3.1.0
