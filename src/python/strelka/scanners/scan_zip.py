@@ -68,17 +68,17 @@ class ScanZip(strelka.Scanner):
                                 zinfo = zip_obj.getinfo(name.filename)
 
                                 if zinfo.flag_bits & 0x1:
-                                    if i == 0:
+                                    if 'encrypted' not in self.flags:
                                         self.flags.append('encrypted')
 
-                                        if passwords:
-                                            for pw in passwords:
-                                                try:
-                                                    extract_data = zip_obj.read(name.filename, pw)
-                                                    self.event['password'] = pw
+                                    if passwords:
+                                        for pw in passwords:
+                                            try:
+                                                extract_data = zip_obj.read(name.filename, pw)
+                                                self.event['password'] = pw.decode("utf-8")
 
-                                                except (RuntimeError, zipfile.BadZipFile, zlib.error):
-                                                    pass
+                                            except (RuntimeError, zipfile.BadZipFile, zlib.error):
+                                                pass
                                 else:
                                     extract_data = zip_obj.read(name.filename)
 
