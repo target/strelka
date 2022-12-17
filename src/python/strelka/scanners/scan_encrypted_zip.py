@@ -131,11 +131,14 @@ class ScanEncryptedZip(strelka.Scanner):
                         max_length=max_length,
                         password_file=password_file,
                     )
+
                     if not extracted_pw:
                         self.flags.append("Could not extract password")
                         return
+
                     if log_extracted_pws:
                         self.event["cracked_password"] = extracted_pw
+
                     for i, file_item in enumerate(file_list):
                         if not file_item.filename.endswith("/"):
                             if self.event["total"]["extracted"] >= file_limit:
