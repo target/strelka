@@ -40,7 +40,9 @@ class ScanZip(strelka.Scanner):
             try:
                 with zipfile.ZipFile(zip_io) as zip_obj:
                     filelist = zip_obj.filelist
-                    self.event['total']['files'] = len(filelist)
+                    for file in filelist:
+                        if not file.is_dir():
+                            self.event['total']['files'] += 1
 
                     # For each file in zip, gather metadata metrics and pass back to Strelka for recursive extraction.
                     for i, name in enumerate(filelist):
