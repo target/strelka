@@ -49,7 +49,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install validators setuptools --upgrade
           pip install --no-cache-dir -r src/python/requirements.txt
-      - name: Install JTR
+      - name: Install JTR dependencies
         run: |
           sudo apt-get install --no-install-recommends -qq \
           ca-certificates \
