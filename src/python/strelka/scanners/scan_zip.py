@@ -80,9 +80,17 @@ class ScanZip(strelka.Scanner):
                                             except (RuntimeError, zipfile.BadZipFile, zlib.error):
                                                 pass
                                 else:
-                                    extract_data = zip_obj.read(name.filename)
+                                    try:
+                                        extract_data = zip_obj.read(name.filename)
+                                    except RuntimeError:
+                                        self.flags.append('runtime_error')
+                                    except zipfile.BadZipFile:
+                                        self.flags.append('bad_zip')
+                                    except zlib.error:
+                                        self.flags.append('zlib_error')
 
-                                if extract_data:
+                                # Suppress sending to coordinator in favor of ScanEncryptedZip
+                                if extract_data and 'encrypted' not in self.flags:
                                     extract_file = strelka.File(
                                         name=name.filename,
                                         source=self.name,
