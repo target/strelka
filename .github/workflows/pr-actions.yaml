@@ -80,8 +80,7 @@ jobs:
           && make -s clean \
           && make -sj4 \
           && sudo make install \
-          && cp -Tr /jtr/run/ /jtr && rm -rf /jtr/run \
-          && chmod -R 777 /jtr
+          && cp -Tr /jtr/run/ /jtr && rm -rf /jtr/run
       - name: Test with pytest
         run: |
           pytest
