@@ -54,6 +54,8 @@ jobs:
           curl -OL https://github.com/exiftool/exiftool/archive/refs/tags/12.52.tar.gz && \
           tar -zxvf 12.52.tar.gz && \
           cd exiftool-12.52/ && \
+          conf make_install_make_command 'sudo make' && \
+          conf commit && \
           perl Makefile.PL && \
           make && \
           make install
