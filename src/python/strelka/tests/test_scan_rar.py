@@ -16,7 +16,7 @@ def test_scan_rar(mocker):
     test_scan_rar_event = {
         "elapsed": mock.ANY,
         "flags": [],
-        "total": {"files": 4, "extracted": 3},
+        "total": {"files": 3, "extracted": 3},
         "host_os": "RAR_OS_WIN32",
     }
 
