@@ -48,7 +48,9 @@ class ScanRar(strelka.Scanner):
             try:
                 with rarfile.RarFile(rar_io) as rar_obj:
                     rf_info_list = rar_obj.infolist()
-                    self.event['total']['files'] = len(rf_info_list)
+                    for info in rf_info_list:
+                        if info.is_file():
+                            self.event['total']['files'] += 1
 
                     password = ''
                     for i, name in enumerate(rf_info_list):
