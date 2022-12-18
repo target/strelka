@@ -83,8 +83,11 @@ jobs:
           && cp -Tr /jtr/run/ /jtr && rm -rf /jtr/run
       - name: Inject password for JTR test
         run: |
-          sudo mkdir /etc/strelka/ \
-          && sudo echo password > /etc/strelka/passwords.dat
+          sudo mkdir -p /etc/strelka/ \
+          && ls -la /etc
+      - name: Inject password for JTR test
+        run: |
+          sudo echo password > /etc/strelka/passwords.dat
       - name: Check passwords for JTR test
         run: |
           sudo cat /etc/strelka/passwords.dat
