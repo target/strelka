@@ -85,9 +85,6 @@ jobs:
         run: |
           sudo mkdir -p /etc/strelka/ \
           && sudo echo password | sudo tee /etc/strelka/passwords.dat >/dev/null
-      - name: Check passwords for JTR test
-        run: |
-          sudo cat /etc/strelka/passwords.dat
       - name: Test with pytest
         run: |
           pytest
