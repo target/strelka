@@ -84,7 +84,7 @@ jobs:
       - name: Inject password for JTR test
         run: |
           sudo mkdir -p /etc/strelka/ \
-          && ls -la /etc
+          && ls -la /etc/stelka
       - name: Inject password for JTR test
         run: |
           sudo echo password > /etc/strelka/passwords.dat
