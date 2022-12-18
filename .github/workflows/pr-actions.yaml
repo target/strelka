@@ -81,7 +81,14 @@ jobs:
           && make -sj4 \
           && sudo make install \
           && cp -Tr /jtr/run/ /jtr && rm -rf /jtr/run
+      - name: Inject passwords for JTR test
+        run: |
+          mkdir -p /etc/strelka/ \
+          && echo password > /etc/strelka/passwords.dat
       - name: Test with pytest
         run: |
           pytest
-      
+      - name: Remove passwords for JTR test
+        run: |
+          rm -f /etc/strelka/passwords.dat
+
