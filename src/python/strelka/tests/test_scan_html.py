@@ -1,20 +1,17 @@
-import datetime
 from pathlib import Path
 from unittest import TestCase, mock
 
-from strelka.scanners.scan_html import ScanHtml
+from strelka.scanners.scan_html import ScanHtml as ScanUnderTest
+from strelka.tests import run_test_scan
 
 
 def test_scan_html(mocker):
     """
-    This tests the ScanHtml scanner.
-    It attempts to validate several given HTML metadata values.
-
-    Pass: Sample event matches output of ScanHtml.
+    Pass: Sample event matches output of scanner.
     Failure: Unable to load file or sample event fails to match.
     """
 
-    test_scan_html_event = {
+    test_scan_event = {
         "elapsed": mock.ANY,
         "flags": [],
         "total": {
@@ -51,18 +48,11 @@ def test_scan_html(mocker):
         ],
     }
 
-    scanner = ScanHtml(
-        {"name": "ScanHtml", "key": "scan_html", "limits": {"scanner": 10}},
-        "test_coordinate",
-    )
-
-    mocker.patch.object(ScanHtml, "upload_to_coordinator", return_value=None)
-    scanner.scan_wrapper(
-        Path(Path(__file__).parent / "fixtures/test.html").read_bytes(),
-        {"uid": "12345", "name": "somename"},
-        {"scanner_timeout": 5},
-        datetime.date.today(),
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test.html",
     )
 
     TestCase.maxDiff = None
-    TestCase().assertDictEqual(test_scan_html_event, scanner.event)
+    TestCase().assertDictEqual(test_scan_event, scanner_event)

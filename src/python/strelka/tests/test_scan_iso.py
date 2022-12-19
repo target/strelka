@@ -2,19 +2,17 @@ import datetime
 from pathlib import Path
 from unittest import TestCase, mock
 
-from strelka.scanners.scan_iso import ScanIso
+from strelka.scanners.scan_iso import ScanIso as ScanUnderTest
+from strelka.tests import run_test_scan
 
 
 def test_scan_iso(mocker):
     """
-    This tests the ScanIso scanner.
-    It attempts to validate several given ISO metadata values.
-
-    Pass: Sample event matches output of ScanIso.
+    Pass: Sample event matches output of scanner.
     Failure: Unable to load file or sample event fails to match.
     """
 
-    test_scan_iso_event = {
+    test_scan_event = {
         "elapsed": mock.ANY,
         "flags": [],
         "total": {"files": 1, "extracted": 1},
@@ -31,17 +29,10 @@ def test_scan_iso(mocker):
         },
     }
 
-    scanner = ScanIso(
-        {"name": "ScanIso", "key": "scan_iso", "limits": {"scanner": 10}},
-        "test_coordinate",
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test.iso",
     )
 
-    mocker.patch.object(ScanIso, "upload_to_coordinator", return_value=None)
-    scanner.scan_wrapper(
-        Path(Path(__file__).parent / "fixtures/test.iso").read_bytes(),
-        {"uid": "12345", "name": "somename"},
-        {"scanner_timeout": 5},
-        datetime.date.today(),
-    )
-
-    TestCase().assertDictEqual(test_scan_iso_event, scanner.event)
+    TestCase().assertDictEqual(test_scan_event, scanner_event)

@@ -1,20 +1,17 @@
-import datetime
 from pathlib import Path
 from unittest import TestCase, mock
 
-from strelka.scanners.scan_exiftool import ScanExiftool
+from strelka.scanners.scan_exiftool import ScanExiftool as ScanUnderTest
+from strelka.tests import run_test_scan
 
 
 def test_scan_exiftool_doc(mocker):
     """
-    This tests the ScanExiftool scanner with a DOC file.
-    It attempts to validate several given DOC metadata values.
-
-    Pass: Sample event matches output of ScanExiftool.
+    Pass: Sample event matches output of scanner.
     Failure: Unable to load file or sample event fails to match.
     """
 
-    test_scan_exiftool_doc_event = {
+    test_scan_event = {
         "elapsed": mock.ANY,
         "flags": [],
         "keys": [
@@ -69,33 +66,23 @@ def test_scan_exiftool_doc(mocker):
         ],
     }
 
-    scanner = ScanExiftool(
-        {"name": "ScanExiftool", "key": "scan_exiftool", "limits": {"scanner": 10}},
-        "test_coordinate",
-    )
-
-    mocker.patch.object(ScanExiftool, "upload_to_coordinator", return_value=None)
-    scanner.scan_wrapper(
-        Path(Path(__file__).parent / "fixtures/test.doc").read_bytes(),
-        {"uid": "12345", "name": "somename"},
-        {"scanner_timeout": 5},
-        datetime.date.today(),
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test.doc",
     )
 
     TestCase.maxDiff = None
-    TestCase().assertDictEqual(test_scan_exiftool_doc_event, scanner.event)
+    TestCase().assertDictEqual(test_scan_event, scanner_event)
 
 
 def test_scan_exiftool_jpg(mocker):
     """
-    This tests the ScanExiftool scanner with a JPG file.
-    It attempts to validate several given DOC metadata values.
-
-    Pass: Sample event matches output of ScanExiftool.
+    Pass: Sample event matches output of scanner.
     Failure: Unable to load file or sample event fails to match.
     """
 
-    test_scan_exiftool_jpg_event = {
+    test_scan_event = {
         "elapsed": mock.ANY,
         "flags": [],
         "keys": [
@@ -204,18 +191,11 @@ def test_scan_exiftool_jpg(mocker):
         ],
     }
 
-    scanner = ScanExiftool(
-        {"name": "ScanExiftool", "key": "scan_exiftool", "limits": {"scanner": 10}},
-        "test_coordinate",
-    )
-
-    mocker.patch.object(ScanExiftool, "upload_to_coordinator", return_value=None)
-    scanner.scan_wrapper(
-        Path(Path(__file__).parent / "fixtures/test.jpg").read_bytes(),
-        {"uid": "12345", "name": "somename"},
-        {"scanner_timeout": 5},
-        datetime.date.today(),
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test.jpg",
     )
 
     TestCase.maxDiff = None
-    TestCase().assertDictEqual(test_scan_exiftool_jpg_event, scanner.event)
+    TestCase().assertDictEqual(test_scan_event, scanner_event)

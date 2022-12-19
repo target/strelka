@@ -1,20 +1,17 @@
-import datetime
 from pathlib import Path
 from unittest import TestCase, mock
 
-from strelka.scanners.scan_docx import ScanDocx
+from strelka.scanners.scan_docx import ScanDocx as ScanUnderTest
+from strelka.tests import run_test_scan
 
 
 def test_scan_docx(mocker):
     """
-    This tests the ScanDocx scanner.
-    It attempts to validate several given DOCX metadata values.
-
-    Pass: Sample event matches output of ScanDocx.
+    Pass: Sample event matches output of scanner.
     Failure: Unable to load file or sample event fails to match.
     """
 
-    test_scan_docx_event = {
+    test_scan_event = {
         "elapsed": mock.ANY,
         "flags": [],
         "author": "Ryan.OHoro",
@@ -36,18 +33,11 @@ def test_scan_docx(mocker):
         "image_count": 1,
     }
 
-    scanner = ScanDocx(
-        {"name": "ScanDocx", "key": "scan_docx", "limits": {"scanner": 10}},
-        "test_coordinate",
-    )
-
-    mocker.patch.object(ScanDocx, "upload_to_coordinator", return_value=None)
-    scanner.scan_wrapper(
-        Path(Path(__file__).parent / "fixtures/test.docx").read_bytes(),
-        {"uid": "12345", "name": "somename"},
-        {"scanner_timeout": 5},
-        datetime.date.today(),
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test.docx",
     )
 
     TestCase.maxDiff = None
-    TestCase().assertDictEqual(test_scan_docx_event, scanner.event)
+    TestCase().assertDictEqual(test_scan_event, scanner_event)

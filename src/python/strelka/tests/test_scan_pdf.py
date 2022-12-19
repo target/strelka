@@ -1,20 +1,17 @@
-import datetime
 from pathlib import Path
 from unittest import TestCase, mock
 
-from strelka.scanners.scan_pdf import ScanPdf
+from strelka.scanners.scan_pdf import ScanPdf as ScanUnderTest
+from strelka.tests import run_test_scan
 
 
 def test_scan_pdf(mocker):
     """
-    This tests the ScanPdf scanner.
-    It attempts to validate several given PDF metadata values.
-
-    Pass: Sample event matches output of ScanPdf.
+    Pass: Sample event matches output of scanner.
     Failure: Unable to load file or sample event fails to match.
     """
 
-    test_scan_pdf_event = {
+    test_scan_event = {
         "elapsed": mock.ANY,
         "flags": [],
         "images": 1,
@@ -43,18 +40,11 @@ def test_scan_pdf(mocker):
         "objects": {},
     }
 
-    scanner = ScanPdf(
-        {"name": "ScanPdf", "key": "scan_pdf", "limits": {"scanner": 10}},
-        "test_coordinate",
-    )
-
-    mocker.patch.object(ScanPdf, "upload_to_coordinator", return_value=None)
-    scanner.scan_wrapper(
-        Path(Path(__file__).parent / "fixtures/test.pdf").read_bytes(),
-        {"uid": "12345", "name": "somename"},
-        {"scanner_timeout": 5},
-        datetime.date.today(),
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test.pdf",
     )
 
     TestCase.maxDiff = None
-    TestCase().assertDictEqual(test_scan_pdf_event, scanner.event)
+    TestCase().assertDictEqual(test_scan_event, scanner_event)

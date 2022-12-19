@@ -1,20 +1,17 @@
-import datetime
 from pathlib import Path
 from unittest import TestCase, mock
 
-from strelka.scanners.scan_pe import ScanPe
+from strelka.scanners.scan_pe import ScanPe as ScanUnderTest
+from strelka.tests import run_test_scan
 
 
 def test_scan_pe(mocker):
     """
-    This tests the ScanPe scanner.
-    It attempts to validate several given PE metadata values.
-
-    Pass: Sample event matches output of ScanPe.
+    Pass: Sample event matches output of scanner.
     Failure: Unable to load file or sample event fails to match.
     """
 
-    test_scan_pe_event = {
+    test_scan_event = {
         "elapsed": mock.ANY,
         "flags": ["no_certs_found"],
         "total": {"libraries": 0, "resources": 2, "sections": 2, "symbols": 0},
@@ -135,18 +132,11 @@ def test_scan_pe(mocker):
         "symbols": {"exported": [], "imported": [], "libraries": [], "table": []},
     }
 
-    scanner = ScanPe(
-        {"name": "ScanPe", "key": "scan_pe", "limits": {"scanner": 10}},
-        "test_coordinate",
-    )
-
-    mocker.patch.object(ScanPe, "upload_to_coordinator", return_value=None)
-    scanner.scan_wrapper(
-        Path(Path(__file__).parent / "fixtures/test.exe").read_bytes(),
-        {"uid": "12345", "name": "somename"},
-        {"scanner_timeout": 5},
-        datetime.date.today(),
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test.exe",
     )
 
     TestCase.maxDiff = None
-    TestCase().assertDictEqual(test_scan_pe_event, scanner.event)
+    TestCase().assertDictEqual(test_scan_event, scanner_event)
