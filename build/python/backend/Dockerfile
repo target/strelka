@@ -119,7 +119,6 @@ RUN pip3 install --no-cache-dir -r /strelka/requirements.txt && \
 COPY ./src/python/ /strelka/
 COPY ./build/python/backend/setup.py /strelka/setup.py
 COPY ./configs/python/backend/ /etc/strelka/
-COPY ./configs/python/backend/rules.yara /etc/yara/test_rules.yara
 
 # Install Strelka
 RUN cd /strelka/ && \
@@ -164,7 +163,5 @@ RUN cd /strelka/ && \
 
 # Remove config directory (will bind mount once built)
 RUN rm -rf /etc/strelka/
-# Remove test yara
-RUN rm -f /etc/yara/test_rules.yara
 
 USER 1001
