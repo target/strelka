@@ -83,9 +83,15 @@ def crack_word(
                         stderr=subprocess.DEVNULL,
                     ).communicate(timeout=scanner_timeout+5)
 
-                    if stdout.split(b"\n")[2]:
-                        self.flags.append("cracked_by_incremental")
-                        return stdout.split(b"\n")[2].split()[0]
+                    if b"oldoffice" in stdout.split(b"\n")[0]:
+                        if stdout.split(b"\n")[2]:
+                            self.flags.append("cracked_by_incremental")
+                            return stdout.split(b"\n")[2].split()[0]
+                    elif b"Office" in stdout.split(b"\n")[0]:
+                        if stdout.split(b"\n")[3]:
+                            self.flags.append("cracked_by_incremental")
+                            return stdout.split(b"\n")[3].split()[0]
+
                 return ""
         else:
             return stdout.split(b":")[1].split()[0]
