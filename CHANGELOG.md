@@ -1,6 +1,11 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2022-12-20
+### Changed
+- Small update to fix test warning for ScanPDF
+- Small update to fix test warning for ScanQR
+ 
 ## 2022-12-17
 ### Changed
 - Updated workflows. (@ryanohoro)
