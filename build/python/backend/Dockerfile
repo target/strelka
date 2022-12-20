@@ -23,6 +23,7 @@ RUN apt-get -qq update && \
     python3-dev \
     python3-pip \
     python3-wheel \
+    python-is-python3 \
     pkg-config \
 # Install runtime packages
     7zip=21.07+dfsg-4 \
