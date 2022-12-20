@@ -109,7 +109,8 @@ RUN mkdir jtr && cd jtr && git init && git remote add origin https://github.com/
   && make -sj4 \
   && make install \
   && cp -Tr /jtr/run/ /jtr && rm -rf /jtr/run \
-  && chmod -R 777 /jtr
+  && chmod -R 777 /jtr \
+  && chown -R 1001:1001 /jtr
 
 # Install Python packages
 COPY ./build/python/backend/requirements.txt /strelka/requirements.txt
@@ -148,6 +149,9 @@ RUN cd /strelka/ && \
     chgrp -R 0 /var/log/strelka/ && \
     chmod -R g=u /var/log/strelka/
 
+# Run tests as non-root user
+USER 1001
+
 # Run build checks
 RUN set -x && \
     echo '[+] Run checks' && \
@@ -155,8 +159,7 @@ RUN set -x && \
     python3 -m pytest -s tests/ && \
     echo '[+] Done'
 
-# Prevent permission problems with JTR after running tests "jtr_show_error"
-RUN chmod -R 777 /jtr/*
+USER root
 
 # Remove python build directory
 RUN cd /strelka/ && \
