@@ -1,0 +1,12 @@
+name: "Pull Request Build"
+on:
+  pull_request:
+    branches: [ master ]
+jobs:
+  strelka:
+    name: "Strelka Pull Request Build"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Builds Strelka
+        run: docker-compose -f build/docker-compose.yaml build
