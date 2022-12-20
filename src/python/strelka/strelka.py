@@ -104,8 +104,11 @@ class Scanner(object):
         self.name = self.__class__.__name__
         self.key = inflection.underscore(self.name.replace('Scan', ''))
         self.scanner_timeout = backend_cfg.get('limits').get('scanner')
+        self.signal = None
         self.coordinator = coordinator
         self.event = dict()
+        self.files = []
+        self.flags = []
         self.iocs = []
         self.type = IocOptions
         self.extract = TLDExtract(suffix_list_urls=None)
@@ -159,8 +162,6 @@ class Scanner(object):
             Exception: Unknown exception occurred.
         """
         start = time.time()
-        self.files = []
-        self.flags = []
         self.event = dict()
         self.scanner_timeout = options.get('scanner_timeout',
                                            self.scanner_timeout)

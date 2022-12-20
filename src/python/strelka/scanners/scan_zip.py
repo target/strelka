@@ -40,7 +40,9 @@ class ScanZip(strelka.Scanner):
             try:
                 with zipfile.ZipFile(zip_io) as zip_obj:
                     filelist = zip_obj.filelist
-                    self.event['total']['files'] = len(filelist)
+                    for file in filelist:
+                        if not file.is_dir():
+                            self.event['total']['files'] += 1
 
                     # For each file in zip, gather metadata metrics and pass back to Strelka for recursive extraction.
                     for i, name in enumerate(filelist):
@@ -66,21 +68,29 @@ class ScanZip(strelka.Scanner):
                                 zinfo = zip_obj.getinfo(name.filename)
 
                                 if zinfo.flag_bits & 0x1:
-                                    if i == 0:
+                                    if 'encrypted' not in self.flags:
                                         self.flags.append('encrypted')
 
-                                        if passwords:
-                                            for pw in passwords:
-                                                try:
-                                                    extract_data = zip_obj.read(name.filename, pw)
-                                                    self.event['password'] = pw
+                                    if passwords:
+                                        for pw in passwords:
+                                            try:
+                                                extract_data = zip_obj.read(name.filename, pw)
+                                                self.event['password'] = pw.decode("utf-8")
 
-                                                except (RuntimeError, zipfile.BadZipFile, zlib.error):
-                                                    pass
+                                            except (RuntimeError, zipfile.BadZipFile, zlib.error):
+                                                pass
                                 else:
-                                    extract_data = zip_obj.read(name.filename)
+                                    try:
+                                        extract_data = zip_obj.read(name.filename)
+                                    except RuntimeError:
+                                        self.flags.append('runtime_error')
+                                    except zipfile.BadZipFile:
+                                        self.flags.append('bad_zip')
+                                    except zlib.error:
+                                        self.flags.append('zlib_error')
 
-                                if extract_data:
+                                # Suppress sending to coordinator in favor of ScanEncryptedZip
+                                if extract_data and 'encrypted' not in self.flags:
                                     extract_file = strelka.File(
                                         name=name.filename,
                                         source=self.name,

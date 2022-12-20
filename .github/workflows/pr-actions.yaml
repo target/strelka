@@ -11,7 +11,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
 
-          python-version: '3.x'
+          python-version: '3.10'
 
           architecture: 'x64'
       - name: Install dependencies
@@ -44,12 +44,47 @@ jobs:
           tesseract-ocr \
           unrar \
           upx \
-          jq \
-          exiftool && \
+          jq && \
           python -m pip install --upgrade pip
           pip install validators setuptools --upgrade
           pip install --no-cache-dir -r src/python/requirements.txt
+      - name: Install exiftool
+        run: |
+          cd /tmp/ && \
+          curl -OL https://github.com/exiftool/exiftool/archive/refs/tags/12.52.tar.gz && \
+          tar -zxvf 12.52.tar.gz && \
+          cd exiftool-12.52/ && \
+          perl Makefile.PL && \
+          make && \
+          sudo make install
+      - name: Install JTR dependencies
+        run: |
+          sudo apt-get install --no-install-recommends -qq \
+          ca-certificates \
+          libssl-dev \
+          zlib1g-dev \
+          yasm \
+          libgmp-dev \
+          libpcap-dev \
+          libbz2-dev \
+          libgomp1
+      - name: Install JTR
+        run: |
+          sudo mkdir /jtr \
+          && cd /jtr \
+          && sudo chmod -R 777 /jtr \
+          && git init && git remote add origin https://github.com/openwall/john.git && git fetch --depth 1 origin b5c10480f56ff1b5d76c6cbdaf9c817582ee2228 && git reset --hard FETCH_HEAD \
+          && rm -rf /jtr/.git \
+          && cd /jtr/src \
+          && ./configure \
+          && make -s clean \
+          && make -sj4 \
+          && sudo make install \
+          && cp -Tr /jtr/run/ /jtr && rm -rf /jtr/run
+      - name: Inject password for JTR test
+        run: |
+          sudo mkdir -p /etc/strelka/ \
+          && sudo echo password | sudo tee /etc/strelka/passwords.dat >/dev/null
       - name: Test with pytest
         run: |
           pytest
-      
