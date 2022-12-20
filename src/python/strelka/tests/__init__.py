@@ -7,8 +7,7 @@ def run_test_scan(
     scan_class,
     fixture_path,
     options=None,
-    backend_cfg=None,
-    coordinator="test_coordinate"
+    backend_cfg=None
 ):
     if options is None:
         options = {}
@@ -17,7 +16,7 @@ def run_test_scan(
     if backend_cfg is None:
         backend_cfg = {"limits": {"scanner": 10}}
 
-    scanner = scan_class(backend_cfg, coordinator)
+    scanner = scan_class(backend_cfg, "test_coordinate")
 
     mocker.patch.object(scanner.__class__, "upload_to_coordinator", return_value=None)
 
