@@ -122,79 +122,79 @@ func main() {
 		Gatekeeper: conf.Files.Gatekeeper,
 	}
 
-    // Loop through each pattern in the list of file patterns
-    for _, p := range conf.Files.Patterns {
-        // Expand the pattern to a list of matching file paths
-        match, err := filepath.Glob(p)
-        if err != nil {
-            log.Printf("failed to glob pattern %s: %v", p, err)
-            continue
-        }
+	// Loop through each pattern in the list of file patterns
+	for _, p := range conf.Files.Patterns {
+		// Expand the pattern to a list of matching file paths
+		match, err := filepath.Glob(p)
+		if err != nil {
+			log.Printf("failed to glob pattern %s: %v", p, err)
+			continue
+		}
 
-        // Iterate over the list of files that match the provided pattern.
-        for _, f := range match {
-            // Get the file stats for the current file.
-            fi, err := os.Stat(f)
-            if err != nil {
-                // Log an error and continue to the next file if an error occurred.
-                log.Printf("failed to stat file %s: %v", f, err)
-                continue
-            }
+		// Iterate over the list of files that match the provided pattern.
+		for _, f := range match {
+			// Get the file stats for the current file.
+			fi, err := os.Stat(f)
+			if err != nil {
+				// Log an error and continue to the next file if an error occurred.
+				log.Printf("failed to stat file %s: %v", f, err)
+				continue
+			}
 
-            // Check if the file is a regular file (not a directory or symlink, etc.)
-            if fi.Mode()&os.ModeType != 0 {
-                // Log an error and continue to the next file if the file is not a regular file.
-                log.Printf("file %s is not a regular file", f)
-                continue
-            }
+			// Check if the file is a regular file (not a directory or symlink, etc.)
+			if fi.Mode()&os.ModeType != 0 {
+				// Log an error and continue to the next file if the file is not a regular file.
+				log.Printf("file %s is not a regular file", f)
+				continue
+			}
 
-            // Create the ScanFileRequest struct with the provided attributes.
-            req := structs.ScanFileRequest{
-                Request: request,
-                Attributes: &strelka.Attributes{
-                    Filename: f,
-                },
-                Chunk:  conf.Throughput.Chunk,
-                Delay:  conf.Throughput.Delay,
-                Delete: conf.Files.Delete,
-            }
+			// Create the ScanFileRequest struct with the provided attributes.
+			req := structs.ScanFileRequest{
+				Request: request,
+				Attributes: &strelka.Attributes{
+					Filename: f,
+				},
+				Chunk:  conf.Throughput.Chunk,
+				Delay:  conf.Throughput.Delay,
+				Delete: conf.Files.Delete,
+			}
 
-            // Send the ScanFileRequest to the RPC server using a goroutine.
-            sem <- 1
-            wgRequest.Add(1)
-            go func() {
-                rpc.ScanFile(
-                    frontend,
-                    conf.Conn.Timeout.File,
-                    req,
-                    responses,
-                )
+			// Send the ScanFileRequest to the RPC server using a goroutine.
+			sem <- 1
+			wgRequest.Add(1)
+			go func() {
+				rpc.ScanFile(
+					frontend,
+					conf.Conn.Timeout.File,
+					req,
+					responses,
+				)
 
-                // Notify the wgRequest wait group that the goroutine has finished.
-                wgRequest.Done()
+				// Notify the wgRequest wait group that the goroutine has finished.
+				wgRequest.Done()
 
-                // Release the semaphore to indicate that the goroutine has finished.
-                <-sem
-            }()
-        }
-    }
+				// Release the semaphore to indicate that the goroutine has finished.
+				<-sem
+			}()
+		}
+	}
 
-    wgRequest.Wait()
-    responses <- nil
-    wgResponse.Wait()
+	wgRequest.Wait()
+	responses <- nil
+	wgResponse.Wait()
 
-    // Check if the heapProf flag is set and write a heap profile if it is.
-    if *heapProf {
-        // Create the heap.pprof file.
-        heap, err := os.Create("./heap.pprof")
-        if err != nil {
-            log.Fatalf("failed to create heap.pprof file: %v", err)
-        }
+	// Check if the heapProf flag is set and write a heap profile if it is.
+	if *heapProf {
+		// Create the heap.pprof file.
+		heap, err := os.Create("./heap.pprof")
+		if err != nil {
+			log.Fatalf("failed to create heap.pprof file: %v", err)
+		}
 
-        // Write the heap profile to the file.
-        pprof.WriteHeapProfile(heap)
+		// Write the heap profile to the file.
+		pprof.WriteHeapProfile(heap)
 
-        // Close the file to release associated resources.
-        heap.Close()
-    }
+		// Close the file to release associated resources.
+		heap.Close()
+	}
 }
