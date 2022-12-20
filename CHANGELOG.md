@@ -3,8 +3,8 @@ Changes to the project will be tracked in this file via the date of change.
 
 ## 2022-12-17
 ### Changed
-- Updated workflows.
-- Updated multiple dependencies.
+- Updated workflows. (@ryanohoro)
+- Updated multiple dependencies. (@ryanohoro)
 
 ## 2022-12-16
 ### Added
