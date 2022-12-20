@@ -103,7 +103,7 @@ class Scanner(object):
         """Inits scanner with scanner name and metadata key."""
         self.name = self.__class__.__name__
         self.key = inflection.underscore(self.name.replace('Scan', ''))
-        self.scanner_timeout = backend_cfg.get('limits').get('scanner')
+        self.scanner_timeout = backend_cfg.get('limits', {}).get('scanner', 10)
         self.signal = None
         self.coordinator = coordinator
         self.event = dict()
@@ -164,7 +164,7 @@ class Scanner(object):
         start = time.time()
         self.event = dict()
         self.scanner_timeout = options.get('scanner_timeout',
-                                           self.scanner_timeout)
+                                           self.scanner_timeout or 10)
 
         try:
             self.signal = signal.signal(signal.SIGALRM, timeout_handler)
