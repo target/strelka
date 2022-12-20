@@ -3,11 +3,7 @@ import datetime
 from strelka.scanners.scan_url import ScanUrl
 
 scanner = ScanUrl(
-    {
-        "name": "ScanUrl",
-        "key": "scan_url",
-        "limits": {"scanner": 10}
-    },
+    {"name": "ScanUrl", "key": "scan_url", "limits": {"scanner": 10}},
     "test_coordinate",
 )
 
@@ -34,10 +30,7 @@ def test_scan_simple_url(data, expected):
     scanner.scan_wrapper(
         data,
         "somefile.foo",
-        {
-            "length": 4,
-            "scanner_timeout": 5
-        },
+        {"length": 4, "scanner_timeout": 5},
         datetime.date.today(),
     )
     assert scanner.event.get("urls") == expected

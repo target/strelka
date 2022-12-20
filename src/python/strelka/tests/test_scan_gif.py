@@ -1,36 +1,23 @@
-import datetime
 from pathlib import Path
-from strelka.scanners.scan_gif import ScanGif
+from unittest import TestCase, mock
+
+from strelka.scanners.scan_gif import ScanGif as ScanUnderTest
+from strelka.tests import run_test_scan
 
 
 def test_scan_gif(mocker):
     """
-    This tests the ScanGif scanner.
-    It attempts to validate a given GIFs "trailer index" value.
-
-    Pass: Trailer index matches specified value.
-    Failure: Unable to load file or trailer index does not match specified value.
+    Pass: Sample event matches output of scanner.
+    Failure: Unable to load file or sample event fails to match.
     """
 
-    scanner = ScanGif(
-        {
-            "name": "ScanGif",
-            "key": "scan_gif",
-            "limits": {"scanner": 10}
-        },
-        "test_coordinate",
+    test_scan_event = {"elapsed": mock.ANY, "flags": [], "trailer_index": 3806}
+
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test.gif",
     )
 
-    mocker.patch.object(ScanGif, "upload_to_coordinator", return_value=None)
-    scanner.scan_wrapper(
-        Path(Path(__file__).parent / "fixtures/test.gif").read_bytes(),
-        {
-            "uid": "12345",
-            "name": "somename"
-        },
-        {
-            "scanner_timeout": 5
-        },
-        datetime.date.today(),
-    )
-    assert scanner.event.get("trailer_index") == 3806
+    TestCase.maxDiff = None
+    TestCase().assertDictEqual(test_scan_event, scanner_event)

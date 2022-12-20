@@ -118,6 +118,7 @@ RUN pip3 install --no-cache-dir -r /strelka/requirements.txt && \
 # Copy Strelka files
 COPY ./src/python/ /strelka/
 COPY ./build/python/backend/setup.py /strelka/setup.py
+COPY ./configs/python/backend/ /etc/strelka/
 
 # Install Strelka
 RUN cd /strelka/ && \
@@ -150,11 +151,17 @@ RUN cd /strelka/ && \
 RUN set -x && \
     echo '[+] Run checks' && \
     cd /strelka/strelka/ && \
-    python3 -m pytest tests/ && \
+    python3 -m pytest -s tests/ && \
     echo '[+] Done'
+
+# Prevent permission problems with JTR after running tests "jtr_show_error"
+RUN chmod -R 777 /jtr/*
 
 # Remove python build directory
 RUN cd /strelka/ && \
     rm -rf /strelka/
+
+# Remove config directory (will bind mount once built)
+RUN rm -rf /etc/strelka/
 
 USER 1001
