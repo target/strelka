@@ -13,6 +13,7 @@ def crack_word(
     jtr_path,
     tmp_dir,
     password_file,
+        min_length=1,
     max_length=10,
     scanner_timeout=150,
     brute=False,
@@ -59,25 +60,32 @@ def crack_word(
                         stderr=subprocess.DEVNULL,
                     ).communicate(timeout=scanner_timeout)
 
-                    if stdout.split(b"\n")[3]:
-                        self.flags.append("cracked_by_wordlist")
-                        return stdout.split(b"\n")[3].split()[0]
+                    if b"oldoffice" in stdout.split(b"\n")[0]:
+                        if stdout.split(b"\n")[2]:
+                            self.flags.append("cracked_by_wordlist")
+                            return stdout.split(b"\n")[2].split()[0]
+                    elif b"Office" in stdout.split(b"\n")[0]:
+                        if stdout.split(b"\n")[3]:
+                            self.flags.append("cracked_by_wordlist")
+                            return stdout.split(b"\n")[3].split()[0]
 
                 if brute:
                     (stdout, stderr) = subprocess.Popen(
                         [
                             jtr_path + "john",
                             "--incremental=Alnum",
+                            f"--min-length={min_length}",
                             f"--max-length={max_length}",
                             f"--max-run-time={scanner_timeout}",
                             tmp_data.name,
                         ],
                         stdout=subprocess.PIPE,
                         stderr=subprocess.DEVNULL,
-                    ).communicate(timeout=scanner_timeout)
-                    if stdout.split(b"\n")[3]:
+                    ).communicate(timeout=scanner_timeout+5)
+
+                    if stdout.split(b"\n")[2]:
                         self.flags.append("cracked_by_incremental")
-                        return stdout.split(b"\n")[3].split()[0]
+                        return stdout.split(b"\n")[2].split()[0]
                 return ""
         else:
             return stdout.split(b":")[1].split()[0]
@@ -108,7 +116,7 @@ class ScanEncryptedDoc(strelka.Scanner):
         log_extracted_pws = options.get("log_pws", False)
         scanner_timeout = options.get("scanner_timeout", 150)
         brute = options.get("brute_force", False)
-        max_length = options.get("max_length", 5)
+        max_length = options.get("max_length", 7)
 
         with io.BytesIO(data) as doc_io:
 
