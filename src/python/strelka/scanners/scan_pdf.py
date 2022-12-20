@@ -11,7 +11,7 @@ from strelka import strelka
 # hide PyMuPDF warnings
 fitz.TOOLS.mupdf_display_errors(False)
 phone_numbers = re.compile(
-    "\+?(?:\d{1,2})?\s?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{2,4}?-?\d{2,4}?",
+    r"[+]?(?:\d{1,2})?\s?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{2,4}?-?\d{2,4}?",
     flags=0,
 )
 
