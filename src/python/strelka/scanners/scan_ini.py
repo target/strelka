@@ -8,6 +8,8 @@ class ScanIni(strelka.Scanner):
         self.event['keys'] = []
         self.event['sections'] = []
 
+
+
         section = ''
         ini = data.splitlines()
         for key in ini:
@@ -18,7 +20,7 @@ class ScanIni(strelka.Scanner):
             if key.startswith(b'[') and key.endswith(b']'):
                 section = key[1:-1]
                 self.event['sections'].append(section)
-            elif key.startswith(b'#'):
+            elif key.startswith(b'#') or key.startswith(b';'):
                 self.event['comments'].append(key)
             else:
                 split_key = key.split(b'=')
