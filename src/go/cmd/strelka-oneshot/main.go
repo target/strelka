@@ -18,8 +18,10 @@ import (
 func main() {
 	frontendUrl := flag.String("s", "127.0.0.1:57314", "url for the strelka frontend server")
 	connCert := flag.String("c", "", "path to connection certificate")
-	logPath := flag.String("l", "strelka-oneshot.log", "path to response log file")
+	logPath := flag.String("l", "strelka-oneshot.log", "path to response log file, - for stdout")
 	scanFile := flag.String("f", "", "file to submit for scanning")
+	scanTimeout := flag.Int("t", 60, "scanning timeout in seconds")
+
 	flag.Parse()
 
 	// scanFile is mandatory
@@ -46,7 +48,11 @@ func main() {
 
 	wgResponse.Add(1)
 	go func() {
-		rpc.LogResponses(responses, *logPath)
+	    if *logPath == "-" {
+	        rpc.PrintResponses(responses)
+	    } else {
+	        rpc.LogResponses(responses, *logPath)
+	    }
 		wgResponse.Done()
 	}()
 
@@ -73,7 +79,7 @@ func main() {
 		Delete: false,
 	}
 
-	rpc.ScanFile(frontend, time.Minute*1, req, responses)
+	rpc.ScanFile(frontend, time.Second * time.Duration(*scanTimeout), req, responses)
 
 	responses <- nil
 	wgResponse.Wait()

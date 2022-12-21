@@ -106,6 +106,19 @@ func LogResponses(responses <-chan *strelka.ScanResponse, path string) {
 	}
 }
 
+// Logs events in responses to stdout
+func PrintResponses(responses <-chan *strelka.ScanResponse) {
+	nl := osNewline()
+	for r := range responses {
+		if r != nil {
+			os.stdout.WriteString(fmt.Sprintf("%s%s", r.Event, nl))
+			continue
+		}
+		break
+	}
+}
+
+
 // Discards responses
 func DiscardResponses(responses <-chan *strelka.ScanResponse) {
 	for r := range responses {
