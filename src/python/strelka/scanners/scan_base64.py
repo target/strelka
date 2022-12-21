@@ -8,6 +8,8 @@ class ScanBase64(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         decoded = base64.b64decode(data)
 
+        self.event["size"] = len(decoded)
+
         extract_file = strelka.File(
             source=self.name,
         )
