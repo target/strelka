@@ -27,6 +27,9 @@ func main() {
 	// Parse flags
 	flag.Parse()
 
+	testPath := "./update.yaml"
+	confPath = &testPath
+
 	// Check if CPU profiling is enabled
 	if *cpuProf {
 		// Create file for CPU profiling data
@@ -122,8 +125,14 @@ func main() {
 		Gatekeeper: conf.Files.Gatekeeper,
 	}
 
+	// Get file restrictions
+	for _, p := range conf.Files.Mimetypes {
+		log.Printf(p)
+	}
+
 	// Loop through each pattern in the list of file patterns
 	for _, p := range conf.Files.Patterns {
+		log.Printf(p)
 		// Expand the pattern to a list of matching file paths
 		match, err := filepath.Glob(p)
 		if err != nil {

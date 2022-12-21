@@ -1,6 +1,6 @@
 module github.com/target/strelka/src/go/cmd/strelka-fileshot
 
-go 1.17
+go 1.19
 
 require (
 	github.com/target/strelka v0.0.0-20220128120944-5ae5bd6703f6
