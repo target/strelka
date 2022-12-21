@@ -14,12 +14,14 @@ message Request {
 message Attributes {
   string filename = 1;
   map<string, string> metadata = 2;
+  string yaraFilename = 3;
 }
 
 message ScanFileRequest {
   bytes data = 1; // required
   Request request = 2;
   Attributes attributes = 3;
+  bytes yaraData = 4;
 }
 
 message ScanResponse {

@@ -25,14 +25,27 @@ class ScanYara(strelka.Scanner):
 
     def scan(self, data, file, options, expire_at):
         location = options.get('location', '/etc/yara/')
+
         meta = options.get('meta', [])
+        if 'author' not in meta:
+            meta.append('author')
+        if 'description' not in meta:
+            meta.append('description')
+
+        compiled_custom_yara = None
+        if options.get('source'):
+            try:
+                compiled_custom_yara = yara.compile(source=options['source'])
+            except (yara.Error, yara.SyntaxError):
+                self.flags.append('compiling_error')
 
         try:
-            if self.compiled_yara is None:
+            if self.compiled_yara is None and os.path.exists(location):
                 if os.path.isdir(location):
                     globbed_yara_paths = glob.iglob(f'{location}/**/*.yar*', recursive=True)
                     yara_filepaths = {f'namespace_{i}':entry for (i, entry) in enumerate(globbed_yara_paths)}
-                    self.compiled_yara = yara.compile(filepaths=yara_filepaths)
+                    if yara_filepaths:
+                        self.compiled_yara = yara.compile(filepaths=yara_filepaths)
                 else:
                     self.compiled_yara = yara.compile(filepath=location)
 
@@ -40,28 +53,31 @@ class ScanYara(strelka.Scanner):
             self.flags.append('compiling_error')
 
         self.event['matches'] = []
-        self.event['tags'] = []
-        self.event['meta'] = []
 
         try:
+            yara_matches = []
+
             if self.compiled_yara is not None:
                 yara_matches = self.compiled_yara.match(data=data)
-                for match in yara_matches:
-                    self.event['matches'].append(match.rule)
-                    if match.tags:
-                        for tag in match.tags:
-                            if not tag in self.event['tags']:
-                                self.event['tags'].append(tag)
 
-                    for k, v in match.meta.items():
-                        if meta and k not in meta:
-                            continue
+            if compiled_custom_yara is not None:
+                custom_yara_matches = compiled_custom_yara.match(data=data)
+                yara_matches.extend(custom_yara_matches)
 
-                        self.event['meta'].append({
-                            'rule': match.rule,
-                            'identifier': k,
-                            'value': v,
-                        })
+            for match in yara_matches:
+                event = { 'name': match.rule, 'tags': [], 'meta': {} }
+                if match.tags:
+                    for tag in match.tags:
+                        if not tag in self.event['tags']:
+                            event['tags'].append(tag)
+
+                for k, v in match.meta.items():
+                    if meta and k not in meta:
+                        continue
+
+                    event['meta'][k] = v
+
+                self.event['matches'].append(event)
 
         except (yara.Error, yara.TimeoutError):
             self.flags.append('scanning_error')

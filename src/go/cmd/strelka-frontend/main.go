@@ -61,6 +61,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 	id := uuid.New().String()
 	keyd := fmt.Sprintf("data:%v", id)
 	keye := fmt.Sprintf("event:%v", id)
+	keyy := fmt.Sprintf("yara:%v", id)
 
 	var attr *strelka.Attributes
 	var req *strelka.Request
@@ -82,10 +83,15 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		}
 
 		hash.Write(in.Data)
+		if len(in.YaraData) > 0 {
+			hash.Write(in.YaraData)
+		}
 
 		p := s.coordinator.cli.Pipeline()
 		p.RPush(stream.Context(), keyd, in.Data)
 		p.ExpireAt(stream.Context(), keyd, deadline)
+		p.RPush(stream.Context(), keyy, in.YaraData)
+		p.ExpireAt(stream.Context(), keyy, deadline)
 		if _, err := p.Exec(stream.Context()); err != nil {
 			return err
 		}

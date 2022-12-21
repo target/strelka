@@ -20,6 +20,7 @@ func main() {
 	connCert := flag.String("c", "", "path to connection certificate")
 	logPath := flag.String("l", "strelka-oneshot.log", "path to response log file")
 	scanFile := flag.String("f", "", "file to submit for scanning")
+	yaraFile := flag.String("y", "", "file to submit for additional yara rules")
 	flag.Parse()
 
 	// scanFile is mandatory
@@ -30,8 +31,10 @@ func main() {
 
 	serv := *frontendUrl
 	auth := rpc.SetAuth(*connCert)
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
+
 	conn, err := grpc.DialContext(ctx, serv, auth, grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("failed to connect to %s: %v", serv, err)
@@ -71,6 +74,10 @@ func main() {
 		Chunk:  32768,
 		Delay:  time.Second * 0,
 		Delete: false,
+	}
+
+	if yaraFile != nil {
+		req.Attributes.YaraFilename = *yaraFile
 	}
 
 	rpc.ScanFile(frontend, time.Minute*1, req, responses)

@@ -7,6 +7,7 @@ Command line utility for running Strelka backend server components.
 import argparse
 import glob
 import importlib
+import io
 import logging.config
 import math
 import os
@@ -31,6 +32,7 @@ class Backend(object):
         self.backend_cfg = backend_cfg
         self.coordinator = coordinator
         self.limits = backend_cfg.get('limits')
+        self.yaraData = ''
 
         scanners = backend_cfg.get('scanners')
         if isinstance(scanners, str):
@@ -110,9 +112,15 @@ class Backend(object):
 
     def taste_yara(self, data):
         """Tastes file data with YARA."""
+        # TODO: cache compiled yara and make this more efficient in general
+        compiled_custom_yara = b''
+        if self.yaraData:
+            compiled_custom_yara = yara.compile(source=self.yaraData)
         encoded_whitespace = string.whitespace.encode()
         stripped_data = data.lstrip(encoded_whitespace)
         yara_matches = self.compiled_yara.match(data=stripped_data)
+        if compiled_custom_yara:
+            yara_matches.extend(compiled_custom_yara.match(data=stripped_data))
         return [match.rule for match in yara_matches]
 
     def distribute(self, root_id, file, expire_at):
@@ -128,11 +136,18 @@ class Backend(object):
                         return
 
                     data = b''
+                    yaraData = b''
                     while 1:
                         pop = self.coordinator.lpop(f'data:{file.pointer}')
                         if pop is None:
                             break
                         data += pop
+
+                        ypop = self.coordinator.lpop(f'yara:{file.pointer}')
+                        if ypop is not None:
+                            yaraData += ypop
+
+                    self.yaraData = yaraData.decode()
 
                     file.add_flavors({'mime': self.taste_mime(data)})
                     file.add_flavors({'yara': self.taste_yara(data)})
@@ -184,13 +199,17 @@ class Backend(object):
                     for scanner in scanner_list:
                         try:
                             name = scanner['name']
+                            options = scanner.get('options', {})
+
+                            if name == 'ScanYara':
+                                options['source'] = self.yaraData
+
                             und_name = inflection.underscore(name)
                             scanner_import = f'strelka.scanners.{und_name}'
                             module = importlib.import_module(scanner_import)
                             if und_name not in self.scanner_cache:
                                 attr = getattr(module, name)(self.backend_cfg, self.coordinator)
                                 self.scanner_cache[und_name] = attr
-                            options = scanner.get('options', {})
                             plugin = self.scanner_cache[und_name]
                             (f, s) = plugin.scan_wrapper(
                                 data,

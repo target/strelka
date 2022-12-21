@@ -17,7 +17,7 @@ class StrelkaFrontend:
         chunk: Data chunk size in bytes (default: 32768)
     """
 
-    def __init__(self, 
+    def __init__(self,
                  server='localhost:57314',
                  cert=None,
                  gatekeeper=True,
@@ -43,7 +43,7 @@ class StrelkaFrontend:
                                       client='strelka-python',
                                       source=self.source,
                                       gatekeeper=self.gatekeeper)
-        attributes = strelka_pb2.Attributes(filename=filename)
+	attributes = strelka_pb2.Attributes(filename=filename)
         with open(filename, 'rb') as f:
             while True:
                 chunk = f.read(self.chunk)

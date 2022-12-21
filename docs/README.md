@@ -511,7 +511,8 @@ As files enter the system, they are tasted (e.g. scanned with YARA), their flavo
 ### protobuf
 #### `ScanFileRequest` protobuf
 Below is a description of the keys included in the `ScanFileRequest` protobuf. All keys are optional unless otherwise specified as required. This protobuf can be used to create new client apps in other programming languages supported by gRPC.
-* "bytes": file data (required)
+* "data": file data (required)
+* "yaraData": additional yara rules to run
 * "request.id": string used to identify the request
 * "request.client": string used to identify the Strelka client app
 * "request.source": string used to identify the system or source of the request

@@ -2,7 +2,6 @@ scanners:
 #  'ScanAntiword': haven't been able to get any response.
 #  'ScanHeader': These just grab 50 bytes and only tell us anything if it's not a binary file. We'd rather have all of the contents
 #  'ScanFooter':
-#  'ScanYara': just use yara for flavors
   'ScanBase64':
     - positive:
         flavors:
@@ -540,6 +539,13 @@ scanners:
           - 'soap_file'
           - 'html_file' # Simple XML, such as a POM file, is recognized as HTML
       priority: 5
+  'ScanYara':
+    - positive:
+        flavors:
+          - '*'
+      priority: 5
+      options:
+        location: '/etc/yara/'
   'ScanZip':
     - positive:
         flavors:
