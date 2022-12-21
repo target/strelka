@@ -19,8 +19,8 @@ def test_scan_x509_pem(mocker):
         "serial_number": "46332118164471944499838906445041402559045013295",
         "fingerprint": "E8EC60C506A5383F5E0FC69FA7C9F460",
         "version": 0,
-        "not_after": 1703156563,
-        "not_before": 1671620563,
+        "not_after": mock.ANY,
+        "not_before": mock.ANY,
         "expired": mock.ANY,
     }
 
