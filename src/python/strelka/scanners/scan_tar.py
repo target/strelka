@@ -25,7 +25,6 @@ class ScanTar(strelka.Scanner):
                             self.event['total']['files'] += 1
                     for tar_member in tar_members:
                         if tar_member.isfile():
-                            print(tar_member.name)
                             if self.event['total']['extracted'] >= file_limit:
                                 break
 
