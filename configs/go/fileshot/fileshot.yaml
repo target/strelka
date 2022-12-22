@@ -1,7 +1,7 @@
 client: 'go-fileshot-default'
 conn:
   server: 'localhost:57314'
-  #cert: './cert/devtest.crt'
+  #cert: './cert/devtest.crt' # Optional, remove key if not needed
   timeout:
     dial: 5s
     file: 5m
@@ -12,12 +12,12 @@ throughput:
 files:
   patterns:
     - '/glob/to/your/files/*'
-  minsize: 0
-  maxsize: 9999999999
-  limitpattern: 999
-  limittotal: 99999
-  modified: 99999
-  mimetypes:
+  minsize: 0                  # Optional, remove key if not needed
+  maxsize: 9999999999         # Optional, remove key if not needed
+  limitpattern: 999           # Optional, remove key if not needed
+  limittotal: 99999           # Optional, remove key if not needed
+  modified: 99999             # Optional, remove key if not needed
+  mimetypes:                  # Optional, remove key if not needed
     - 'application/mimetype'
   delete: false
   gatekeeper: false
