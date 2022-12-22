@@ -20,6 +20,6 @@ files:
   mimetypes:                  # Optional, remove key if not needed
     - 'application/mimetype'
   delete: false
-  gatekeeper: false
+  gatekeeper: true
 response:
   log: 'strelka.log'
