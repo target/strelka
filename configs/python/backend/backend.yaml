@@ -60,6 +60,12 @@ scanners:
 #      options:
 #        tmp_directory: '/dev/shm/'
 #        location: '/etc/capa/'
+  # hunt_common_credit_card_memscrapper
+  'ScanCcn':
+    - positive:
+        flavors:
+          - 'hunt_common_credit_card_memscrapper'
+      priority: 5
   'ScanDocx':
     - positive:
         flavors:
