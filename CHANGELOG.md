@@ -1,6 +1,44 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2022-12-20
+### Changed
+- Small update to fix test warning for ScanPDF
+- Small update to fix test warning for ScanQR
+ 
+## 2022-12-17
+### Changed
+- Updated workflows. (@ryanohoro)
+- Updated multiple dependencies. (@ryanohoro)
+
+## 2022-12-16
+### Added
+- Added `ScanDocx` Scanner test. (@ryanohoro)
+- Added `ScanLNK` Scanner test.
+- Added `ScanDocx` Scanner test. (@ryanohoro)
+- Added `ScanPe` Scanner test. (@ryanohoro)
+- Added `ScanJpeg` Scanner test. (@ryanohoro)
+- Added `ScanHtml` Scanner test. (@ryanohoro)
+- Added `ScanPdf` Scanner test. (@ryanohoro)
+- Added `ScanExiftool` Scanner test. (@ryanohoro)
+- Added `ScanRar` Scanner test. (@ryanohoro)
+- Added `ScanZip` Scanner test. (@ryanohoro)
+- Added `ScanEncryptedZip` Scanner test. (@ryanohoro)
+
+### Changed
+- Updated `ScanLNK` YAARA taste.
+- Updated `ScanPngEof` to fix some bugs (@ryanohoro)
+- Updated multiple dependencies.
+
+## 2022-12-12
+### Added
+- Added `ScanVHD` Scanner. (@ryanohoro)
+- Added `ScanVHD` Scanner test. (@ryanohoro)
+
+## 2022-12-11
+### Added
+- Added `ScanISO` Scanner test. (@ryanohoro)
+
 ## 2022-12-08
 ### Added
 - Added `ScanMsi` Scanner.
