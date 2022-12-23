@@ -60,10 +60,12 @@ def crack_word(
                         stderr=subprocess.DEVNULL,
                     ).communicate(timeout=scanner_timeout)
 
+                    # Office 97
                     if b"oldoffice" in stdout.split(b"\n")[0]:
                         if stdout.split(b"\n")[2]:
                             self.flags.append("cracked_by_wordlist")
                             return stdout.split(b"\n")[2].split()[0]
+                    # Office 2003 / Open XML
                     elif b"Office" in stdout.split(b"\n")[0]:
                         if stdout.split(b"\n")[3]:
                             self.flags.append("cracked_by_wordlist")

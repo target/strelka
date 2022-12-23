@@ -2,7 +2,7 @@ import subprocess
 import tempfile
 import io
 import os
-import zipfile
+import pyzipper
 import zlib
 
 from strelka import strelka
@@ -60,9 +60,16 @@ def crack_zip(
                         stderr=subprocess.DEVNULL,
                     ).communicate(timeout=scanner_timeout)
 
-                    if stdout.split(b"\n")[1]:
-                        self.flags.append("cracked_by_wordlist")
-                        return stdout.split(b"\n")[1].split()[0]
+                    # ZipCrypto
+                    if b"PKZIP" in stdout.split(b"\n")[0]:
+                        if stdout.split(b"\n")[1]:
+                            self.flags.append("cracked_by_wordlist")
+                            return stdout.split(b"\n")[1].split()[0]
+                    # WinZip AES
+                    elif b"WinZip" in stdout.split(b"\n")[0]:
+                        if stdout.split(b"\n")[2]:
+                            self.flags.append("cracked_by_wordlist")
+                            return stdout.split(b"\n")[2].split()[0]
                 if brute:
                     (stdout, stderr) = subprocess.Popen(
                         [
@@ -115,7 +122,22 @@ class ScanEncryptedZip(strelka.Scanner):
 
         with io.BytesIO(data) as zip_io:
             try:
-                with zipfile.ZipFile(zip_io) as zip_obj:
+
+                is_aes = False
+                with pyzipper.ZipFile(zip_io) as zip_obj:
+
+                    file_list = zip_obj.filelist  # .filelist
+                    for file_list_item in file_list:
+                        if not file_list_item.is_dir():
+                            # Check for the AES compression type
+                            if file_list_item.compress_type == 99:
+                                is_aes = True
+                                break
+
+                with pyzipper.AESZipFile(zip_io) if is_aes else pyzipper.ZipFile(
+                    zip_io
+                ) as zip_obj:
+
                     file_list = zip_obj.filelist  # .filelist
                     for file_list_item in file_list:
                         if not file_list_item.is_dir():
@@ -139,14 +161,14 @@ class ScanEncryptedZip(strelka.Scanner):
                     if log_extracted_pws:
                         self.event["cracked_password"] = extracted_pw
 
-                    for i, file_item in enumerate(file_list):
-                        if not file_item.filename.endswith("/"):
+                    for file_item in file_list:
+                        if not file_item.is_dir():
                             if self.event["total"]["extracted"] >= file_limit:
                                 break
 
                             try:
                                 extract_data = zip_obj.read(
-                                    file_item.filename, extracted_pw
+                                    file_item.filename, pwd=extracted_pw
                                 )
 
                                 if extract_data:
@@ -165,7 +187,7 @@ class ScanEncryptedZip(strelka.Scanner):
                                     self.files.append(extract_file)
                                     self.event["total"]["extracted"] += 1
 
-                            except NotImplementedError:
+                            except NotImplementedError as e:
                                 self.flags.append("unsupported_compression")
                             except RuntimeError:
                                 self.flags.append("runtime_error")
@@ -174,5 +196,5 @@ class ScanEncryptedZip(strelka.Scanner):
                             except zlib.error:
                                 self.flags.append("zlib_error")
 
-            except zipfile.BadZipFile:
+            except pyzipper.BadZipFile:
                 self.flags.append("bad_zip")
