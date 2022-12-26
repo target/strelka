@@ -33,10 +33,12 @@ class ScanEmail(strelka.Scanner):
                     elif b"Start mail input; end with <CRLF>.<CRLF>\n" in data:
                         data = data.rpartition(b"Start mail input; end with <CRLF>.<CRLF>\n")[2]
                     parsed_eml = ep.decode_email_bytes(data)
+                    print(parsed_eml)
                     if not (parsed_eml['header']['subject'] and parsed_eml['header']['header']):
                         self.flags.append('parse_manual_email_error')
                         return
-            except:
+            except Exception as e:
+                print(str(e))
                 self.flags.append('parse_manual_email_error')
                 return
 

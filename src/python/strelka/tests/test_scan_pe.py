@@ -1,4 +1,5 @@
 from pathlib import Path
+from pytest_unordered import unordered
 from unittest import TestCase, mock
 
 from strelka.scanners.scan_pe import ScanPe as ScanUnderTest
@@ -16,12 +17,42 @@ def test_scan_pe(mocker):
         "flags": ["no_certs_found"],
         "total": {"libraries": 0, "resources": 2, "sections": 2, "symbols": 0},
         "summary": {
-            "resource_md5": mock.ANY,
-            "resource_sha1": mock.ANY,
-            "resource_sha256": mock.ANY,
-            "section_md5": mock.ANY,
-            "section_sha1": mock.ANY,
-            "section_sha256": mock.ANY,
+            "resource_md5": unordered(
+                [
+                    "f4741884351459aa7733725b88e693af",
+                    "b7db84991f23a680df8e95af8946f9c9",
+                ]
+            ),
+            "resource_sha1": unordered(
+                [
+                    "5371904ee7671fb0b066d9323eda553269f344f9",
+                    "cac699787884fb993ced8d7dc47b7c522c7bc734",
+                ]
+            ),
+            "resource_sha256": unordered(
+                [
+                    "539dc26a14b6277e87348594ab7d6e932d16aabb18612d77f29fe421a9f1d46a",
+                    "d8df3d0358a91b3ef97c4d472b34a60f7cf9ee7f1a6f37058fc3d1af3a156a36",
+                ]
+            ),
+            "section_md5": unordered(
+                [
+                    "c3eafa2cd34f98a226e31b8ea3fea400",
+                    "cc14da7fb94ef9b27a926fe95b86b44f",
+                ]
+            ),
+            "section_sha1": unordered(
+                [
+                    "3d584b265a558dc22fa6dfa9991ae7eafee5c1a4",
+                    "00104b432a8e7246695843e4f2d7cf2582efa3e6",
+                ]
+            ),
+            "section_sha256": unordered(
+                [
+                    "86d9755b2ba9d8ffd765621f09844dd62d0b082fdc4aafa63b3b3f3ae25d9c77",
+                    "bb31a5224e9f78905909655d9c80ba7d63f03910e4f22b296d6b7865e2a477c3",
+                ]
+            ),
         },
         "debug": {
             "type": "rsds",

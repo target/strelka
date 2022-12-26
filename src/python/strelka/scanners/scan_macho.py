@@ -190,7 +190,7 @@ class ScanMacho(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         tmp_directory = options.get('tmp_directory', '/tmp/')
 
-        macho = MachO.parse(raw=data, config=MachO.ParserConfig.deep)
+        macho = MachO.parse(raw=list(data), config=MachO.ParserConfig.deep)
 
         self.event['total'] = {
             'binaries': macho.size,
