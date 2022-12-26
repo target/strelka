@@ -17,8 +17,14 @@ class ScanLibarchive(strelka.Scanner):
 
         try:
             with libarchive.memory_reader(data) as archive:
+                # Using basically the same logic to count files
+                # However, it is more technically correct to count
+                # the files before trying to extract them in case an error occurs
                 for entry in archive:
-                    self.event['total']['files'] += 1
+                    if entry.isfile:
+                        self.event['total']['files'] += 1
+
+                for entry in archive:
                     if entry.isfile:
                         if self.event['total']['extracted'] >= file_limit:
                             continue
