@@ -8,22 +8,18 @@ class ScanPngEof(strelka.Scanner):
     """
 
     def scan(self, data, file, options, expire_at):
-        datalen = len(data)
-        if (
-            (data[datalen - 1] == b"\x82")
-            and (data[datalen - 2] == b"\x60")
-            and (data[len(data) - 3] == b"\x42")
-        ):
-            # file DOES NOT have data after EOF, found end of file
+
+        # PNG IEND chunk
+        png_iend = b"\x00\x00\x00\x00\x49\x45\x4e\x44\xae\x42\x60\x82"
+
+        # A normal PNG file should end with the IEND chunk
+        if data.endswith(png_iend):
             self.flags.append("no_trailer")
-        else:  # the file DOES have data after EOF, did not find end of file
-            trailer_index = data.rfind(b"\x42\x60\x82")
-            if trailer_index == -1:
-                self.event[
-                    "end_index"
-                ] = -1  # didn't find the offical ending of the file
-            else:
-                trailer_index = trailer_index + 3
+        else:
+            # Locate the first occurance of the IEND chunk, the end of PNG file
+            if -1 != (trailer_index := data.find(png_iend)):
+
+                trailer_index = trailer_index + len(png_iend)
                 self.event["trailer_index"] = trailer_index
 
                 extract_file = strelka.File(source=self.name)
@@ -37,3 +33,5 @@ class ScanPngEof(strelka.Scanner):
                     )
 
                 self.files.append(extract_file)
+            else:
+                self.flags.append("no_iend_chunk")
