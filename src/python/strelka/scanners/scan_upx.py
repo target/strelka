@@ -29,6 +29,7 @@ class ScanUpx(strelka.Scanner):
                     upx_file = upx_fin.read()
                     upx_size = len(upx_file)
                     if upx_size > len(data):
+                        self.flags.append('upx_packed')
                         extract_file = strelka.File(
                             source=self.name,
                         )
