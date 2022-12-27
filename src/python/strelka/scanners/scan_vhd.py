@@ -223,8 +223,6 @@ class ScanVhd(strelka.Scanner):
                                 self.event["hidden_dirs"].append(match.group("name"))
 
                             if "directory" not in modes_list:
-                                if self.event["total"]["extracted"] >= file_limit:
-                                    break
                                 self.event["total"]["files"] += 1
                                 self.event["files"].append(
                                     {
