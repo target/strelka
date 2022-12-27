@@ -9,7 +9,7 @@ class ScanPngEof(strelka.Scanner):
 
     def scan(self, data, file, options, expire_at):
 
-        # PNG IEND trailer
+        # PNG IEND chunk
         png_iend = b"\x00\x00\x00\x00\x49\x45\x4e\x44\xae\x42\x60\x82"
 
         # A normal PNG file should end with the IEND chunk
