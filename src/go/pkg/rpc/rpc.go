@@ -6,9 +6,9 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"runtime"
 	"time"
-	"path/filepath"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -106,6 +106,18 @@ func LogResponses(responses <-chan *strelka.ScanResponse, path string) {
 	}
 }
 
+// Logs events in responses to stdout
+func PrintResponses(responses <-chan *strelka.ScanResponse) {
+	nl := osNewline()
+	for r := range responses {
+		if r != nil {
+			os.Stdout.WriteString(fmt.Sprintf("%s%s", r.Event, nl))
+			continue
+		}
+		break
+	}
+}
+
 // Discards responses
 func DiscardResponses(responses <-chan *strelka.ScanResponse) {
 	for r := range responses {
@@ -129,15 +141,15 @@ func ScanFile(client strelka.FrontendClient, timeout time.Duration, req structs.
 	if req.Delete {
 		defer os.Remove(req.Attributes.Filename)
 	} else if req.Processed != "" {
-                defer func() {
-                        _, name := filepath.Split(req.Attributes.Filename)
-                        m := filepath.Join(req.Processed, name)
-                        err := os.Rename(req.Attributes.Filename, m)
-                        if err != nil {
-                                log.Printf("failed to move file %s to directory %s: %v", name, req.Processed, err)
-                        }
-                }()
-        }
+		defer func() {
+			_, name := filepath.Split(req.Attributes.Filename)
+			m := filepath.Join(req.Processed, name)
+			err := os.Rename(req.Attributes.Filename, m)
+			if err != nil {
+				log.Printf("failed to move file %s to directory %s: %v", name, req.Processed, err)
+			}
+		}()
+	}
 	defer file.Close()
 
 	scanFile, err := client.ScanFile(ctx, grpc.WaitForReady(true))
