@@ -42,6 +42,7 @@ pytz>=2022.1
 pyxlsb2==0.0.8
 pyyaml>=5.4.1
 pyzbar==0.1.8
+pyzipper==0.3.6
 rarfile==4.0
 redis==3.5.3
 requests==2.25.1
