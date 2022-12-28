@@ -65,7 +65,7 @@ Use any malware sample, or other file you'd like Strelka to analyze.
 wget https://github.com/ytisf/theZoo/raw/master/malware/Binaries/Win32.Emotet/Win32.Emotet.zip -P samples/
 ```
 
-#### Step 6: Analyze the file with Strelka using oneshot
+#### Step 6: Analyze the file with Strelka using the dockerized oneshot
 
 ```bash
 docker-compose -f build/docker-compose.yaml run oneshot -f /samples/Win32.Emotet.zip | jq
@@ -73,16 +73,11 @@ docker-compose -f build/docker-compose.yaml run oneshot -f /samples/Win32.Emotet
 
 #### What's happening here?
 
-1. Strelka determined that the submitted file was an encrypted ZIP using the taste configuration
-   * `configs/python/backend/taste/taste.yara`
-   * `configs/python/backend/backend.yaml`
-2. Strelka ran the ScanEncryptedZip scanner (and a few others), based on the file type
-3. ScanEncryptedZip used a dictionary to crack the ZIP file password, and extract the compressed file
-4. The extracted file was sent back into the Strelka pipeline for analysis (note the `file.depth` field)
-5. Strelka determined that the extracted file was an EXE
-6. Strelka ran the ScanPe scanner (and a few others), based on the file type
-7. ScanPe dissected the EXE file and added useful metadata to the output
-8. ScanYara analyzed the EXE file using the provided rules and added numerous matches to the output, some indicating the file might be malicious
+1. Strelka determined that the submitted file was an encrypted ZIP (See: [taste.yara](configs/python/backend/taste/taste.yara) [backend.yaml](configs/python/backend/backend.yaml))
+2. ScanEncryptedZip used a dictionary to crack the ZIP file password, and extract the compressed file
+3. The extracted file was sent back into the Strelka pipeline for analysis (note the `file.depth` field), and determined that the extracted file was an EXE
+4. ScanPe dissected the EXE file and added useful metadata to the output
+5. ScanYara analyzed the EXE file using the provided rules and added numerous matches to the output, some indicating the file might be malicious
 
 *The following output has been edited for brevity.*
 
