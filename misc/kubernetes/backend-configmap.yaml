@@ -265,7 +265,7 @@ data:
               - 'cpio_file'
               - 'application/x-xar'
               - 'xar_file'
-              - 'arj_file'
+#              - 'arj_file'  # ARJ support missing from ScanLibarchive
               - 'iso_file'
               - 'application/x-debian-package'
               - 'debian_package_file'
