@@ -221,6 +221,9 @@ $ cat strelka.log | jq .
 
 Terminal 1 runs a full Strelka cluster with logs printed to stdout and Terminal 2 is used to send files to the cluster. `fileshot.yaml` will need the `patterns` field updated to identify files to scan, by default scan results will be written to `./strelka.log`.
 
+You can also provide a list of MD5 hashes to exclude from file submission with a `-e <PATH/TO/HASHES>` argument.
+Additional logging can be observed using `-v`
+
 ## Deployment
 ### Client Apps
 Strelka's core client apps are designed to efficiently integrate a wide-range of systems (Windows, Mac, Linux) with a cluster. Out of the box client apps are written in Go and custom clients can be written in any language supported by gRPC.
@@ -277,6 +280,12 @@ For the options below, only one response setting may be configured.
 * "conn.concurrency": number of concurrent requests to make (defaults to 8)
 * "files.chunk": size of file chunks that will be sent to the frontend server (defaults to 32768b / 32kb)
 * "files.patterns": list of glob patterns that determine which files will be sent for scanning (defaults to example glob pattern)
+* "files.minsize": Checks the file size for a file to be scanned. If size does not exceed this number (in bytes), ignore file. (If no specified, no check is run).
+* "files.maxsize": Checks the file size for a file to be scanned. If size exceeds this number (in bytes), ignore file. (If no specified, no check is run).
+* "files.limitpattern":  Checks the amount of files submitted in this scan. If total scanned in a specific pattern is greater than this number, scan no more in that    pattern. (If no specified, no check is run).
+* "files.limittotal": Checks the amount of files submitted in this scan. If total scanned is greater than this number, scan no more. (If no specified, no check is run).
+* "files.modified": Checks last modified time of file and if time is greater than this number (in hours), ignore. (If no specified, no check is run). 
+* "files.mimetypes": List of inclusion mimetypes to be scanned. Mimetypes not in the list will not be scanned. (If no specified, no check is run).
 * "files.delay": artificial sleep between the submission of each chunk
 * "files.delete": boolean that determines if files should be deleted after being sent for scanning (defaults to false -- does not delete files)
 * "files.gatekeeper": boolean that determines if events should be pulled from the temporary event cache (defaults to true)

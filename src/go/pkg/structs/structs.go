@@ -27,10 +27,16 @@ type ConfThroughput struct {
 }
 
 type ConfFiles struct {
-	Patterns   []string // required
-	Delete     bool     // optional
-	Gatekeeper bool     // required
-	Processed string // optional
+	Patterns     []string // required
+	Mimetypes    []string //optional
+	Minsize      int      //optional
+	Maxsize      int      //optional
+	LimitPattern int      //optional
+	LimitTotal   int      //optional
+	Modified     int      //optional
+	Delete       bool     // optional
+	Gatekeeper   bool     // required
+	Processed    string   // optional
 }
 
 type ConfCoordinator struct {
