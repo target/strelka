@@ -33,7 +33,7 @@ Running a file through Strelka is simple. In this section, Strelka capabilities 
 
 ```bash
 # Ubuntu 22.04
-sudo apt install -y wget git docker docker-compose jq
+sudo apt install -y wget git docker docker-compose golang jq
 ````
 
 #### Step 2: Download Strelka
@@ -55,6 +55,8 @@ echo 'include "./rules/index.yar"' > configs/python/backend/yara/rules.yara
 ```bash
 docker-compose -f build/docker-compose.yaml build
 docker-compose -f build/docker-compose.yaml up -d
+
+go build github.com/target/strelka/src/go/cmd/strelka-oneshot
 ```
 
 #### Step 5: Prepare a file to analyze
@@ -68,7 +70,7 @@ wget https://github.com/ytisf/theZoo/raw/master/malware/Binaries/Win32.Emotet/Wi
 #### Step 6: Analyze the file with Strelka using the dockerized oneshot
 
 ```bash
-docker-compose -f build/docker-compose.yaml run oneshot -f /samples/Win32.Emotet.zip | jq
+./strelka-oneshot -f /samples/Win32.Emotet.zip | jq
 ```
 
 #### What's happening here?
