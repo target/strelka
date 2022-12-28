@@ -46,6 +46,7 @@ cd strelka
 #### Step 3: Download and install preferred yara rules (optional)
 
 ```bash
+rm configs/python/backend/yara/rules.yara
 git clone https://github.com/Yara-Rules/rules.git configs/python/backend/yara
 echo 'include "./rules/index.yar"' > configs/python/backend/yara/rules.yara
 ```
