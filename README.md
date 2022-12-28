@@ -183,6 +183,14 @@ docker-compose -f build/docker-compose.yaml run oneshot -f /samples/Win32.Emotet
 }
 ```
 
+#### What's next?
+
+If Strelka was deployed and ingesting files in your environment, you might be collecting these events in your SIEM. With this analysis, you could write a rule that looks for events matching the suspicious yara tags, alerting you to a potentially malicious file.
+
+```
+scan.yara.tags:("Technique_AntiDebugging" && "SubTechnique_SEH")
+```
+
 ## Potential Uses
 With over 50 file scanners for the most common file types (e.g., exe, docx, js, zip), Strelka provides users with the ability to gain new insights into files on their host, network, or enterprise. While Strelka *is not* a detection engine itself (although it does utilize [YARA](https://virustotal.github.io/yara/), it can provide enough metadata to identify suspicious or malicious files. Some potential uses for Strelka include:
 
@@ -200,8 +208,6 @@ More documentation about Strelka can be found in the [README](https://target.git
 Guidelines for contributing can be found [here](https://github.com/target/strelka/blob/master/CONTRIBUTING.md).
 
 ## Known Issues
-
-None currently.
 
 See [issues labeled `bug`](https://github.com/target/strelka/issues?q=is%3Aissue+is%3Aopen+label%3Abug) in the tracker for any potential known issues.
 
