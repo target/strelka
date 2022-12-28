@@ -27,7 +27,7 @@ Strelka is a modular data scanning platform, allowing users or systems to submit
 
 Running a file through Strelka is simple. In this section, Strelka capabilities of extraction and analysis are demonstrated for a one-off analysis.
 
-*Please review the [documentation](https://target.github.io/strelka/) for details on how to properly build and deploy Strelka in an enterprise envrionment.*
+*Please review the [documentation](https://target.github.io/strelka/) for details on how to properly build and deploy Strelka in an enterprise environment.*
 
 #### Step 1: Install prerequisites
 
