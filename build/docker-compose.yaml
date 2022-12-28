@@ -35,7 +35,6 @@ services:
       - net
     volumes:
       - ../configs/python/backend/:/etc/strelka/:ro
-      - ../configs/python/backend/rules.yara:/etc/yara/rules.yara:ro
     restart: unless-stopped
     container_name: strelka_backend_1
     depends_on:
@@ -54,6 +53,19 @@ services:
       - ../configs/go/manager/:/etc/strelka/:ro
     depends_on:
       - coordinator
+
+  oneshot:
+    build:
+      context: ..
+      dockerfile: build/go/oneshot/Dockerfile
+    command: strelka-oneshot
+    container_name: strelka_oneshot_1
+    networks:
+      - net
+    volumes:
+      - ../samples/:/samples/:ro
+    depends_on:
+      - frontend
 
   mmrpc:
     build:

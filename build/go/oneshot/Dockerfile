@@ -25,6 +25,9 @@ RUN apk add --no-cache jq
 # Initialize with non-root user
 USER 1001
 
+ENV STRELKA_ONESHOT_FRONTENDURL=frontend:57314
+ENV STRELKA_ONESHOT_LOGPATH=-
+
 # Set container entrypoint. This could be set/overridden elsewhere in deployment (e.g. k8s, docker-compose, etc.)
 # Currently overwritten in ./build/docker-compose.yml
 ENTRYPOINT ["strelka-oneshot"]
