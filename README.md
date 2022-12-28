@@ -80,10 +80,10 @@ docker-compose -f build/docker-compose.yaml run oneshot -f /samples/Win32.Emotet
 2. Strelka ran the ScanEncryptedZip scanner (and a few others), based on the file type
 3. ScanEncryptedZip used a dictionary to crack the ZIP file password, and extract the compressed file
 4. The extracted file was sent back into the Strelka pipeline for analysis (note the `file.depth` field)
-5. Strelka determined that the extracted file was a Windows Executable
+5. Strelka determined that the extracted file was an EXE
 6. Strelka ran the ScanPe scanner (and a few others), based on the file type
-7. ScanPe dissected the PE file and added useful metadata to the output
-8. ScanYara analyzed the PE file using the provided rules and added numerous matches to the output, some indicating the file might be malicious
+7. ScanPe dissected the EXE file and added useful metadata to the output
+8. ScanYara analyzed the EXE file using the provided rules and added numerous matches to the output, some indicating the file might be malicious
 
 *The following output has been edited for brevity.*
 
