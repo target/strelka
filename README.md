@@ -49,7 +49,6 @@ cd strelka
 
 ```bash
 git clone https://github.com/Yara-Rules/rules.git configs/python/backend/yara
-rm configs/python/backend/yara/rules.yara
 echo 'include "./rules/index.yar"' > configs/python/backend/yara/rules.yara
 ```
 
