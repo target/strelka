@@ -49,7 +49,7 @@ cd strelka
 
 ```bash
 rm configs/python/backend/yara/rules.yara
-git clone https://github.com/Yara-Rules/rules.git configs/python/backend/yara
+git clone https://github.com/Yara-Rules/rules.git configs/python/backend/yara/rules/
 echo 'include "./rules/index.yar"' > configs/python/backend/yara/rules.yara
 ```
 
@@ -58,7 +58,6 @@ echo 'include "./rules/index.yar"' > configs/python/backend/yara/rules.yara
 ```bash
 docker-compose -f build/docker-compose.yaml build
 docker-compose -f build/docker-compose.yaml up -d
-
 go build github.com/target/strelka/src/go/cmd/strelka-oneshot
 ```
 
