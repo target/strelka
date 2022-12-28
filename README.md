@@ -33,31 +33,32 @@ Running a file through Strelka is simple. In this section, Strelka capabilities 
 
 ```bash
 # Ubuntu 22.04
-sudo apt install -y wget git docker docker-compose golang jq
-sudo usermod -aG docker $USER
+sudo apt install -y wget git docker docker-compose golang jq && \
+sudo groupadd docker && \
+sudo usermod -aG docker $USER && \
 newgrp docker
 ````
 
 #### Step 2: Download Strelka
 
 ```bash
-git clone https://github.com/target/strelka.git
+git clone https://github.com/target/strelka.git && \
 cd strelka
 ```
 
 #### Step 3: Download and install preferred yara rules (optional)
 
 ```bash
-rm configs/python/backend/yara/rules.yara
-git clone https://github.com/Yara-Rules/rules.git configs/python/backend/yara/rules/
+rm configs/python/backend/yara/rules.yara && \
+git clone https://github.com/Yara-Rules/rules.git configs/python/backend/yara/rules/ && \
 echo 'include "./rules/index.yar"' > configs/python/backend/yara/rules.yara
 ```
 
 #### Step 4: Build and start Strelka
 
 ```bash
-docker-compose -f build/docker-compose.yaml build
-docker-compose -f build/docker-compose.yaml up -d
+docker-compose -f build/docker-compose.yaml build && \
+docker-compose -f build/docker-compose.yaml up -d && \
 go build github.com/target/strelka/src/go/cmd/strelka-oneshot
 ```
 
