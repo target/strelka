@@ -73,7 +73,7 @@ wget https://github.com/ytisf/theZoo/raw/master/malware/Binaries/Win32.Emotet/Wi
 #### Step 6: Analyze the file with Strelka using the dockerized oneshot
 
 ```bash
-./strelka-oneshot -f /samples/Win32.Emotet.zip | jq
+./strelka-oneshot -f samples/Win32.Emotet.zip -l - | jq
 ```
 
 #### What's happening here?
