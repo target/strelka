@@ -24,7 +24,10 @@ Strelka is a modular data scanning platform, allowing users or systems to submit
 ![Strelka Features](./misc/assets/strelka_features.png)
 
 ## Quickstart
-*This section is a demonstration of Strelka's capabilities. Please review the [documentation](https://target.github.io/strelka/) for details on how to properly build and deploy Strelka in an enterprise envrionment.*
+
+Running a file through Strelka is simple. In this section, Strelka capabilities of extraction and analysis are demonstrated for a one-off analysis.
+
+*Please review the [documentation](https://target.github.io/strelka/) for details on how to properly build and deploy Strelka in an enterprise envrionment.*
 
 #### Step 1: Install prerequisites
 
@@ -37,13 +40,11 @@ sudo apt install -y wget git docker docker-compose jq
 #### Step 2: Download Strelka
 
 ```bash
-# Clone Strelka
-cd ~/
 git clone https://github.com/target/strelka.git
 cd strelka
 ```
 
-#### Step 3: Download and install yara rules (optional)
+#### Step 3: Download and install preferred yara rules (optional)
 
 ```bash
 git clone https://github.com/Yara-Rules/rules.git configs/python/backend/yara
@@ -71,36 +72,28 @@ wget https://github.com/ytisf/theZoo/raw/master/malware/Binaries/Win32.Emotet/Wi
 docker-compose -f build/docker-compose.yaml run oneshot -f /samples/Win32.Emotet.zip | jq
 ```
 
-##### What's happening here?
+#### What's happening here?
 
-1. Strelka determined the file is an encrypted ZIP file using the taste configuration defined in `configs/python/backend/taste/taste.yara` and `configs/python/backend/backend.yaml`
-2. Strelka ran the following scanners, some based on the file type:
-    * ScanEncryptedZip
-    * ScanEntropy
-    * ScanFooter
-    * ScanHash
-    * ScanHeader
-    * ScanYara
-    * ScanZip
+1. Strelka determined that the submitted file was an encrypted ZIP using the taste configuration
+   * `configs/python/backend/taste/taste.yara`
+   * `configs/python/backend/backend.yaml`
+2. Strelka ran the ScanEncryptedZip scanner (and a few others), based on the file type
 3. ScanEncryptedZip used a dictionary to crack the ZIP file password, and extract the compressed file
-4. The extracted file was sent back into the Strelka pipeline for analysis
-5. Strelka determined the extracted file is a Windows PE EXE
-6. ScanPe dissected the PE file and generated useful metadata
-7. ScanYara analyzed the PE file and generated numerous matches indicating the file might be malicious
-The password-protected zip file is cracked, the file inside extracted 
+4. The extracted file was sent back into the Strelka pipeline for analysis (note the `file.depth` field)
+5. Strelka determined that the extracted file was a Windows Executable
+6. Strelka ran the ScanPe scanner (and a few others), based on the file type
+7. ScanPe dissected the PE file and added useful metadata to the output
+8. ScanYara analyzed the PE file using the provided rules and added numerous matches to the output, some indicating the file might be malicious
+
+*The following output has been edited for brevity.*
 
 ```json
 {
   "file": {
     "depth": 0,
     "flavors": {
-      "mime": [
-        "application/zip"
-      ],
-      "yara": [
-        "encrypted_zip",
-        "zip_file"
-      ]
+      "mime": ["application/zip"],
+      "yara": ["encrypted_zip", "zip_file"]
     },
     "scanners": [
       "ScanEncryptedZip",
@@ -116,10 +109,7 @@ The password-protected zip file is cracked, the file inside extracted
     "encrypted_zip": {
       "cracked_password": "infected",
       "elapsed": 0.114269,
-      "total": {
-        "extracted": 1,
-        "files": 1
-      }
+      "total": {"extracted": 1, "files": 1}
     }
   }
 }
@@ -129,12 +119,8 @@ The password-protected zip file is cracked, the file inside extracted
   "file": {
     "depth": 1,
     "flavors": {
-      "mime": [
-        "application/x-dosexec"
-      ],
-      "yara": [
-        "mz_file"
-      ]
+      "mime": ["application/x-dosexec"],
+      "yara": ["mz_file"]
     },
     "name": "29D6161522C7F7F21B35401907C702BDDB05ED47.bin",
     "scanners": [
@@ -156,26 +142,15 @@ The password-protected zip file is cracked, the file inside extracted
       "elapsed": 0.013076,
       "file_alignment": 4096,
       "file_info": {
-        "comments": "Note: In CSS3, the text-decoration property is a shorthand property for text-decoration-line, text-decoration-color, and text-decoration-style, but this is currently.",
         "company_name": "In CSS3",
         "file_description": "Note: In CSS3, the text-decoration property is a shorthand property for text-decoration-line, text-decoration-color, and text-decoration-style, but this is currently.",
         "file_version": "1.00.0065",
-        "fixed": {
-          "operating_systems": [
-            "WINDOWS32"
-          ],
-          "type": {
-            "primary": "APP"
-          }
-        },
+        "fixed": {"operating_systems": ["WINDOWS32"]},
         "internal_name": "Callstb",
         "original_filename": "NOFAstb.exe",
         "product_name": "Goodreads",
         "product_version": "1.00.0065",
-        "var": {
-          "character_set": "Unicode",
-          "language": "U.S. English"
-        }
+        "var": {"character_set": "Unicode", "language": "U.S. English"}
       }
     },
     "yara": {
