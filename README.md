@@ -75,9 +75,9 @@ docker-compose -f build/docker-compose.yaml run oneshot -f /samples/Win32.Emotet
 
 1. Strelka determined that the submitted file was an encrypted ZIP (See: [taste.yara](configs/python/backend/taste/taste.yara) [backend.yaml](configs/python/backend/backend.yaml))
 2. [ScanEncryptedZip](src/python/strelka/scanners/scan_encrypted_zip.py) used a dictionary to crack the ZIP file password, and extract the compressed file
-3. The extracted file was sent back into the Strelka pipeline for analysis (note the `file.depth` field), and determined that the extracted file was an EXE
+3. The extracted file was sent back into the Strelka pipeline for analysis (note the `file.depth` field), and Strelka determined that the extracted file was an EXE
 4. [ScanPe](src/python/strelka/scanners/scan_pe.py) dissected the EXE file and added useful metadata to the output
-5. [ScanYara](src/python/strelka/scanners/scan_yara.py) analyzed the EXE file using the provided rules and added numerous matches to the output, some indicating the file might be malicious
+5. [ScanYara](src/python/strelka/scanners/scan_yara.py) analyzed the EXE file, using the provided rules, and added numerous matches to the output, some indicating the file might be malicious
 
 *The following output has been edited for brevity.*
 
