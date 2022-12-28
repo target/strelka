@@ -13,6 +13,7 @@ RUN apt-get -qq update && \
     apt-get install --no-install-recommends -qq \
     automake \
     build-essential \
+    cmake \
     curl \
     gcc \
     git \
@@ -134,6 +135,7 @@ RUN cd /strelka/ && \
     apt-get autoremove -qq --purge \
     automake \
     build-essential \
+    cmake \
     curl \
     gcc \
     git \
