@@ -31,9 +31,8 @@ Running a file through Strelka is simple. In this section, Strelka capabilities 
 
 #### Step 1: Install prerequisites
 
-For Ubuntu 22.04
-
 ```bash
+# Ubuntu 22.04
 sudo apt install -y wget git docker docker-compose jq
 ````
 
@@ -60,7 +59,7 @@ docker-compose -f build/docker-compose.yaml up -d
 
 #### Step 5: Prepare a file to analyze
 
-Use any real malware sample, or other file you'd like Strelka to analyze. 
+Use any malware sample, or other file you'd like Strelka to analyze. 
 
 ```bash
 wget https://github.com/ytisf/theZoo/raw/master/malware/Binaries/Win32.Emotet/Win32.Emotet.zip -P samples/
