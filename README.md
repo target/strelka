@@ -34,7 +34,6 @@ Running a file through Strelka is simple. In this section, Strelka capabilities 
 ```bash
 # Ubuntu 22.04
 sudo apt install -y wget git docker docker-compose golang jq && \
-sudo groupadd docker && \
 sudo usermod -aG docker $USER && \
 newgrp docker
 ````
