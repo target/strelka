@@ -60,6 +60,12 @@ scanners:
 #      options:
 #        tmp_directory: '/dev/shm/'
 #        location: '/etc/capa/'
+  'ScanDmg':
+    - positive:
+        flavors:
+          - 'application/xdmg'
+          - 'dmg_file'
+      priority: 5
   'ScanDocx':
     - positive:
         flavors:

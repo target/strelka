@@ -59,6 +59,19 @@ rule cpio_file {
         $a at 0
 }
 
+// 63 64 73 61 65 6E 63 72  cdsaencr Macintosh encrypted Disk image (v1)
+// 65 6E 63 72 63 64 73 61	encrcdsa Macintosh encrypted Disk image (v2)
+// 78 01 73 0D 62 62 60     x.s.bb`  Mac OS X Disk Copy Disk Image file
+// 42 5A 68                 BZh      Mac Disk image (BZ2 compressed)
+
+rule dmg_file {hbjnm
+    meta:
+        type = "archive"
+    strings:
+        $a = { 6B 6F 6C 79 }
+    condition:
+        $a at filesize-512
+}
 
 rule encrypted_zip
 {
