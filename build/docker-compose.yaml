@@ -62,8 +62,6 @@ services:
     container_name: strelka_oneshot_1
     networks:
       - net
-    volumes:
-      - ../samples/:/samples/:ro
     depends_on:
       - frontend
 
