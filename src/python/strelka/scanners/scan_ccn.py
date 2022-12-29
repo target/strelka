@@ -23,7 +23,10 @@ class ScanCcn(strelka.Scanner):
         return self.luhn_checksum(card_number) == 0
 
     def scan(self, data, file, options, expire_at):
-        re_visa = re.compile(rb"4[0-9]{12}(?:[0-9]{3})?")
+        # re_amex = re.compile(rb"[^0-9](3[47][0-9]{13})[^0-9]")
+        # re_disc = re.compile(rb"[^0-9](6[0-9]{15})[^0-9]")
+        # re_mast = re.compile(rb"[^0-9](5[1-5]{1}[0-9]{14})[^0-9]")
+        re_visa = re.compile(rb"[^0-9](4[0-9]{15})[^0-9]")
 
         if matches := re_visa.findall(data):
             for match in matches:
@@ -31,6 +34,5 @@ class ScanCcn(strelka.Scanner):
                     if self.is_luhn_valid(match.decode("ascii")):
                         if "luhn_match" not in self.flags:
                             self.flags.append("luhn_match")
-                            self.throw("msg", e)
                 except:
                     pass

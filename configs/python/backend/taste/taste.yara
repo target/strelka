@@ -824,14 +824,18 @@ rule wmv_file {
 rule credit_cards {
     meta:
         // https://github.com/sbousseaden/YaraHunts/blob/master/hunt_creditcard_memscrap.yara
-        description = "Hunting rule for possible CC data memory scrapper"
-        author = "SBousseaden"
-        date = "17/07/2020"
-    strings:
         // https://stackoverflow.com/questions/9315647/regex-credit-card-number-tests
-        // $cc1 = "^3[47][0-9]{13}$"  // Amex Card
-        // $cc2 = "^65[4-9][0-9]{13}|64[4-9][0-9]{13}|6011[0-9]{12}|(622(?:12[6-9]|1[3-9][0-9]|[2-8][0-9][0-9]|9[01][0-9]|92[0-5])[0-9]{10})$"  // Discover Card
-        // $cc3 = "^(5[1-5][0-9]{14}|2(22[1-9][0-9]{12}|2[3-9][0-9]{13}|[3-6][0-9]{14}|7[0-1][0-9]{13}|720[0-9]{12}))$"  // Mastercard
-        $cc4 = "^4[0-9]{12}(?:[0-9]{3})?$"  // Visa Card
-    condition: 1 of ($cc*)
+        // https://moneytips.com/anatomy-of-a-credit-card/
+        // https://engineering.avast.io/yara-in-search-of-regular-expressions/
+        // https://baymard.com/checkout-usability/credit-card-patterns
+        description = "Identify popular credit card numbers"
+        author = "ryan.ohoro"
+        date = "12/29/2022"
+    strings:
+        $amex = /[^0-9]3[47][0-9]{13}[^0-9]/      // Amex Card
+        $disc = /[^0-9]6[0-9]{15}[^0-9]/          // Discover Card
+        $mast = /[^0-9]5[1-5]{1}[0-9]{14}[^0-9]/  // Mastercard
+        $visa = /[^0-9]4[0-9]{15}[^0-9]/          // Visa Card
+    condition:
+        any of them
 }
