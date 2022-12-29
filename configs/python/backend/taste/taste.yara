@@ -832,9 +832,9 @@ rule credit_cards {
         author = "ryan.ohoro"
         date = "12/29/2022"
     strings:
-        $amex = /[^0-9]3[47][0-9]{13}[^0-9]/      // Amex Card
-        $disc = /[^0-9]6[0-9]{15}[^0-9]/          // Discover Card
-        $mast = /[^0-9]5[1-5]{1}[0-9]{14}[^0-9]/  // Mastercard
+        // $amex = /[^0-9]3[47][0-9]{13}[^0-9]/      // Amex Card
+        // $disc = /[^0-9]6[0-9]{15}[^0-9]/          // Discover Card
+        // $mast = /[^0-9]5[1-5]{1}[0-9]{14}[^0-9]/  // Mastercard
         $visa = /[^0-9]4[0-9]{15}[^0-9]/          // Visa Card
     condition:
         any of them
