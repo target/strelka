@@ -59,6 +59,24 @@ rule cpio_file {
         $a at 0
 }
 
+rule dmg_disk_image {
+    meta:
+        type = "archive"
+    strings:
+        $koly = { 6B 6F 6C 79 }  // koly
+    condition:
+        $koly at filesize - 0x200
+}
+
+rule dmg_encrypted_disk_image {
+    meta:
+        type = "archive"
+    strings:
+        $v1 = { 65 6E 63 72 63 64 73 61 00 } // encrcdsa - v1
+        $v2 = { 63 64 73 61 65 6E 63 72 00 } // cdsaencr - v2
+    condition:
+        $v1 at 0 or $v2 at 0
+}
 
 rule encrypted_zip
 {
@@ -90,6 +108,19 @@ rule encrypted_word_document
     condition:
         uint32be(0) == 0xd0cf11e0 and
         any of them		
+}
+
+rule hfsplus_disk_image {
+    meta:
+        type = "archive"
+        reference = "https://developer.apple.com/library/archive/technotes/tn/tn1150.html"
+        reference = "https://fossies.org/linux/file/magic/Magdir/macintosh"
+    strings:
+        $a = { 48 2B 00 04 }  // H+   Non-bootable
+        $b = { 48 2B 4C 78 }  // H+Lx Bootable
+    condition:
+        $a at 0x400 or
+        $b at 0x408
 }
 
 rule iso_file {
