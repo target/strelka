@@ -63,8 +63,9 @@ scanners:
   'ScanDmg':
     - positive:
         flavors:
-          - 'application/xdmg'
-          - 'dmg_file'
+          - 'dmg_disk_image'
+#          - 'dmg_encrypted_disk_image'
+          - 'hfsplus_disk_image'
       priority: 5
   'ScanDocx':
     - positive:

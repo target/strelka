@@ -20,7 +20,7 @@ class ScanDmg(strelka.Scanner):
 
         self.event["total"] = {"files": 0, "extracted": 0}
         self.event["files"] = []
-        self.event["hidden_dirs"] = []
+        # self.event["hidden_dirs"] = []
         self.event["meta"] = {}
 
         try:
@@ -57,6 +57,7 @@ class ScanDmg(strelka.Scanner):
                             stdout=subprocess.PIPE,
                             stderr=subprocess.DEVNULL,
                         ).communicate(timeout=scanner_timeout)
+
                     except Exception:
                         self.flags.append("dmg_7zip_extract_process_error")
 
@@ -76,6 +77,11 @@ class ScanDmg(strelka.Scanner):
                         pathlib.Path(tmp_extract), self.EXCLUDED_ROOT_DIRS
                     ):
                         if not name.is_file():
+                            continue
+
+                        print(name)
+                        # Skip duplicate files created with these extended attributes
+                        if str(name).endswith(":com.apple.quarantine") or str(name).endswith(":com.apple.FinderInfo"):
                             continue
 
                         if self.event["total"]["extracted"] >= file_limit:
@@ -218,9 +224,9 @@ class ScanDmg(strelka.Scanner):
                             ):
                                 continue
 
-                            # Matching ScanIso, collecting hidden directories separately
-                            if "hidden" in modes_list and "directory" in modes_list:
-                                self.event["hidden_dirs"].append(match.group("name"))
+                            # No DMG sample available has a file property of hidden
+                            #if "hidden" in modes_list and "directory" in modes_list:
+                            #    self.event["hidden_dirs"].append(match.group("name"))
 
                             if "directory" not in modes_list:
                                 self.event["total"]["files"] += 1
