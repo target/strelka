@@ -14,7 +14,7 @@ class ScanDmg(strelka.Scanner):
     EXCLUDED_ROOT_DIRS = ["[SYSTEM]"]
 
     def scan(self, data, file, options, expire_at):
-        file_limit = options.get("limit", 100)
+        file_limit = options.get("limit", 1000)
         tmp_directory = options.get("tmp_file_directory", "/tmp/")
         scanner_timeout = options.get("scanner_timeout", 150)
 
