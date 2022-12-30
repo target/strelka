@@ -11,7 +11,7 @@ def test_scan_jpeg(mocker):
     Failure: Unable to load file or sample event fails to match.
     """
 
-    test_scan_event = {"elapsed": mock.ANY, "flags": []}
+    test_scan_event = {"elapsed": mock.ANY, "flags": ["no_trailer"]}
 
     scanner_event = run_test_scan(
         mocker=mocker,
@@ -29,7 +29,7 @@ def test_scan_jpeg_pe_overlay(mocker):
     Failure: Unable to load file or sample event fails to match.
     """
 
-    test_scan_event = {"elapsed": mock.ANY, "flags": [], "trailer_index": 308564}
+    test_scan_event = {"elapsed": mock.ANY, "flags": [], "trailer_index": 308566}
 
     scanner_event = run_test_scan(
         mocker=mocker,
