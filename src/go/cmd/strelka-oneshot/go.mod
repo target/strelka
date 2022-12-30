@@ -1,17 +1,17 @@
 module github.com/target/strelka/src/go/cmd/strelka-oneshot
 
-go 1.17
+go 1.19
 
 require (
-	github.com/target/strelka v0.0.0-20220128120944-5ae5bd6703f6
-	google.golang.org/grpc v1.44.0
+	github.com/target/strelka v0.0.0-20221227011537-20c8aa06509f
+	google.golang.org/grpc v1.51.0
 )
 
 require (
-	github.com/golang/protobuf v1.4.3 // indirect
-	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect
-	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
-	golang.org/x/text v0.3.0 // indirect
-	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
-	google.golang.org/protobuf v1.25.0 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
+	golang.org/x/net v0.4.0 // indirect
+	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
+	google.golang.org/genproto v0.0.0-20221207170731-23e4bf6bdc37 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 )
