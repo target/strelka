@@ -60,6 +60,11 @@ scanners:
 #      options:
 #        tmp_directory: '/dev/shm/'
 #        location: '/etc/capa/'
+#  'ScanCcn':
+#    - positive:
+#        flavors:
+#          - 'credit_cards'
+#      priority: 5
   'ScanDmg':
     - positive:
         flavors:
