@@ -6,7 +6,7 @@ Changes to the project will be tracked in this file via the date of change.
 - Added dozens of tests over the last few weeks
 
 ### Changed
-- Updated with bugfixes or updates: `ScanBase64`, `ScanEncryptedZip`, `ScanIni`, `ScanJPEG`, `ScanLibarchive`, `ScanMacho`, `ScanPDF`, `ScanPNGEoF`, `ScanQR`, `ScanRar`, ScanTAR`, ScanUPX`, ScanVHD`, ScanZip` (@ryanohoro)
+- Updated with bugfixes or updates: `ScanBase64`, `ScanEncryptedZip`, `ScanIni`, `ScanJPEG`, `ScanLibarchive`, `ScanMacho`, `ScanPDF`, `ScanPNGEoF`, `ScanQR`, `ScanRar`,`ScanTAR`, `ScanUPX`, `ScanVHD`, `ScanZip` (@ryanohoro)
 
 ## 2022-12-30
 ### Changed
