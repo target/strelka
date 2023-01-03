@@ -160,6 +160,43 @@ func main() {
 	// Set Total Limiter for Max Files to be consumed by host
 	totalCount := 0
 
+	// LOG FILE CODE IMPLEMENTED BY CHRISTIAN.RONDESTVEDT
+	// Create a log file
+	f, err := os.Create("log.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+
+	// Output log dictionary
+	type Dictionary map[string]string
+	output_dict := Dictionary{
+		“metadata”: 
+		{“files”:{"total": 0, "submitted": 0}, 
+		{“exclusions”: {"size": 0, "mimetypes": 0, "hash": 0, "modified": 0}}
+		}
+	}
+	// Dictionary value updates
+	output_dict["metadata"]["files"]["total"] += 1
+	output_dict["metadata"]["files"]["submitted"] += 1
+	output_dict["metadata"]["exclusions"]["size"] += 1
+	output_dict["metadata"]["exclusions"]["mimetypes"] += 1
+	output_dict["metadata"]["exclusions"]["hash"] += 1
+	output_dict["metadata"]["exclusions"]["modified"] += 1
+
+	// Marshal the dictionary into JSON
+	jsonData, err := json.Marshal(output_dict)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Write to the log file
+	_, err = f.WriteString(jsonData)
+	if err != nil {
+		log.Fatal(err)
+	}
+	/////////////////////////////////////////////////////
+
 	// Loop through each pattern in the list of file patterns
 	for _, p := range conf.Files.Patterns {
 
