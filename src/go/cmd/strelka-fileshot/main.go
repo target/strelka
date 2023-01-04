@@ -162,43 +162,38 @@ func main() {
 
 	// LOG FILE CODE IMPLEMENTED BY CHRISTIAN.RONDESTVEDT
 	// Create a log file
-	f, err := os.Create("log.txt")
+	f, err := os.Create("output.log")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer f.Close()
 
 	// Output log dictionary
-	type Dictionary map[string]string
-	output_dict := Dictionary{
-		“metadata”: 
-		{“files”:{"total": 0, "submitted": 0}, 
-		{“exclusions”: {"size": 0, "mimetypes": 0, "hash": 0, "modified": 0}}
-		}
-	}
-	// Dictionary value updates
-	output_dict["metadata"]["files"]["total"] += 1
-	output_dict["metadata"]["files"]["submitted"] += 1
-	output_dict["metadata"]["exclusions"]["size"] += 1
-	output_dict["metadata"]["exclusions"]["mimetypes"] += 1
-	output_dict["metadata"]["exclusions"]["hash"] += 1
-	output_dict["metadata"]["exclusions"]["modified"] += 1
+	
+	exclusionsDict := make(map[string]string)
+	exclusionsDict["size"] = 0
+	exclusionsDict["mimetypes"] = 0
+	exclusionsDict["hash"] = 0 
+	exclusionsDict["modified"] = 0
 
-	// Marshal the dictionary into JSON
-	jsonData, err := json.Marshal(output_dict)
-	if err != nil {
-		log.Fatal(err)
-	}
+	filesDict := make(map[string]map[string]string)
+	filesDict["total"] = 0
+	filesDict["total"] = 0
+	filesDict["exclusions"] = exclusionsDict 
 
-	// Write to the log file
-	_, err = f.WriteString(jsonData)
-	if err != nil {
-		log.Fatal(err)
-	}
+	metadataDict := make(map[string]map[string]map[string]string)
+	metadataDict["files"] = filesDict
+
+	outputDict := make(map[string]map[string]map[string]map[string]string)
+	outputDict["metadata"] = metadataDict
+
 	/////////////////////////////////////////////////////
 
 	// Loop through each pattern in the list of file patterns
 	for _, p := range conf.Files.Patterns {
+		
+		// Logging tracker
+		outputDict["metadata"]["files"]["total"] += 1
 
 		if *verbose {
 			log.Printf("Collecting files from: %s.", p)
@@ -224,7 +219,7 @@ func main() {
 
 		// If recently modified is set, run this, otherwise place match into new var matches
 		if conf.Files.Modified > 0 {
-			match = getRecentlyModified(match, conf.Files.Modified, *verbose)
+			match = getRecentlyModified(&outputDict, match, conf.Files.Modified, *verbose)
 		}
 
 		// Iterate over the list of files that match the provided pattern.
@@ -266,7 +261,7 @@ func main() {
 			// Check file size
 			// If file size not in range, skip to next file.
 			if !(conf.Files.Minsize < 0) && conf.Files.Maxsize > 0 {
-				if !checkFileSize(fi, int64(conf.Files.Minsize), int64(conf.Files.Maxsize), *verbose) {
+				if !checkFileSize(&outputDict, fi, int64(conf.Files.Minsize), int64(conf.Files.Maxsize), *verbose) {
 					continue
 				}
 			}
@@ -284,7 +279,7 @@ func main() {
 			// Check file mimetypes
 			// If mimetype not found, skip to next file.
 			if len(conf.Files.Mimetypes) > 0 {
-				if !checkFileMimetype(file, conf.Files.Mimetypes, *verbose) {
+				if !checkFileMimetype(&outputDict, file, conf.Files.Mimetypes, *verbose) {
 					continue
 				}
 			}
@@ -293,7 +288,7 @@ func main() {
 			// Check hash exclusions
 			// If an exclusion is found, skip to next file.
 			if len(hashes) > 0 {
-				if checkFileHash(file, hashes, *verbose) {
+				if checkFileHash(&outputDict, file, hashes, *verbose) {
 					continue
 				}
 			}
@@ -327,6 +322,9 @@ func main() {
 				// Notify the wgRequest wait group that the goroutine has finished.
 				wgRequest.Done()
 
+				// Logging tracker
+				outputDict["metadata"]["files"]["submitted"] += 1
+
 				// Release the semaphore to indicate that the goroutine has finished.
 				<-sem
 			}()
@@ -353,9 +351,24 @@ func main() {
 	}
 }
 
+// Marshal the dictionary into JSON
+jsonData, err := json.Marshal(outputDict)
+if err != nil {
+	log.Fatal(err)
+}
+
+// Write to the log file
+_, err = io.WriteString(f, jsonData)
+if err != nil {
+	log.Fatal(err)
+}
+
 // Checks if the size of a file is within a given range and returns
 // true if it is, or false otherwise.
-func checkFileSize(file fs.FileInfo, minSize int64, maxSize int64, verbose bool) bool {
+func checkFileSize(m *map[string]map[string]map[string]map[string]string, file fs.FileInfo, minSize int64, maxSize int64, verbose bool) bool {
+	// Logging tracker
+	m["metadata"]["files"]["exclusions"]["size"] += 1
+	
 	// Check if the file size is within the specified range
 	if file.Size() >= minSize && file.Size() <= maxSize {
 		return true
@@ -370,7 +383,10 @@ func checkFileSize(file fs.FileInfo, minSize int64, maxSize int64, verbose bool)
 
 // Checks the MIME type of a file against a list of MIME types and returns
 // true if a match is found, or false otherwise.
-func checkFileMimetype(file *os.File, mimetypes []string, verbose bool) bool {
+func checkFileMimetype(m *map[string]map[string]map[string]map[string]string, file *os.File, mimetypes []string, verbose bool) bool {
+	// Logging tracker
+	outputDict["metadata"]["files"]["exclusions"]["mimetypes"] += 1 
+
 	// Read the first 512 bytes of the file
 	buffer := make([]byte, 512)
 	_, err := file.Read(buffer)
@@ -404,7 +420,10 @@ func checkFileMimetype(file *os.File, mimetypes []string, verbose bool) bool {
 
 // checkFileHash checks the MD5 hash of a file against a list of hashes and returns
 // true if a match is found, or false otherwise.
-func checkFileHash(file *os.File, hashlist []string, verbose bool) bool {
+func checkFileHash(m *map[string]map[string]map[string]map[string]string, file *os.File, hashlist []string, verbose bool) bool {
+	// Logging tracker
+	outputDict["metadata"]["files"]["exclusions"]["hash"] += 1 
+	
 	// Create a new MD5 hash
 	hash := md5.New()
 
@@ -429,7 +448,10 @@ func checkFileHash(file *os.File, hashlist []string, verbose bool) bool {
 
 // getRecentlyModified returns a slice of file paths that match the provided slice of file names and
 // have been modified within the last modified hours.
-func getRecentlyModified(match []string, modified int, verbose bool) []string {
+func getRecentlyModified(m *map[string]map[string]map[string]map[string]string, match []string, modified int, verbose bool) []string {
+	// Logging tracker
+	outputDict["metadata"]["files"]["exclusions"]["modified"] += 1 
+	
 	var matches []string     // slice to hold the matching file paths
 	var paths []string       // slice to hold the file paths
 	var modTimes []time.Time // slice to hold the modification times of the files
