@@ -349,18 +349,18 @@ func main() {
 		// Close the file to release associated resources.
 		heap.Close()
 	}
-}
 
-// Marshal the dictionary into JSON
-jsonData, err := json.Marshal(outputDict)
-if err != nil {
-	log.Fatal(err)
-}
+	// Marshal the dictionary into JSON
+	jsonData, err := json.Marshal(outputDict)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// Write to the log file
-_, err = io.WriteString(f, jsonData)
-if err != nil {
-	log.Fatal(err)
+	// Write to the log file
+	_, err = io.WriteString(f, jsonData)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // Checks if the size of a file is within a given range and returns
