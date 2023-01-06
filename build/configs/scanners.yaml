@@ -449,6 +449,7 @@ scanners:
           - 'json_file'
           - 'ini_file'
           - 'html_file'
+          - 'text/html'
           - 'hta_file'
           - 'text/rtf'
           - 'rtf_file'
