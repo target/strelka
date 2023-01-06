@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/md5"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -27,6 +28,19 @@ import (
 	"google.golang.org/grpc"
 	"gopkg.in/yaml.v2"
 )
+
+var strelkaMetadata = map[string]map[string]int{
+	"files": {
+		"total":     0,
+		"submitted": 0,
+	},
+	"exclusions": {
+		"size":      0,
+		"mimetypes": 0,
+		"hash":      0,
+		"modified":  0,
+	},
+}
 
 func main() {
 	// Declare flags
@@ -168,32 +182,8 @@ func main() {
 	}
 	defer f.Close()
 
-	// Output log dictionary
-	
-	exclusionsDict := make(map[string]string)
-	exclusionsDict["size"] = 0
-	exclusionsDict["mimetypes"] = 0
-	exclusionsDict["hash"] = 0 
-	exclusionsDict["modified"] = 0
-
-	filesDict := make(map[string]map[string]string)
-	filesDict["total"] = 0
-	filesDict["total"] = 0
-	filesDict["exclusions"] = exclusionsDict 
-
-	metadataDict := make(map[string]map[string]map[string]string)
-	metadataDict["files"] = filesDict
-
-	outputDict := make(map[string]map[string]map[string]map[string]string)
-	outputDict["metadata"] = metadataDict
-
-	/////////////////////////////////////////////////////
-
 	// Loop through each pattern in the list of file patterns
 	for _, p := range conf.Files.Patterns {
-		
-		// Logging tracker
-		outputDict["metadata"]["files"]["total"] += 1
 
 		if *verbose {
 			log.Printf("Collecting files from: %s.", p)
@@ -219,7 +209,7 @@ func main() {
 
 		// If recently modified is set, run this, otherwise place match into new var matches
 		if conf.Files.Modified > 0 {
-			match = getRecentlyModified(&outputDict, match, conf.Files.Modified, *verbose)
+			match = getRecentlyModified(match, conf.Files.Modified, *verbose)
 		}
 
 		// Iterate over the list of files that match the provided pattern.
@@ -232,6 +222,9 @@ func main() {
 			if *verbose {
 				log.Printf("Submitting file: %s.", f)
 			}
+
+			// Logging tracker
+			strelkaMetadata["files"]["total"] += 1
 
 			// If current path exceeds amount allowed per collection path, move onto next path.
 			if conf.Files.LimitPattern > 0 && patternCount > conf.Files.LimitPattern {
@@ -261,7 +254,7 @@ func main() {
 			// Check file size
 			// If file size not in range, skip to next file.
 			if !(conf.Files.Minsize < 0) && conf.Files.Maxsize > 0 {
-				if !checkFileSize(&outputDict, fi, int64(conf.Files.Minsize), int64(conf.Files.Maxsize), *verbose) {
+				if !checkFileSize(fi, int64(conf.Files.Minsize), int64(conf.Files.Maxsize), *verbose) {
 					continue
 				}
 			}
@@ -279,7 +272,7 @@ func main() {
 			// Check file mimetypes
 			// If mimetype not found, skip to next file.
 			if len(conf.Files.Mimetypes) > 0 {
-				if !checkFileMimetype(&outputDict, file, conf.Files.Mimetypes, *verbose) {
+				if !checkFileMimetype(file, conf.Files.Mimetypes, *verbose) {
 					continue
 				}
 			}
@@ -288,7 +281,7 @@ func main() {
 			// Check hash exclusions
 			// If an exclusion is found, skip to next file.
 			if len(hashes) > 0 {
-				if checkFileHash(&outputDict, file, hashes, *verbose) {
+				if checkFileHash(file, hashes, *verbose) {
 					continue
 				}
 			}
@@ -322,12 +315,12 @@ func main() {
 				// Notify the wgRequest wait group that the goroutine has finished.
 				wgRequest.Done()
 
-				// Logging tracker
-				outputDict["metadata"]["files"]["submitted"] += 1
-
 				// Release the semaphore to indicate that the goroutine has finished.
 				<-sem
 			}()
+
+			// Logging tracker
+			strelkaMetadata["files"]["submitted"] += 1
 		}
 	}
 
@@ -351,13 +344,13 @@ func main() {
 	}
 
 	// Marshal the dictionary into JSON
-	jsonData, err := json.Marshal(outputDict)
+	jsonData, err := json.Marshal(strelkaMetadata)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Write to the log file
-	_, err = io.WriteString(f, jsonData)
+	_, err = io.WriteString(f, string(jsonData))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -365,10 +358,7 @@ func main() {
 
 // Checks if the size of a file is within a given range and returns
 // true if it is, or false otherwise.
-func checkFileSize(m *map[string]map[string]map[string]map[string]string, file fs.FileInfo, minSize int64, maxSize int64, verbose bool) bool {
-	// Logging tracker
-	m["metadata"]["files"]["exclusions"]["size"] += 1
-	
+func checkFileSize(file fs.FileInfo, minSize int64, maxSize int64, verbose bool) bool {
 	// Check if the file size is within the specified range
 	if file.Size() >= minSize && file.Size() <= maxSize {
 		return true
@@ -378,14 +368,15 @@ func checkFileSize(m *map[string]map[string]map[string]map[string]string, file f
 		log.Printf("[IGNORING] File size (%d) is not within configured Minsize (%d) and Maxsize (%d): %s.", file.Size(), minSize, maxSize, file.Name())
 	}
 
+	// Logging tracker
+	strelkaMetadata["exclusions"]["size"] += 1
+
 	return false
 }
 
 // Checks the MIME type of a file against a list of MIME types and returns
 // true if a match is found, or false otherwise.
-func checkFileMimetype(m *map[string]map[string]map[string]map[string]string, file *os.File, mimetypes []string, verbose bool) bool {
-	// Logging tracker
-	outputDict["metadata"]["files"]["exclusions"]["mimetypes"] += 1 
+func checkFileMimetype(file *os.File, mimetypes []string, verbose bool) bool {
 
 	// Read the first 512 bytes of the file
 	buffer := make([]byte, 512)
@@ -403,10 +394,12 @@ func checkFileMimetype(m *map[string]map[string]map[string]map[string]string, fi
 		return false
 	}
 
-	// Iterate through the list of approved MIME types
+	// Iterate through the list of excluded MIME types
 	for _, v := range mimetypes {
 		// Check if the current MIME type matches a known MIME type
 		if strings.Contains(mimeType.String(), v) {
+			// Logging tracker
+			strelkaMetadata["exclusions"]["mimetypes"] += 1
 			return true
 		}
 	}
@@ -420,10 +413,7 @@ func checkFileMimetype(m *map[string]map[string]map[string]map[string]string, fi
 
 // checkFileHash checks the MD5 hash of a file against a list of hashes and returns
 // true if a match is found, or false otherwise.
-func checkFileHash(m *map[string]map[string]map[string]map[string]string, file *os.File, hashlist []string, verbose bool) bool {
-	// Logging tracker
-	outputDict["metadata"]["files"]["exclusions"]["hash"] += 1 
-	
+func checkFileHash(file *os.File, hashlist []string, verbose bool) bool {
 	// Create a new MD5 hash
 	hash := md5.New()
 
@@ -440,6 +430,8 @@ func checkFileHash(m *map[string]map[string]map[string]map[string]string, file *
 			if verbose {
 				log.Printf("[IGNORING] File hash (%s) was found in MD5 exclusion list: %s.", fmt.Sprintf("%x", hash.Sum(nil)), file.Name())
 			}
+			// Logging tracker
+			strelkaMetadata["exclusions"]["hash"] += 1
 			return true
 		}
 	}
@@ -448,10 +440,7 @@ func checkFileHash(m *map[string]map[string]map[string]map[string]string, file *
 
 // getRecentlyModified returns a slice of file paths that match the provided slice of file names and
 // have been modified within the last modified hours.
-func getRecentlyModified(m *map[string]map[string]map[string]map[string]string, match []string, modified int, verbose bool) []string {
-	// Logging tracker
-	outputDict["metadata"]["files"]["exclusions"]["modified"] += 1 
-	
+func getRecentlyModified(match []string, modified int, verbose bool) []string {
 	var matches []string     // slice to hold the matching file paths
 	var paths []string       // slice to hold the file paths
 	var modTimes []time.Time // slice to hold the modification times of the files
@@ -487,6 +476,8 @@ func getRecentlyModified(m *map[string]map[string]map[string]map[string]string, 
 			if verbose {
 				log.Printf("[IGNORING] Last modified time: %s older than configured timeframe (%d hours): %s.", modTimes[i], modified, path)
 			}
+			// Logging tracker
+			strelkaMetadata["exclusions"]["modified"] += 1
 		}
 	}
 
