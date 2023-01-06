@@ -32,7 +32,6 @@ class Backend(object):
         self.backend_cfg = backend_cfg
         self.coordinator = coordinator
         self.limits = backend_cfg.get('limits')
-        self.yaraData = ''
 
         scanners = backend_cfg.get('scanners')
         if isinstance(scanners, str):
@@ -112,15 +111,9 @@ class Backend(object):
 
     def taste_yara(self, data):
         """Tastes file data with YARA."""
-        # TODO: cache compiled yara and make this more efficient in general
-        compiled_custom_yara = b''
-        if self.yaraData:
-            compiled_custom_yara = yara.compile(source=self.yaraData)
         encoded_whitespace = string.whitespace.encode()
         stripped_data = data.lstrip(encoded_whitespace)
         yara_matches = self.compiled_yara.match(data=stripped_data)
-        if compiled_custom_yara:
-            yara_matches.extend(compiled_custom_yara.match(data=stripped_data))
         return [match.rule for match in yara_matches]
 
     def distribute(self, root_id, file, expire_at):
@@ -143,11 +136,7 @@ class Backend(object):
                             break
                         data += pop
 
-                        ypop = self.coordinator.lpop(f'yara:{file.pointer}')
-                        if ypop is not None:
-                            yaraData += ypop
-
-                    self.yaraData = yaraData.decode()
+                        yaraData = self.coordinator.get(f'yara:{root_id}')
 
                     file.add_flavors({'mime': self.taste_mime(data)})
                     file.add_flavors({'yara': self.taste_yara(data)})
@@ -202,7 +191,7 @@ class Backend(object):
                             options = scanner.get('options', {})
 
                             if name == 'ScanYara':
-                                options['source'] = self.yaraData
+                                options['source'] = yaraData.decode()
 
                             und_name = inflection.underscore(name)
                             scanner_import = f'strelka.scanners.{und_name}'

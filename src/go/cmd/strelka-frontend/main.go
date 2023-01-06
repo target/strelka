@@ -90,8 +90,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		p := s.coordinator.cli.Pipeline()
 		p.RPush(stream.Context(), keyd, in.Data)
 		p.ExpireAt(stream.Context(), keyd, deadline)
-		p.RPush(stream.Context(), keyy, in.YaraData)
-		p.ExpireAt(stream.Context(), keyy, deadline)
+		p.SetNX(stream.Context(), keyy, in.YaraData, time.Until(deadline))
 		if _, err := p.Exec(stream.Context()); err != nil {
 			return err
 		}
