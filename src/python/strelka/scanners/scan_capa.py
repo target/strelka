@@ -30,7 +30,7 @@ class ScanCapa(strelka.Scanner):
 
                     try:
                         (stdout, stderr) = subprocess.Popen(
-                            ['capa', tmp_data.name, '-r', location, '-j'],
+                            ['capa', '-j', '-r', location, '-s', location, tmp_data.name],
                             stdout=subprocess.PIPE,
                             stderr=subprocess.DEVNULL
                         ).communicate()
@@ -39,33 +39,31 @@ class ScanCapa(strelka.Scanner):
                         return
 
                     if stdout:
-                        # Observed extraneous data in stdout requiring string trimming. Parse out JSON response.
-                        # This can be fixed when CAPA is aviailable as a Python 3 library.
                         try:
-                            stdout = stdout[stdout.find(b'{'):]
-                            stdout = stdout[:stdout.rfind(b'}')]
-                            stdout += b'}'
-                            capa_json = json.loads(stdout)
+                            capa_json = json.loads(stdout.rstrip())
+                            print(json.dumps(capa_json))
                         except:
                             self.flags.append('error_parsing')
                             return
 
                         try:
                             # Sets are used to remove duplicative values
-                            self.event['matches'] = set()
-                            self.event['mitre_techniques'] = set()
-                            self.event['mitre_ids'] = set()
+                            self.event['matches'] = []
+                            self.event['mitre_techniques'] = []
+                            self.event['mitre_ids'] = []
 
-                            for k, v in capa_json['rules'].items():
-                                self.event['matches'].add(k)
-                                if 'att&ck' in v['meta']:
-                                    result = re.search(r'^([^:]+)::([^\[)]+)\s\[([^\]]+)\]', v['meta']['att&ck'][0])
-                                    self.event['mitre_techniques'].add(result.group(2))
-                                    self.event['mitre_ids'].add(result.group(3))
+                            for rule_key, rule_value in capa_json['rules'].items():
+                                self.event['matches'].append(rule_key)
+                                if 'attack' in rule_value.get('meta', []):
+                                    if attacks := rule_value.get('meta', []).get('attack', []):
+                                        for attack in attacks:
+                                            self.event['mitre_techniques'].append(
+                                                "::".join(attack.get("parts", [])))
+                                            self.event['mitre_ids'].append(attack.get("id", ""))
                             # For consistency, convert sets to list
-                            self.event['matches'] = list(self.event['matches'])
-                            self.event['mitre_techniques'] = list(self.event['mitre_techniques'])
-                            self.event['mitre_ids'] = list(self.event['mitre_ids'])
+                            self.event['matches'] = list(set(self.event['matches']))
+                            self.event['mitre_techniques'] = list(set(self.event['mitre_techniques']))
+                            self.event['mitre_ids'] = list(set(self.event['mitre_ids']))
                         except:
                             self.flags.append('error_collection')
             except:
