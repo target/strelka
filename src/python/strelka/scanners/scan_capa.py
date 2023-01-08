@@ -1,4 +1,3 @@
-import re
 import os
 import json
 import subprocess
@@ -52,17 +51,13 @@ class ScanCapa(strelka.Scanner):
                         ).communicate()
                 except:
                     self.flags.append('error_processing')
-                    print(stdout, stderr)
-                    raise
                     return
 
                 if stdout:
                     try:
                         capa_json = json.loads(stdout.rstrip())
-                        print(json.dumps(capa_json))
                     except:
                         self.flags.append('error_parsing')
-                        raise
                         return
 
                     try:
@@ -85,7 +80,5 @@ class ScanCapa(strelka.Scanner):
                         self.event['mitre_ids'] = list(set(self.event['mitre_ids']))
                     except:
                         self.flags.append('error_collection')
-                        raise
         except:
             self.flags.append('error_execution')
-            raise
