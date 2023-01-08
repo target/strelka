@@ -62,17 +62,7 @@ RUN apt-get -q update && \
     perl Makefile.PL && \
     make && \
     make install && \
-# Install FireEye CAPA
-#   - Binary installation, not supported as Python 3 plugin
-#   - Requires binary to be executable
-#   - Vivisect dependency requires available /.viv/ folder.
-    cd /tmp/ && \
-    curl -OL https://github.com/mandiant/capa/releases/download/v$CAPA_VERSION/capa-v$CAPA_VERSION-linux.zip && \
-    unzip capa-v$CAPA_VERSION-linux.zip && \
-    rm capa-v$CAPA_VERSION-linux.zip && \
-    chmod +x /tmp/capa && \
-    mkdir /.viv/ && \
-    chmod -R a+rw /.viv && \
+# Install FireEye CAPA rules
     curl -OL https://github.com/mandiant/capa-rules/archive/refs/tags/v$CAPA_VERSION.zip && \
     unzip v$CAPA_VERSION.zip -d /etc/capa && \
     rm v$CAPA_VERSION.zip && \
