@@ -30,7 +30,7 @@ class ScanCapa(strelka.Scanner):
 
                     try:
                         (stdout, stderr) = subprocess.Popen(
-                            ['/tmp/capa-linux', tmp_data.name, '-r', location, '-j'],
+                            ['/tmp/capa', tmp_data.name, '-r', location, '-j'],
                             stdout=subprocess.PIPE,
                             stderr=subprocess.DEVNULL
                         ).communicate()
