@@ -19,56 +19,73 @@ class ScanCapa(strelka.Scanner):
 
     def scan(self, data, file, options, expire_at):
         tmp_directory = options.get('tmp_directory', '/tmp/')
-        location = options.get('location', '/etc/capa/')
+        location_rules = options.get('location_rules', '/etc/capa/rules/')
+        location_signatures = options.get('location_signatures', '/etc/capa/signatures/')
 
-        # Only run if rules file exists, otherwise return no rules error
-        if len(os.listdir(location)) != 0:
-            try:
-                with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
-                    tmp_data.write(data)
-                    tmp_data.flush()
+        # Check rules and signatures locationss
+        if os.path.isdir(location_rules):
+            if not os.listdir(location_rules):
+                self.flags.append('error_norules')
+                return
+        else:
+            self.flags.append('error_norules')
+            return
 
-                    try:
-                        (stdout, stderr) = subprocess.Popen(
-                            ['capa', '-j', '-r', location, '-s', location, tmp_data.name],
+        if os.path.isdir(location_signatures):
+            if not os.listdir(location_signatures):
+                self.flags.append('error_nosignatures')
+                return
+        else:
+            self.flags.append('error_nosignatures')
+            return
+
+        try:
+            with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
+                tmp_data.write(data)
+                tmp_data.flush()
+
+                try:
+                    (stdout, stderr) = subprocess.Popen(
+                            ['capa', '-j', '-r', location_rules, '-s', location_signatures, tmp_data.name],
                             stdout=subprocess.PIPE,
                             stderr=subprocess.DEVNULL
                         ).communicate()
+                except:
+                    self.flags.append('error_processing')
+                    print(stdout, stderr)
+                    raise
+                    return
+
+                if stdout:
+                    try:
+                        capa_json = json.loads(stdout.rstrip())
+                        print(json.dumps(capa_json))
                     except:
-                        self.flags.append('error_processing')
+                        self.flags.append('error_parsing')
+                        raise
                         return
 
-                    if stdout:
-                        try:
-                            capa_json = json.loads(stdout.rstrip())
-                            print(json.dumps(capa_json))
-                        except:
-                            self.flags.append('error_parsing')
-                            return
+                    try:
+                        # Sets are used to remove duplicative values
+                        self.event['matches'] = []
+                        self.event['mitre_techniques'] = []
+                        self.event['mitre_ids'] = []
 
-                        try:
-                            # Sets are used to remove duplicative values
-                            self.event['matches'] = []
-                            self.event['mitre_techniques'] = []
-                            self.event['mitre_ids'] = []
-
-                            for rule_key, rule_value in capa_json['rules'].items():
-                                self.event['matches'].append(rule_key)
-                                if 'attack' in rule_value.get('meta', []):
-                                    if attacks := rule_value.get('meta', []).get('attack', []):
-                                        for attack in attacks:
-                                            self.event['mitre_techniques'].append(
-                                                "::".join(attack.get("parts", [])))
-                                            self.event['mitre_ids'].append(attack.get("id", ""))
-                            # For consistency, convert sets to list
-                            self.event['matches'] = list(set(self.event['matches']))
-                            self.event['mitre_techniques'] = list(set(self.event['mitre_techniques']))
-                            self.event['mitre_ids'] = list(set(self.event['mitre_ids']))
-                        except:
-                            self.flags.append('error_collection')
-            except:
-                self.flags.append('error_execution')
-        else:
-            self.flags.append('error_norules')
-
-
+                        for rule_key, rule_value in capa_json['rules'].items():
+                            self.event['matches'].append(rule_key)
+                            if 'attack' in rule_value.get('meta', []):
+                                if attacks := rule_value.get('meta', []).get('attack', []):
+                                    for attack in attacks:
+                                        self.event['mitre_techniques'].append(
+                                            "::".join(attack.get("parts", [])))
+                                        self.event['mitre_ids'].append(attack.get("id", ""))
+                        # For consistency, convert sets to list
+                        self.event['matches'] = list(set(self.event['matches']))
+                        self.event['mitre_techniques'] = list(set(self.event['mitre_techniques']))
+                        self.event['mitre_ids'] = list(set(self.event['mitre_ids']))
+                    except:
+                        self.flags.append('error_collection')
+                        raise
+        except:
+            self.flags.append('error_execution')
+            raise

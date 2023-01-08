@@ -54,4 +54,3 @@ def test_scan_capa_elf(mocker):
 
     TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_event, scanner_event)
-

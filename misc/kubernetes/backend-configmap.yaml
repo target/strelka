@@ -52,7 +52,8 @@ data:
 #            priority: 5
 #            options:
 #              tmp_directory: '/dev/shm/'
-#              location: '/etc/capa/'
+#              location_rules: '/etc/capa/rules/'
+#              location_signatures: '/etc/capa/signatures/'
       'ScanDocx':
         - positive:
             flavors:
