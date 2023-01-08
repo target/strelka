@@ -79,7 +79,6 @@ class ScanDmg(strelka.Scanner):
                         if not name.is_file():
                             continue
 
-                        print(name)
                         # Skip duplicate files created with these extended attributes
                         if str(name).endswith(":com.apple.quarantine") or str(name).endswith(":com.apple.FinderInfo"):
                             continue
