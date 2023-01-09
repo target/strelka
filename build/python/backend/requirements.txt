@@ -26,7 +26,7 @@ oletools==0.56.1
 opencv-contrib-python==4.6.0.66
 opencv-python==4.6.0.66
 openpyxl==3.0.9
-pefile
+pefile==2022.5.30
 pgpdump3==1.5.2
 py-tlsh==4.7.2
 pycdlib==1.13.0
