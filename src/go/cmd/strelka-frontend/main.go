@@ -90,8 +90,14 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		p := s.coordinator.cli.Pipeline()
 		p.RPush(stream.Context(), keyd, in.Data)
 		p.ExpireAt(stream.Context(), keyd, deadline)
-		p.RPush(stream.Context(), keyy, in.YaraData)
-		p.ExpireAt(stream.Context(), keyy, deadline)
+
+		// We're using a different pattern for YARA data, because (unlike the file data) it's not chunked.
+		// Additionally, we want to ensure the key stays populated for all exploded sub-documents so that
+		// the YARA can be evaluated against them too. Using the 'rpush/rpop' pattern would be cumbersome
+		// because we'd have to pass the yara data through the scanners and back into the queue for every
+		// sub-document.
+		p.SetNX(stream.Context(), keyy, in.YaraData, time.Until(deadline))
+
 		if _, err := p.Exec(stream.Context()); err != nil {
 			return err
 		}

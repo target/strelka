@@ -34,6 +34,7 @@ class ScanYara(strelka.Scanner):
 
         compiled_custom_yara = None
         if options.get('source'):
+            # custom yara was provided - use it to evaluate this file
             try:
                 compiled_custom_yara = yara.compile(source=options['source'])
             except (yara.Error, yara.SyntaxError):
