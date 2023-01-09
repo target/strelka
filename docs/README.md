@@ -652,7 +652,8 @@ Upon execution, you will be provided the successes and failures for any availabl
 Some tests (e.g., ScanCapa, ScanDmg, ScanOCR) may fail on local host testing as they rely on
 additional executables to run via `subprocess` that are not installed via `pip`. If you wish 
 to verify these tests, either install the relevant executable (which can be observed in Backend 
-Dockerfile) or simply build Strelka - of which the docker build logs show test outcomes. 
+Dockerfile - build/python/backend/Dockerfile) or simply build Strelka - of which the docker build 
+logs show test outcomes. 
 ```
 
 ## Use Cases
