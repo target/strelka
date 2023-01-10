@@ -11,13 +11,19 @@ def test_scan_exception(mocker):
     Failure: Unable to load file or sample event fails to match, meaning the exception was uncaught.
     """
 
-    test_scan_event = {"elapsed": mock.ANY, "flags": ["uncaught_exception"]}
+    test_scan_event = {
+        "elapsed": mock.ANY,
+        "flags": ["uncaught_exception"],
+        "exception": "Traceback (most recent call last):\n\n  File \"/home/karl/strelka/src/python/strelka/strelka.py\", line 173, in scan_wrapper\n    self.scan(data, file, options, expire_at)\n\n  File \"/home/karl/strelka/src/python/strelka/scanners/scan_exception.py\", line 23, in scan\n    raise Exception(\"Scanner Exception\")\n\nException: Scanner Exception\n",
+    }
 
     scanner_event = run_test_scan(
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.empty",
     )
+
+    print(scanner_event)
 
     TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_event, scanner_event)
