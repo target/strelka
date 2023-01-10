@@ -43,6 +43,9 @@ class ScanCapa(strelka.Scanner):
                 tmp_data.write(data)
                 tmp_data.flush()
 
+                stdout = None
+                stderr = None
+
                 try:
                     (stdout, stderr) = subprocess.Popen(
                             ['capa', '-j', '-r', location_rules, '-s', location_signatures, tmp_data.name],
