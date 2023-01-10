@@ -54,6 +54,7 @@ data:
 #              tmp_directory: '/dev/shm/'
 #              location_rules: '/etc/capa/rules/'
 #              location_signatures: '/etc/capa/signatures/'
+#              scanner_timeout: 20
       'ScanDocx':
         - positive:
             flavors:

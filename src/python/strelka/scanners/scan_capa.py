@@ -20,6 +20,7 @@ class ScanCapa(strelka.Scanner):
         tmp_directory = options.get('tmp_directory', '/tmp/')
         location_rules = options.get('location_rules', '/etc/capa/rules/')
         location_signatures = options.get('location_signatures', '/etc/capa/signatures/')
+        scanner_timeout = options.get('scanner_timeout', 20)
 
         # Check rules and signatures locationss
         if os.path.isdir(location_rules):
@@ -43,19 +44,16 @@ class ScanCapa(strelka.Scanner):
                 tmp_data.write(data)
                 tmp_data.flush()
 
-                stdout = None
-                stderr = None
-
                 try:
                     (stdout, stderr) = subprocess.Popen(
                             ['capa', '-j', '-r', location_rules, '-s', location_signatures, tmp_data.name],
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE
-                        ).communicate()
+                        ).communicate(timeout=scanner_timeout)
+                except subprocess.TimeoutExpired:
+                    self.flags.append('process_timed_out')
+                    return
                 except Exception as e:
-                    self.flags.append(e)
-                    self.flags.append(stdout)
-                    self.flags.append(stderr)
                     self.flags.append('error_processing')
                     return
 
@@ -87,5 +85,4 @@ class ScanCapa(strelka.Scanner):
                     except:
                         self.flags.append('error_collection')
         except Exception as e:
-            self.flags.append(e)
             self.flags.append('error_execution')

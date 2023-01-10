@@ -24,6 +24,7 @@ def test_scan_capa_dotnet(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.exe",
+        options={"scanner_timeout": 20}
     )
 
     TestCase.maxDiff = None
@@ -48,6 +49,7 @@ def test_scan_capa_elf(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.elf",
+        options={"scanner_timeout": 20}
     )
 
     TestCase.maxDiff = None
@@ -83,6 +85,7 @@ def test_scan_capa_pe_xor(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test_xor.exe",
+        options={"scanner_timeout": 20}
     )
 
     TestCase.maxDiff = None
