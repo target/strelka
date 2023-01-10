@@ -7,20 +7,19 @@ from strelka.tests import run_test_scan
 
 def test_scan_exception(mocker):
     """
-    Pass: Sample event matches output of scanner. Exception should be caught by scan_wrapper() and a flag set.
+    Pass: Exception should be caught by scan_wrapper(), a flag set, traceback added.
     Failure: Unable to load file or sample event fails to match, meaning the exception was uncaught.
     """
 
     test_scan_event = {
         "elapsed": mock.ANY,
         "flags": ["uncaught_exception"],
-        "exception": "Traceback (most recent call last):\n\n  File \"/home/karl/strelka/src/python/strelka/strelka.py\", line 173, in scan_wrapper\n    self.scan(data, file, options, expire_at)\n\n  File \"/home/karl/strelka/src/python/strelka/scanners/scan_exception.py\", line 23, in scan\n    raise Exception(\"Scanner Exception\")\n\nException: Scanner Exception\n",
+        "exception": mock.ANY,
     }
 
     scanner_event = run_test_scan(
         mocker=mocker,
-        scan_class=ScanUnderTest,
-        fixture_path=Path(__file__).parent / "fixtures/test.empty",
+        scan_class=ScanUnderTest
     )
 
     TestCase.maxDiff = None
