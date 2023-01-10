@@ -49,7 +49,10 @@ class ScanCapa(strelka.Scanner):
                             stdout=subprocess.PIPE,
                             stderr=subprocess.DEVNULL
                         ).communicate()
-                except:
+                except Exception as e:
+                    self.flags.append(stdout)
+                    self.flags.append(stderr)
+                    self.flags.append(e)
                     self.flags.append('error_processing')
                     return
 
