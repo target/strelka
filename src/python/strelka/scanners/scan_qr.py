@@ -21,7 +21,9 @@ class ScanQr(strelka.Scanner):
 
             try:
                 self.event['data'] = barcodes[0].data.decode('utf-8')
-            except:
+            except strelka.ScannerTimeout:
+                raise
+            except Exception:
                 self.flags.append('decode error')
                 return
 
@@ -47,8 +49,11 @@ class ScanQr(strelka.Scanner):
                 # Type: No Defined Match
                 else:
                     self.event['type'] = 'undefined'
-            except:
+            except strelka.ScannerTimeout:
+                    raise
+            except Exception:
                 self.flags.append('parse error')
-
+        except strelka.ScannerTimeout:
+            raise
         except Exception:
             self.flags.append('general error')
