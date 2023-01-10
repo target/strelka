@@ -47,12 +47,12 @@ class ScanCapa(strelka.Scanner):
                     (stdout, stderr) = subprocess.Popen(
                             ['capa', '-j', '-r', location_rules, '-s', location_signatures, tmp_data.name],
                             stdout=subprocess.PIPE,
-                            stderr=subprocess.DEVNULL
+                            stderr=subprocess.PIPE
                         ).communicate()
                 except Exception as e:
+                    self.flags.append(e)
                     self.flags.append(stdout)
                     self.flags.append(stderr)
-                    self.flags.append(e)
                     self.flags.append('error_processing')
                     return
 
