@@ -83,5 +83,6 @@ class ScanCapa(strelka.Scanner):
                         self.event['mitre_ids'] = list(set(self.event['mitre_ids']))
                     except:
                         self.flags.append('error_collection')
-        except:
+        except Exception as e:
+            self.flags.append(e)
             self.flags.append('error_execution')
