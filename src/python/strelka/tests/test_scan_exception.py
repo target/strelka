@@ -1,4 +1,3 @@
-from pathlib import Path
 from unittest import TestCase, mock
 
 from strelka.scanners.scan_exception import ScanException as ScanUnderTest
