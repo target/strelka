@@ -108,6 +108,7 @@ scanners:
   'ScanEncryptedZip':
     - positive:
         flavors:
+          - 'application/msword'
           - 'encrypted_zip'
       priority: 5
       options:
@@ -216,6 +217,11 @@ scanners:
       priority: 5
       options:
         length: 50
+        encodings:
+          - classic
+          - backslash
+#          - raw
+#          - hex
   'ScanGif':
     - positive:
         flavors:
@@ -241,6 +247,11 @@ scanners:
       priority: 5
       options:
         length: 50
+        encodings:
+          - classic
+          - backslash
+#          - raw
+#          - hex
   'ScanHtml':
     - positive:
         flavors:
