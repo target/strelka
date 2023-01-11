@@ -181,7 +181,7 @@ class Scanner(object):
             logging.exception(f'{self.name}: unhandled exception while scanning'
                               f' uid {file.uid if file else "_missing_"} (see traceback below)')
             self.flags.append('uncaught_exception')
-            self.event.update({"exception": "\n".join(traceback.format_exception(e, limit=-3))})
+            self.event.update({"exception": "\n".join(traceback.format_exception(e, limit=-1))})
 
         self.event = {
             **{'elapsed': round(time.time() - start, 6)},
