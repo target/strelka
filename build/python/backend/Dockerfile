@@ -43,6 +43,7 @@ RUN apt-get -q update && \
     redis-server \
     tesseract-ocr \
     unrar \
+    unzip \
     upx \
     jq && \
 # Download and compile Archive library, needed for exiftool to work best
@@ -61,15 +62,16 @@ RUN apt-get -q update && \
     perl Makefile.PL && \
     make && \
     make install && \
-# Install FireEye CAPA
-#   - Binary installation, not supported as Python 3 plugin
-#   - Requires binary to be executable
-#   - Vivisect dependency requires available /.viv/ folder.
-    cd /tmp/ && \
-    curl -OL https://github.com/fireeye/capa/releases/download/v$CAPA_VERSION/capa-linux && \
-    chmod +x /tmp/capa-linux && \
-    mkdir /.viv/ && \
-    chmod -R a+rw /.viv && \
+# Install FireEye CAPA rules and signatures
+    mkdir -p /etc/capa/rules/ && \
+    curl -OL https://github.com/mandiant/capa-rules/archive/refs/tags/v$CAPA_VERSION.zip && \
+    unzip v$CAPA_VERSION.zip -d /etc/capa/rules/ && \
+    rm v$CAPA_VERSION.zip && \
+    mkdir -p /etc/capa/signatures/ && \
+    cd /etc/capa/signatures/ && \
+    curl -OL https://github.com/mandiant/capa/raw/master/sigs/1_flare_msvc_rtf_32_64.sig && \
+    curl -OL https://github.com/mandiant/capa/raw/master/sigs/2_flare_msvc_atlmfc_32_64.sig && \
+    curl -OL https://github.com/mandiant/capa/raw/master/sigs/3_flare_common_libs.sig && \
 # Install FireEye FLOSS
 #   - Binary installation, not supported as Python 3 plugin
 #   - Requires binary to be executable
