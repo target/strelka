@@ -28,6 +28,8 @@ class ScanVhd(strelka.Scanner):
                 data, tmp_directory, scanner_timeout, expire_at, file_limit
             )
 
+        except strelka.ScannerTimeout:
+            raise
         except Exception:
             self.flags.append("vhd_7zip_extract_error")
 
@@ -57,6 +59,8 @@ class ScanVhd(strelka.Scanner):
                             stdout=subprocess.PIPE,
                             stderr=subprocess.DEVNULL,
                         ).communicate(timeout=scanner_timeout)
+                    except strelka.ScannerTimeout:
+                        raise
                     except Exception:
                         self.flags.append("vhd_7zip_extract_process_error")
 
@@ -85,9 +89,13 @@ class ScanVhd(strelka.Scanner):
                         try:
                             self.upload(name, expire_at)
                             self.event["total"]["extracted"] += 1
+                        except strelka.ScannerTimeout:
+                            raise
                         except Exception:
                             self.flags.append("vhd_file_upload_error")
 
+            except strelka.ScannerTimeout:
+                raise
             except Exception:
                 self.flags.append("vhd_7zip_extract_error")
 
@@ -100,6 +108,8 @@ class ScanVhd(strelka.Scanner):
 
                 self.parse_7zip_stdout(stdout.decode("utf-8"), file_limit)
 
+            except strelka.ScannerTimeout:
+                raise
             except Exception:
                 self.flags.append("vhd_7zip_output_error")
                 return

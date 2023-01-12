@@ -89,6 +89,8 @@ def crack_zip(
         else:
             return stdout.split(b":")[1]
 
+    except strelka.ScannerTimeout:
+        raise
     except Exception as e:
         self.flags.append(str(e))
         return ""

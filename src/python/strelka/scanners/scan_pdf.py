@@ -22,7 +22,9 @@ class ScanPdf(strelka.Scanner):
     def _convert_timestamp(timestamp):
         try:
             return str(datetime.datetime.strptime(timestamp.replace("'", ""), "D:%Y%m%d%H%M%S%z"))
-        except:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             return
 
     def scan(self, data, file, options, expire_at):
@@ -101,7 +103,9 @@ class ScanPdf(strelka.Scanner):
                             expire_at,
                         )
                     self.files.append(extract_file)
-            except:
+            except strelka.ScannerTimeout:
+                raise
+            except Exception:
                 self.flags.append("embedded_parsing_failure")
 
             # submit extracted images to strelka
@@ -121,7 +125,9 @@ class ScanPdf(strelka.Scanner):
                                 expire_at,
                             )
                         self.files.append(extract_file)
-            except:
+            except strelka.ScannerTimeout:
+                raise
+            except Exception:
                 self.flags.append("image_parsing_failure")
 
             # parse data from each page
@@ -148,7 +154,12 @@ class ScanPdf(strelka.Scanner):
                         expire_at,
                     )
                 self.files.append(extract_file)
-            except:
+
+            except strelka.ScannerTimeout:
+                raise
+            except Exception:
                 self.flags.append("page_parsing_failure")
+        except strelka.ScannerTimeout:
+            raise
         except Exception:
             self.flags.append("pdf_load_error")
