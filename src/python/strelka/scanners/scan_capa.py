@@ -50,17 +50,18 @@ class ScanCapa(strelka.Scanner):
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE
                         ).communicate(timeout=scanner_timeout)
-                except subprocess.TimeoutExpired:
-                    self.flags.append('process_timed_out')
-                    return
-                except Exception as e:
+                except strelka.ScannerTimeout:
+                    raise
+                except Exception:
                     self.flags.append('error_processing')
                     return
 
                 if stdout:
                     try:
                         capa_json = json.loads(stdout.rstrip())
-                    except:
+                    except strelka.ScannerTimeout:
+                        raise
+                    except Exception:
                         self.flags.append('error_parsing')
                         return
 
@@ -82,7 +83,11 @@ class ScanCapa(strelka.Scanner):
                         self.event['matches'] = list(set(self.event['matches']))
                         self.event['mitre_techniques'] = list(set(self.event['mitre_techniques']))
                         self.event['mitre_ids'] = list(set(self.event['mitre_ids']))
-                    except:
+                    except strelka.ScannerTimeout:
+                        raise
+                    except Exception:
                         self.flags.append('error_collection')
-        except Exception as e:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             self.flags.append('error_execution')

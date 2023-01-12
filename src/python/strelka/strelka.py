@@ -3,6 +3,7 @@ import logging
 import re
 import signal
 import time
+import traceback
 import uuid
 
 from boltons import iterutils
@@ -173,18 +174,19 @@ class Scanner(object):
             signal.alarm(0)
         except ScannerTimeout:
             self.flags.append('timed_out')
+        except (DistributionTimeout, RequestTimeout):
+            raise
         except Exception as e:
             signal.alarm(0)
-            if isinstance(e, DeprecationWarning) or (e, RequestTimeout):
-                raise
-            logging.exception(f'{self.name}: exception while scanning'
-                              f' uid {file.uid} (see traceback below)')
+            logging.exception(f'{self.name}: unhandled exception while scanning'
+                              f' uid {file.uid if file else "_missing_"} (see traceback below)')
             self.flags.append('uncaught_exception')
+            self.event.update({"exception": "\n".join(traceback.format_exception(e, limit=-1))})
 
         self.event = {
             **{'elapsed': round(time.time() - start, 6)},
             **{'flags': self.flags},
-            **self.event,
+            **self.event
         }
         return (
             self.files,
@@ -272,6 +274,7 @@ class Scanner(object):
         except Exception as e:
             logging.error(f"Failed to add {ioc} from {self.name}: {e}")
 
+
 def chunk_string(s, chunk=1024 * 16):
     """Takes an input string and turns it into smaller byte pieces.
 
@@ -336,6 +339,7 @@ def format_event(metadata):
         lambda p, k, v: v != '' and v != [] and v != {} and v is not None,
     )
     return json.dumps(remap2)
+
 
 def timeout_handler(signum, frame):
     """Signal ScannerTimeout"""

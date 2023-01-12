@@ -7,6 +7,7 @@ git log -p <file>
 
 # Target Team
 - Paul Hutelmyer - Lead
+- Ryan O'Horo
 
 # External Collaborators
 - Josh Liburdi ([@jshlbrd](https://twitter.com/jshlbrd))

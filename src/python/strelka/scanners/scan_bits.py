@@ -35,27 +35,26 @@ class ScanBITS(strelka.Scanner):
 
         try:
             self.event['jobs'] = self.process_file(data)
+        except strelka.ScannerTimeout:
+            raise
         except Exception:
             self.flags.append("file_parsing_error")
 
     def process_file(self, file_data):
         """ Processes the given BITS file.  Attempts to find/parse jobs. """
 
-        try:
-
-            # Parse as a qmgr database (support old and Win10 formats)
-            parsed_records = []
-            jobs = self.load_qmgr10_db(file_data)
-            for job in jobs:
-                try:
-                    parsed_records.append(job.job_dict)
-                except:
-                    self.flags.append("job_parsing_error")
-            if parsed_records:
-                return parsed_records
-
-        except Exception as e:
-            print(e)
+        # Parse as a qmgr database (support old and Win10 formats)
+        parsed_records = []
+        jobs = self.load_qmgr10_db(file_data)
+        for job in jobs:
+            try:
+                parsed_records.append(job.job_dict)
+            except strelka.ScannerTimeout:
+                raise
+            except Exception:
+                self.flags.append("job_parsing_error")
+        if parsed_records:
+            return parsed_records
 
     def parse_qmgr10_job(self, file_entries, job_data):
         """Attempt to parse job data from the Win10 qmgr database"""
@@ -73,10 +72,14 @@ class ScanBITS(strelka.Scanner):
             # Parse as a JOB
             try:
                 parsed_job = JOB.parse(job_data)
+            except strelka.ScannerTimeout:
+                raise
             except Exception:
                 # If it fails to parse as a JOB, at least try to parse as a CONTROL struct
                 try:
                     parsed_job = CONTROL.parse(job_data)
+                except strelka.ScannerTimeout:
+                    raise
                 except Exception:
                     return None
 
@@ -95,12 +98,16 @@ class ScanBITS(strelka.Scanner):
                     file_job = file_entries.pop(cur_guid, None)
                     if file_job:
                         parsed_job['files'].extend(file_job['files'])
+            except strelka.ScannerTimeout:
+                raise
             except Exception:
                 pass
 
             # Build a BitsJob for the job entry
             new_job = BitsJob(parsed_job)
             return new_job
+        except strelka.ScannerTimeout:
+            raise
         except Exception:
             print(f'Exception occurred parsing job: ' + traceback.format_exc(), file=sys.stderr)
             return None
@@ -131,6 +138,8 @@ class ScanBITS(strelka.Scanner):
                 cur_job['ctime'] = datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=(filetime / 10))
 
             return cur_job
+        except strelka.ScannerTimeout:
+            raise
         except Exception:
             return None
 

@@ -31,7 +31,9 @@ class ScanIso(strelka.Scanner):
                     self.event['meta']['date_expiration'] = self._datetime_from_volume_date(iso.pvd.volume_expiration_date)
                     self.event['meta']['date_modification'] = self._datetime_from_volume_date(iso.pvd.volume_modification_date)
                     self.event['meta']['volume_identifier'] = iso.pvd.volume_identifier.decode()
-                except:
+                except strelka.ScannerTimeout:
+                    raise
+                except Exception:
                     pass
 
                 if iso.has_udf():
@@ -56,7 +58,10 @@ class ScanIso(strelka.Scanner):
                         try:
                             if dir_record.file_flags == 3:
                                 self.event['hidden_dirs'].append(ident_to_here)
-                        except:
+
+                        except strelka.ScannerTimeout:
+                            raise
+                        except Exception:
                             pass
 
                         child_lister = iso.list_children(**{pathname: ident_to_here})
@@ -93,11 +98,17 @@ class ScanIso(strelka.Scanner):
                                         )
                                     self.files.append(extract_file)
                                     self.event['total']['extracted'] += 1
+                                except strelka.ScannerTimeout:
+                                    raise
                                 except Exception as e:
                                     self.flags.append(f'iso_extract_error: {e}')
+                        except strelka.ScannerTimeout:
+                            raise
                         except Exception:
                             self.flags.append('iso_read_error')
                 iso.close()
+        except strelka.ScannerTimeout:
+            raise
         except Exception:
             self.flags.append('iso_read_error')
 
@@ -121,7 +132,9 @@ class ScanIso(strelka.Scanner):
                 second,
             )
             return dt.strftime('%Y-%m-%dT%H:%M:%SZ')
-        except:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             return
 
     @staticmethod
@@ -154,8 +167,12 @@ class ScanIso(strelka.Scanner):
                     iso_date.second,
                 )
                 dt = dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+            except strelka.ScannerTimeout:
+                raise
             except Exception:
                 return
             return dt
-        except:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             return

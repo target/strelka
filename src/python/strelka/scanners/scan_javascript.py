@@ -28,7 +28,9 @@ class ScanJavascript(strelka.Scanner):
             if beautify:
                 js = jsbeautifier.beautify(data.decode())
                 self.event['beautified'] = True
-        except:  # noqa
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             self.flags.append('beautify_failed')
 
         if js is None:

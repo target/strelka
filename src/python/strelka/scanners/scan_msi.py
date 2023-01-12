@@ -34,6 +34,8 @@ class ScanMsi(strelka.Scanner):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.DEVNULL,
                 ).communicate()
+            except strelka.ScannerTimeout:
+                raise
             except Exception as e:
                 # Handle any exceptions raised while running exiftool
                 self.flags.append(f'msi_extract_error: {e}')
