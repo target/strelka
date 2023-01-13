@@ -108,9 +108,7 @@ class Backend(object):
 
     def taste_yara(self, data):
         """Tastes file data with YARA."""
-        encoded_whitespace = string.whitespace.encode()
-        stripped_data = data.lstrip(encoded_whitespace)
-        yara_matches = self.compiled_yara.match(data=stripped_data)
+        yara_matches = self.compiled_yara.match(data=data)
         return [match.rule for match in yara_matches]
 
     def distribute(self, root_id, file, expire_at):
