@@ -84,6 +84,7 @@ def test_scan_pcap(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.pcap",
+        options={"scanner_timeout": 20}
     )
 
     TestCase.maxDiff = None
@@ -167,7 +168,8 @@ def test_scan_pcap_ng(mocker):
     scanner_event = run_test_scan(
         mocker=mocker,
         scan_class=ScanUnderTest,
-        fixture_path=Path(__file__).parent / "fixtures/test.pcapng"
+        fixture_path=Path(__file__).parent / "fixtures/test.pcapng",
+        options={"scanner_timeout": 20}
     )
 
     TestCase.maxDiff = None

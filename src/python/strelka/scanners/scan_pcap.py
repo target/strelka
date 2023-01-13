@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import shutil
 import subprocess
@@ -65,10 +66,12 @@ class ScanPcap(strelka.Scanner):
                                 self.event["total"]["files"] += 1
                                 self.event["files"].append(file_event)
 
+                                extracted_file_path = os.path.join(tmp_extract, file_event["extracted"])
+
                                 try:
-                                    print(os.path.join(tmp_extract, file_event["extracted"]))
-                                    if os.path.exists(os.path.join(tmp_extract, file_event["extracted"])):
-                                        self.upload(os.path.join(tmp_extract, file_event["extracted"]), expire_at)
+                                    if os.path.exists(extracted_file_path):
+                                        logging.debug(f"size_seen {file_event['seen_bytes']}")
+                                        self.upload(extracted_file_path, expire_at)
                                         self.event["total"]["extracted"] += 1
 
                                 except strelka.ScannerTimeout:
@@ -96,3 +99,4 @@ class ScanPcap(strelka.Scanner):
                     c,
                     expire_at,
                 )
+                self.files.append(extract_file)
