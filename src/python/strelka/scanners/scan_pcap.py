@@ -70,7 +70,6 @@ class ScanPcap(strelka.Scanner):
 
                                 try:
                                     if os.path.exists(extracted_file_path):
-                                        logging.debug(f"size_seen {file_event['seen_bytes']}")
                                         self.upload(extracted_file_path, expire_at)
                                         self.event["total"]["extracted"] += 1
 
