@@ -111,6 +111,7 @@ class Backend(object):
         encoded_whitespace = string.whitespace.encode()
         stripped_data = data.lstrip(encoded_whitespace)
         yara_matches = self.compiled_yara.match(data=stripped_data)
+        return [match.rule for match in yara_matches]
 
     def distribute(self, root_id, file, expire_at):
         """Distributes a file through scanners."""
