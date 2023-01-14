@@ -1,10 +1,17 @@
 import json
 import logging
-import re
-import signal
-import time
 import traceback
 import uuid
+import glob
+import importlib
+import math
+import os
+import re
+import string
+import signal
+import time
+import magic
+import yara
 
 from boltons import iterutils
 import inflection
@@ -67,6 +74,273 @@ class File(object):
         self.flavors = {**self.flavors, **flavors}
 
 
+class Backend(object):
+    def __init__(self, backend_cfg, coordinator):
+        self.scanner_cache = {}
+        self.backend_cfg = backend_cfg
+        self.coordinator = coordinator
+        self.limits = backend_cfg.get('limits')
+        self.scanners = backend_cfg.get('scanners')
+
+        self.compiled_magic = magic.Magic(
+            magic_file=backend_cfg.get('tasting').get('mime_db'),
+            mime=True,
+        )
+
+        yara_rules = backend_cfg.get('tasting').get('yara_rules')
+        if os.path.isdir(yara_rules):
+            yara_filepaths = {}
+            globbed_yara = glob.iglob(
+                f'{yara_rules}/**/*.yar*',
+                recursive=True,
+            )
+            for (i, entry) in enumerate(globbed_yara):
+                yara_filepaths[f'namespace{i}'] = entry
+            self.compiled_yara = yara.compile(filepaths=yara_filepaths)
+        else:
+            self.compiled_yara = yara.compile(filepath=yara_rules)
+
+    def timeout_handler(self, ex):
+        """Signal timeout handler"""
+
+        def fn(signum, frame):
+            raise ex
+
+        return fn
+
+    def work(self):
+        logging.info('starting up')
+
+        count = 0
+        work_start = time.time()
+        work_expire = work_start + self.limits.get('time_to_live')
+
+        while 1:
+            if self.limits.get('max_files') != 0:
+                if count >= self.limits.get('max_files'):
+                    break
+            if self.limits.get('time_to_live') != 0:
+                if time.time() >= work_expire:
+                    break
+
+            task = self.coordinator.zpopmin('tasks', count=1)
+            if len(task) == 0:
+                time.sleep(0.25)
+                continue
+
+            (root_id, expire_at) = task[0]
+            root_id = root_id.decode()
+            file = File(pointer=root_id)
+            expire_at = math.ceil(expire_at)
+            timeout = math.ceil(expire_at - time.time())
+            if timeout <= 0:
+                continue
+
+            try:
+                self.signal = signal.signal(
+                        signal.SIGALRM,
+                        self.timeout_handler(RequestTimeout)
+                    )
+                signal.alarm(timeout)
+                self.distribute(root_id, file, expire_at)
+                p = self.coordinator.pipeline(transaction=False)
+                p.rpush(f'event:{root_id}', 'FIN')
+                p.expireat(f'event:{root_id}', expire_at)
+                p.execute()
+                signal.alarm(0)
+            except RequestTimeout:
+                logging.debug(f'request {root_id} timed out')
+            except Exception:
+                signal.alarm(0)
+                logging.exception('unknown exception (see traceback below)')
+
+            count += 1
+
+        logging.info(f'shutdown after scanning {count} file(s) and'
+                     f' {time.time() - work_start} second(s)')
+
+    def taste_mime(self, data):
+        """Tastes file data with libmagic."""
+        return [self.compiled_magic.from_buffer(data)]
+
+    def taste_yara(self, data):
+        """Tastes file data with YARA."""
+        encoded_whitespace = string.whitespace.encode()
+        stripped_data = data.lstrip(encoded_whitespace)
+        yara_matches = self.compiled_yara.match(data=stripped_data)
+        return [match.rule for match in yara_matches]
+
+    def distribute(self, root_id, file, expire_at):
+        """Distributes a file through scanners."""
+        try:
+            files = []
+
+            try:
+                self.signal = signal.signal(
+                        signal.SIGALRM,
+                        self.timeout_handler(DistributionTimeout)
+                    )
+                signal.alarm(self.limits.get('distribution'))
+                if file.depth > self.limits.get('max_depth'):
+                    logging.info(f'request {root_id} exceeded maximum depth')
+                    return
+
+                data = b''
+                while 1:
+                    pop = self.coordinator.lpop(f'data:{file.pointer}')
+                    if pop is None:
+                        break
+                    data += pop
+
+                file.add_flavors({'mime': self.taste_mime(data)})
+                file.add_flavors({'yara': self.taste_yara(data)})
+                flavors = (
+                    file.flavors.get('external', [])
+                    + file.flavors.get('mime', [])
+                    + file.flavors.get('yara', [])
+                )
+
+                scanner_list = []
+                for name in self.scanners:
+                    mappings = self.scanners.get(name, {})
+                    assigned = self.assign_scanner(
+                        name,
+                        mappings,
+                        flavors,
+                        file,
+                    )
+                    if assigned is not None:
+                        scanner_list.append(assigned)
+                scanner_list.sort(
+                    key=lambda k: k.get('priority', 5),
+                    reverse=True,
+                )
+
+                p = self.coordinator.pipeline(transaction=False)
+                tree_dict = {
+                    'node': file.uid,
+                    'parent': file.parent,
+                    'root': root_id,
+                }
+
+                if file.depth == 0:
+                    tree_dict['node'] = root_id
+                if file.depth == 1:
+                    tree_dict['parent'] = root_id
+
+                file_dict = {
+                    'depth': file.depth,
+                    'name': file.name,
+                    'flavors': file.flavors,
+                    'scanners': [s.get('name') for s in scanner_list],
+                    'size': len(data),
+                    'source': file.source,
+                    'tree': tree_dict,
+                }
+                scan = {}
+
+                for scanner in scanner_list:
+                    try:
+                        name = scanner['name']
+                        und_name = inflection.underscore(name)
+                        scanner_import = f'strelka.scanners.{und_name}'
+                        module = importlib.import_module(scanner_import)
+                        if und_name not in self.scanner_cache:
+                            attr = getattr(module, name)(self.backend_cfg, self.coordinator)
+                            self.scanner_cache[und_name] = attr
+                        options = scanner.get('options', {})
+                        plugin = self.scanner_cache[und_name]
+                        (f, s) = plugin.scan_wrapper(
+                            data,
+                            file,
+                            options,
+                            expire_at,
+                        )
+                        files.extend(f)
+
+                        scan = {
+                            **scan,
+                            **s,
+                        }
+
+                    except ModuleNotFoundError:
+                        logging.exception(f'scanner {name} not found')
+
+                event = {
+                    **{'file': file_dict},
+                    **{'scan': scan},
+                }
+
+                p.rpush(f'event:{root_id}', format_event(event))
+                p.expireat(f'event:{root_id}', expire_at)
+                p.execute()
+                signal.alarm(0)
+
+            except DistributionTimeout:
+                logging.exception(f'node {file.uid} timed out')
+
+            for f in files:
+                f.parent = file.uid
+                f.depth = file.depth + 1
+                self.distribute(root_id, f, expire_at)
+
+        except RequestTimeout:
+            signal.alarm(0)
+            raise
+
+    def assign_scanner(self, scanner, mappings, flavors, file):
+        """Assigns scanners based on mappings and file data.
+
+        Performs the task of assigning scanners based on the scan configuration
+        mappings and file flavors, filename, and source. Assignment supports
+        positive and negative matching: scanners are assigned if any positive
+        categories are matched and no negative categories are matched. Flavors are
+        literal matches, filename and source matches uses regular expressions.
+
+        Args:
+            scanner: Name of the scanner to be assigned.
+            mappings: List of dictionaries that contain values used to assign
+                the scanner.
+            flavors: List of file flavors to use during scanner assignment.
+            filename: Filename to use during scanner assignment.
+            source: File source to use during scanner assignment.
+        Returns:
+            Dictionary containing the assigned scanner or None.
+        """
+        for mapping in mappings:
+            negatives = mapping.get('negative', {})
+            positives = mapping.get('positive', {})
+            neg_flavors = negatives.get('flavors', [])
+            neg_filename = negatives.get('filename', None)
+            neg_source = negatives.get('source', None)
+            pos_flavors = positives.get('flavors', [])
+            pos_filename = positives.get('filename', None)
+            pos_source = positives.get('source', None)
+            assigned = {'name': scanner,
+                        'priority': mapping.get('priority', 5),
+                        'options': mapping.get('options', {})}
+
+            for neg_flavor in neg_flavors:
+                if neg_flavor in flavors:
+                    return None
+            if neg_filename is not None:
+                if re.search(neg_filename, file.name) is not None:
+                    return None
+            if neg_source is not None:
+                if re.search(neg_source, file.source) is not None:
+                    return None
+            for pos_flavor in pos_flavors:
+                if pos_flavor == '*' or pos_flavor in flavors:
+                    return assigned
+            if pos_filename is not None:
+                if re.search(pos_filename, file.name) is not None:
+                    return assigned
+            if pos_source is not None:
+                if re.search(pos_source, file.source) is not None:
+                    return assigned
+        return None
+
+
 class IocOptions(object):
     """
     Defines an ioc options object that can be used to specify the ioc_type for developers as opposed to using a
@@ -122,6 +396,10 @@ class Scanner(object):
         during scanning."""
         pass
 
+    def timeout_handler(self, signum, frame):
+        """Signal ScannerTimeout"""
+        raise ScannerTimeout
+
     def scan(self,
              data,
              file,
@@ -168,7 +446,7 @@ class Scanner(object):
                                            self.scanner_timeout or 10)
 
         try:
-            self.signal = signal.signal(signal.SIGALRM, timeout_handler)
+            self.signal = signal.signal(signal.SIGALRM, self.timeout_handler)
             signal.alarm(self.scanner_timeout)
             self.scan(data, file, options, expire_at)
             signal.alarm(0)
@@ -339,8 +617,3 @@ def format_event(metadata):
         lambda p, k, v: v != '' and v != [] and v != {} and v is not None,
     )
     return json.dumps(remap2)
-
-
-def timeout_handler(signum, frame):
-    """Signal ScannerTimeout"""
-    raise ScannerTimeout
