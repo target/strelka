@@ -1,9 +1,25 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-01-12
+### Changed
+- Adds tracebacks to events that have unhandled exceptions. (@ryanohoro)
+- Updates to `ScanCapa`, tests, and associated build files. (@ryanohoro)
+
+### Added
+- Adds a test for scanner timeout behavior `test_scan_delay` (@ryanohoro)
+
+### 2023-01-11
+### Added
+- Adds an encodings option to ScanHeader/ScanFooter for additional data encodings (@ryanohoro)
+
+## 2023-01-10
+### Added
+- Adds a new test that throws an exception in a scanner and verifies an event with an uncaught_exception flag is created. (@ryanohoro)
+
 ## 2023-01-01
 ### Added
-- Added dozens of tests over the last few weeks
+- Added dozens of tests over the last few weeks.
 
 ### Changed
 - Updated with bugfixes or updates: `ScanBase64`, `ScanEncryptedZip`, `ScanIni`, `ScanJPEG`, `ScanLibarchive`, `ScanMacho`, `ScanPDF`, `ScanPNGEoF`, `ScanQR`, `ScanRar`,`ScanTAR`, `ScanUPX`, `ScanVHD`, `ScanZip` (@ryanohoro)

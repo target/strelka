@@ -264,7 +264,9 @@ def parse_certificates(data):
         pefile = SignedPEFile(buffer)
         try:
             signed_datas = list(pefile.signed_datas)
-        except:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             return "no_certs_found"
     except (SignedPEParseError, SignerInfoParseError, AuthenticodeParseError, VerificationError,
             CertificateVerificationError, SignerInfoVerificationError, AuthenticodeVerificationError) as e:
@@ -293,6 +295,8 @@ def parse_certificates(data):
                         "signature_algorithim": str(cert.signature_algorithm['algorithm'])
                     }
                     cert_list.append(cert_dict)
+                except strelka.ScannerTimeout:
+                    raise
                 except Exception as e:
                     return "exception parsing certificate exception"
 
@@ -334,6 +338,8 @@ def parse_certificates(data):
     try:
         pefile.verify()
         security_dict["verification"] = True
+    except strelka.ScannerTimeout:
+        raise
     except Exception as e:
         security_dict['verification'] = False
         security_dict['verification_error'] = str(e)
@@ -629,6 +635,8 @@ class ScanPe(strelka.Scanner):
                 self.event['summary']['section_md5'] = list(section_md5_set)
                 self.event['summary']['section_sha1'] = list(section_sha1_set)
                 self.event['summary']['section_sha256'] = list(section_sha256_set)
+            except strelka.ScannerTimeout:
+                raise
             except Exception as e:
                 self.flags.append(f"exception thrown when parsing section's {e}")
 

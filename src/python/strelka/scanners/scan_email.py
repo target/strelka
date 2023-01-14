@@ -19,7 +19,9 @@ class ScanEmail(strelka.Scanner):
             try:
                 ep = eml_parser.EmlParser(include_attachment_data=True, include_raw_body=True)
                 parsed_eml = ep.decode_email_bytes(data)
-            except:
+            except strelka.ScannerTimeout:
+                raise
+            except Exception:
                 self.flags.append('parse_load_error')
                 return
 
@@ -33,12 +35,12 @@ class ScanEmail(strelka.Scanner):
                     elif b"Start mail input; end with <CRLF>.<CRLF>\n" in data:
                         data = data.rpartition(b"Start mail input; end with <CRLF>.<CRLF>\n")[2]
                     parsed_eml = ep.decode_email_bytes(data)
-                    print(parsed_eml)
                     if not (parsed_eml['header']['subject'] and parsed_eml['header']['header']):
                         self.flags.append('parse_manual_email_error')
                         return
+            except strelka.ScannerTimeout:
+                raise
             except Exception as e:
-                print(str(e))
                 self.flags.append('parse_manual_email_error')
                 return
 
@@ -60,7 +62,9 @@ class ScanEmail(strelka.Scanner):
                                 self.event['domains'] += body['domain']
                             else:
                                 self.event['domains'] = body['domain']
-            except:
+            except strelka.ScannerTimeout:
+                raise
+            except Exception:
                 self.flags.append('parse_body_error')
 
             # Attachments
@@ -81,7 +85,9 @@ class ScanEmail(strelka.Scanner):
                             'raw': base64.b64decode(attachment['raw'])
                         }
                         )
-            except:
+            except strelka.ScannerTimeout:
+                raise
+            except Exception:
                 self.flags.append('parse_attachment_error')
 
             # Header
@@ -96,7 +102,9 @@ class ScanEmail(strelka.Scanner):
                     self.event['received_domain'] = parsed_eml['header']['received_domain']
                 if 'received_ip' in parsed_eml['header']:
                     self.event['received_ip'] = parsed_eml['header']['received_ip']
-            except:
+            except strelka.ScannerTimeout:
+                raise
+            except Exception:
                 self.flags.append('parse_header_error')
 
             # If attachments were found, submit back into pipeline
@@ -119,7 +127,9 @@ class ScanEmail(strelka.Scanner):
 
                         self.files.append(extract_file)
                         self.event['total']['extracted'] += 1
-            except:
+            except strelka.ScannerTimeout:
+                raise
+            except Exception:
                 self.flags.append('extract_attachment_error')
 
         except AssertionError:

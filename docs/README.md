@@ -650,6 +650,13 @@ pytest
 
 Upon execution, you will be provided the successes and failures for any available scanner test.
 
+```
+Some tests (e.g., ScanCapa, ScanDmg, ScanOCR) may fail on local host testing as they rely on
+additional executables to run via `subprocess` that are not installed via `pip`. If you wish 
+to verify these tests, either install the relevant executable (which can be observed in Backend 
+Dockerfile - build/python/backend/Dockerfile) or simply build Strelka - of which the docker build 
+logs show test outcomes. 
+```
 
 ## Use Cases
 Below are some select use cases that show the value Strelka can add to a threat detection tech stack. Keep in mind that these results are parsed in real time without post-processing and are typically correlated with other detection/response tools (e.g. Bro, Volatility, etc.). The file metadata shown below was derived from files found in [VirusShare](https://virusshare.com/) torrent no. 323 and from a test file in the [MaliciousMacroBot (MMBot) repository](https://github.com/egaus/MaliciousMacroBot).

@@ -95,7 +95,8 @@ def crack_word(
                 return ""
         else:
             return stdout.split(b":")[1].split()[0]
-
+    except strelka.ScannerTimeout:
+        raise
     except Exception as e:
         self.flags.append(str(e))
         return ""
@@ -158,7 +159,9 @@ class ScanEncryptedDoc(strelka.Scanner):
                         )
 
                     self.files.append(extract_file)
-                except:
+                except strelka.ScannerTimeout:
+                    raise
+                except Exception:
                     self.flags.append(
                         "Could not decrypt document with recovered password"
                     )

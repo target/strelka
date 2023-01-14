@@ -3,7 +3,13 @@ from pathlib import Path
 from strelka.strelka import File
 
 
-def run_test_scan(mocker, scan_class, fixture_path, options=None, backend_cfg=None):
+def run_test_scan(
+    mocker,
+    scan_class,
+    fixture_path=None,
+    options=None,
+    backend_cfg=None
+):
     if options is None:
         options = {}
     if "scanner_timeout" not in options:
@@ -15,8 +21,13 @@ def run_test_scan(mocker, scan_class, fixture_path, options=None, backend_cfg=No
 
     mocker.patch.object(scanner.__class__, "upload_to_coordinator", return_value=None)
 
+    if fixture_path:
+        data = Path(fixture_path).read_bytes()
+    else:
+        data = None
+
     scanner.scan_wrapper(
-        data=Path(fixture_path).read_bytes(),
+        data=data,
         file=File(name="test"),
         options=options,
         expire_at=datetime.date.today(),
