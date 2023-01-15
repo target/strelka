@@ -17,6 +17,8 @@ class ScanManifest(strelka.Scanner):
             for key in optional_keys:
                 if jsondata.get(key):
                     self.event[key] = jsondata[key]
+        except strelka.ScannerTimeout:
+            raise
         except Exception:
             self.flags.append('error parsing manifest')
             return

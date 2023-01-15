@@ -59,6 +59,24 @@ rule cpio_file {
         $a at 0
 }
 
+rule dmg_disk_image {
+    meta:
+        type = "archive"
+    strings:
+        $koly = { 6B 6F 6C 79 }  // koly
+    condition:
+        $koly at filesize - 0x200
+}
+
+rule dmg_encrypted_disk_image {
+    meta:
+        type = "archive"
+    strings:
+        $v1 = { 65 6E 63 72 63 64 73 61 00 } // encrcdsa - v1
+        $v2 = { 63 64 73 61 65 6E 63 72 00 } // cdsaencr - v2
+    condition:
+        $v1 at 0 or $v2 at 0
+}
 
 rule encrypted_zip
 {
@@ -90,6 +108,19 @@ rule encrypted_word_document
     condition:
         uint32be(0) == 0xd0cf11e0 and
         any of them		
+}
+
+rule hfsplus_disk_image {
+    meta:
+        type = "archive"
+        reference = "https://developer.apple.com/library/archive/technotes/tn/tn1150.html"
+        reference = "https://fossies.org/linux/file/magic/Magdir/macintosh"
+    strings:
+        $a = { 48 2B 00 04 }  // H+   Non-bootable
+        $b = { 48 2B 4C 78 }  // H+Lx Bootable
+    condition:
+        $a at 0x400 or
+        $b at 0x408
 }
 
 rule iso_file {
@@ -817,4 +848,25 @@ rule wmv_file {
         type = "video"
     condition:
         uint32(0) == 0x75B22630 and uint32(4) == 0x11CF668E and uint32(8) == 0xAA00D9A6 and uint32(12) == 0x6CCE6200
+}
+
+// PII
+
+rule credit_cards {
+    meta:
+        // https://github.com/sbousseaden/YaraHunts/blob/master/hunt_creditcard_memscrap.yara
+        // https://stackoverflow.com/questions/9315647/regex-credit-card-number-tests
+        // https://moneytips.com/anatomy-of-a-credit-card/
+        // https://engineering.avast.io/yara-in-search-of-regular-expressions/
+        // https://baymard.com/checkout-usability/credit-card-patterns
+        description = "Identify popular credit card numbers"
+        author = "ryan.ohoro"
+        date = "12/29/2022"
+    strings:
+        // $amex = /[^0-9]3[47][0-9]{13}[^0-9]/      // Amex Card
+        // $disc = /[^0-9]6[0-9]{15}[^0-9]/          // Discover Card
+        // $mast = /[^0-9]5[1-5]{1}[0-9]{14}[^0-9]/  // Mastercard
+        $visa = /[^0-9]4[0-9]{15}[^0-9]/          // Visa Card
+    condition:
+        any of them
 }

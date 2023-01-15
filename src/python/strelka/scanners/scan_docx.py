@@ -89,5 +89,7 @@ class ScanDocx(strelka.Scanner):
                 self.flags.append('value_error')
             except zipfile.BadZipFile:
                 self.flags.append('bad_zip')
-            except error:
+            except strelka.ScannerTimeout:
+                raise
+            except Exception:
                 self.flags.append('bad_doc')

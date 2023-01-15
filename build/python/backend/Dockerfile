@@ -7,10 +7,14 @@ ARG YARA_PYTHON_VERSION=4.2.3
 ARG CAPA_VERSION=4.0.1
 ARG EXIFTOOL_VERSION=12.52
 
+# Set up package pinning for future releases (kinetic 22.10, 7zip 22.01+dfsg-2)
+COPY ./build/python/backend/pin.pref /etc/apt/preferences.d/pin.pref
+COPY ./build/python/backend/kinetic.list /etc/apt/sources.list.d/kinetic.list
+
 # Update packages
-RUN apt-get -qq update && \
+RUN apt-get -q update && \
 # Install build packages
-    apt-get install --no-install-recommends -qq \
+    apt-get install -q -y --no-install-recommends \
     automake \
     build-essential \
     cmake \
@@ -27,7 +31,7 @@ RUN apt-get -qq update && \
     python-is-python3 \
     pkg-config \
 # Install runtime packages
-    7zip=21.07+dfsg-4 \
+    7zip \
     antiword \
     libarchive-dev \
     libfuzzy-dev \
@@ -40,6 +44,7 @@ RUN apt-get -qq update && \
     redis-server \
     tesseract-ocr \
     unrar \
+    unzip \
     upx \
     jq && \
 # Download and compile Archive library, needed for exiftool to work best
@@ -58,15 +63,16 @@ RUN apt-get -qq update && \
     perl Makefile.PL && \
     make && \
     make install && \
-# Install FireEye CAPA
-#   - Binary installation, not supported as Python 3 plugin
-#   - Requires binary to be executable
-#   - Vivisect dependency requires available /.viv/ folder.
-    cd /tmp/ && \
-    curl -OL https://github.com/fireeye/capa/releases/download/v$CAPA_VERSION/capa-linux && \
-    chmod +x /tmp/capa-linux && \
-    mkdir /.viv/ && \
-    chmod -R a+rw /.viv && \
+# Install FireEye CAPA rules and signatures
+    mkdir -p /etc/capa/rules/ && \
+    curl -OL https://github.com/mandiant/capa-rules/archive/refs/tags/v$CAPA_VERSION.zip && \
+    unzip v$CAPA_VERSION.zip -d /etc/capa/rules/ && \
+    rm v$CAPA_VERSION.zip && \
+    mkdir -p /etc/capa/signatures/ && \
+    cd /etc/capa/signatures/ && \
+    curl -OL https://github.com/mandiant/capa/raw/master/sigs/1_flare_msvc_rtf_32_64.sig && \
+    curl -OL https://github.com/mandiant/capa/raw/master/sigs/2_flare_msvc_atlmfc_32_64.sig && \
+    curl -OL https://github.com/mandiant/capa/raw/master/sigs/3_flare_common_libs.sig && \
 # Install FireEye FLOSS
 #   - Binary installation, not supported as Python 3 plugin
 #   - Requires binary to be executable
@@ -91,8 +97,8 @@ RUN apt-get -qq update && \
 
 
 # Install JTR
-RUN apt-get -qq update \
-  && apt-get install -qq --no-install-recommends -y  \
+RUN apt-get -q update \
+  && apt-get install -q -y --no-install-recommends \
     ca-certificates \
     libssl-dev \
     zlib1g-dev \
@@ -156,8 +162,7 @@ RUN cd /strelka/ && \
 USER 1001
 
 # Run build checks
-RUN set -x && \
-    echo '[+] Run checks' && \
+RUN echo '[+] Run checks' && \
     cd /strelka/strelka/ && \
     python3 -m pytest -s tests/ && \
     echo '[+] Done'

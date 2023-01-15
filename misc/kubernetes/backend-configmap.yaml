@@ -42,15 +42,19 @@ data:
               - 'application/x-bzip2'
               - 'bzip2_file'
           priority: 5
-      #  'ScanCapa':
-      #    - positive:
-      #        flavors:
-      #          - 'application/x-dosexec'
-      #          - 'mz_file'
-      #      priority: 5
-      #      options:
-      #        tmp_directory: '/dev/shm/'
-      #        location: '/etc/capa/'
+#        'ScanCapa':
+#          - positive:
+#              flavors:
+#                - 'application/x-dosexec'
+#                - 'mz_file'
+#                - 'application/x-sharedlib'
+#                - 'elf_file'
+#            priority: 5
+#            options:
+#              tmp_directory: '/dev/shm/'
+#              location_rules: '/etc/capa/rules/'
+#              location_signatures: '/etc/capa/signatures/'
+#              scanner_timeout: 20
       'ScanDocx':
         - positive:
             flavors:
@@ -180,6 +184,11 @@ data:
           priority: 5
           options:
             length: 50
+            encodings:
+              - classic
+              - backslash
+#             - raw
+#             - hex
       'ScanGif':
         - positive:
             flavors:
@@ -205,6 +214,11 @@ data:
           priority: 5
           options:
             length: 50
+            encodings:
+              - classic
+              - backslash
+#             - raw
+#             - hex
       'ScanHtml':
         - positive:
             flavors:

@@ -38,12 +38,12 @@ def test_scan_vhd(mocker):
             "$RECYCLE.BIN/S-1-5-21-3712961497-200595429-3248382696-1000",
         ],
         "meta": {
-            "7zip_version": "21.07",
+            "7zip_version": "22.01",
             "partitions": [
                 {"path": mock.ANY, "type": "GPT"},
-                {"path": "0.Basic data partition.img", "file_system": "Windows BDP"},
+                {"path": "0.Basic data partition.ntfs", "file_system": "Windows BDP"},
                 {
-                    "path": "0.Basic data partition.img",
+                    "path": "0.Basic data partition.ntfs",
                     "type": "NTFS",
                     "label": "New Volume",
                     "file_system": "NTFS 3.1",
@@ -98,7 +98,7 @@ def test_scan_vhdx(mocker):
             "$RECYCLE.BIN/S-1-5-21-3712961497-200595429-3248382696-1000",
         ],
         "meta": {
-            "7zip_version": "21.07",
+            "7zip_version": "22.01",
             "partitions": [
                 {
                     "path": mock.ANY,
@@ -106,9 +106,9 @@ def test_scan_vhdx(mocker):
                     "creator_application": "Microsoft Windows 10.0.19044.0",
                 },
                 {"path": mock.ANY, "type": "GPT"},
-                {"path": "0.Basic data partition.img", "file_system": "Windows BDP"},
+                {"path": "0.Basic data partition.ntfs", "file_system": "Windows BDP"},
                 {
-                    "path": "0.Basic data partition.img",
+                    "path": "0.Basic data partition.ntfs",
                     "type": "NTFS",
                     "label": "New Volume",
                     "file_system": "NTFS 3.1",

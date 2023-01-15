@@ -70,7 +70,7 @@ Python code should attempt to adhere as closely to [PEP8](https://www.python.org
       tmp_data.write(data)
       tmp_data.flush()
   ```
-* Add appropriate try/except statements and append the exceptions as flags
+* Add appropriate try/except statements and append the exceptions as flags with lower case, underscore style
   ```py
   try:
     ...
@@ -82,6 +82,15 @@ Python code should attempt to adhere as closely to [PEP8](https://www.python.org
     self.flags.append(f"not_implemented_error_{object_id}")
   except PSSyntaxError:
     self.flags.append(f"ps_syntax_error_{object_id}")
+  ```
+* If catching bare `Exception`, always catch and raise strelka.ScannerTimeout
+  ```py
+    try:
+      ...
+    except strelka.ScannerTimeout:
+      raise
+    except Exception:
+      self.flags.append(f"unknown_bad_thing_happened")
   ```
 * Add a `total` dictionary if a scanner can extract more than 1 file from the file being scanned
     * This dictionary should be as contextual as possible and include the number of successfully extracted files

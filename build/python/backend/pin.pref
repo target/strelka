@@ -1,0 +1,7 @@
+Package: 7zip
+Pin: release n=jammy
+Pin-Priority: 100
+
+Package: *
+Pin: release n=kinetic
+Pin-Priority: 200

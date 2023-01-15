@@ -18,7 +18,9 @@ class ScanTnef(strelka.Scanner):
 
             try:
                 object_data = tnef_object.data.strip(b'\0') or None
-            except:
+            except strelka.ScannerTimeout:
+                raise
+            except Exception:
                 object_data = tnef_object.data
 
             if object_data is not None:

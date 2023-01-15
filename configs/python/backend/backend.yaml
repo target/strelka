@@ -56,10 +56,26 @@ scanners:
 #        flavors:
 #          - 'application/x-dosexec'
 #          - 'mz_file'
+#          - 'application/x-sharedlib'
+#          - 'elf_file'
 #      priority: 5
 #      options:
 #        tmp_directory: '/dev/shm/'
-#        location: '/etc/capa/'
+#        location_rules: '/etc/capa/rules/'
+#        location_signatures: '/etc/capa/signatures/'
+#        scanner_timeout: 20
+#  'ScanCcn':
+#    - positive:
+#        flavors:
+#          - 'credit_cards'
+#      priority: 5
+  'ScanDmg':
+    - positive:
+        flavors:
+          - 'dmg_disk_image'
+#          - 'dmg_encrypted_disk_image'
+          - 'hfsplus_disk_image'
+      priority: 5
   'ScanDocx':
     - positive:
         flavors:
@@ -96,6 +112,7 @@ scanners:
   'ScanEncryptedZip':
     - positive:
         flavors:
+          - 'application/msword'
           - 'encrypted_zip'
       priority: 5
       options:
@@ -204,6 +221,11 @@ scanners:
       priority: 5
       options:
         length: 50
+        encodings:
+          - classic
+          - backslash
+#          - raw
+#          - hex
   'ScanGif':
     - positive:
         flavors:
@@ -229,6 +251,11 @@ scanners:
       priority: 5
       options:
         length: 50
+        encodings:
+          - classic
+          - backslash
+#          - raw
+#          - hex
   'ScanHtml':
     - positive:
         flavors:

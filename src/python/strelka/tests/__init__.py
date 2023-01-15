@@ -1,11 +1,12 @@
 import datetime
 from pathlib import Path
+from strelka.strelka import File
 
 
 def run_test_scan(
     mocker,
     scan_class,
-    fixture_path,
+    fixture_path=None,
     options=None,
     backend_cfg=None
 ):
@@ -20,9 +21,14 @@ def run_test_scan(
 
     mocker.patch.object(scanner.__class__, "upload_to_coordinator", return_value=None)
 
+    if fixture_path:
+        data = Path(fixture_path).read_bytes()
+    else:
+        data = None
+
     scanner.scan_wrapper(
-        data=Path(fixture_path).read_bytes(),
-        file={"uid": "12345", "name": "test"},
+        data=data,
+        file=File(name="test"),
         options=options,
         expire_at=datetime.date.today(),
     )

@@ -15,7 +15,9 @@ class ScanLNK(strelka.Scanner):
             if header.LinkFlags.HasLinkTargetIDList:
                 linktargetidlist = LinkTargetIDList.parse(data[offset:])
                 offset += linktargetidlist.IDListSize + 2
-        except:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             self.flags.append("Unable to parse LinkTargetIDList")
 
         try:
@@ -34,7 +36,9 @@ class ScanLNK(strelka.Scanner):
                         data[offset + linkinfo.CommonNetworkRelativeLinkOffset:])
                     self.event["net_name"] = commonnetworkrelativelink.NetName
                 offset += linkinfo.LinkInfoSize
-        except:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             self.flags.append("Unable to parse LinkInfo")
 
         StringData = "StringData" / Struct(
@@ -51,7 +55,9 @@ class ScanLNK(strelka.Scanner):
                     offset += (len(NAME_STRING.String) * 2 + 2)
                 else:
                     offset += (len(NAME_STRING.String) + 2)
-        except:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             self.flags.append("Unable to parse NAME_STRING")
 
         try:
@@ -62,7 +68,9 @@ class ScanLNK(strelka.Scanner):
                     offset += (len(RELATIVE_PATH.String) * 2 + 2)
                 else:
                     offset += (len(RELATIVE_PATH.String) + 2)
-        except:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             self.flags.append("Unable to parse RELATIVE_PATH")
 
         try:
@@ -73,7 +81,9 @@ class ScanLNK(strelka.Scanner):
                     offset += (len(WORKING_DIR.String) * 2 + 2)
                 else:
                     offset += (len(WORKING_DIR.String) + 2)
-        except:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             self.flags.append("Unable to parse WORKING_DIR")
 
         try:
@@ -84,7 +94,9 @@ class ScanLNK(strelka.Scanner):
                     offset += (len(COMMAND_LINE_ARGUMENTS.String) * 2 + 2)
                 else:
                     offset += (len(COMMAND_LINE_ARGUMENTS.String) + 2)
-        except:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             self.flags.append("Unable to parse COMMAND_LINE_ARGUMENTS")
 
         try:
@@ -95,7 +107,9 @@ class ScanLNK(strelka.Scanner):
                     offset += (len(ICON_LOCATION.String) * 2 + 2)
                 else:
                     offset += (len(ICON_LOCATION.String) + 2)
-        except:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             self.flags.append("Unable to parse ICON_LOCATION")
 
         try:
@@ -104,13 +118,17 @@ class ScanLNK(strelka.Scanner):
                 try:
                     extradata = ExtraData.parse(data[offset:])
                     blocksize = extradata.BlockSize
-                except:
+                except strelka.ScannerTimeout:
+                    raise
+                except Exception:
                     break
 
                 try:
                     if extradata.IconEnvironmentDataBlock:
                         self.event["icon_target"] = extradata.IconEnvironmentDataBlock.TargetAnsi
-                except:
+                except strelka.ScannerTimeout:
+                    raise
+                except Exception:
                     self.flags.append("Unable to parse IconEnvironmentDataBlock")
 
                 if extradata.TrackerDataBlock:
@@ -118,5 +136,8 @@ class ScanLNK(strelka.Scanner):
                     self.event["mac"] = str(uuid.UUID(bytes_le=extradata.TrackerDataBlock.Droid[16:])).split('-')[-1]
 
                 offset += extradata.BlockSize
-        except:
+
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             self.flags.append("Unable to parse ExtraDataBlock")
