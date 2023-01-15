@@ -2,12 +2,12 @@ import redis
 import yaml
 
 from pathlib import Path
-from unittest import TestCase
+from unittest import TestCase, mock
 
 from strelka import strelka
 
 
-def test_assignment():
+def test_assignment(mocker):
     """
     Pass: All test fixtures match the given non-wildcard scanner assignments.
     Failure: At least one test fixture does not match the given scanner assignment.

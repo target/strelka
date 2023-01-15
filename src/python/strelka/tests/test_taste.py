@@ -2,12 +2,12 @@ import redis
 import yaml
 
 from pathlib import Path
-from unittest import TestCase
+from unittest import TestCase, mock
 
 from strelka import strelka
 
 
-def test_taste() -> None:
+def test_taste(mocker) -> None:
     """
     Pass: All test fixtures match the given yara and mime matches.
     Failure: At least one test fixture does not match the given yara and mime matches.
