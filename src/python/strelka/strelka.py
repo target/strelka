@@ -1,23 +1,27 @@
-import json
-import logging
-import traceback
-import uuid
 import glob
 import importlib
+import ipaddress
+import itertools
+import json
+import logging
 import math
 import os
 import re
-import string
 import signal
+import string
 import time
-import magic
-import yara
+import traceback
+import uuid
+from types import FrameType
+from typing import Any, Callable, Generator, Optional, Tuple, Union
 
-from boltons import iterutils
 import inflection
-from tldextract import TLDExtract
-import ipaddress
-import validators
+import magic  # type: ignore
+import redis
+import validators  # type: ignore
+import yara  # type: ignore
+from boltons import iterutils  # type: ignore
+from tldextract import TLDExtract  # type: ignore
 
 
 class RequestTimeout(Exception):
@@ -53,19 +57,20 @@ class File(object):
         name: String that contains the name of the file.
         source: String that describes which scanner the file originated from.
     """
-    def __init__(self, pointer='',
-                 parent='', depth=0,
-                 name='', source=''):
-        """Inits file object."""
-        self.flavors = {}
-        self.uid = str(uuid.uuid4())
-        self.depth = depth
-        self.name = name
-        self.parent = parent
-        self.pointer = pointer or self.uid
-        self.source = source
 
-    def add_flavors(self, flavors):
+    def __init__(self, pointer: str = '',
+                 parent: str = '', depth: int = 0,
+                 name: str = '', source: str = '') -> None:
+        """Inits file object."""
+        self.flavors: dict = {}
+        self.uid = str(uuid.uuid4())
+        self.depth: int = depth
+        self.name: str = name
+        self.parent: str = parent
+        self.pointer: str = pointer or self.uid
+        self.source: str = source
+
+    def add_flavors(self, flavors: dict):
         """Adds flavors to the file.
 
         In cases where flavors and self.flavors share duplicate keys, flavors
@@ -74,20 +79,29 @@ class File(object):
         self.flavors = {**self.flavors, **flavors}
 
 
+def timeout_handler(ex):
+    """Signal timeout handler"""
+
+    def fn(signal_number: int, frame: Optional[FrameType]):
+        raise ex
+
+    return fn
+
+
 class Backend(object):
-    def __init__(self, backend_cfg, coordinator):
-        self.scanner_cache = {}
-        self.backend_cfg = backend_cfg
-        self.coordinator = coordinator
-        self.limits = backend_cfg.get('limits')
-        self.scanners = backend_cfg.get('scanners')
+    def __init__(self, backend_cfg: dict, coordinator: redis.StrictRedis) -> None:
+        self.scanner_cache: dict = {}
+        self.backend_cfg: dict = backend_cfg
+        self.coordinator: redis.StrictRedis = coordinator
+        self.limits: dict = backend_cfg.get('limits', {})
+        self.scanners: dict = backend_cfg.get('scanners', {})
 
         self.compiled_magic = magic.Magic(
-            magic_file=backend_cfg.get('tasting').get('mime_db'),
+            magic_file=backend_cfg.get('tasting', {}).get('mime_db', ''),
             mime=True,
         )
 
-        yara_rules = backend_cfg.get('tasting').get('yara_rules')
+        yara_rules = backend_cfg.get('tasting', {}).get('yara_rules', '/etc/strelka/taste/')
         if os.path.isdir(yara_rules):
             yara_filepaths = {}
             globbed_yara = glob.iglob(
@@ -100,24 +114,19 @@ class Backend(object):
         else:
             self.compiled_yara = yara.compile(filepath=yara_rules)
 
-    def timeout_handler(self, ex):
-        """Signal timeout handler"""
+    def match_flavors(self, data: bytes) -> dict:
+        return {'mime': self.taste_mime(data), 'yara': self.taste_yara(data)}
 
-        def fn(signum, frame):
-            raise ex
-
-        return fn
-
-    def work(self):
+    def work(self) -> None:
         logging.info('starting up')
 
         count = 0
         work_start = time.time()
-        work_expire = work_start + self.limits.get('time_to_live')
+        work_expire = work_start + self.limits.get('time_to_live', 900)
 
         while 1:
             if self.limits.get('max_files') != 0:
-                if count >= self.limits.get('max_files'):
+                if count >= self.limits.get('max_files', 5000):
                     break
             if self.limits.get('time_to_live') != 0:
                 if time.time() >= work_expire:
@@ -137,10 +146,7 @@ class Backend(object):
                 continue
 
             try:
-                self.signal = signal.signal(
-                        signal.SIGALRM,
-                        self.timeout_handler(RequestTimeout)
-                    )
+                signal.signal(signal.SIGALRM, timeout_handler(RequestTimeout))
                 signal.alarm(timeout)
                 self.distribute(root_id, file, expire_at)
                 p = self.coordinator.pipeline(transaction=False)
@@ -159,29 +165,26 @@ class Backend(object):
         logging.info(f'shutdown after scanning {count} file(s) and'
                      f' {time.time() - work_start} second(s)')
 
-    def taste_mime(self, data):
+    def taste_mime(self, data: bytes) -> list:
         """Tastes file data with libmagic."""
         return [self.compiled_magic.from_buffer(data)]
 
-    def taste_yara(self, data):
+    def taste_yara(self, data: bytes) -> list:
         """Tastes file data with YARA."""
         encoded_whitespace = string.whitespace.encode()
         stripped_data = data.lstrip(encoded_whitespace)
         yara_matches = self.compiled_yara.match(data=stripped_data)
         return [match.rule for match in yara_matches]
 
-    def distribute(self, root_id, file, expire_at):
+    def distribute(self, root_id: str, file: File, expire_at: int) -> None:
         """Distributes a file through scanners."""
         try:
             files = []
 
             try:
-                self.signal = signal.signal(
-                        signal.SIGALRM,
-                        self.timeout_handler(DistributionTimeout)
-                    )
-                signal.alarm(self.limits.get('distribution'))
-                if file.depth > self.limits.get('max_depth'):
+                signal.signal(signal.SIGALRM, timeout_handler(DistributionTimeout))
+                signal.alarm(self.limits.get('distribution', 600))
+                if file.depth > self.limits.get('max_depth', 15):
                     logging.info(f'request {root_id} exceeded maximum depth')
                     return
 
@@ -192,29 +195,9 @@ class Backend(object):
                         break
                     data += pop
 
-                file.add_flavors({'mime': self.taste_mime(data)})
-                file.add_flavors({'yara': self.taste_yara(data)})
-                flavors = (
-                    file.flavors.get('external', [])
-                    + file.flavors.get('mime', [])
-                    + file.flavors.get('yara', [])
-                )
+                file.add_flavors(self.match_flavors(data))
 
-                scanner_list = []
-                for name in self.scanners:
-                    mappings = self.scanners.get(name, {})
-                    assigned = self.assign_scanner(
-                        name,
-                        mappings,
-                        flavors,
-                        file,
-                    )
-                    if assigned is not None:
-                        scanner_list.append(assigned)
-                scanner_list.sort(
-                    key=lambda k: k.get('priority', 5),
-                    reverse=True,
-                )
+                scanner_list = self.match_scanners(file)
 
                 p = self.coordinator.pipeline(transaction=False)
                 tree_dict = {
@@ -237,7 +220,7 @@ class Backend(object):
                     'source': file.source,
                     'tree': tree_dict,
                 }
-                scan = {}
+                scan: dict = {}
 
                 for scanner in scanner_list:
                     try:
@@ -264,7 +247,7 @@ class Backend(object):
                         }
 
                     except ModuleNotFoundError:
-                        logging.exception(f'scanner {name} not found')
+                        logging.exception(f'scanner {scanner.get("name", "__missing__")} not found')
 
                 event = {
                     **{'file': file_dict},
@@ -288,10 +271,10 @@ class Backend(object):
             signal.alarm(0)
             raise
 
-    def assign_scanner(self, scanner, mappings, flavors, file):
-        """Assigns scanners based on mappings and file data.
+    def match_scanner(self, scanner: str, mappings: list, file: File, ignore_wildcards: Optional[bool] = False) -> dict:
+        """Matches a scanner to mappings and file data.
 
-        Performs the task of assigning scanners based on the scan configuration
+        Performs the task of assigning a scanner based on the scan configuration
         mappings and file flavors, filename, and source. Assignment supports
         positive and negative matching: scanners are assigned if any positive
         categories are matched and no negative categories are matched. Flavors are
@@ -301,9 +284,8 @@ class Backend(object):
             scanner: Name of the scanner to be assigned.
             mappings: List of dictionaries that contain values used to assign
                 the scanner.
-            flavors: List of file flavors to use during scanner assignment.
-            filename: Filename to use during scanner assignment.
-            source: File source to use during scanner assignment.
+            file: File object to use during scanner assignment.
+            ignore_wildcards: Filter out wildcard scanner matches
         Returns:
             Dictionary containing the assigned scanner or None.
         """
@@ -321,16 +303,16 @@ class Backend(object):
                         'options': mapping.get('options', {})}
 
             for neg_flavor in neg_flavors:
-                if neg_flavor in flavors:
-                    return None
+                if neg_flavor in itertools.chain(*file.flavors.values()):
+                    return {}
             if neg_filename is not None:
                 if re.search(neg_filename, file.name) is not None:
-                    return None
+                    return {}
             if neg_source is not None:
                 if re.search(neg_source, file.source) is not None:
-                    return None
+                    return {}
             for pos_flavor in pos_flavors:
-                if pos_flavor == '*' or pos_flavor in flavors:
+                if (pos_flavor == '*' and not ignore_wildcards) or pos_flavor in itertools.chain(*file.flavors.values()):
                     return assigned
             if pos_filename is not None:
                 if re.search(pos_filename, file.name) is not None:
@@ -338,7 +320,33 @@ class Backend(object):
             if pos_source is not None:
                 if re.search(pos_source, file.source) is not None:
                     return assigned
-        return None
+
+        return {}
+
+    def match_scanners(self, file: File, ignore_wildcards: Optional[bool] = False) -> list:
+        """
+        Wraps match_scanner
+
+        Args:
+            file: File object to use during scanner assignment.
+            ignore_wildcards: Filter out wildcard scanner matches.
+        Returns:
+            List of scanner dictionaries.
+        """
+        scanner_list = []
+
+        for name in self.scanners:
+            mappings = self.scanners.get(name, {})
+            scanner = self.match_scanner(name, mappings, file, ignore_wildcards)
+            if scanner:
+                scanner_list.append(scanner)
+
+        scanner_list.sort(
+            key=lambda k: k.get('priority', 5),
+            reverse=True,
+        )
+
+        return scanner_list
 
 
 class IocOptions(object):
@@ -374,29 +382,29 @@ class Scanner(object):
             (see scan_wrapper).
         coordinator: Redis client connection to the coordinator.
     """
-    def __init__(self, backend_cfg, coordinator):
+
+    def __init__(self, backend_cfg: dict, coordinator: redis.StrictRedis) -> None:
         """Inits scanner with scanner name and metadata key."""
         self.name = self.__class__.__name__
         self.key = inflection.underscore(self.name.replace('Scan', ''))
         self.scanner_timeout = backend_cfg.get('limits', {}).get('scanner', 10)
-        self.signal = None
         self.coordinator = coordinator
-        self.event = dict()
-        self.files = []
-        self.flags = []
-        self.iocs = []
+        self.event: dict = dict()
+        self.files: list = []
+        self.flags: list = []
+        self.iocs: list = []
         self.type = IocOptions
-        self.extract = TLDExtract(suffix_list_urls=None)
+        self.extract = TLDExtract(suffix_list_urls=[])
         self.init()
 
-    def init(self):
+    def init(self) -> None:
         """Overrideable init.
 
         This method can be used to setup one-time variables required
         during scanning."""
         pass
 
-    def timeout_handler(self, signum, frame):
+    def timeout_handler(self, signal_number: int, frame: Optional[FrameType]) -> None:
         """Signal ScannerTimeout"""
         raise ScannerTimeout
 
@@ -404,7 +412,7 @@ class Scanner(object):
              data,
              file,
              options,
-             expire_at):
+             expire_at) -> None:
         """Overrideable scan method.
 
         Args:
@@ -419,7 +427,7 @@ class Scanner(object):
                      data,
                      file,
                      options,
-                     expire_at):
+                     expire_at) -> Tuple[list, dict]:
         """Sets up scan attributes and calls scan method.
 
         Scanning code is wrapped in try/except for error handling.
@@ -446,7 +454,7 @@ class Scanner(object):
                                            self.scanner_timeout or 10)
 
         try:
-            self.signal = signal.signal(signal.SIGALRM, self.timeout_handler)
+            signal.signal(signal.SIGALRM, self.timeout_handler)
             signal.alarm(self.scanner_timeout)
             self.scan(data, file, options, expire_at)
             signal.alarm(0)
@@ -471,7 +479,7 @@ class Scanner(object):
             {self.key: self.event}
         )
 
-    def upload_to_coordinator(self, pointer, chunk, expire_at):
+    def upload_to_coordinator(self, pointer, chunk, expire_at) -> None:
         """Uploads data to coordinator.
 
         This method is used during scanning to upload data to coordinator,
@@ -489,7 +497,7 @@ class Scanner(object):
         p.expireat(f'data:{pointer}', expire_at)
         p.execute()
 
-    def process_ioc(self, ioc, ioc_type, scanner_name, description='', malicious=False):
+    def process_ioc(self, ioc, ioc_type, scanner_name, description='', malicious=False) -> None:
         if not ioc:
             return
         if ioc_type == 'url':
@@ -521,7 +529,7 @@ class Scanner(object):
         else:
             self.iocs.append({'ioc': ioc, 'ioc_type': ioc_type, 'scanner': scanner_name, 'description': description})
 
-    def add_iocs(self, ioc, ioc_type, description='', malicious=False):
+    def add_iocs(self, ioc, ioc_type, description='', malicious=False) -> None:
         """Adds ioc to the iocs.
         :param ioc: The IOC or list of IOCs to be added. All iocs must be of the same type. Must be type String or Bytes.
         :param ioc_type: Must be one of md5, sha1, sha256, domain, url, email, ip, either as string or type object (e.g. self.type.domain).
@@ -539,21 +547,23 @@ class Scanner(object):
                     if isinstance(i, bytes):
                         i = i.decode()
                     if not isinstance(i, str):
-                        logging.warning(f"Could not process {i} from {self.name}: Type {type(i)} is not type Bytes or String")
+                        logging.warning(
+                            f"Could not process {i} from {self.name}: Type {type(i)} is not type Bytes or String")
                         continue
                     self.process_ioc(i, ioc_type, self.name, description=description, malicious=malicious)
             else:
                 if isinstance(ioc, bytes):
                     ioc = ioc.decode()
                 if not isinstance(ioc, str):
-                    logging.warning(f"Could not process {ioc} from {self.name}: Type {type(ioc)} is not type Bytes or String")
+                    logging.warning(
+                        f"Could not process {ioc} from {self.name}: Type {type(ioc)} is not type Bytes or String")
                     return
                 self.process_ioc(ioc, ioc_type, self.name, description=description, malicious=malicious)
         except Exception as e:
             logging.error(f"Failed to add {ioc} from {self.name}: {e}")
 
 
-def chunk_string(s, chunk=1024 * 16):
+def chunk_string(s, chunk=1024 * 16) -> Generator[bytes, None, None]:
     """Takes an input string and turns it into smaller byte pieces.
 
     This method is required for inserting data into coordinator.
@@ -568,28 +578,7 @@ def chunk_string(s, chunk=1024 * 16):
         yield s[c:c + chunk]
 
 
-def normalize_whitespace(text):
-    """Normalizes whitespace in text.
-
-    Scanners that parse text generally need whitespace normalized, otherwise
-    metadata parsed from the text may be unreliable. This function normalizes
-    whitespace characters to a single space.
-
-    Args:
-        text: Text that needs whitespace normalized.
-    Returns:
-        Text with whitespace normalized.
-    """
-    if isinstance(text, bytes):
-        text = re.sub(br'\s+', b' ', text)
-        text = re.sub(br'(^\s+|\s+$)', b'', text)
-    elif isinstance(text, str):
-        text = re.sub(r'\s+', ' ', text)
-        text = re.sub(r'(^\s+|\s+$)', '', text)
-    return text
-
-
-def format_event(metadata):
+def format_event(metadata) -> str:
     """Formats file metadata into an event.
 
     This function must be used on file metadata before the metadata is
@@ -606,6 +595,7 @@ def format_event(metadata):
     Returns:
         JSON-formatted file event.
     """
+
     def visit(path, key, value):
         if isinstance(value, (bytes, bytearray)):
             value = str(value, encoding='UTF-8', errors='replace')
