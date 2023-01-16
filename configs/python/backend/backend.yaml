@@ -642,7 +642,7 @@ scanners:
           - '*'
       priority: 5
       options:
-        location: '/etc/yara/'
+        location: '/etc/strelka/yara/rules.yara'
   'ScanZip':
     - positive:
         flavors:

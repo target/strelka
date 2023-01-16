@@ -46,6 +46,7 @@ RUN apt-get -q update && \
     antiword \
     libarchive-dev \
     libfuzzy-dev \
+    libjansson-dev \
     libmagic-dev \
     libssl-dev \
     libzbar0 \
@@ -96,7 +97,7 @@ RUN apt-get -q update && \
     tar -zxvf v$YARA_VERSION.tar.gz && \
     cd yara-$YARA_VERSION/ && \
     ./bootstrap.sh && \
-    ./configure --with-crypto --enable-dotnet --enable-magic && \
+    ./configure --with-crypto --enable-magic --enable-cuckoo && \
     make && make install && make check && \
 # Install yara-python
     cd /tmp/ && \
