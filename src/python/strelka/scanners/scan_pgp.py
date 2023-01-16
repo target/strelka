@@ -147,7 +147,6 @@ class ScanPgp(strelka.Scanner):
                         self.event['user_attributes'].append(user_attribute_entry)
 
                 elif isinstance(packet, UserIDPacket):
-                    print(packet.__class__.__name__)
                     self.event['total']['user_ids'] += 1
                     user_id_entry = {
                         'user': getattr(packet, 'user', None),
