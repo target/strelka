@@ -466,6 +466,7 @@ scanners:
     - positive:
         flavors:
           - 'application/pgp-keys'
+          - 'text/PGP'
           - 'pgp_file'
       priority: 5
   'ScanPhp':
