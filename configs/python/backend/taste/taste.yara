@@ -201,6 +201,29 @@ rule mp3_file {
         uint16(0) == 0x4449 and uint8(2) == 0x33
 }
 
+// Captures
+
+rule pcap_file {
+    meta:
+        type = "capture"
+    strings:
+        $a = { A1 B2 C3 D4 }
+        $b = { D4 C3 B2 A1 }
+    condition:
+        $a at 0 or $b at 0
+}
+
+rule pcapng_file {
+    meta:
+        type = "capture"
+    strings:
+        $a = { 0A 0D 0D 0A }
+        $b = { 1A 2B 3C 4D }
+        $c = { 4D 3C 2B 1A }
+    condition:
+        $a at 0 and ($b at 8 or $c at 8)
+}
+
 // Certificate Files
 
 rule pkcs7_file {
