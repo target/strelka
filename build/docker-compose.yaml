@@ -54,17 +54,6 @@ services:
     depends_on:
       - coordinator
 
-  oneshot:
-    build:
-      context: ..
-      dockerfile: build/go/oneshot/Dockerfile
-    command: strelka-oneshot
-    container_name: strelka_oneshot_1
-    networks:
-      - net
-    depends_on:
-      - frontend
-
   mmrpc:
     build:
       context: ..
