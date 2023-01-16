@@ -442,6 +442,14 @@ scanners:
           - 'application/msword'
           - 'olecf_file'
       priority: 5
+  'ScanPcap':
+    - positive:
+        flavors:
+          - 'pcap_file'
+          - 'pcapng_file'
+      priority: 5
+      options:
+        scanner_timeout: 20
   'ScanPdf':
     - positive:
         flavors:
@@ -639,7 +647,7 @@ scanners:
           - '*'
       priority: 5
       options:
-        location: '/etc/yara/'
+        location: '/etc/strelka/yara/rules.yara'
   'ScanZip':
     - positive:
         flavors:

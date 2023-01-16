@@ -259,3 +259,4 @@ class ScanVhd(strelka.Scanner):
                     c,
                     expire_at,
                 )
+            self.files.append(extract_file)
