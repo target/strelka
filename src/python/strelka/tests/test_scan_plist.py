@@ -13,6 +13,7 @@ def test_scan_plist(mocker):
 
     test_scan_event = {
         "elapsed": mock.ANY,
+        "flags": [],
         "keys": [
             {"key": "Language", "value": "English"},
             {"key": "Locale", "value": "US"},
