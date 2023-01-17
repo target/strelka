@@ -2,6 +2,14 @@ FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
+ARG USERNAME=strelka
+ARG USER_UID=1001
+ARG USER_GID=$USER_UID
+
+# Create the user
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID --create-home --shell /bin/bash $USERNAME
+
 ARG YARA_VERSION=4.2.3
 ARG YARA_PYTHON_VERSION=4.2.3
 ARG CAPA_VERSION=4.0.1
@@ -44,6 +52,7 @@ RUN apt-get -q update && \
     apt-get install -q -y --no-install-recommends \
     7zip \
     antiword \
+    binwalk \
     libarchive-dev \
     libfuzzy-dev \
     libjansson-dev \
@@ -174,7 +183,7 @@ RUN cd /strelka/ && \
     chmod -R g=u /var/log/strelka/
 
 # Run tests as non-root user
-USER 1001
+USER $username
 
 # Run build checks
 RUN echo '[+] Run checks' && \
@@ -191,4 +200,4 @@ RUN cd /strelka/ && \
 # Remove config directory (will bind mount once built)
 RUN rm -rf /etc/strelka/
 
-USER 1001
+USER $username
