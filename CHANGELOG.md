@@ -1,6 +1,14 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-01-18
+### Changed
+- Adds tests for ScanPgp, ScanPlist, ScanNf, Updates for ScanOle (@ryanohoro)
+- Bug fix in ScanQR (@ryanohoro)
+- Adds support for WEBP to multiple scanners (@ryanohoro)
+- Increase collection potential for PGP (@ryanohoro)
+- Backend Dockerfile modification (@ryanohoro)
+
 ## 2023-01-12
 ### Changed
 - Adds tracebacks to events that have unhandled exceptions. (@ryanohoro)
