@@ -20,10 +20,13 @@ class ScanQr(strelka.Scanner):
             barcodes = decode(Image.open(io.BytesIO(data)))
 
             try:
-                self.event['data'] = barcodes[0].data.decode('utf-8')
+                if barcodes:
+                    self.event['data'] = barcodes[0].data.decode('utf-8')
+                else:
+                    return
             except strelka.ScannerTimeout:
                 raise
-            except Exception:
+            except Exception as e:
                 self.flags.append('decode error')
                 return
 
@@ -50,7 +53,7 @@ class ScanQr(strelka.Scanner):
                 else:
                     self.event['type'] = 'undefined'
             except strelka.ScannerTimeout:
-                    raise
+                raise
             except Exception:
                 self.flags.append('parse error')
         except strelka.ScannerTimeout:
