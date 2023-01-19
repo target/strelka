@@ -1,1 +1,2 @@
-deb http://archive.ubuntu.com/ubuntu kinetic main restricted universe multiverse
+deb [arch=amd64] http://archive.ubuntu.com/ubuntu kinetic main restricted universe multiverse
+deb [arch=arm64] http://ports.ubuntu.com/ kinetic main restricted universe multiverse
