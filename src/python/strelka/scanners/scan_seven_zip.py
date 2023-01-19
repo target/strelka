@@ -187,13 +187,11 @@ class ScanSevenZip(strelka.Scanner):
             # Method property
             match = regex_method.match(output_line)
             if match and match.group("encryption"):
-                logging.debug("matched method")
                 return True
 
             # Password prompt
             match = regex_pompt.match(output_line)
             if match:
-                logging.debug("matched prompt")
                 return True
 
         return False

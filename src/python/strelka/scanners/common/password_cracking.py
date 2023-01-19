@@ -130,7 +130,6 @@ def crack_john(
                         return match.group("password")
 
             if brute:
-                logging.debug("Brute force attempt")
                 self.flags.append("incremental")
                 brute_time_start = time.time()
                 (stdout, stderr) = subprocess.Popen(
