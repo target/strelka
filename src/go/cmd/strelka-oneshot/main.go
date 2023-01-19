@@ -16,6 +16,7 @@ import (
 )
 
 func main() {
+
 	frontendUrl := flag.String("s", "127.0.0.1:57314", "url for the strelka frontend server")
 	connCert := flag.String("c", "", "path to connection certificate")
 	logPath := flag.String("l", "strelka-oneshot.log", "path to response log file, - for stdout")
@@ -28,6 +29,13 @@ func main() {
 	if *scanFile == "" {
 		flag.Usage()
 		os.Exit(1)
+	}
+
+	if os.Getenv("STRELKA_ONESHOT_FRONTENDURL") != "" {
+	    *frontendUrl = os.Getenv("STRELKA_ONESHOT_FRONTENDURL")
+	}
+	if os.Getenv("STRELKA_ONESHOT_LOGPATH") != "" {
+	    *logPath = os.Getenv("STRELKA_ONESHOT_LOGPATH")
 	}
 
 	serv := *frontendUrl

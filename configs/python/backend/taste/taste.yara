@@ -201,6 +201,29 @@ rule mp3_file {
         uint16(0) == 0x4449 and uint8(2) == 0x33
 }
 
+// Captures
+
+rule pcap_file {
+    meta:
+        type = "capture"
+    strings:
+        $a = { A1 B2 C3 D4 }
+        $b = { D4 C3 B2 A1 }
+    condition:
+        $a at 0 or $b at 0
+}
+
+rule pcapng_file {
+    meta:
+        type = "capture"
+    strings:
+        $a = { 0A 0D 0D 0A }
+        $b = { 1A 2B 3C 4D }
+        $c = { 4D 3C 2B 1A }
+    condition:
+        $a at 0 and ($b at 8 or $c at 8)
+}
+
 // Certificate Files
 
 rule pkcs7_file {
@@ -426,10 +449,12 @@ rule pgp_file {
         $a = { ?? ?? 2D 2D 2D 42 45 47 49 4E 20 50 47 50 20 50 55 42 4C 49 43 20 4B 45 59 20 42 4C 4F 43 4B 2D } // (.{2})(\x2D\x2D\x2DBEGIN PGP PUBLIC KEY BLOCK\x2D)
         $b = { ?? ?? 2D 2D 2D 42 45 47 49 4E 20 50 47 50 20 53 49 47 4E 41 54 55 52 45 2D } // (\x2D\x2D\x2D\x2D\x2DBEGIN PGP SIGNATURE\x2D)
         $c = { ?? ?? 2D 2D 2D 42 45 47 49 4E 20 50 47 50 20 4D 45 53 53 41 47 45 2D } // (\x2D\x2D\x2D\x2D\x2DBEGIN PGP MESSAGE\x2D)
+        $d = { ?? ?? 2D 2D 2D 42 45 47 49 4e 20 50 47 50 20 53 49 47 4e 45 44 20 4d 45 53 53 41 47 45 2D } // (\x2D\x2D\x2D\x2D\x2DBEGIN PGP SIGNED MESSAGE\x2D)
     condition:
         $a at 0 or
         $b at 0 or
-        $c at 0
+        $c at 0 or
+        $d at 0
 }
 
 // Executable Files

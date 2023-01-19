@@ -199,6 +199,7 @@ scanners:
           - 'bmp_file'
           - 'application/x-shockwave-flash'
           - 'fws_file'
+          - 'image/webp'
       priority: 5
       options:
         keys:
@@ -352,6 +353,7 @@ scanners:
           - 'jpeg_file'
           - 'image/x-ms-bmp'
           - 'bmp_file'
+          - 'image/webp'
       priority: 5
   'ScanLzma':
     - positive:
@@ -415,6 +417,7 @@ scanners:
           - 'jpeg_file'
           - 'image/x-ms-bmp'
           - 'bmp_file'
+          - 'image/webp'
       priority: 5
   'ScanOcr':
     - positive:
@@ -427,6 +430,7 @@ scanners:
           - 'type_is_tiff'
           - 'image/x-ms-bmp'
           - 'bmp_file'
+          - 'image/webp'
       priority: 5
       options:
         extract_text: False
@@ -438,6 +442,14 @@ scanners:
           - 'application/msword'
           - 'olecf_file'
       priority: 5
+  'ScanPcap':
+    - positive:
+        flavors:
+          - 'pcap_file'
+          - 'pcapng_file'
+      priority: 5
+      options:
+        scanner_timeout: 20
   'ScanPdf':
     - positive:
         flavors:
@@ -466,6 +478,7 @@ scanners:
     - positive:
         flavors:
           - 'application/pgp-keys'
+          - 'text/PGP'
           - 'pgp_file'
       priority: 5
   'ScanPhp':
@@ -513,6 +526,7 @@ scanners:
           - 'type_is_tiff'
           - 'image/x-ms-bmp'
           - 'bmp_file'
+          - 'image/webp'
       priority: 5
   'ScanRar':
     - positive:
@@ -634,7 +648,7 @@ scanners:
           - '*'
       priority: 5
       options:
-        location: '/etc/yara/'
+        location: '/etc/strelka/yara/rules.yara'
   'ScanZip':
     - positive:
         flavors:

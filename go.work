@@ -1,0 +1,7 @@
+go 1.19
+
+use ./src/go/cmd/strelka-fileshot
+use ./src/go/cmd/strelka-filestream
+use ./src/go/cmd/strelka-frontend
+use ./src/go/cmd/strelka-manager
+use ./src/go/cmd/strelka-oneshot

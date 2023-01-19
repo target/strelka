@@ -2,6 +2,14 @@ FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
+ARG USERNAME=strelka
+ARG USER_UID=1001
+ARG USER_GID=$USER_UID
+
+# Create the user
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID --create-home --shell /bin/bash $USERNAME
+
 ARG YARA_VERSION=4.2.3
 ARG YARA_PYTHON_VERSION=4.2.3
 ARG CAPA_VERSION=4.0.1
@@ -21,6 +29,7 @@ RUN apt-get -q update && \
     curl \
     gcc \
     git \
+    gpg \
     libglu1-mesa \
     libtool \
     make \
@@ -29,12 +38,24 @@ RUN apt-get -q update && \
     python3-pip \
     python3-wheel \
     python-is-python3 \
-    pkg-config \
+    pkg-config
+
+# Add zeek repo
+RUN echo 'deb http://download.opensuse.org/repositories/security:/zeek/xUbuntu_22.04/ /' | tee /etc/apt/sources.list.d/security:zeek.list && \
+    curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_22.04/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null
+
+# Add zeek to path
+ENV PATH=$PATH:/opt/zeek/bin
+
 # Install runtime packages
+RUN apt-get -q update && \
+    apt-get install -q -y --no-install-recommends \
     7zip \
     antiword \
+    binwalk \
     libarchive-dev \
     libfuzzy-dev \
+    libjansson-dev \
     libmagic-dev \
     libssl-dev \
     libzbar0 \
@@ -45,7 +66,8 @@ RUN apt-get -q update && \
     unrar \
     unzip \
     upx \
-    jq && \
+    jq \
+    zeek-lts && \
 # Download and compile Archive library, needed for exiftool to work best
     cd /tmp/ && \
     curl -OL https://cpan.metacpan.org/authors/id/P/PH/PHRED/Archive-Zip-1.68.tar.gz && \
@@ -84,7 +106,7 @@ RUN apt-get -q update && \
     tar -zxvf v$YARA_VERSION.tar.gz && \
     cd yara-$YARA_VERSION/ && \
     ./bootstrap.sh && \
-    ./configure --with-crypto --enable-dotnet --enable-magic && \
+    ./configure --with-crypto --enable-magic --enable-cuckoo && \
     make && make install && make check && \
 # Install yara-python
     cd /tmp/ && \
@@ -94,6 +116,8 @@ RUN apt-get -q update && \
     python3 setup.py build --dynamic-linking && \
     python3 setup.py install
 
+# Mark zeek as manual (keeps getting autoremoved?)
+RUN apt-mark manual zeek-lts
 
 # Install JTR
 RUN apt-get -q update \
@@ -137,13 +161,14 @@ RUN cd /strelka/ && \
     python3 setup.py -q clean --all && \
     rm -rf dist/ strelka.egg-info && \
     pip3 uninstall -y grpcio-tools && \
-    apt-get autoremove -qq --purge \
+    apt-get remove -y --purge \
     automake \
     build-essential \
     cmake \
     curl \
     gcc \
     git \
+    gpg \
     libtool \
     make \
     python3-dev \
@@ -158,7 +183,7 @@ RUN cd /strelka/ && \
     chmod -R g=u /var/log/strelka/
 
 # Run tests as non-root user
-USER 1001
+USER $username
 
 # Run build checks
 RUN echo '[+] Run checks' && \
@@ -175,4 +200,4 @@ RUN cd /strelka/ && \
 # Remove config directory (will bind mount once built)
 RUN rm -rf /etc/strelka/
 
-USER 1001
+USER $username
