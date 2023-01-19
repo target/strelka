@@ -561,6 +561,13 @@ scanners:
           - 'application/x-7z-compressed'
           - '_7zip_file'
       priority: 5
+      options:
+#        min_length: 1
+#        max_length: 6
+        scanner_timeout: 150
+        crack_pws: True
+        log_pws: True
+#        brute_force: True
   # 'ScanStrings':
   #   - positive:
   #       flavors:
