@@ -143,8 +143,6 @@ class Backend(object):
                     + file.flavors.get('yara', [])
                 )
 
-                logging.debug(f"{file.name} {flavors}")
-
                 scanner_list = []
                 for name in self.scanners:
                     mappings = self.scanners.get(name, {})
