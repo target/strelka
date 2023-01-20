@@ -327,8 +327,6 @@ scanners:
         flavors:
           - 'application/vnd.ms-cab-compressed'
           - 'cab_file'
-          - 'application/x-7z-compressed'
-          - '_7zip_file'
           - 'application/x-cpio'
           - 'cpio_file'
           - 'application/x-xar'
@@ -557,6 +555,19 @@ scanners:
         flavors:
           - 'text/x-ruby'
       priority: 5
+  'ScanSevenZip':
+    - positive:
+        flavors:
+          - 'application/x-7z-compressed'
+          - '_7zip_file'
+      priority: 5
+      options:
+#        min_length: 1
+#        max_length: 6
+        scanner_timeout: 150
+        crack_pws: True
+        log_pws: True
+#        brute_force: True
   # 'ScanStrings':
   #   - positive:
   #       flavors:

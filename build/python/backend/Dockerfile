@@ -54,6 +54,8 @@ RUN apt-get -q update && \
     antiword \
     binwalk \
     libarchive-dev \
+    # 7z2john.pl
+    libcompress-raw-lzma-perl \
     libfuzzy-dev \
     libjansson-dev \
     libmagic-dev \
