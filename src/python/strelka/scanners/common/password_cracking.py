@@ -128,6 +128,8 @@ def crack_john(
                     if match := re_password.match(line):
                         self.flags.append("cracked_by_wordlist")
                         return match.group("password")
+            else:
+                self.flags.append("wordlist_file_missing")
 
             if brute:
                 self.flags.append("incremental")
