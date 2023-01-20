@@ -2,6 +2,16 @@ FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
+ARG CONFIG_TESTS=false
+
+ARG USERNAME=strelka
+ARG USER_UID=1001
+ARG USER_GID=$USER_UID
+
+# Create the user
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID --create-home --shell /bin/bash $USERNAME
+
 ARG YARA_VERSION=4.2.3
 ARG YARA_PYTHON_VERSION=4.2.3
 ARG CAPA_VERSION=4.0.1
@@ -21,6 +31,7 @@ RUN apt-get -q update && \
     curl \
     gcc \
     git \
+    gpg \
     libglu1-mesa \
     libtool \
     make \
@@ -29,12 +40,26 @@ RUN apt-get -q update && \
     python3-pip \
     python3-wheel \
     python-is-python3 \
-    pkg-config \
+    pkg-config
+
+# Add zeek repo
+RUN echo 'deb http://download.opensuse.org/repositories/security:/zeek/xUbuntu_22.04/ /' | tee /etc/apt/sources.list.d/security:zeek.list && \
+    curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_22.04/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null
+
+# Add zeek to path
+ENV PATH=$PATH:/opt/zeek/bin
+
 # Install runtime packages
+RUN apt-get -q update && \
+    apt-get install -q -y --no-install-recommends \
     7zip \
     antiword \
+    binwalk \
     libarchive-dev \
+    # 7z2john.pl
+    libcompress-raw-lzma-perl \
     libfuzzy-dev \
+    libjansson-dev \
     libmagic-dev \
     libssl-dev \
     libzbar0 \
@@ -43,8 +68,10 @@ RUN apt-get -q update && \
     redis-server \
     tesseract-ocr \
     unrar \
+    unzip \
     upx \
-    jq && \
+    jq \
+    zeek-lts && \
 # Download and compile Archive library, needed for exiftool to work best
     cd /tmp/ && \
     curl -OL https://cpan.metacpan.org/authors/id/P/PH/PHRED/Archive-Zip-1.68.tar.gz && \
@@ -61,15 +88,16 @@ RUN apt-get -q update && \
     perl Makefile.PL && \
     make && \
     make install && \
-# Install FireEye CAPA
-#   - Binary installation, not supported as Python 3 plugin
-#   - Requires binary to be executable
-#   - Vivisect dependency requires available /.viv/ folder.
-    cd /tmp/ && \
-    curl -OL https://github.com/fireeye/capa/releases/download/v$CAPA_VERSION/capa-linux && \
-    chmod +x /tmp/capa-linux && \
-    mkdir /.viv/ && \
-    chmod -R a+rw /.viv && \
+# Install FireEye CAPA rules and signatures
+    mkdir -p /etc/capa/rules/ && \
+    curl -OL https://github.com/mandiant/capa-rules/archive/refs/tags/v$CAPA_VERSION.zip && \
+    unzip v$CAPA_VERSION.zip -d /etc/capa/rules/ && \
+    rm v$CAPA_VERSION.zip && \
+    mkdir -p /etc/capa/signatures/ && \
+    cd /etc/capa/signatures/ && \
+    curl -OL https://github.com/mandiant/capa/raw/master/sigs/1_flare_msvc_rtf_32_64.sig && \
+    curl -OL https://github.com/mandiant/capa/raw/master/sigs/2_flare_msvc_atlmfc_32_64.sig && \
+    curl -OL https://github.com/mandiant/capa/raw/master/sigs/3_flare_common_libs.sig && \
 # Install FireEye FLOSS
 #   - Binary installation, not supported as Python 3 plugin
 #   - Requires binary to be executable
@@ -82,7 +110,7 @@ RUN apt-get -q update && \
     tar -zxvf v$YARA_VERSION.tar.gz && \
     cd yara-$YARA_VERSION/ && \
     ./bootstrap.sh && \
-    ./configure --with-crypto --enable-dotnet --enable-magic && \
+    ./configure --with-crypto --enable-magic --enable-cuckoo && \
     make && make install && make check && \
 # Install yara-python
     cd /tmp/ && \
@@ -92,6 +120,8 @@ RUN apt-get -q update && \
     python3 setup.py build --dynamic-linking && \
     python3 setup.py install
 
+# Mark zeek as manual (keeps getting autoremoved?)
+RUN apt-mark manual zeek-lts
 
 # Install JTR
 RUN apt-get -q update \
@@ -135,13 +165,14 @@ RUN cd /strelka/ && \
     python3 setup.py -q clean --all && \
     rm -rf dist/ strelka.egg-info && \
     pip3 uninstall -y grpcio-tools && \
-    apt-get autoremove -qq --purge \
+    apt-get remove -y --purge \
     automake \
     build-essential \
     cmake \
     curl \
     gcc \
     git \
+    gpg \
     libtool \
     make \
     python3-dev \
@@ -156,12 +187,13 @@ RUN cd /strelka/ && \
     chmod -R g=u /var/log/strelka/
 
 # Run tests as non-root user
-USER 1001
+USER $USERNAME
 
 # Run build checks
-RUN echo '[+] Run checks' && \
+RUN echo '[+] Run build checks' && \
     cd /strelka/strelka/ && \
     python3 -m pytest -s tests/ && \
+    if $CONFIG_TESTS; then python3 -m pytest -s tests_configuration/; fi && \
     echo '[+] Done'
 
 USER root
@@ -173,4 +205,4 @@ RUN cd /strelka/ && \
 # Remove config directory (will bind mount once built)
 RUN rm -rf /etc/strelka/
 
-USER 1001
+USER $USERNAME

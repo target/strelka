@@ -37,7 +37,9 @@ class ScanFloss(strelka.Scanner):
                                 stderr=subprocess.DEVNULL
                             ).communicate()
                             floss_json = json.load(tmp_output)
-                        except:
+                        except strelka.ScannerTimeout:
+                            raise
+                        except Exception:
                             self.flags.append('error_processing')
                             return
 
@@ -46,12 +48,18 @@ class ScanFloss(strelka.Scanner):
                                 self.event['decoded'] = floss_json['strings']['decoded_strings'][:limit]
                             if floss_json['strings']['stack_strings']:
                                 self.event['stack'] = floss_json['strings']['stack_strings'][:limit]
-                        except:
+                        except strelka.ScannerTimeout:
+                            raise
+                        except Exception:
                             self.flags.append('error_parsing')
                             return
-                except:
+                except strelka.ScannerTimeout:
+                    raise
+                except Exception:
                     self.flags.append('error_execution')
-        except:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             self.flags.append('error_execution')
 
 

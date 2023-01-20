@@ -1,10 +1,14 @@
 import pgpdump
+
 from pgpdump.packet import PublicKeyEncryptedSessionKeyPacket
 from pgpdump.packet import PublicKeyPacket
+from pgpdump.packet import SecretKeyPacket
 from pgpdump.packet import SignaturePacket
 from pgpdump.packet import TrustPacket
 from pgpdump.packet import UserAttributePacket
 from pgpdump.packet import UserIDPacket
+from pgpdump.packet import CompressedDataPacket
+from pgpdump.packet import Packet
 
 from strelka import strelka
 
@@ -15,6 +19,7 @@ class ScanPgp(strelka.Scanner):
         self.event['total'] = {
             'public_keys': 0,
             'public_key_encrypted_session_keys': 0,
+            'secret_keys': 0,
             'signatures': 0,
             'trusts': 0,
             'user_attributes': 0,
@@ -23,15 +28,55 @@ class ScanPgp(strelka.Scanner):
 
         self.event.setdefault('public_keys', [])
         self.event.setdefault('public_key_encrypted_session_keys', [])
+        self.event.setdefault('secret_keys', [])
         self.event.setdefault('signatures', [])
         self.event.setdefault('trusts', [])
         self.event.setdefault('user_attributes', [])
         self.event.setdefault('user_ids', [])
 
         try:
-            data = pgpdump.AsciiData(data)
-            for packet in data.packets():
-                if isinstance(packet, PublicKeyPacket):
+            self.parse_pgpdump(data)
+        except Exception:
+            self.flags.append('pgpdump_error')
+
+    def parse_pgpdump(self, data):
+
+        pgpdump_data = None
+
+        try:
+            pgpdump_data = pgpdump.AsciiData(data)
+        except (pgpdump.utils.PgpdumpException, AttributeError):
+            try:
+                pgpdump_data = pgpdump.BinaryData(data)
+            except pgpdump.utils.PgpdumpException:
+                self.flags.append('pgpdump_parse_error')
+
+        if pgpdump_data:
+            for packet in pgpdump_data.packets():
+                if isinstance(packet, CompressedDataPacket):
+                    self.parse_pgpdump(packet.decompressed_data)
+
+                elif isinstance(packet, SecretKeyPacket):
+                    self.event['total']['secret_keys'] += 1
+                    secret_key_entry = {
+                        'key_id': getattr(packet, 'key_id', None),
+                        'pubkey_version': getattr(packet, 'secretkey_version', None),
+                        'fingerprint': getattr(packet, 'fingerprint', None),
+                        'pub_algorithm_type': getattr(packet, 'secret_algorithm_type', None),
+                        'key_value': getattr(packet, 'key_value', None),
+                    }
+
+                    creation_time = getattr(packet, 'creation_time', None)
+                    if creation_time is not None:
+                        secret_key_entry['creation_time'] = creation_time.isoformat()
+                    expiration_time = getattr(packet, 'expiration_time', None)
+                    if expiration_time is not None:
+                        secret_key_entry['expiration_time'] = expiration_time.isoformat()
+
+                    if secret_key_entry not in self.event['secret_keys']:
+                        self.event['secret_keys'].append(secret_key_entry)
+
+                elif isinstance(packet, PublicKeyPacket):
                     self.event['total']['public_keys'] += 1
                     public_key_entry = {
                         'key_id': getattr(packet, 'key_id', None),
@@ -112,5 +157,7 @@ class ScanPgp(strelka.Scanner):
                     if user_id_entry not in self.event['user_ids']:
                         self.event['user_ids'].append(user_id_entry)
 
-        except TypeError:
-            self.flags.append('type_error')
+                elif isinstance(packet, Packet):
+                    if packet.name == 'Literal Data Packet':
+                        pass
+                        # print(packet.data)

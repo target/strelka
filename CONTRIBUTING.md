@@ -26,22 +26,53 @@ We rely on contributors to test any changes before they are submitted as pull re
 
 New scanners should be accompanied by a [pytest](https://docs.pytest.org/) based test in `src/python/strelka/tests`, along with **non-malicous** and reasonably sized sample files in `src/python/strelka/tests/fixtures`.
 
-pytest is run when the docker container is built to assure scanners will work at runtime.
+New fixtures should also be accompanied by updates to the configuration tests in `tests_configuration`. Changes to tastes or scanner assignments will require updates to these tests.
 
-Run pytest manually:
+The best way to run Strelka's test suite is to build the docker containers. Some of Strelka's scanners have OS level dependencies which make them unsuitable for individual testing.
 
-```bash
-cd src/python/strelka/
-python -m pytest tests/
+```
+docker-compose -f build/docker-compose.yaml build
+
 ============================= test session starts ==============================
-platform linux -- Python 3.10.7, pytest-7.2.0, pluggy-1.0.0
-rootdir: /strelka/src/python
-plugins: mock-3.10.0
-collected 9 items
+platform linux -- Python 3.10.6, pytest-7.2.0, pluggy-1.0.0
+rootdir: /strelka
+plugins: mock-3.10.0, unordered-0.5.2
+collected 92 items
+
+tests/test_required_for_scanner.py .
+tests/test_scan_base64.py .
+tests/test_scan_base64_pe.py .
+tests/test_scan_batch.py .
+tests/test_scan_bmp_eof.py .
 
 ...
 
-============================== 9 passed in 0.48s ===============================
+tests/test_scan_upx.py .
+tests/test_scan_url.py ..
+tests/test_scan_vhd.py ..
+tests/test_scan_x509.py ..
+tests/test_scan_xml.py .
+tests/test_scan_yara.py .
+tests/test_scan_zip.py ..
+
+======================= 92 passed, 29 warnings in 27.93s =======================
+```
+
+If you're testing with the default backend.yaml and taste.yara, enable `CONFIG_TESTS` to assure the configuration works as expected.
+
+```
+docker-compose -f build/docker-compose.yaml build --build-arg CONFIG_TESTS=true backend
+
+============================= test session starts ==============================
+platform linux -- Python 3.10.6, pytest-7.2.0, pluggy-1.0.0
+rootdir: /strelka
+plugins: mock-3.10.0, unordered-0.5.2
+collected 155 items
+
+tests_configuration/test_scanner_assignment.py .............................................................................
+tests_configuration/test_taste.py ..............................................................................
+
+======================= 155 passed, 4 warnings in 8.55s ========================
 ```
 
 ## Style Guides
@@ -70,7 +101,7 @@ Python code should attempt to adhere as closely to [PEP8](https://www.python.org
       tmp_data.write(data)
       tmp_data.flush()
   ```
-* Add appropriate try/except statements and append the exceptions as flags
+* Add appropriate try/except statements and append the exceptions as flags with lower case, underscore style
   ```py
   try:
     ...
@@ -82,6 +113,15 @@ Python code should attempt to adhere as closely to [PEP8](https://www.python.org
     self.flags.append(f"not_implemented_error_{object_id}")
   except PSSyntaxError:
     self.flags.append(f"ps_syntax_error_{object_id}")
+  ```
+* If catching bare `Exception`, always catch and raise strelka.ScannerTimeout
+  ```py
+    try:
+      ...
+    except strelka.ScannerTimeout:
+      raise
+    except Exception:
+      self.flags.append(f"unknown_bad_thing_happened")
   ```
 * Add a `total` dictionary if a scanner can extract more than 1 file from the file being scanned
     * This dictionary should be as contextual as possible and include the number of successfully extracted files

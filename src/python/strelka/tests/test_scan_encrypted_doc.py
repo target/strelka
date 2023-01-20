@@ -21,7 +21,7 @@ def test_scan_encrypted_doc(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test_password.doc",
-        options={"log_pws": True, "password_file": str(Path(Path(__file__).parent / "fixtures/test_passwords.dat"))}
+        options={"log_pws": True, "password_file": str(Path(Path(__file__).parent / "helpers/test_passwords.dat"))}
     )
 
     TestCase.maxDiff = None
@@ -44,7 +44,7 @@ def test_scan_encrypted_docx(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test_password.docx",
-        options={"log_pws": True, "password_file": str(Path(Path(__file__).parent / "fixtures/test_passwords.dat"))}
+        options={"log_pws": True, "password_file": str(Path(Path(__file__).parent / "helpers/test_passwords.dat"))}
     )
 
     TestCase.maxDiff = None

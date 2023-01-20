@@ -46,7 +46,9 @@ class ScanElf(strelka.Scanner):
                 'machine': str(elf.header.machine_type).split('.')[1],
                 'size': elf.header.header_size,
             }
-        except:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             pass
 
         if elf.has_interpreter:
@@ -94,7 +96,9 @@ class ScanElf(strelka.Scanner):
                     'type': str(sec.type).split('.')[1],
                     'segments': [str(seg.type).split('.')[1] for seg in sec.segments],
                 })
-        except:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             pass
 
         self.event['segments'] = []
@@ -115,7 +119,9 @@ class ScanElf(strelka.Scanner):
                         'size': seg.virtual_size,
                     },
                 })
-        except:
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
             pass
 
         self.event['symbols'] = {

@@ -34,5 +34,7 @@ class ScanCcn(strelka.Scanner):
                     if self.is_luhn_valid(match.decode("ascii")):
                         if "luhn_match" not in self.flags:
                             self.flags.append("luhn_match")
-                except:
+                except strelka.ScannerTimeout:
+                    raise
+                except Exception:
                     pass
