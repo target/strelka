@@ -279,8 +279,6 @@ def test_scan_ocr_png(mocker):
         fixture_path=Path(__file__).parent / "fixtures/test_text.png",
     )
 
-    print(scanner_event)
-
     TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_event, scanner_event)
 
@@ -420,9 +418,5 @@ def test_scan_ocr_webp(mocker):
         fixture_path=Path(__file__).parent / "fixtures/test_text.webp",
     )
 
-    print(scanner_event)
-
     TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_event, scanner_event)
-
-
