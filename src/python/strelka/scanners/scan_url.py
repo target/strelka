@@ -35,7 +35,7 @@ class ScanUrl(strelka.Scanner):
         else:
             url_regex = self.regexes['default']
 
-        normalized_data = strelka.normalize_whitespace(data)
+        normalized_data = b' '.join(data.split())
         self.event.setdefault('urls', [])
         urls = url_regex.findall(normalized_data)
         for url in urls:

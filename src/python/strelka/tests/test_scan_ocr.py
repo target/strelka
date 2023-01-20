@@ -420,5 +420,3 @@ def test_scan_ocr_webp(mocker):
 
     TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_event, scanner_event)
-
-

@@ -613,50 +613,53 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanZlib          | Decompresses gzip files                                                                | N/A                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
 
 ## Tests
-As Strelka consists of many scanners and dependencies for those scanners, Pytests are particularly valuable for testing the ongoing functionality of Strelka and it's scanners. Tests allow users to write test cases that verify the correct behavior of Strelka scanners to ensure that the scanners remain reliable and accurate. Additionally, using pytests can help streamline the development process, allowing developers to focus on writing new features and improvements for the scanners. The following section details how to setup Pytests.
+As Strelka consists of many scanners and dependencies for those scanners. Pytests are particularly valuable for testing the ongoing functionality of Strelka and it's scanners. Tests allow users to write test cases that verify the correct behavior of Strelka scanners to ensure that the scanners remain reliable and accurate. Additionally, using pytests can help streamline the development process, allowing developers to focus on writing new features and improvements for the scanners. Strelka contains a set of standard test fixture files that represent the types of files Strelka ingests.
 
-If using Strelka on Github, this repository supports Github Actions which runs on Pull Requests
-
-### Tests Setup
-Here are the steps for setting up a virtualenv virtual environment, installing requirements from src/python/requirements.txt, and running pytest:
-
-1. Install virtualenv, if it is not already installed:
+The best way to run Strelka's test suite is to build the docker containers. Some of Strelka's scanners have OS level dependencies which make them unsuitable for individual testing.
 
 ```
-pip install virtualenv
+docker-compose -f build/docker-compose.yaml build backend
+
+============================= test session starts ==============================
+platform linux -- Python 3.10.6, pytest-7.2.0, pluggy-1.0.0
+rootdir: /strelka
+plugins: mock-3.10.0, unordered-0.5.2
+collected 92 items
+
+tests/test_required_for_scanner.py .
+tests/test_scan_base64.py .
+tests/test_scan_base64_pe.py .
+tests/test_scan_batch.py .
+tests/test_scan_bmp_eof.py .
+
+...
+
+tests/test_scan_upx.py .
+tests/test_scan_url.py ..
+tests/test_scan_vhd.py ..
+tests/test_scan_x509.py ..
+tests/test_scan_xml.py .
+tests/test_scan_yara.py .
+tests/test_scan_zip.py ..
+
+======================= 92 passed, 29 warnings in 27.93s =======================
 ```
-2. Create a new virtual environment:
+
+If you're testing with the default backend.yaml and taste.yara, enable `CONFIG_TESTS` to assure the configuration works as expected.
 
 ```
-virtualenv <environment-name>
-```
+docker-compose -f build/docker-compose.yaml build --build-arg CONFIG_TESTS=true backend
 
-3. Activate the virtual environment:
+============================= test session starts ==============================
+platform linux -- Python 3.10.6, pytest-7.2.0, pluggy-1.0.0
+rootdir: /strelka
+plugins: mock-3.10.0, unordered-0.5.2
+collected 155 items
 
-```
-source <environment-name>/bin/activate
-```
+tests_configuration/test_scanner_assignment.py .............................................................................
+tests_configuration/test_taste.py ..............................................................................
 
-4. Install the requirements from src/python/requirements.txt:
-
-```
-pip install -r src/python/requirements.txt
-```
-
-5. Run pytest to execute the test cases:
-
-```
-pytest
-```
-
-Upon execution, you will be provided the successes and failures for any available scanner test.
-
-```
-Some tests (e.g., ScanCapa, ScanDmg, ScanOCR) may fail on local host testing as they rely on
-additional executables to run via `subprocess` that are not installed via `pip`. If you wish 
-to verify these tests, either install the relevant executable (which can be observed in Backend 
-Dockerfile - build/python/backend/Dockerfile) or simply build Strelka - of which the docker build 
-logs show test outcomes. 
+======================= 155 passed, 4 warnings in 8.55s ========================
 ```
 
 ## Use Cases
