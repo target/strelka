@@ -2,6 +2,8 @@ FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
+ARG CONFIG_TESTS=false
+
 ARG USERNAME=strelka
 ARG USER_UID=1001
 ARG USER_GID=$USER_UID
@@ -183,12 +185,13 @@ RUN cd /strelka/ && \
     chmod -R g=u /var/log/strelka/
 
 # Run tests as non-root user
-USER $username
+USER $USERNAME
 
 # Run build checks
-RUN echo '[+] Run checks' && \
+RUN echo '[+] Run build checks' && \
     cd /strelka/strelka/ && \
     python3 -m pytest -s tests/ && \
+    if $CONFIG_TESTS; then python3 -m pytest -s tests_configuration/; fi && \
     echo '[+] Done'
 
 USER root
@@ -200,4 +203,4 @@ RUN cd /strelka/ && \
 # Remove config directory (will bind mount once built)
 RUN rm -rf /etc/strelka/
 
-USER $username
+USER $USERNAME
