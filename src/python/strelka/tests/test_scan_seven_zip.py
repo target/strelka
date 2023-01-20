@@ -95,7 +95,7 @@ def test_scan_sevenzip_wordlist(mocker):
         options={
             "log_pws": True,
             "password_file": str(
-                Path(Path(__file__).parent / "fixtures/test_passwords.dat")
+                Path(Path(__file__).parent / "helpers/test_passwords.dat")
             ),
         },
     )
@@ -148,7 +148,7 @@ def test_scan_sevenzip_wordlist_filenames(mocker):
         options={
             "log_pws": True,
             "password_file": str(
-                Path(Path(__file__).parent / "fixtures/test_passwords.dat")
+                Path(Path(__file__).parent / "helpers/test_passwords.dat")
             ),
         },
     )

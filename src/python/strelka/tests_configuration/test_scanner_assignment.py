@@ -9,7 +9,7 @@ from strelka import strelka
 
 # Scanners that apply to all files (*) are not included
 test_assignments_expected: dict = {
-    "test.7z": ["ScanLibarchive"],
+    "test.7z": ["ScanSevenZip"],
     "test.b64": ["ScanUrl"],
     "test.bat": ["ScanBatch"],
     "test.bz2": ["ScanBzip2"],
@@ -96,6 +96,7 @@ test_assignments_expected: dict = {
     ],
     "test_lzx.cab": ["ScanLibarchive"],
     "test_manifest.json": ["ScanJson", "ScanManifest"],
+    "test_password.7z": ["ScanSevenZip"],
     "test_password.doc": ["ScanEncryptedZip", "ScanExiftool", "ScanOle", "ScanVba"],
     "test_password.docx": [
         "ScanEncryptedDoc",
@@ -103,6 +104,7 @@ test_assignments_expected: dict = {
         "ScanOle",
         "ScanVba",
     ],
+    "test_password_brute.7z": ["ScanSevenZip"],
     "test_password_brute.doc": [
         "ScanEncryptedZip",
         "ScanExiftool",
@@ -115,6 +117,7 @@ test_assignments_expected: dict = {
         "ScanOle",
         "ScanVba",
     ],
+    "test_password_filenames.7z": ["ScanSevenZip"],
     "test_pe.b64": ["ScanBase64PE", "ScanUrl"],
     "test_pe_object.doc": [
         "ScanEncryptedZip",
