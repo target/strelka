@@ -8,7 +8,7 @@ import yaml
 from strelka import strelka
 
 # Scanners that apply to all files (*) are not included
-test_assignments_expected = {
+test_assignments_expected: dict = {
     "test.7z": ["ScanLibarchive"],
     "test.b64": ["ScanUrl"],
     "test.bat": ["ScanBatch"],
