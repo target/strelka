@@ -304,8 +304,8 @@ class Backend(object):
                         und_name = inflection.underscore(name)
                         scanner_import = f'strelka.scanners.{und_name}'
                         module = importlib.import_module(scanner_import)
-
-                        if self.backend_cfg.get("caching", {"scanner", True}).get("scanner", True):
+                        print(self.backend_cfg)
+                        if self.backend_cfg.get("caching", {"scanner": True}).get("scanner", True):
                             # Cache a copy of each scanner object
                             if und_name not in self.scanner_cache:
                                 attr = getattr(module, name)(self.backend_cfg, self.coordinator)
