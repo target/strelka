@@ -178,6 +178,7 @@ class Backend(object):
                 continue
 
             # Get request metadata and Redis context deadline UNIX timestamp
+            logging.debug(task)
             (task_item, expire_at) = task[0]
             try:
                 task_info = json.loads(task_item)
