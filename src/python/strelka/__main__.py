@@ -6,6 +6,7 @@ import time
 
 import yaml
 
+from importlib.resources import files
 from strelka import strelka
 
 
@@ -23,24 +24,37 @@ def main():
 
     if os.path.exists("/etc/strelka/backend.yaml"):
         backend_cfg_path = "/etc/strelka/backend.yaml"
-    elif os.path.exists("/home/karl/strelka/configs/python/backend/backend.yaml"):
-        backend_cfg_path = "/home/karl/strelka/configs/python/backend/backend.yaml"
+    elif os.path.exists(files('strelka.config').joinpath('backend.yaml')):
+        backend_cfg_path = files('strelka.config').joinpath('backend.yaml')
     else:
         logging.exception("no backend configuration found")
         sys.exit(1)
 
+    if os.path.exists("/etc/strelka/taste/taste.yara"):
+        taste_path = "/etc/strelka/taste/taste.yara"
+    elif os.path.exists(files('strelka.config').joinpath('taste.yara')):
+        taste_path = str(files('strelka.config').joinpath('taste.yara'))
+    else:
+        logging.exception("no taste path found")
+        sys.exit(1)
+
+    if os.path.exists("/etc/strelka/yara/rules.yara"):
+        yara_rules_path = "/etc/strelka/yara/rules.yara"
+    elif os.path.exists(files('strelka.config').joinpath('rules.yara')):
+        yara_rules_path = str(files('strelka.config').joinpath('rules.yara'))
+    else:
+        logging.exception("no yara rules path found")
+        sys.exit(1)
+
     with open(backend_cfg_path) as f:
         backend_cfg = yaml.safe_load(f.read())
-
-        backend_cfg["tasting"][
-            "yara_rules"
-        ] = "/home/karl/strelka/src/python/strelka/config/taste.yara"
+        backend_cfg["tasting"]["yara_rules"] = taste_path
+        backend_cfg["scanners"]["ScanYara"][0]["options"]["location"] = yara_rules_path
 
         backend = strelka.Backend(backend_cfg)
 
         with open(args.filename, "rb") as analysis_file:
             data = analysis_file.read()
-            flavors = backend.match_flavors(data)
 
             file = strelka.File(name=analysis_file.name, data=data)
 
