@@ -11,6 +11,8 @@ coordinator:
 tasting:
   mime_db: null
   yara_rules: '/etc/strelka/taste/'
+caching:
+  scanner: true
 scanners:
   #'ScanAntiword':
   #  - positive:

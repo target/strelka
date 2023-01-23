@@ -305,16 +305,19 @@ class Backend(object):
                         scanner_import = f'strelka.scanners.{und_name}'
                         module = importlib.import_module(scanner_import)
 
-                        # Cache a copy of each scanner object
-                        if und_name not in self.scanner_cache:
-                            attr = getattr(module, name)(self.backend_cfg, self.coordinator)
-                            self.scanner_cache[und_name] = attr
+                        if self.backend_cfg.get("caching", {"scanner", True}).get("scanner", True):
+                            # Cache a copy of each scanner object
+                            if und_name not in self.scanner_cache:
+                                attr = getattr(module, name)(self.backend_cfg, self.coordinator)
+                                self.scanner_cache[und_name] = attr
+                            plugin = self.scanner_cache[und_name]
+
+                            # Clear cached scanner of files
+                            plugin.files = []
+                        else:
+                            plugin = getattr(module, name)(self.backend_cfg, self.coordinator)
 
                         options = scanner.get('options', {})
-                        plugin = self.scanner_cache[und_name]
-
-                        # Clear cached scanner of files
-                        plugin.files = []
 
                         # Run the scanner
                         (scanner_files, scanner_event) = plugin.scan_wrapper(
