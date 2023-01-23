@@ -233,6 +233,10 @@ class Backend(object):
                             self.scanner_cache[und_name] = attr
                         options = scanner.get('options', {})
                         plugin = self.scanner_cache[und_name]
+
+                        # Clear cached scanner of files
+                        plugin.files = []
+
                         (f, s) = plugin.scan_wrapper(
                             data,
                             file,
