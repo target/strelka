@@ -48,29 +48,51 @@ class File(object):
     object may be removed in favor of a pure-Redis design.
 
     Attributes:
-        flavors: Dictionary of flavors assigned to the file during distribution.
-        uid: String that contains a universally unique identifier (UUIDv4)
-            used to uniquely identify the file.
+        data: Byte string of file data for local-only use
         depth: Integer that represents how deep the file was embedded.
+        flavors: Dictionary of flavors assigned to the file during distribution.
+        name: String that contains the name of the file.
         parent: UUIDv4 of the file that produced this file.
         pointer: String that contains the location of the file bytes in Redis.
-        name: String that contains the name of the file.
+        size: Integer of data length
         source: String that describes which scanner the file originated from.
+        tree: Dictionary of relationships between File objects
+        uid: String that contains a universally unique identifier (UUIDv4) used to uniquely identify the file.
     """
 
+    # FIXME: There doesn't appear to be any reason why pointer and uid should be different
     def __init__(self, pointer: str = '',
                  parent: str = '', depth: int = 0,
-                 name: str = '', source: str = '') -> None:
+                 name: str = '', source: str = '', data: Optional[bytes] = None) -> None:
         """Inits file object."""
-        self.flavors: dict = {}
-        self.uid = str(uuid.uuid4())
+        self.data: Optional[bytes] = data
         self.depth: int = depth
+        self.flavors: dict = {}
         self.name: str = name
         self.parent: str = parent
-        self.pointer: str = pointer or self.uid
+        self.pointer: str = pointer
+        self.scanners: list[str] = []
+        self.size: int = -1
         self.source: str = source
+        self.tree: dict = {}
+        self.uid = str(uuid.uuid4())
 
-    def add_flavors(self, flavors: dict):
+        if not self.pointer:
+            self.pointer = self.uid
+
+    def dictionary(self) -> dict:
+
+        return {
+            'depth': self.depth,
+            'flavors': self.flavors,
+            'name': self.name,
+            'scanners': self.scanners,
+            'size': self.size,
+            'source': self.source,
+            'tree': self.tree
+        }
+
+    def add_flavors(self, flavors: dict) -> None:
         """Adds flavors to the file.
 
         In cases where flavors and self.flavors share duplicate keys, flavors
@@ -89,10 +111,10 @@ def timeout_handler(ex):
 
 
 class Backend(object):
-    def __init__(self, backend_cfg: dict, coordinator: redis.StrictRedis) -> None:
+    def __init__(self, backend_cfg: dict, coordinator: Optional[redis.StrictRedis] = None) -> None:
         self.scanner_cache: dict = {}
         self.backend_cfg: dict = backend_cfg
-        self.coordinator: redis.StrictRedis = coordinator
+        self.coordinator: Optional[redis.StrictRedis] = coordinator
         self.limits: dict = backend_cfg.get('limits', {})
         self.scanners: dict = backend_cfg.get('scanners', {})
 
@@ -114,57 +136,6 @@ class Backend(object):
         else:
             self.compiled_yara = yara.compile(filepath=yara_rules)
 
-    def match_flavors(self, data: bytes) -> dict:
-        return {'mime': self.taste_mime(data), 'yara': self.taste_yara(data)}
-
-    def work(self) -> None:
-        logging.info('starting up')
-
-        count = 0
-        work_start = time.time()
-        work_expire = work_start + self.limits.get('time_to_live', 900)
-
-        while 1:
-            if self.limits.get('max_files') != 0:
-                if count >= self.limits.get('max_files', 5000):
-                    break
-            if self.limits.get('time_to_live') != 0:
-                if time.time() >= work_expire:
-                    break
-
-            task = self.coordinator.zpopmin('tasks', count=1)
-            if len(task) == 0:
-                time.sleep(0.25)
-                continue
-
-            (root_id, expire_at) = task[0]
-            root_id = root_id.decode()
-            file = File(pointer=root_id)
-            expire_at = math.ceil(expire_at)
-            timeout = math.ceil(expire_at - time.time())
-            if timeout <= 0:
-                continue
-
-            try:
-                signal.signal(signal.SIGALRM, timeout_handler(RequestTimeout))
-                signal.alarm(timeout)
-                self.distribute(root_id, file, expire_at)
-                p = self.coordinator.pipeline(transaction=False)
-                p.rpush(f'event:{root_id}', 'FIN')
-                p.expireat(f'event:{root_id}', expire_at)
-                p.execute()
-                signal.alarm(0)
-            except RequestTimeout:
-                logging.debug(f'request {root_id} timed out')
-            except Exception:
-                signal.alarm(0)
-                logging.exception('unknown exception (see traceback below)')
-
-            count += 1
-
-        logging.info(f'shutdown after scanning {count} file(s) and'
-                     f' {time.time() - work_start} second(s)')
-
     def taste_mime(self, data: bytes) -> list:
         """Tastes file data with libmagic."""
         return [self.compiled_magic.from_buffer(data)]
@@ -176,50 +147,155 @@ class Backend(object):
         yara_matches = self.compiled_yara.match(data=stripped_data)
         return [match.rule for match in yara_matches]
 
-    def distribute(self, root_id: str, file: File, expire_at: int) -> None:
-        """Distributes a file through scanners."""
-        try:
-            files = []
+    def match_flavors(self, data: bytes) -> dict:
+        return {'mime': self.taste_mime(data), 'yara': self.taste_yara(data)}
+
+    def work(self) -> None:
+        """Process tasks from Redis coordinator"""
+
+        logging.info('starting up')
+
+        if not self.coordinator:
+            logging.error("no coordinator specified")
+            return
+
+        count = 0
+        work_start = time.time()
+        work_expire = work_start + self.limits.get('time_to_live', 900)
+
+        while True:
+            if self.limits.get('max_files') != 0:
+                if count >= self.limits.get('max_files', 5000):
+                    break
+            if self.limits.get('time_to_live') != 0:
+                if time.time() >= work_expire:
+                    break
+
+            # Retrieve request task from Redis coordinator
+            task = self.coordinator.zpopmin('tasks', count=1)
+            if len(task) == 0:
+                time.sleep(0.25)
+                continue
+
+            # Get request metadata and Redis context deadline UNIX timestamp
+            (task_item, expire_at) = task[0]
+            try:
+                task_info = json.loads(task_item)
+            except json.JSONDecodeError:
+                root_id = task_item.decode()
+                # Create new file object for task, use the request root_id as the pointer
+                file = File(pointer=root_id)
+            else:
+                root_id = task_info["id"]
+                try:
+                    file = File(pointer=root_id, name=task_info["attributes"]["filename"])
+                except KeyError as ex:
+                    logging.debug(f"No filename attached (error: {ex}) to request: {task_item}")
+                    file = File(pointer=root_id)
+
+            # file = File(pointer=root_id)
+            expire_at = math.ceil(expire_at)
+            timeout = math.ceil(expire_at - time.time())
+
+            # If the deadline has passed, bail out
+            if timeout <= 0:
+                continue
 
             try:
+                # Prepare timeout handler
+                signal.signal(signal.SIGALRM, timeout_handler(RequestTimeout))
+                signal.alarm(timeout)
+
+                # Distribute the file to the scanners
+                self.distribute(root_id, file, expire_at)
+
+                # Push completed event back to Redis to complete request
+                p = self.coordinator.pipeline(transaction=False)
+                p.rpush(f'event:{root_id}', 'FIN')
+                p.expireat(f'event:{root_id}', expire_at)
+                p.execute()
+
+                # Reset timeout handler
+                signal.alarm(0)
+
+            except RequestTimeout:
+                logging.debug(f'request {root_id} timed out')
+            except Exception:
+                signal.alarm(0)
+                logging.exception('unknown exception (see traceback below)')
+
+            count += 1
+
+        logging.info(f'shutdown after scanning {count} file(s) and'
+                     f' {time.time() - work_start} second(s)')
+
+    def distribute(self, root_id: str, file: File, expire_at: int) -> list[dict]:
+        """Distributes a file through scanners.
+
+        Args:
+            root_id: Root request/file UUIDv4
+            file: File object
+            expire_at: Deadline UNIX timestamp
+        Returns:
+            List of event dictionaries
+        """
+
+        try:
+            data = b''
+            files = []
+            events = []
+
+            pipeline = None
+
+            try:
+                # Prepare timeout handler
                 signal.signal(signal.SIGALRM, timeout_handler(DistributionTimeout))
                 signal.alarm(self.limits.get('distribution', 600))
+
                 if file.depth > self.limits.get('max_depth', 15):
                     logging.info(f'request {root_id} exceeded maximum depth')
-                    return
+                    return []
 
-                data = b''
-                while 1:
-                    pop = self.coordinator.lpop(f'data:{file.pointer}')
-                    if pop is None:
-                        break
-                    data += pop
+                # Distribute can work local-only (data in File) or through a coordinator
+                if file.data:
+                    # Pull data for file from File object
+                    data = file.data
+                elif self.coordinator:
+                    # Pull data for file from coordinator
+                    while True:
+                        pop = self.coordinator.lpop(f'data:{file.pointer}')
+                        if pop is None:
+                            break
+                        data += pop
 
+                    # Initialize Redis pipeline
+                    pipeline = self.coordinator.pipeline(transaction=False)
+                else:
+                    raise Exception("No data or coordinator available")
+
+                # Match data to mime and yara flavors
                 file.add_flavors(self.match_flavors(data))
 
+                # Get list of matching scanners
                 scanner_list = self.match_scanners(file)
 
-                p = self.coordinator.pipeline(transaction=False)
                 tree_dict = {
                     'node': file.uid,
                     'parent': file.parent,
                     'root': root_id,
                 }
 
+                # Since root_id comes from the request, use that instead of the file's uid
                 if file.depth == 0:
                     tree_dict['node'] = root_id
                 if file.depth == 1:
                     tree_dict['parent'] = root_id
 
-                file_dict = {
-                    'depth': file.depth,
-                    'name': file.name,
-                    'flavors': file.flavors,
-                    'scanners': [s.get('name') for s in scanner_list],
-                    'size': len(data),
-                    'source': file.source,
-                    'tree': tree_dict,
-                }
+                # Update the file object
+                file.scanners = [s.get('name') for s in scanner_list]
+                file.size = len(data)
+                file.tree = tree_dict
+
                 scan: dict = {}
 
                 for scanner in scanner_list:
@@ -228,48 +304,68 @@ class Backend(object):
                         und_name = inflection.underscore(name)
                         scanner_import = f'strelka.scanners.{und_name}'
                         module = importlib.import_module(scanner_import)
+
+                        # Cache a copy of each scanner object
                         if und_name not in self.scanner_cache:
                             attr = getattr(module, name)(self.backend_cfg, self.coordinator)
                             self.scanner_cache[und_name] = attr
+
                         options = scanner.get('options', {})
                         plugin = self.scanner_cache[und_name]
-                        (f, s) = plugin.scan_wrapper(
+
+                        # Clear cached scanner of files
+                        plugin.files = []
+
+                        # Run the scanner
+                        (scanner_files, scanner_event) = plugin.scan_wrapper(
                             data,
                             file,
                             options,
                             expire_at,
                         )
-                        files.extend(f)
+
+                        # Collect extracted files
+                        files.extend(scanner_files)
 
                         scan = {
                             **scan,
-                            **s,
+                            **scanner_event,
                         }
 
                     except ModuleNotFoundError:
                         logging.exception(f'scanner {scanner.get("name", "__missing__")} not found')
 
                 event = {
-                    **{'file': file_dict},
+                    **{'file': file.dictionary()},
                     **{'scan': scan},
                 }
 
-                p.rpush(f'event:{root_id}', format_event(event))
-                p.expireat(f'event:{root_id}', expire_at)
-                p.execute()
+                # Collect events for local-only
+                events.append(event)
+
+                # Send event back to Redis coordinator
+                if pipeline:
+                    pipeline.rpush(f'event:{root_id}', format_event(event))
+                    pipeline.expireat(f'event:{root_id}', expire_at)
+                    pipeline.execute()
+
                 signal.alarm(0)
 
             except DistributionTimeout:
+                # FIXME: node id is not always file.uid
                 logging.exception(f'node {file.uid} timed out')
 
-            for f in files:
-                f.parent = file.uid
-                f.depth = file.depth + 1
-                self.distribute(root_id, f, expire_at)
+            # Re-ingest extracted files
+            for scanner_file in files:
+                scanner_file.parent = file.uid
+                scanner_file.depth = file.depth + 1
+                events.extend(self.distribute(root_id, scanner_file, expire_at))
 
         except RequestTimeout:
             signal.alarm(0)
             raise
+
+        return events
 
     def match_scanner(self, scanner: str, mappings: list, file: File, ignore_wildcards: Optional[bool] = False) -> dict:
         """Matches a scanner to mappings and file data.
@@ -383,7 +479,7 @@ class Scanner(object):
         coordinator: Redis client connection to the coordinator.
     """
 
-    def __init__(self, backend_cfg: dict, coordinator: redis.StrictRedis) -> None:
+    def __init__(self, backend_cfg: dict, coordinator: Optional[redis.StrictRedis] = None) -> None:
         """Inits scanner with scanner name and metadata key."""
         self.name = self.__class__.__name__
         self.key = inflection.underscore(self.name.replace('Scan', ''))
@@ -395,6 +491,7 @@ class Scanner(object):
         self.iocs: list = []
         self.type = IocOptions
         self.extract = TLDExtract(suffix_list_urls=[])
+        self.expire_at: int = 0
         self.init()
 
     def init(self) -> None:
@@ -402,7 +499,6 @@ class Scanner(object):
 
         This method can be used to setup one-time variables required
         during scanning."""
-        pass
 
     def timeout_handler(self, signal_number: int, frame: Optional[FrameType]) -> None:
         """Signal ScannerTimeout"""
@@ -424,10 +520,10 @@ class Scanner(object):
         pass
 
     def scan_wrapper(self,
-                     data,
-                     file,
-                     options,
-                     expire_at) -> Tuple[list, dict]:
+                     data: bytes,
+                     file: File,
+                     options: dict,
+                     expire_at: int) -> Tuple[list[File], dict]:
         """Sets up scan attributes and calls scan method.
 
         Scanning code is wrapped in try/except for error handling.
@@ -456,6 +552,7 @@ class Scanner(object):
         try:
             signal.signal(signal.SIGALRM, self.timeout_handler)
             signal.alarm(self.scanner_timeout)
+            self.expire_at = expire_at
             self.scan(data, file, options, expire_at)
             signal.alarm(0)
         except ScannerTimeout:
@@ -467,7 +564,7 @@ class Scanner(object):
             logging.exception(f'{self.name}: unhandled exception while scanning'
                               f' uid {file.uid if file else "_missing_"} (see traceback below)')
             self.flags.append('uncaught_exception')
-            self.event.update({"exception": "\n".join(traceback.format_exception(e, limit=-1))})
+            self.event.update({"exception": "\n".join(traceback.format_exception(e, limit=-10))})
 
         self.event = {
             **{'elapsed': round(time.time() - start, 6)},
@@ -478,6 +575,26 @@ class Scanner(object):
             self.files,
             {self.key: self.event}
         )
+
+    def emit_file(self, data: bytes, name: str = "", flavors: Optional[list[str]] = None) -> None:
+        """Re-ingest extracted file"""
+        extract_file = File(
+            name=name,
+            source=self.name,
+        )
+        if flavors:
+            extract_file.add_flavors({'external': flavors})
+
+        if self.coordinator:
+            for c in chunk_string(data):
+                self.upload_to_coordinator(
+                    extract_file.pointer,
+                    c,
+                    self.expire_at,
+                )
+        else:
+            extract_file.data = data
+        self.files.append(extract_file)
 
     def upload_to_coordinator(self, pointer, chunk, expire_at) -> None:
         """Uploads data to coordinator.
@@ -492,10 +609,11 @@ class Scanner(object):
                 the coordinator.
             expire_at: Expiration date for data stored in pointer.
         """
-        p = self.coordinator.pipeline(transaction=False)
-        p.rpush(f'data:{pointer}', chunk)
-        p.expireat(f'data:{pointer}', expire_at)
-        p.execute()
+        if self.coordinator:
+            p = self.coordinator.pipeline(transaction=False)
+            p.rpush(f'data:{pointer}', chunk)
+            p.expireat(f'data:{pointer}', expire_at)
+            p.execute()
 
     def process_ioc(self, ioc, ioc_type, scanner_name, description='', malicious=False) -> None:
         if not ioc:
@@ -578,7 +696,7 @@ def chunk_string(s, chunk=1024 * 16) -> Generator[bytes, None, None]:
         yield s[c:c + chunk]
 
 
-def format_event(metadata) -> str:
+def format_event(metadata: dict) -> str:
     """Formats file metadata into an event.
 
     This function must be used on file metadata before the metadata is
