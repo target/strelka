@@ -180,6 +180,8 @@ class Backend(object):
             # Get request metadata and Redis context deadline UNIX timestamp
             logging.debug(task)
             (task_item, expire_at) = task[0]
+
+            # Support old (ID only) and new (JSON) style requests
             try:
                 task_info = json.loads(task_item)
             except json.JSONDecodeError:
@@ -194,7 +196,6 @@ class Backend(object):
                     logging.debug(f"No filename attached (error: {ex}) to request: {task_item}")
                     file = File(pointer=root_id)
 
-            # file = File(pointer=root_id)
             expire_at = math.ceil(expire_at)
             timeout = math.ceil(expire_at - time.time())
 
