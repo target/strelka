@@ -56,7 +56,7 @@ test_assignments_expected: dict = {
     ],
     "test.rar": ["ScanRar"],
     "test.tar": ["ScanTar"],
-    "test.txt": ["ScanUrl"],
+    "test.txt": ["ScanUrl", "ScanTlsh"],
     "test.txt.asc": ["ScanPgp"],
     "test.txt.gpg": [],  # FIXME: Need binary PGP yara signature
     "test.url": ["ScanUrl"],

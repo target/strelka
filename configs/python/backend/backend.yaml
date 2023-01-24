@@ -591,6 +591,13 @@ scanners:
       priority: 5
       options:
         limit: 1000
+  'ScanTlsh':
+    - positive:
+        flavors:
+          - '*'
+      priority: 5
+      options:
+        location: '/etc/strelka/tlsh/'
   'ScanTnef':
     - positive:
         flavors:
