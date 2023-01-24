@@ -34,33 +34,14 @@ class ScanTnef(strelka.Scanner):
         tnef_attachments = getattr(tnef, 'attachments', [])
         self.event['total']['attachments'] = len(tnef_attachments)
         for attachment in tnef_attachments:
-            extract_file = strelka.File(
-                name=attachment.name.decode(),
-                source=self.name,
-            )
 
-            for c in strelka.chunk_string(attachment.data):
-                self.upload_to_coordinator(
-                    extract_file.pointer,
-                    c,
-                    expire_at,
-                )
+            # Send extracted file back to Strelka
+            self.emit_file(attachment.data, name=attachment.name.decode())
 
-            self.files.append(extract_file)
             self.event['total']['extracted'] += 1
 
         tnef_html = getattr(tnef, 'htmlbody', None)
-        if tnef_html is not None:
-            extract_file = strelka.File(
-                name='htmlbody',
-                source=self.name,
-            )
+        if tnef_html:
 
-            for c in strelka.chunk_string(tnef_html):
-                self.upload_to_coordinator(
-                    extract_file.pointer,
-                    c,
-                    expire_at,
-                )
-
-            self.files.append(extract_file)
+            # Send extracted file back to Strelka
+            self.emit_file(tnef_html, name='htmlbody')

@@ -84,19 +84,13 @@ class ScanIso(strelka.Scanner):
                                     self.event['total']['files'] += 1
                                     file_io = io.BytesIO()
                                     iso.get_file_from_iso_fp(file_io, **{pathname: ident_to_here})
-                                    extract_file = strelka.File(
-                                        name=ident_to_here,
-                                        source=self.name,
-                                    )
+
                                     file_io.seek(0)
                                     extract_data = file_io.read()
-                                    for c in strelka.chunk_string(extract_data):
-                                        self.upload_to_coordinator(
-                                            extract_file.pointer,
-                                            c,
-                                            expire_at,
-                                        )
-                                    self.files.append(extract_file)
+
+                                    # Send extracted file back to Strelka
+                                    self.emit_file(extract_data, name=ident_to_here)
+
                                     self.event['total']['extracted'] += 1
                                 except strelka.ScannerTimeout:
                                     raise

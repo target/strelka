@@ -564,19 +564,7 @@ class ScanPe(strelka.Scanner):
 
                         self.event['resources'].append(resource_dict)
 
-                        # TODO (swack) add option to enable / disable
-                        # if len(data) > 0:
-                        #     extract_file = strelka.File(
-                        #         name=f'{resource_name or res1.id}',
-                        #         source=f'{self.name}::Resource',
-                        #     )
-                        #     for c in strelka.chunk_string(data):
-                        #         self.upload_to_coordinator(
-                        #             extract_file.pointer,
-                        #             c,
-                        #             expire_at,
-                        #         )
-                        #     self.files.append(extract_file)
+                        # TODO: Add optional resource extraction
 
             self.event['summary']['resource_md5'] = list(resource_md5_set)
             self.event['summary']['resource_sha1'] = list(resource_sha1_set)
@@ -617,19 +605,7 @@ class ScanPe(strelka.Scanner):
                     if sec.Characteristics & o:
                         row['characteristics'].append(CHARACTERISTICS_SECTION[o])
 
-                # TODO (swack) add option to enable / disable
-                # if sec.SizeOfRawData > 0:
-                #     extract_file = strelka.File(
-                #         name=name,
-                #         source=f'{self.name}::Section',
-                #     )
-                #     for c in strelka.chunk_string(sec.get_data()):
-                #         self.upload_to_coordinator(
-                #             extract_file.pointer,
-                #             c,
-                #             expire_at,
-                #         )
-                #     self.files.append(extract_file)
+                # TODO: Add optional resource extraction
 
                 self.event['sections'].append(row)
                 self.event['summary']['section_md5'] = list(section_md5_set)
@@ -686,24 +662,4 @@ class ScanPe(strelka.Scanner):
         self.event['total']['libraries'] = len(self.event['symbols']['libraries'])
         self.event['total']['symbols'] = len(self.event['symbols']['table'])
 
-        # TODO (swack) add option to enable / disable
-        # security = pe.OPTIONAL_HEADER.DATA_DIRECTORY[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_SECURITY']]
-        # sec_addr = security.VirtualAddress
-        #
-        # if security.Size > 0:
-        #     data = pe.write()[sec_addr + 8:]
-        #
-        #     if len(data) > 0:
-        #         self.flags.append('signed')
-        #
-        #         extract_file = strelka.File(
-        #             name='signature',
-        #             source=f'{self.name}::Security',
-        #         )
-        #         for c in strelka.chunk_string(data):
-        #             self.upload_to_coordinator(
-        #                 extract_file.pointer,
-        #                 c,
-        #                 expire_at,
-        #             )
-        #         self.files.append(extract_file)
+        # TODO: Add optional resource extraction

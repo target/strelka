@@ -1,4 +1,4 @@
-import bs4
+import bs4  # type: ignore
 
 from strelka import strelka
 
@@ -36,20 +36,7 @@ class ScanHtml(strelka.Scanner):
 
                 if link and link.startswith('data:') and ';base64,' in link:
                     hyperlink_data = link.split(';base64,')[1]
-                    extract_file = strelka.File(
-                        name='base64_hyperlink',
-                        source=self.name,
-                    )
-
-                    for c in strelka.chunk_string(hyperlink_data):
-                        self.upload_to_coordinator(
-                            extract_file.pointer,
-                            c,
-                            expire_at,
-                        )
-
-                    self.files.append(extract_file)
-
+                    self.emit_file(hyperlink_data.encode(), name=f'base64_hyperlink')
                 else:
                     if link not in self.event['hyperlinks']:
                         self.event['hyperlinks'].append(link)
@@ -112,20 +99,7 @@ class ScanHtml(strelka.Scanner):
                     self.event['scripts'].append(script_entry)
 
                 if script.text:
-                    extract_file = strelka.File(
-                        name=f'script_{index}',
-                        source=self.name,
-                    )
-                    extract_file.add_flavors({'external': script_flavors})
-
-                    for c in strelka.chunk_string(script.text):
-                        self.upload_to_coordinator(
-                            extract_file.pointer,
-                            c,
-                            expire_at,
-                        )
-
-                    self.files.append(extract_file)
+                    self.emit_file(script.text.encode(), name=f'script_{index}', flavors=script_flavors)
                     self.event['total']['extracted'] += 1
 
             spans = soup.find_all('span')

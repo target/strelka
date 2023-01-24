@@ -72,19 +72,8 @@ class ScanRpm(strelka.Scanner):
                         elif key == 'url':
                             self.event['url'] = value
 
-                    extract_file = strelka.File(
-                        name=extract_name,
-                        source=self.name,
-                    )
-
-                    for c in strelka.chunk_string(data[rpm_obj.data_offset:]):
-                        self.upload_to_coordinator(
-                            extract_file.pointer,
-                            c,
-                            expire_at,
-                        )
-
-                    self.files.append(extract_file)
+                    # Send extracted file back to Strelka
+                    self.emit_file(data[rpm_obj.data_offset:], name=extract_name)  # FIXME: extract_name always empty string
 
             except ValueError:
                 self.flags.append('value_error')

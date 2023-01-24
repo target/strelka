@@ -21,19 +21,10 @@ class ScanVba(strelka.Scanner):
                 extract_macros = list(vba.extract_macros())
                 self.event['total']['files'] = len(extract_macros)
                 for (filename, stream_path, vba_filename, vba_code) in extract_macros:
-                    extract_file = strelka.File(
-                        name=f'{vba_filename}',
-                        source=self.name,
-                    )
 
-                    for c in strelka.chunk_string(vba_code):
-                        self.upload_to_coordinator(
-                            extract_file.pointer,
-                            c,
-                            expire_at,
-                        )
+                    # Send extracted file back to Strelka
+                    self.emit_file(vba_code, name=f'{vba_filename}')
 
-                    self.files.append(extract_file)
                     self.event['total']['extracted'] += 1
 
                 if analyze_macros:

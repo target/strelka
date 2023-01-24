@@ -112,24 +112,22 @@ class ScanEmail(strelka.Scanner):
                 if attachments:
                     for attachment in attachments:
                         self.event['total']['attachments'] += 1
-                        extract_file = strelka.File(
-                            name=attachment['name'],
-                            source=self.name,
-                        )
-                        extract_file.add_flavors({'external': [attachment['content-type'].partition(";")[0]]})
 
-                        for c in strelka.chunk_string(attachment['raw']):
-                            self.upload_to_coordinator(
-                                extract_file.pointer,
-                                c,
-                                expire_at,
-                            )
+                        name = attachment['name']
+                        try:
+                            flavors = [attachment['content-type'].encode("utf-8").partition(b";")[0]]
+                        except Exception:
+                            flavors = []
+                            self.flags.append('content_type_error')
 
-                        self.files.append(extract_file)
+                        # Send extracted file back to Strelka
+                        self.emit_file(attachment['raw'], name=name, flavors=flavors)
+
                         self.event['total']['extracted'] += 1
             except strelka.ScannerTimeout:
                 raise
-            except Exception:
+            except Exception as e:
+                raise
                 self.flags.append('extract_attachment_error')
 
         except AssertionError:

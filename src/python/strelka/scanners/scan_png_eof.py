@@ -21,17 +21,10 @@ class ScanPngEof(strelka.Scanner):
 
                 trailer_index = trailer_index + len(png_iend)
                 self.event["trailer_index"] = trailer_index
-
-                extract_file = strelka.File(source=self.name)
                 self.event["PNG_EOF"] = data[trailer_index:]
 
-                for c in strelka.chunk_string(data[trailer_index:]):
-                    self.upload_to_coordinator(
-                        extract_file.pointer,
-                        c,
-                        expire_at,
-                    )
+                # Send extracted file back to Strelka
+                self.emit_file(data[trailer_index:])
 
-                self.files.append(extract_file)
             else:
                 self.flags.append("no_iend_chunk")

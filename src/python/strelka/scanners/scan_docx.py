@@ -69,21 +69,13 @@ class ScanDocx(strelka.Scanner):
                     self.event['white_text_in_doc'] = True
 
                 if extract_text:
-                    extract_file = strelka.File(
-                        name='text',
-                        source=self.name,
-                    )
 
+                    text = ''
                     for paragraph in docx_doc.paragraphs:
+                        text += f'{paragraph.text}\n'
 
-                        text = f'{paragraph.text}\n'
-                        self.upload_to_coordinator(
-                            extract_file.pointer,
-                            text,
-                            expire_at,
-                        )
-
-                    self.files.append(extract_file)
+                    # Send extracted file back to Strelka
+                    self.emit_file(text.encode('utf-8'), name='text')
 
             except ValueError:
                 self.flags.append('value_error')

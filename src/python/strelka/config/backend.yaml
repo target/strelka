@@ -11,8 +11,6 @@ coordinator:
 tasting:
   mime_db: null
   yara_rules: '/etc/strelka/taste/'
-caching:
-  scanner: true
 scanners:
   #'ScanAntiword':
   #  - positive:
@@ -114,6 +112,7 @@ scanners:
   'ScanEncryptedZip':
     - positive:
         flavors:
+          - 'application/msword'
           - 'encrypted_zip'
       priority: 5
       options:
@@ -433,7 +432,6 @@ scanners:
       priority: 5
       options:
         extract_text: False
-        split_words: True
         tmp_directory: '/dev/shm/'
   'ScanOle':
     - positive:

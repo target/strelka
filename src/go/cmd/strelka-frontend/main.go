@@ -139,12 +139,17 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		}
 	}
 
+	requestInfo, err := json.Marshal(em["request"])
+	if err != nil {
+		return err
+	}
+
 	if err := s.coordinator.cli.ZAdd(
 	    stream.Context(),
 		"tasks",
 		&redis.Z{
 			Score:  float64(deadline.Unix()),
-			Member: id,
+			Member: requestInfo,
 		},
 	).Err(); err != nil {
 		return err

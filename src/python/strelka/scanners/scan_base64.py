@@ -10,15 +10,5 @@ class ScanBase64(strelka.Scanner):
 
         self.event["size"] = len(decoded)
 
-        extract_file = strelka.File(
-            source=self.name,
-        )
-
-        for c in strelka.chunk_string(decoded):
-            self.upload_to_coordinator(
-                extract_file.pointer,
-                c,
-                expire_at,
-            )
-
-        self.files.append(extract_file)
+        # Send extracted file back to Strelka
+        self.emit_file(decoded)

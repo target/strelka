@@ -30,16 +30,9 @@ class ScanUpx(strelka.Scanner):
                     upx_size = len(upx_file)
                     if upx_size > len(data):
                         self.flags.append('upx_packed')
-                        extract_file = strelka.File(
-                            source=self.name,
-                        )
-                        for c in strelka.chunk_string(upx_file):
-                            self.upload_to_coordinator(
-                                extract_file.pointer,
-                                c,
-                                expire_at,
-                            )
-                        self.files.append(extract_file)
+
+                        # Send extracted file back to Strelka
+                        self.emit_file(upx_file)
 
                 os.remove(f'{tmp_data.name}_upx')
 

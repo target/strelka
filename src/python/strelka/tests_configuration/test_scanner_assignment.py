@@ -17,7 +17,7 @@ test_assignments_expected: dict = {
     "test.deb": ["ScanLibarchive"],
     "test.der": ["ScanX509"],
     "test.dmg": ["ScanDmg"],
-    "test.doc": ["ScanEncryptedZip", "ScanExiftool", "ScanOle", "ScanVba"],
+    "test.doc": ["ScanExiftool", "ScanOle", "ScanVba"],
     "test.docx": ["ScanDocx", "ScanZip"],
     "test.elf": [],
     "test.eml": ["ScanEmail"],
@@ -77,7 +77,7 @@ test_assignments_expected: dict = {
         "ScanPngEof",
         "ScanQr",
     ],
-    "test_classic.doc": ["ScanEncryptedZip", "ScanExiftool", "ScanOle", "ScanVba"],
+    "test_classic.doc": ["ScanExiftool", "ScanOle", "ScanVba"],
     "test_embed_rar.jpg": [
         "ScanExiftool",
         "ScanJpeg",
@@ -97,7 +97,7 @@ test_assignments_expected: dict = {
     "test_lzx.cab": ["ScanLibarchive"],
     "test_manifest.json": ["ScanJson", "ScanManifest"],
     "test_password.7z": ["ScanSevenZip"],
-    "test_password.doc": ["ScanEncryptedZip", "ScanExiftool", "ScanOle", "ScanVba"],
+    "test_password.doc": ["ScanExiftool", "ScanOle", "ScanVba"],
     "test_password.docx": [
         "ScanEncryptedDoc",
         "ScanExiftool",
@@ -106,7 +106,6 @@ test_assignments_expected: dict = {
     ],
     "test_password_brute.7z": ["ScanSevenZip"],
     "test_password_brute.doc": [
-        "ScanEncryptedZip",
         "ScanExiftool",
         "ScanOle",
         "ScanVba",
@@ -120,13 +119,11 @@ test_assignments_expected: dict = {
     "test_password_filenames.7z": ["ScanSevenZip"],
     "test_pe.b64": ["ScanBase64PE", "ScanUrl"],
     "test_pe_object.doc": [
-        "ScanEncryptedZip",
         "ScanExiftool",
         "ScanOle",
         "ScanVba",
     ],
     "test_pe_object_classic.doc": [
-        "ScanEncryptedZip",
         "ScanExiftool",
         "ScanOle",
         "ScanVba",

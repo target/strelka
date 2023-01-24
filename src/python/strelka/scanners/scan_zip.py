@@ -117,19 +117,10 @@ class ScanZip(strelka.Scanner):
 
                                 # Suppress sending to coordinator in favor of ScanEncryptedZip
                                 if extract_data and "encrypted" not in self.flags:
-                                    extract_file = strelka.File(
-                                        name=name.filename,
-                                        source=self.name,
-                                    )
 
-                                    for c in strelka.chunk_string(extract_data):
-                                        self.upload_to_coordinator(
-                                            extract_file.pointer,
-                                            c,
-                                            expire_at,
-                                        )
+                                    # Send extracted file back to Strelka
+                                    self.emit_file(extract_data, name=name.filename)
 
-                                    self.files.append(extract_file)
                                     self.event["total"]["extracted"] += 1
 
                             except NotImplementedError:

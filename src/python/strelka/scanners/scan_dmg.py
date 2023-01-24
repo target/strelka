@@ -56,7 +56,7 @@ class ScanDmg(strelka.Scanner):
                         (stdout, stderr) = subprocess.Popen(
                             ["7zz", "x", tmp_data.name, f"-o{tmp_extract}"],
                             stdout=subprocess.PIPE,
-                            stderr=subprocess.DEVNULL,
+                            stderr=subprocess.PIPE,
                         ).communicate(timeout=scanner_timeout)
                     except strelka.ScannerTimeout:
                         raise
@@ -90,7 +90,12 @@ class ScanDmg(strelka.Scanner):
                             break
 
                         try:
-                            self.upload(name, expire_at)
+                            relname = os.path.relpath(name, tmp_extract)
+                            with open(name, "rb") as extracted_file:
+
+                                # Send extracted file back to Strelka
+                                self.emit_file(extracted_file.read(), name=relname)
+
                             self.event["total"]["extracted"] += 1
                         except strelka.ScannerTimeout:
                             raise
@@ -247,17 +252,3 @@ class ScanDmg(strelka.Scanner):
         except Exception:
             self.flags.append("dmg_7zip_parse_error")
             return
-
-    def upload(self, name, expire_at):
-        """Send extracted file to coordinator"""
-        with open(name, "rb") as extracted_file:
-            extract_file = strelka.File(
-                source=self.name,
-            )
-
-            for c in strelka.chunk_string(extracted_file.read()):
-                self.upload_to_coordinator(
-                    extract_file.pointer,
-                    c,
-                    expire_at,
-                )

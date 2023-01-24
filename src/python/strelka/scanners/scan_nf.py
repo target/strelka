@@ -1,5 +1,5 @@
 from strelka import strelka
-import cv2 as cv
+import cv2
 import numpy as np
 
 class ScanNf(strelka.Scanner):
@@ -17,23 +17,26 @@ class ScanNf(strelka.Scanner):
     The higher the value for both variables, the more strict the algorithm is.
     """
     def scan(self, data, file, options, expire_at):
-        # Convert image to HSV color space
-        np_array = np.fromstring(data, np.uint8)
-        np_image = cv.imdecode(np_array, cv.IMREAD_COLOR)
-        image = cv.cvtColor(np_image, cv.COLOR_BGR2HSV)
+        try:
+            # Convert image to HSV color space
+            np_array = np.fromstring(data, np.uint8)
+            np_image = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+            image = cv2.cvtColor(np_image, cv2.COLOR_BGR2HSV)
 
-        # Calculate histogram of saturation channel
-        s = cv.calcHist([image], [1], None, [256], [0, 256])
+            # Calculate histogram of saturation channel
+            s = cv2.calcHist([image], [1], None, [256], [0, 256])
 
-        # Calculate percentage of pixels with saturation >= p
-        p = 0.05
-        s_perc = float(np.sum(s[int(p * 255.0):-1])) / float(np.prod(image.shape[0:2]))
+            # Calculate percentage of pixels with saturation >= p
+            p = 0.05
+            s_perc = float(np.sum(s[int(p * 255.0):-1])) / float(np.prod(image.shape[0:2]))
 
-        # Percentage threshold; above: valid image, below: noise
-        s_thr = 0.25
-        self.event['percentage'] = s_perc
-        self.event['threshold'] = s_thr
-        if s_perc < s_thr:
-            self.event['noise_floor'] = True # Potentially dangerous
-        else:
-            self.event['noise_floor'] = False # Not dangerous
+            # Percentage threshold; above: valid image, below: noise
+            s_thr = 0.25
+            self.event['percentage'] = s_perc
+            self.event['threshold'] = s_thr
+            if s_perc < s_thr:
+                self.event['noise_floor'] = True # Potentially dangerous
+            else:
+                self.event['noise_floor'] = False # Not dangerous
+        except cv2.error:
+            self.flags.append("cv2_image_error")

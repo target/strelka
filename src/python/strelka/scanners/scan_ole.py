@@ -30,32 +30,13 @@ class ScanOle(strelka.Scanner):
                         else:
                             extract_name = extract_name + '_native_data'
 
-                        extract_file = strelka.File(
-                            name=extract_name,
-                            source=self.name,
-                        )
-
-                        for c in strelka.chunk_string(native_stream.data):
-                            self.upload_to_coordinator(
-                                extract_file.pointer,
-                                c,
-                                expire_at,
-                            )
+                        # Send extracted file back to Strelka
+                        self.emit_file(native_stream.data, name=extract_name)
 
                     else:
-                        extract_file = strelka.File(
-                            name=extract_name,
-                            source=self.name,
-                        )
+                        # Send extracted file back to Strelka
+                        self.emit_file(extract_data, name=extract_name)
 
-                        for c in strelka.chunk_string(extract_data):
-                            self.upload_to_coordinator(
-                                extract_file.pointer,
-                                c,
-                                expire_at,
-                            )
-
-                    self.files.append(extract_file)
                     self.event['total']['extracted'] += 1
                 except AttributeError:
                     self.flags.append("attribute_error_in_stream")

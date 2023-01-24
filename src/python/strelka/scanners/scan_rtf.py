@@ -24,44 +24,20 @@ class ScanRtf(strelka.Scanner):
                 break
 
             index = rtf.server.index(rtf_object)
-            if rtf_object.is_package:
-                extract_file = strelka.File(
-                    name=rtf_object.filename,
-                    source=self.name,
-                )
 
-                for c in strelka.chunk_string(rtf_object.olepkgdata):
-                    self.upload_to_coordinator(
-                        extract_file.pointer,
-                        c,
-                        expire_at,
-                    )
+            if rtf_object.is_package:
+
+                # Send extracted file back to Strelka
+                self.emit_file(rtf_object.olepkgdata, name=rtf_object.filename)
 
             elif rtf_object.is_ole:
-                extract_file = strelka.File(
-                    name=f'rtf_object_{index}',
-                    source=self.name,
-                )
 
-                for c in strelka.chunk_string(rtf_object.oledata):
-                    self.upload_to_coordinator(
-                        extract_file.pointer,
-                        c,
-                        expire_at,
-                    )
+                # Send extracted file back to Strelka
+                self.emit_file(rtf_object.oledata, name=f'rtf_object_{index}')
 
             else:
-                extract_file = strelka.File(
-                    name=f'rtf_object_{index}',
-                    source=self.name,
-                )
 
-                for c in strelka.chunk_string(rtf_object.rawdata):
-                    self.upload_to_coordinator(
-                        extract_file.pointer,
-                        c,
-                        expire_at,
-                    )
+                # Send extracted file back to Strelka
+                self.emit_file(rtf_object.rawdata, name=f'rtf_object_{index}')
 
-            self.files.append(extract_file)
             self.event['total']['extracted'] += 1
