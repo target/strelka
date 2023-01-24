@@ -94,19 +94,10 @@ class ScanRar(strelka.Scanner):
                                     self.flags.append('no_password_match_found')                        
 
                                 if extract_data:
-                                    extract_file = strelka.File(
-                                        name=f'{file_info.filename}',
-                                        source=self.name,
-                                    )
 
-                                    for c in strelka.chunk_string(extract_data):
-                                        self.upload_to_coordinator(
-                                            extract_file.pointer,
-                                            c,
-                                            expire_at,
-                                        )
+                                    # Send extracted file back to Strelka
+                                    self.emit_file(extract_data, name=f'{file_info.filename}')
 
-                                    self.files.append(extract_file)
                                     self.event['total']['extracted'] += 1
 
                             except NotImplementedError:

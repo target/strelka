@@ -11,17 +11,9 @@ class ScanBmpEof(strelka.Scanner):
         if expectedSize != actualSize:
             self.event['trailer_index'] = expectedSize
             trailer_bytes_data = data[expectedSize:]
-            extract_file = strelka.File(
-                source=self.name,
-            )
-
-            for c in strelka.chunk_string(trailer_bytes_data):
-                self.upload_to_coordinator(
-                    extract_file.pointer,
-                    c,
-                    expire_at,
-                )
             self.event['BMP_EOF'] = data[expectedSize:]
-            self.files.append(extract_file)
+
+            # Send extracted file back to Strelka
+            self.emit_file(trailer_bytes_data)
         else:
             self.flags.append('no_trailer')

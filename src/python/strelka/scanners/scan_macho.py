@@ -204,19 +204,9 @@ class ScanMacho(strelka.Scanner):
                     tmp_data.flush()
 
                     with open(tmp_data.name, 'rb') as f:
-                        extract_file = strelka.File(
-                            name=f'binary_{r}',
-                            source=self.name,
-                        )
 
-                        for c in strelka.chunk_string(f.read()):
-                            self.upload_to_coordinator(
-                                extract_file.pointer,
-                                c,
-                                expire_at,
-                            )
-
-                        self.files.append(extract_file)
+                        # Send extracted file back to Strelka
+                        self.emit_file(f.read(), name=f'binary_{r}')
 
             return
 

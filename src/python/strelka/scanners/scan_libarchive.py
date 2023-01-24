@@ -31,19 +31,13 @@ class ScanLibarchive(strelka.Scanner):
                         if self.event['total']['extracted'] >= file_limit:
                             continue
 
-                        extract_file = strelka.File(
-                            name=entry.pathname,
-                            source=self.name,
-                        )
-
+                        extracted_data = b''
                         for block in entry.get_blocks():
-                            self.upload_to_coordinator(
-                                extract_file.pointer,
-                                block,
-                                expire_at,
-                            )
+                            extracted_data += block
 
-                        self.files.append(extract_file)
+                        # Send extracted file back to Strelka
+                        self.emit_file(extracted_data, name=entry.pathname)
+
                         self.event['total']['extracted'] += 1
 
         except libarchive.ArchiveError:

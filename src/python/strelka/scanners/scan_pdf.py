@@ -92,17 +92,10 @@ class ScanPdf(strelka.Scanner):
             try:
                 for i in range(reader.embfile_count()):
                     props = reader.embfile_info(i)
-                    extract_file = strelka.File(
-                        name=props['filename'],
-                        source=self.name,
-                    )
-                    for c in strelka.chunk_string(reader.embfile_get(i)):
-                        self.upload_to_coordinator(
-                            extract_file.pointer,
-                            c,
-                            expire_at,
-                        )
-                    self.files.append(extract_file)
+
+                    # Send extracted file back to Strelka
+                    self.emit_file(reader.embfile_get(i), name=props['filename'])
+
             except strelka.ScannerTimeout:
                 raise
             except Exception:
@@ -114,17 +107,10 @@ class ScanPdf(strelka.Scanner):
                     for img in reader.get_page_images(i):
                         self.event['images'] += 1
                         pix = fitz.Pixmap(reader, img[0])
-                        extract_file = strelka.File(
-                            name="image",
-                            source=self.name,
-                        )
-                        for c in strelka.chunk_string(pix.tobytes()):
-                            self.upload_to_coordinator(
-                                extract_file.pointer,
-                                c,
-                                expire_at,
-                            )
-                        self.files.append(extract_file)
+
+                        # Send extracted file back to Strelka
+                        self.emit_file(pix.tobytes(), name="image")
+
             except strelka.ScannerTimeout:
                 raise
             except Exception:
@@ -142,18 +128,8 @@ class ScanPdf(strelka.Scanner):
 
                     text += page.get_text()
 
-                # submit extracted text to strelka
-                extract_file = strelka.File(
-                    name="text",
-                    source=self.name,
-                )
-                for c in strelka.chunk_string(text):
-                    self.upload_to_coordinator(
-                        extract_file.pointer,
-                        c,
-                        expire_at,
-                    )
-                self.files.append(extract_file)
+                # Send extracted file back to Strelka
+                self.emit_file(text.encode("utf-8"), name="text")
 
             except strelka.ScannerTimeout:
                 raise

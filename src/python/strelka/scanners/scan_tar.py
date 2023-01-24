@@ -31,19 +31,10 @@ class ScanTar(strelka.Scanner):
                             try:
                                 tar_file = tar_obj.extractfile(tar_member)
                                 if tar_file is not None:
-                                    extract_file = strelka.File(
-                                        name=tar_member.name,
-                                        source=self.name,
-                                    )
 
-                                    for c in strelka.chunk_string(tar_file.read()):
-                                        self.upload_to_coordinator(
-                                            extract_file.pointer,
-                                            c,
-                                            expire_at,
-                                        )
+                                    # Send extracted file back to Strelka
+                                    self.emit_file(tar_file.read(), name=tar_member.name)
 
-                                    self.files.append(extract_file)
                                     self.event['total']['extracted'] += 1
 
                             except KeyError:

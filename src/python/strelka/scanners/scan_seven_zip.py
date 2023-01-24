@@ -153,7 +153,12 @@ class ScanSevenZip(strelka.Scanner):
                         self.flags.append("file_limit_error")
                         break
 
-                    self.upload(name, expire_at)
+                    relname = os.path.relpath(name, tmp_extract)
+                    with open(name, "rb") as extracted_file:
+
+                        # Send extracted file back to Strelka
+                        self.emit_file(extracted_file.read(), name=relname)
+
                     self.event["total"]["extracted"] += 1
 
             if password:
@@ -301,18 +306,3 @@ class ScanSevenZip(strelka.Scanner):
                                     "datetime": match.group("datetime"),
                                 }
                             )
-
-    def upload(self, name, expire_at):
-        """Send extracted file to coordinator"""
-        with open(name, "rb") as extracted_file:
-            extract_file = strelka.File(
-                source=self.name,
-            )
-
-            for c in strelka.chunk_string(extracted_file.read()):
-                self.upload_to_coordinator(
-                    extract_file.pointer,
-                    c,
-                    expire_at,
-                )
-            self.files.append(extract_file)

@@ -147,18 +147,10 @@ class ScanEncryptedDoc(strelka.Scanner):
                     output_doc.seek(0)
                     extract_data = output_doc.read()
                     output_doc.seek(0)
-                    extract_file = strelka.File(
-                        source=self.name,
-                    )
 
-                    for c in strelka.chunk_string(extract_data):
-                        self.upload_to_coordinator(
-                            extract_file.pointer,
-                            c,
-                            expire_at,
-                        )
+                    # Send extracted file back to Strelka
+                    self.emit_file(extract_data)
 
-                    self.files.append(extract_file)
                 except strelka.ScannerTimeout:
                     raise
                 except Exception:

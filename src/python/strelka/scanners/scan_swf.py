@@ -21,18 +21,9 @@ class ScanSwf(strelka.Scanner):
                 self.event['type'] = 'CWS'
                 try:
                     extract_data += zlib.decompress(swf_io.read())[:swf_size - 8]
-                    extract_file = strelka.File(
-                        source=self.name,
-                    )
 
-                    for c in strelka.chunk_string(extract_data):
-                        self.upload_to_coordinator(
-                            extract_file.pointer,
-                            c,
-                            expire_at,
-                        )
-
-                    self.files.append(extract_file)
+                    # Send extracted file back to Strelka
+                    self.emit_file(extract_data)
 
                 except zlib.error:
                     self.flags.append('zlib_error')
@@ -41,18 +32,9 @@ class ScanSwf(strelka.Scanner):
                 self.event['type'] = 'ZWS'
                 swf_io.seek(12)
                 extract_data += pylzma.decompress(swf_io.read())[:swf_size - 8]
-                extract_file = strelka.File(
-                    source=self.name,
-                )
 
-                for c in strelka.chunk_string(extract_data):
-                    self.upload_to_coordinator(
-                        extract_file.pointer,
-                        c,
-                        expire_at,
-                    )
-
-                self.files.append(extract_file)
+                # Send extracted file back to Strelka
+                self.emit_file(extract_data)
 
             elif magic == b'FWS':
                 self.event['type'] = 'FWS'

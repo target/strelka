@@ -174,19 +174,10 @@ class ScanEncryptedZip(strelka.Scanner):
                                 )
 
                                 if extract_data:
-                                    extract_file = strelka.File(
-                                        name=file_item.filename,
-                                        source=self.name,
-                                    )
 
-                                    for c in strelka.chunk_string(extract_data):
-                                        self.upload_to_coordinator(
-                                            extract_file.pointer,
-                                            c,
-                                            expire_at,
-                                        )
+                                    # Send extracted file back to Strelka
+                                    self.emit_file(extract_data, name=file_item.filename)
 
-                                    self.files.append(extract_file)
                                     self.event["total"]["extracted"] += 1
 
                             except NotImplementedError as e:

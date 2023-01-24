@@ -74,19 +74,10 @@ class ScanXml(strelka.Scanner):
                         if tag_data not in self.event['tag_data']:
                             self.event['tag_data'].append(tag_data)
                     elif tag in xml_args['extract_tags']:
-                        extract_file = strelka.File(
-                            name=tag,
-                            source=self.name,
-                        )
 
-                        for c in strelka.chunk_string(text):
-                            self.upload_to_coordinator(
-                                extract_file.pointer,
-                                c,
-                                self.expire_at,
-                            )
+                        # Send extracted file back to Strelka
+                        self.emit_file(text, name=tag)
 
-                        self.files.append(extract_file)
                         self.event['total']['extracted'] += 1
 
             for child in node.getchildren():

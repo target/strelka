@@ -13,18 +13,8 @@ class ScanBzip2(strelka.Scanner):
                     decompressed = bzip2_obj.read()
                     self.event['size'] = len(decompressed)
 
-                    extract_file = strelka.File(
-                        source=self.name,
-                    )
-
-                    for c in strelka.chunk_string(decompressed):
-                        self.upload_to_coordinator(
-                            extract_file.pointer,
-                            c,
-                            expire_at,
-                        )
-
-                    self.files.append(extract_file)
+                    # Send extracted file back to Strelka
+                    self.emit_file(decompressed, name=file.name)
 
                 except EOFError:
                     self.flags.append('eof_error')
