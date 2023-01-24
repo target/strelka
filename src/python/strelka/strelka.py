@@ -315,6 +315,7 @@ class Backend(object):
 
                             # Clear cached scanner of files
                             plugin.files = []
+                            plugin.flags = []
                         else:
                             plugin = getattr(module, name)(self.backend_cfg, self.coordinator)
 
