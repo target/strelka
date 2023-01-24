@@ -39,6 +39,12 @@ class ScannerTimeout(Exception):
     pass
 
 
+class ScannerException(Exception):
+    def __init__(self, message=""):
+        self.message = message
+        super().__init__(self.message)
+
+
 class File(object):
     """Defines a file that will be scanned.
 
@@ -564,6 +570,9 @@ class Scanner(object):
             self.flags.append('timed_out')
         except (DistributionTimeout, RequestTimeout):
             raise
+        except ScannerException as e:
+            signal.alarm(0)
+            self.event.update({"exception": e.message})
         except Exception as e:
             signal.alarm(0)
             logging.exception(f'{self.name}: unhandled exception while scanning'
