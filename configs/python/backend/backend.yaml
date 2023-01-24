@@ -433,6 +433,7 @@ scanners:
       priority: 5
       options:
         extract_text: False
+        split_words: True
         tmp_directory: '/dev/shm/'
   'ScanOle':
     - positive:
