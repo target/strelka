@@ -40,6 +40,7 @@ class ScanTlsh(strelka.Scanner):
         try:
             if self.tlsh_rules is None:
                 if os.path.isdir(location):
+                    self.tlsh_rules = {}
                     for filepath in glob.iglob(f'{location}/**/*.yaml', recursive=True):
                         with open(filepath, 'r') as tlsh_rules:
                             try:
