@@ -114,7 +114,6 @@ scanners:
   'ScanEncryptedZip':
     - positive:
         flavors:
-          - 'application/msword'
           - 'encrypted_zip'
       priority: 5
       options:
