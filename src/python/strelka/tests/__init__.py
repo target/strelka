@@ -13,9 +13,9 @@ def run_test_scan(
     if options is None:
         options = {}
     if "scanner_timeout" not in options:
-        options["scanner_timeout"] = 20
+        options["scanner_timeout"] = 30
     if backend_cfg is None:
-        backend_cfg = {"limits": {"scanner": 20}}
+        backend_cfg = {"limits": {"scanner": 30}}
 
     scanner = scan_class(backend_cfg, "test_coordinate")
 

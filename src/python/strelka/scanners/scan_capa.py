@@ -20,7 +20,7 @@ class ScanCapa(strelka.Scanner):
         tmp_directory = options.get('tmp_directory', '/tmp/')
         location_rules = options.get('location_rules', '/etc/capa/rules/')
         location_signatures = options.get('location_signatures', '/etc/capa/signatures/')
-        scanner_timeout = options.get('scanner_timeout', 20)
+        scanner_timeout = options.get('scanner_timeout', 30)
 
         # Check rules and signatures locationss
         if os.path.isdir(location_rules):
