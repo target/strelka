@@ -598,6 +598,7 @@ scanners:
       priority: 5
       options:
         location: '/etc/strelka/tlsh/'
+        score: 30
   'ScanTnef':
     - positive:
         flavors:
