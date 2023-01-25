@@ -378,8 +378,9 @@ scanners:
   'ScanMsi':
     - positive:
         flavors:
-          - 'image/vnd.fpx'
-          - 'application/x-msi'
+          - "image/vnd.fpx"
+          - "application/vnd.ms-msi"
+          - "application/x-msi"
       priority: 5
       options:
         tmp_directory: '/dev/shm/'
