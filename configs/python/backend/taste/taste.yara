@@ -315,6 +315,16 @@ rule excel4_file
         (uint32be(0) == 0x504b0304 and $rels and $sheet and $xlsstr)
 }
 
+rule onenote_file
+{
+    meta:
+        type = "document"
+    strings:
+        $guid = { e4 52 5c 7b 8c d8 a7 4d ae b1 53 78 d0 29 96 d3 }
+    condition:
+        $guid at 0
+}
+
 rule mso_file {
     meta:
         type = "document"
