@@ -64,6 +64,7 @@ test_assignments_expected: dict = {
     "test.vhdx": ["ScanVhd"],
     "test.webp": ["ScanExiftool", "ScanLsb", "ScanNf", "ScanOcr", "ScanQr"],
     "test.xar": ["ScanLibarchive"],
+    "test.xlsm": ["ScanXl4ma"],
     "test.xml": ["ScanXml"],
     "test.xz": ["ScanLzma"],
     "test.yara": ["ScanUrl"],
@@ -210,7 +211,9 @@ def test_fixture_scanner_assignment(fixture_path, expected) -> None:
     if os.path.exists("/etc/strelka/backend.yaml"):
         backend_cfg_path: str = "/etc/strelka/backend.yaml"
     else:
-        backend_cfg_path: str = Path(Path(__file__).parent / "../../../../configs/python/backend/backend.yaml")
+        backend_cfg_path: str = Path(
+            Path(__file__).parent / "../../../../configs/python/backend/backend.yaml"
+        )
 
     with open(backend_cfg_path, "r") as f:
         backend_cfg = yaml.safe_load(f.read())
