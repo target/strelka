@@ -94,6 +94,7 @@ test_assignments_expected: dict = {
         "ScanPngEof",
         "ScanQr",
     ],
+    "test_hyperlinks.html": ["ScanHtml"],
     "test_lzx.cab": ["ScanLibarchive"],
     "test_manifest.json": ["ScanJson", "ScanManifest"],
     "test_password.7z": ["ScanSevenZip"],

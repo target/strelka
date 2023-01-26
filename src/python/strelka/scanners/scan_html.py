@@ -12,6 +12,7 @@ class ScanHtml(strelka.Scanner):
     """
     def scan(self, data, file, options, expire_at):
         parser = options.get('parser', 'html.parser')
+        link_limit = options.get('max_links', 50)
 
         self.event['total'] = {
             'scripts': 0,
@@ -40,6 +41,14 @@ class ScanHtml(strelka.Scanner):
                 else:
                     if link not in self.event['hyperlinks']:
                         self.event['hyperlinks'].append(link)
+
+            # Gather count of links and reduce potential link duplicates and restrict amount of
+            # links returned using the configurable link_limit.
+            if self.event['hyperlinks']:
+                self.event['hyperlinks_count'] = {'total': len(self.event['hyperlinks'])}
+                self.event['hyperlinks'] = list(set(self.event['hyperlinks']))
+                self.event['hyperlinks_count']['unique'] = len(self.event['hyperlinks'])
+                self.event['hyperlinks'] = self.event['hyperlinks'][:link_limit]
 
             forms = soup.find_all('form')
             self.event['total']['forms'] = len(forms)
