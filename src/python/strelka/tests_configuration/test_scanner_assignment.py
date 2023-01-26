@@ -40,7 +40,7 @@ test_assignments_expected: dict = {
     "test.json": ["ScanJson"],
     "test.lnk": ["ScanExiftool", "ScanLNK"],
     "test.macho": ["ScanMacho"],
-    "test.msi": ["ScanExiftool", "ScanOle", "ScanVba"],  # TODO: Needs CDF subtype
+    "test.msi": ['ScanExiftool', 'ScanMsi', 'ScanOle', 'ScanVba'],  # TODO: Needs CDF subtype
     "test.pcap": ["ScanPcap"],
     "test.pcapng": [],
     "test.pdf": ["ScanExiftool", "ScanPdf"],
@@ -64,7 +64,7 @@ test_assignments_expected: dict = {
     "test.vhdx": ["ScanVhd"],
     "test.webp": ["ScanExiftool", "ScanLsb", "ScanNf", "ScanOcr", "ScanQr"],
     "test.xar": ["ScanLibarchive"],
-    "test.xlsm": ["ScanXl4ma"],
+    "test.xls": ['ScanExiftool', 'ScanOle', 'ScanVba', 'ScanXl4ma'],
     "test.xml": ["ScanXml"],
     "test.xz": ["ScanLzma"],
     "test.yara": ["ScanUrl"],

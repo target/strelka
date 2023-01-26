@@ -62,9 +62,11 @@ taste_expectations: dict = {
     "test.vhdx": {"mime": ["application/octet-stream"], "yara": ["vhdx_file"]},
     "test.webp": {"mime": ["image/webp"], "yara": []},
     "test.xar": {"mime": ["application/x-xar"], "yara": ["xar_file"]},
+    "test.xls": {"mime": ["application/vnd.ms-excel"], "yara": ["excel4_file", "olecf_file"]},
     "test.xml": {"mime": ["text/xml"], "yara": ["xml_file"]},
     "test.xz": {"mime": ["application/x-xz"], "yara": ["xz_file"]},
     "test.yara": {"mime": ["text/plain"], "yara": []},
+    "test.yaml": {"mime": ["text/plain"], "yara": []},
     "test.zip": {"mime": ["application/zip"], "yara": ["zip_file"]},
     "test_aes256_password.zip": {
         "mime": ["application/zip"],

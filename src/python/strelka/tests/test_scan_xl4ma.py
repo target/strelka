@@ -1,5 +1,6 @@
 from pathlib import Path
 from unittest import TestCase, mock
+from pytest_unordered import unordered
 
 from strelka.scanners.scan_xl4ma import ScanXl4ma as ScanUnderTest
 from strelka.tests import run_test_scan
@@ -14,14 +15,14 @@ def test_scan_xl4ma(mocker):
     test_scan_event = {
         "elapsed": mock.ANY,
         "flags": [],
-        "decoded": ["https://www.fake-website.com/path/to/resource?param1=value1&param2=value2#some-fragment"],
-        "iocs": ["https://www.fake-website.com/path/to/resource"],
+        "decoded": unordered(['3', 'user', 'clean.xls', 'None', "https://www.example.com/path/to/resource"]),
+        "iocs": ["https://www.example.com/path/to/resource"],
     }
 
     scanner_event = run_test_scan(
         mocker=mocker,
         scan_class=ScanUnderTest,
-        fixture_path=Path(__file__).parent / "fixtures/test.xlsm",
+        fixture_path=Path(__file__).parent / "fixtures/test.xls",
     )
 
     TestCase.maxDiff = None
