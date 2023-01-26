@@ -311,6 +311,7 @@ scanners:
       priority: 5
       options:
         beautify: True
+        limits: 50
   'ScanJpeg':
     - positive:
         flavors:
