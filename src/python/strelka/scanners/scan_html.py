@@ -45,9 +45,7 @@ class ScanHtml(strelka.Scanner):
             # Gather count of links and reduce potential link duplicates and restrict amount of
             # links returned using the configurable link_limit.
             if self.event['hyperlinks']:
-                self.event['hyperlinks_count'] = {'total': len(self.event['hyperlinks'])}
-                self.event['hyperlinks'] = list(set(self.event['hyperlinks']))
-                self.event['hyperlinks_count']['unique'] = len(self.event['hyperlinks'])
+                self.event['hyperlinks_count'] = len(self.event['hyperlinks'])
                 self.event['hyperlinks'] = self.event['hyperlinks'][:link_limit]
 
             forms = soup.find_all('form')

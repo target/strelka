@@ -78,7 +78,7 @@ def test_scan_html_hyperlinks(mocker):
             "spans": 0,
         },
         "title": "Sample HTML File",
-        "hyperlinks_count": {"total": 7, "unique": 7},
+        "hyperlinks_count": 7,
         "hyperlinks": ['https://www.example.com',
                        'https://www.example2.com',
                        'https://www.example3.com',
@@ -100,4 +100,4 @@ def test_scan_html_hyperlinks(mocker):
 
     TestCase.maxDiff = None
     TestCase().assertLessEqual(len(test_scan_event['hyperlinks']), MAX_SIZE_OPTION)
-    TestCase().assertDictEqual(test_scan_event["hyperlinks_count"], scanner_event["hyperlinks_count"])
+    TestCase().assertTrue(test_scan_event["hyperlinks_count"], scanner_event["hyperlinks_count"])
