@@ -267,7 +267,7 @@ scanners:
       priority: 5
       options:
         parser: "html5lib"
-        max_links: 50
+        max_hyperlinks: 50
 #  'ScanIni':
 #    - positive:
 #        filename: '(\.([Cc][Ff][Gg]|[Ii][Nn][Ii])|PROJECT)$'

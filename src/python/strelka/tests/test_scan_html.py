@@ -58,7 +58,7 @@ def test_scan_html(mocker):
     TestCase().assertDictEqual(test_scan_event, scanner_event)
 
 
-def test_scan_html_hyperlinks(mocker):
+def test_scan_html_max_hyperlinks(mocker):
     """
     Pass: Sample event matches output of scanner.
     Failure: Unable to load file or sample event fails to match.
@@ -95,7 +95,7 @@ def test_scan_html_hyperlinks(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test_hyperlinks.html",
-        options={"max_links": MAX_SIZE_OPTION}
+        options={"max_hyperlinks": MAX_SIZE_OPTION}
     )
 
     TestCase.maxDiff = None
