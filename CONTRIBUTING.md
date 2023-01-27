@@ -14,6 +14,46 @@ Bugs should be submitted as issues using the bug report template.
 Enhancements should be submitted as issues using the feature request template.
 
 ## Development Environment
+
+Clone the repo
+
+```
+git clone https://github.com/target/strelka.git
+```
+
+Python should be set up to use a virtualenv.
+
+```
+cd strelka/
+python -m venv env
+```
+
+Activate the virtualenv
+
+```
+source env/bin/activate
+```
+
+Install build requirements
+
+```
+cd src/python/
+pip install -r requirements.txt
+```
+
+Install strelka
+
+```
+python setup.py install
+```
+
+Install pre-commit hooks
+
+```
+pre-commit install
+```
+
+
 Development builds can tested using the default docker-compose.yaml file (`build/docker-compose.yaml`). To bring the project up with docker-compse, use the following command as a template:
     ```bash
     docker-compose -f build/docker-compose.yaml --project-name strelka up
@@ -76,8 +116,11 @@ tests_configuration/test_taste.py ..............................................
 ```
 
 ## Style Guides
+
 ### Python
-Python code should attempt to adhere as closely to [PEP8](https://www.python.org/dev/peps/pep-0008/) as possible. We may ask authors to refactor code for better PEP8 compliance, but we do not enforce 100% compliance.
+Python code should attempt to adhere as closely to [PEP8](https://www.python.org/dev/peps/pep-0008/) as possible.
+
+Conformance is ensured using `black`, `isort`, `flake8`, and `mypy` in pre-commit hooks and CI/CD actions. Pushes and PRs may be automatically rejected due to non-conformance. Review errors/warnings from the style modules for tips.
 
 ### Scanners
 * Write event data in snake_case JSON format
