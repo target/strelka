@@ -1,10 +1,54 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-01-27
+### Changed
+- Added tests and option limiters to `ScanHtml` and `ScanJavascript`
+- Bug fix + tests for `ScanXl4ma`
+
+## 2023-01-24
+### Changed
+- Documentation update (@jertel)
+- Updating backend flavors
+- Bug fixes and tests
+
+### Added
+- Added `ScanTlsh` scanner and tests (@ryanborre)
+
+## 2023-01-23
+### Changed
+- Bug fixes for various tastes / tests (@ryanohoro)
+- Updating scanners with common function for file submission to reduce code reuse / potential errors (@ryanohoro)
+- Added additional functionality (e.g., `ScanOcr` can not concatenate output into single line) (@ryanohoro)
+
+## 2023-01-22
+### Changed
+- Additional tests (@ryanohoro)
+- Refactoring backend (@ryanohoro)
+
+## 2023-01-21
+### Changed
+- Bug fix for strelka backend (cached scanners) (@ryanohoro)
+
+## 2023-01-20
+### Changed
+- Test updates (@ryanohoro)
+
+### Added
+- Adds local execution functionality (@ryanohoro)
+
+## 2023-01-19
+### Changed
+- ARM fix for container build
+- Updated documentation for tests (@ryanohoro)
+
+### Added
+- Adds `ScanSevenZip` and associated tests. (@ryanohoro)
+
 ## 2023-01-18
 ### Changed
-- Adds tests for ScanPgp, ScanPlist, ScanNf, Updates for ScanOle (@ryanohoro)
-- Bug fix in ScanQR (@ryanohoro)
+- Adds tests for `ScanPgp`, `ScanPlist`, `ScanNf`, Updates for `ScanOle` (@ryanohoro)
+- Bug fix in `ScanQR` (@ryanohoro)
 - Adds support for WEBP to multiple scanners (@ryanohoro)
 - Increase collection potential for PGP (@ryanohoro)
 - Backend Dockerfile modification (@ryanohoro)
