@@ -22,6 +22,6 @@ jobs:
 
       - name: Code quality checks
         run: |
-          python -m black --exclude --check --diff src/python
+          python -m black --check --diff src/python
           python -m flake8 --exclude src/python/build/,src/python/strelka/proto/ src/python
-          python -m isort --check-only src/python
+          python -m isort --profile black --check-only src/python
