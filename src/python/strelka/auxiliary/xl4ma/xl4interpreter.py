@@ -1,8 +1,9 @@
 # Authors: Ryan Borre
 
 import logging
-import formulas
 import os
+
+import formulas
 
 
 class Interpreter:
@@ -159,7 +160,7 @@ class Interpreter:
                 if isinstance(result, str):
                     self.results.add(str(result))
 
-        except:
+        except Exception:
             logging.info("formula error")
 
         temp_file.close()

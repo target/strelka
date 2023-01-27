@@ -2,8 +2,10 @@
 
 import glob
 import os
+
 import tlsh
 import yaml
+
 from strelka import strelka
 
 
@@ -28,28 +30,30 @@ class ScanTlsh(strelka.Scanner):
         self.tlsh_rules = None
 
     def scan(self, data, file, options, expire_at):
-        location = options.get('location', '/etc/strelka/tlsh/')
-        score_threshold = options.get('score', 30)
+        location = options.get("location", "/etc/strelka/tlsh/")
+        score_threshold = options.get("score", 30)
 
         tlsh_file = tlsh.hash(data)
 
-        if tlsh_file == 'TNULL':
-            self.flags.append('null_tlsh')
+        if tlsh_file == "TNULL":
+            self.flags.append("null_tlsh")
             return
 
         try:
             if self.tlsh_rules is None:
                 if os.path.isdir(location):
                     self.tlsh_rules = {}
-                    for filepath in glob.iglob(f'{location}/**/*.yaml', recursive=True):
-                        with open(filepath, 'r') as tlsh_rules:
+                    for filepath in glob.iglob(f"{location}/**/*.yaml", recursive=True):
+                        with open(filepath, "r") as tlsh_rules:
                             try:
-                                self.tlsh_rules.update(yaml.safe_load(tlsh_rules.read()))
+                                self.tlsh_rules.update(
+                                    yaml.safe_load(tlsh_rules.read())
+                                )
                             except yaml.YAMLError:
                                 self.flags.append(f"yaml_error: {filepath}")
                                 return
                 elif os.path.isfile(location):
-                    with open(location, 'r') as tlsh_rules:
+                    with open(location, "r") as tlsh_rules:
                         self.tlsh_rules = yaml.safe_load(tlsh_rules.read())
                 else:
                     self.flags.append("tlsh_location_not_found")
@@ -72,4 +76,4 @@ class ScanTlsh(strelka.Scanner):
                         this_family = family
                         this_score = score
 
-        self.event['match'] = {'family': this_family, 'score': this_score}
+        self.event["match"] = {"family": this_family, "score": this_score}

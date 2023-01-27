@@ -1,7 +1,7 @@
 import warnings
-from pathlib import Path
 from os import walk
 from os.path import isfile, join
+from pathlib import Path
 
 
 def test_required_for_scanner(mocker):

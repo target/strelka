@@ -1,7 +1,8 @@
 import io
 import os
-import pyzipper
 import zlib
+
+import pyzipper
 
 from strelka import strelka
 

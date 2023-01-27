@@ -17,10 +17,10 @@ class ScanMsi(strelka.Scanner):
 
     def scan(self, data, file, options, expire_at):
         # Get a list of keys to collect from the MSI file
-        keys = options.get('keys', [])
+        keys = options.get("keys", [])
 
         # Get the temporary directory to write the MSI file to
-        tmp_directory = options.get('tmp_directory', '/tmp/')
+        tmp_directory = options.get("tmp_directory", "/tmp/")
 
         with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
             # Write the MSI data to the temporary file
@@ -30,7 +30,7 @@ class ScanMsi(strelka.Scanner):
             # Run exiftool to extract metadata from the file
             try:
                 (stdout, stderr) = subprocess.Popen(
-                    ['exiftool', '-d', '"%s"', '-j', tmp_data.name],
+                    ["exiftool", "-d", '"%s"', "-j", tmp_data.name],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.DEVNULL,
                 ).communicate()
@@ -38,7 +38,7 @@ class ScanMsi(strelka.Scanner):
                 raise
             except Exception as e:
                 # Handle any exceptions raised while running exiftool
-                self.flags.append(f'msi_extract_error: {e}')
+                self.flags.append(f"msi_extract_error: {e}")
                 return
 
             if stdout:
@@ -47,7 +47,7 @@ class ScanMsi(strelka.Scanner):
                     exiftool_dictionary = json.loads(stdout)[0]
                 except ValueError as e:
                     # Handle any errors while parsing the JSON output
-                    self.flags.append(f'msi_parse_error: {e}')
+                    self.flags.append(f"msi_parse_error: {e}")
                     return
 
                 for k, v in exiftool_dictionary.items():

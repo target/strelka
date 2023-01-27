@@ -15,13 +15,14 @@ class ScanStrings(strelka.Scanner):
             collected.
             Defaults to 0 (unlimited).
     """
+
     def init(self):
-        self.strings_regex = re.compile(br'[^\x00-\x1F\x7F-\xFF]{4,}')
+        self.strings_regex = re.compile(rb"[^\x00-\x1F\x7F-\xFF]{4,}")
 
     def scan(self, data, file, options, expire_at):
-        limit = options.get('limit', 0)
+        limit = options.get("limit", 0)
 
         strings = self.strings_regex.findall(data)
         if limit:
             strings = strings[:limit]
-        self.event['strings'] = strings
+        self.event["strings"] = strings

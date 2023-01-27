@@ -16,10 +16,7 @@ def test_scan_exception(mocker):
         "exception": mock.ANY,
     }
 
-    scanner_event = run_test_scan(
-        mocker=mocker,
-        scan_class=ScanUnderTest
-    )
+    scanner_event = run_test_scan(mocker=mocker, scan_class=ScanUnderTest)
 
     TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_event, scanner_event)

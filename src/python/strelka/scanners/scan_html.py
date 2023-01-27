@@ -10,115 +10,120 @@ class ScanHtml(strelka.Scanner):
         parser: Sets the HTML parser used during scanning.
             Defaults to 'html.parser'.
     """
-    def scan(self, data, file, options, expire_at):
-        parser = options.get('parser', 'html.parser')
-        max_hyperlinks = options.get('max_hyperlinks', 50)
 
-        self.event['total'] = {
-            'scripts': 0,
-            'forms': 0,
-            'inputs': 0,
-            'frames': 0,
-            'extracted': 0,
+    def scan(self, data, file, options, expire_at):
+        parser = options.get("parser", "html.parser")
+        max_hyperlinks = options.get("max_hyperlinks", 50)
+
+        self.event["total"] = {
+            "scripts": 0,
+            "forms": 0,
+            "inputs": 0,
+            "frames": 0,
+            "extracted": 0,
         }
 
         try:
             soup = bs4.BeautifulSoup(data, parser)
 
             if soup.title:
-                self.event['title'] = soup.title.text
+                self.event["title"] = soup.title.text
 
             hyperlinks = []
-            hyperlinks.extend(soup.find_all('a', href=True))
-            hyperlinks.extend(soup.find_all('img', src=True))
-            self.event.setdefault('hyperlinks', [])
+            hyperlinks.extend(soup.find_all("a", href=True))
+            hyperlinks.extend(soup.find_all("img", src=True))
+            self.event.setdefault("hyperlinks", [])
             for hyperlink in hyperlinks:
-                link = hyperlink.get('href') or hyperlink.get('src')
+                link = hyperlink.get("href") or hyperlink.get("src")
 
-                if link and link.startswith('data:') and ';base64,' in link:
-                    hyperlink_data = link.split(';base64,')[1]
-                    self.emit_file(hyperlink_data.encode(), name=f'base64_hyperlink')
+                if link and link.startswith("data:") and ";base64," in link:
+                    hyperlink_data = link.split(";base64,")[1]
+                    self.emit_file(hyperlink_data.encode(), name="base64_hyperlink")
                 else:
-                    if link not in self.event['hyperlinks']:
-                        self.event['hyperlinks'].append(link)
+                    if link not in self.event["hyperlinks"]:
+                        self.event["hyperlinks"].append(link)
 
             # Gather count of links and reduce potential link duplicates and restrict amount of
             # links returned using the configurable max_hyperlinks.
-            if self.event['hyperlinks']:
-                self.event['hyperlinks_count'] = len(self.event['hyperlinks'])
-                self.event['hyperlinks'] = self.event['hyperlinks'][:max_hyperlinks]
+            if self.event["hyperlinks"]:
+                self.event["hyperlinks_count"] = len(self.event["hyperlinks"])
+                self.event["hyperlinks"] = self.event["hyperlinks"][:max_hyperlinks]
 
-            forms = soup.find_all('form')
-            self.event['total']['forms'] = len(forms)
-            self.event.setdefault('forms', [])
+            forms = soup.find_all("form")
+            self.event["total"]["forms"] = len(forms)
+            self.event.setdefault("forms", [])
             for form in forms:
                 form_entry = {
-                    'action': form.get('action'),
-                    'method': form.get('method'),
+                    "action": form.get("action"),
+                    "method": form.get("method"),
                 }
-                if form_entry not in self.event['forms']:
-                    self.event['forms'].append(form_entry)
+                if form_entry not in self.event["forms"]:
+                    self.event["forms"].append(form_entry)
 
             frames = []
-            frames.extend(soup.find_all('frame'))
-            frames.extend(soup.find_all('iframe'))
-            self.event['total']['frames'] = len(frames)
-            self.event.setdefault('frames', [])
+            frames.extend(soup.find_all("frame"))
+            frames.extend(soup.find_all("iframe"))
+            self.event["total"]["frames"] = len(frames)
+            self.event.setdefault("frames", [])
             for frame in frames:
                 frame_entry = {
-                    'src': frame.get('src'),
-                    'name': frame.get('name'),
-                    'height': frame.get('height'),
-                    'width': frame.get('width'),
-                    'border': frame.get('border'),
-                    'id': frame.get('id'),
-                    'style': frame.get('style'),
+                    "src": frame.get("src"),
+                    "name": frame.get("name"),
+                    "height": frame.get("height"),
+                    "width": frame.get("width"),
+                    "border": frame.get("border"),
+                    "id": frame.get("id"),
+                    "style": frame.get("style"),
                 }
-                if frame_entry not in self.event['frames']:
-                    self.event['frames'].append(frame_entry)
+                if frame_entry not in self.event["frames"]:
+                    self.event["frames"].append(frame_entry)
 
-            inputs = soup.find_all('input')
-            self.event['total']['inputs'] = len(inputs)
-            self.event.setdefault('inputs', [])
+            inputs = soup.find_all("input")
+            self.event["total"]["inputs"] = len(inputs)
+            self.event.setdefault("inputs", [])
             for html_input in inputs:
                 input_entry = {
-                    'type': html_input.get('type'),
-                    'name': html_input.get('name'),
-                    'value': html_input.get('value'),
+                    "type": html_input.get("type"),
+                    "name": html_input.get("name"),
+                    "value": html_input.get("value"),
                 }
-                if input_entry not in self.event['inputs']:
-                    self.event['inputs'].append(input_entry)
+                if input_entry not in self.event["inputs"]:
+                    self.event["inputs"].append(input_entry)
 
-            scripts = soup.find_all('script')
-            self.event['total']['scripts'] = len(scripts)
-            self.event.setdefault('scripts', [])
+            scripts = soup.find_all("script")
+            self.event["total"]["scripts"] = len(scripts)
+            self.event.setdefault("scripts", [])
             for (index, script) in enumerate(scripts):
                 script_flavors = [
-                    script.get('language', '').lower(),
-                    script.get('type', '').lower(),
+                    script.get("language", "").lower(),
+                    script.get("type", "").lower(),
                 ]
                 script_entry = {
-                    'src': script.get('src'),
-                    'language': script.get('language'),
-                    'type': script.get('type'),
+                    "src": script.get("src"),
+                    "language": script.get("language"),
+                    "type": script.get("type"),
                 }
-                if script_entry not in self.event['scripts']:
-                    self.event['scripts'].append(script_entry)
+                if script_entry not in self.event["scripts"]:
+                    self.event["scripts"].append(script_entry)
 
                 if script.text:
-                    self.emit_file(script.text.encode(), name=f'script_{index}', flavors=script_flavors)
-                    self.event['total']['extracted'] += 1
+                    self.emit_file(
+                        script.text.encode(),
+                        name=f"script_{index}",
+                        flavors=script_flavors,
+                    )
+                    self.event["total"]["extracted"] += 1
 
-            spans = soup.find_all('span')
-            self.event['total']['spans'] = len(spans)
-            self.event.setdefault('spans', [])
+            spans = soup.find_all("span")
+            self.event["total"]["spans"] = len(spans)
+            self.event.setdefault("spans", [])
             for span in spans:
                 span_entry = {
-                    'class': span.get('class'),
-                    'style': span.get('style'),
+                    "class": span.get("class"),
+                    "style": span.get("style"),
                 }
-                if span_entry not in self.event['spans']:
-                    self.event['spans'].append(span_entry)
+                if span_entry not in self.event["spans"]:
+                    self.event["spans"].append(span_entry)
 
         except TypeError:
-            self.flags.append('type_error')
+            self.flags.append("type_error")

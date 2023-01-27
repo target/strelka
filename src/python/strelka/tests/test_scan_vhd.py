@@ -69,8 +69,6 @@ def test_scan_vhdx(mocker):
     Failure: Unable to load file or sample event fails to match.
     """
 
-    fixture_path = "fixtures/test.vhdx"
-
     test_scan_event = {
         "elapsed": mock.ANY,
         "flags": [],

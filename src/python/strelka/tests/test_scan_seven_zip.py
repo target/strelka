@@ -85,7 +85,7 @@ def test_scan_sevenzip_wordlist(mocker):
         ],
         "hidden_dirs": ["hidden"],
         "meta": {"7zip_version": "22.01"},
-        "cracked_password": b"password"
+        "cracked_password": b"password",
     }
 
     scanner_event = run_test_scan(
@@ -138,7 +138,7 @@ def test_scan_sevenzip_wordlist_filenames(mocker):
         ],
         "hidden_dirs": ["hidden"],
         "meta": {"7zip_version": "22.01"},
-        "cracked_password": b"password"
+        "cracked_password": b"password",
     }
 
     scanner_event = run_test_scan(
@@ -169,7 +169,7 @@ def test_scan_sevenzip_nocrack_filenames(mocker):
         "total": {"files": 0, "extracted": 0},
         "files": [],
         "hidden_dirs": [],
-        "meta": {"7zip_version": "22.01"}
+        "meta": {"7zip_version": "22.01"},
     }
 
     scanner_event = run_test_scan(

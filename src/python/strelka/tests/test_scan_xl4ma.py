@@ -1,7 +1,7 @@
 from pathlib import Path
 from unittest import TestCase, mock
-from pytest_unordered import unordered
 
+from pytest_unordered import unordered
 from strelka.scanners.scan_xl4ma import ScanXl4ma as ScanUnderTest
 from strelka.tests import run_test_scan
 
@@ -15,7 +15,15 @@ def test_scan_xl4ma(mocker):
     test_scan_event = {
         "elapsed": mock.ANY,
         "flags": [],
-        "decoded": unordered(['3', 'user', 'clean.xls', 'None', "https://www.example.com/path/to/resource"]),
+        "decoded": unordered(
+            [
+                "3",
+                "user",
+                "clean.xls",
+                "None",
+                "https://www.example.com/path/to/resource",
+            ]
+        ),
         "iocs": ["https://www.example.com/path/to/resource"],
     }
 

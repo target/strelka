@@ -1,9 +1,10 @@
-import io
 import collections
 import datetime
-import pycdlib
+import io
 
+import pycdlib
 from pycdlib.dates import DirectoryRecordDate
+
 from strelka import strelka
 
 
@@ -11,12 +12,12 @@ class ScanIso(strelka.Scanner):
     """Extracts files from ISO files."""
 
     def scan(self, data, file, options, expire_at):
-        file_limit = options.get('limit', 1000)
+        file_limit = options.get("limit", 1000)
 
-        self.event['total'] = {'files': 0, 'extracted': 0}
-        self.event['files'] = []
-        self.event['hidden_dirs'] = []
-        self.event['meta'] = {}
+        self.event["total"] = {"files": 0, "extracted": 0}
+        self.event["files"] = []
+        self.event["hidden_dirs"] = []
+        self.event["meta"] = {}
 
         try:
             # ISO must be opened as a byte stream
@@ -26,38 +27,51 @@ class ScanIso(strelka.Scanner):
 
                 # Attempt to get Meta
                 try:
-                    self.event['meta']['date_created'] = self._datetime_from_volume_date(iso.pvd.volume_creation_date)
-                    self.event['meta']['date_effective'] = self._datetime_from_volume_date(iso.pvd.volume_effective_date)
-                    self.event['meta']['date_expiration'] = self._datetime_from_volume_date(iso.pvd.volume_expiration_date)
-                    self.event['meta']['date_modification'] = self._datetime_from_volume_date(iso.pvd.volume_modification_date)
-                    self.event['meta']['volume_identifier'] = iso.pvd.volume_identifier.decode()
+                    self.event["meta"][
+                        "date_created"
+                    ] = self._datetime_from_volume_date(iso.pvd.volume_creation_date)
+                    self.event["meta"][
+                        "date_effective"
+                    ] = self._datetime_from_volume_date(iso.pvd.volume_effective_date)
+                    self.event["meta"][
+                        "date_expiration"
+                    ] = self._datetime_from_volume_date(iso.pvd.volume_expiration_date)
+                    self.event["meta"][
+                        "date_modification"
+                    ] = self._datetime_from_volume_date(
+                        iso.pvd.volume_modification_date
+                    )
+                    self.event["meta"][
+                        "volume_identifier"
+                    ] = iso.pvd.volume_identifier.decode()
                 except strelka.ScannerTimeout:
                     raise
                 except Exception:
                     pass
 
                 if iso.has_udf():
-                    pathname = 'udf_path'
+                    pathname = "udf_path"
                 elif iso.has_rock_ridge():
-                    pathname = 'rr_path'
+                    pathname = "rr_path"
                 elif iso.has_joliet():
-                    pathname = 'joliet_path'
+                    pathname = "joliet_path"
                 else:
-                    pathname = 'iso_path'
+                    pathname = "iso_path"
 
-                root_entry = iso.get_record(**{pathname: '/'})
+                root_entry = iso.get_record(**{pathname: "/"})
 
                 # Iterate through ISO file tree
                 dirs = collections.deque([root_entry])
                 while dirs:
                     dir_record = dirs.popleft()
-                    ident_to_here = iso.full_path_from_dirrecord(dir_record,
-                                                                 rockridge=pathname == 'rr_path')
+                    ident_to_here = iso.full_path_from_dirrecord(
+                        dir_record, rockridge=pathname == "rr_path"
+                    )
                     if dir_record.is_dir():
                         # Try to get hidden files, not applicable to all iso types
                         try:
                             if dir_record.file_flags == 3:
-                                self.event['hidden_dirs'].append(ident_to_here)
+                                self.event["hidden_dirs"].append(ident_to_here)
 
                         except strelka.ScannerTimeout:
                             raise
@@ -73,17 +87,26 @@ class ScanIso(strelka.Scanner):
                     else:
                         try:
                             # Collect File Metadata
-                            self.event['files'].append({'filename': ident_to_here,
-                                                        'size': iso.get_record(**{pathname: ident_to_here}).data_length,
-                                                        'date_utc': self._datetime_from_iso_date(
-                                                            iso.get_record(**{pathname: ident_to_here}).date)})
+                            self.event["files"].append(
+                                {
+                                    "filename": ident_to_here,
+                                    "size": iso.get_record(
+                                        **{pathname: ident_to_here}
+                                    ).data_length,
+                                    "date_utc": self._datetime_from_iso_date(
+                                        iso.get_record(**{pathname: ident_to_here}).date
+                                    ),
+                                }
+                            )
 
                             # Extract ISO Files (If Below Option Limit)
-                            if self.event['total']['extracted'] < file_limit:
+                            if self.event["total"]["extracted"] < file_limit:
                                 try:
-                                    self.event['total']['files'] += 1
+                                    self.event["total"]["files"] += 1
                                     file_io = io.BytesIO()
-                                    iso.get_file_from_iso_fp(file_io, **{pathname: ident_to_here})
+                                    iso.get_file_from_iso_fp(
+                                        file_io, **{pathname: ident_to_here}
+                                    )
 
                                     file_io.seek(0)
                                     extract_data = file_io.read()
@@ -91,20 +114,20 @@ class ScanIso(strelka.Scanner):
                                     # Send extracted file back to Strelka
                                     self.emit_file(extract_data, name=ident_to_here)
 
-                                    self.event['total']['extracted'] += 1
+                                    self.event["total"]["extracted"] += 1
                                 except strelka.ScannerTimeout:
                                     raise
                                 except Exception as e:
-                                    self.flags.append(f'iso_extract_error: {e}')
+                                    self.flags.append(f"iso_extract_error: {e}")
                         except strelka.ScannerTimeout:
                             raise
                         except Exception:
-                            self.flags.append('iso_read_error')
+                            self.flags.append("iso_read_error")
                 iso.close()
         except strelka.ScannerTimeout:
             raise
         except Exception:
-            self.flags.append('iso_read_error')
+            self.flags.append("iso_read_error")
 
     @staticmethod
     def _datetime_from_volume_date(volume_date):
@@ -125,7 +148,7 @@ class ScanIso(strelka.Scanner):
                 minute,
                 second,
             )
-            return dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+            return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
         except strelka.ScannerTimeout:
             raise
         except Exception:
@@ -160,7 +183,7 @@ class ScanIso(strelka.Scanner):
                     iso_date.minute,
                     iso_date.second,
                 )
-                dt = dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+                dt = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
             except strelka.ScannerTimeout:
                 raise
             except Exception:

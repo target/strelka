@@ -1,6 +1,7 @@
 # Authors: Ryan Borre
 
 import re
+
 from openpyxl import load_workbook
 
 
@@ -8,7 +9,7 @@ class XLSMWrapper:
     def __init__(self, file_path):
         try:
             self.workbook = load_workbook(file_path, read_only=False, keep_vba=True)
-        except Exception as e:
+        except Exception:
             return
 
     def get_defined_names(self):
@@ -36,7 +37,7 @@ class XLSMWrapper:
                             formulas.append(
                                 {"cell": cell.coordinate, "value": cell.value}
                             )
-                            if re.match("^=?\w+?\(\)$", cell.value):
+                            if re.match(r"^=?\w+?\(\)$", cell.value):
                                 worksheet = self.workbook[sheet]
                                 worksheet[cell.coordinate] = ""
                         elif cell.data_type == "n":

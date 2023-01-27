@@ -1,7 +1,7 @@
 from pathlib import Path
-from pytest_unordered import unordered
 from unittest import TestCase, mock
 
+from pytest_unordered import unordered
 from strelka.scanners.scan_pcap import ScanPcap as ScanUnderTest
 from strelka.tests import run_test_scan
 
@@ -84,7 +84,7 @@ def test_scan_pcap(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.pcap",
-        options={"scanner_timeout": 20}
+        options={"scanner_timeout": 20},
     )
 
     TestCase.maxDiff = None
@@ -169,7 +169,7 @@ def test_scan_pcap_ng(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.pcapng",
-        options={"scanner_timeout": 20}
+        options={"scanner_timeout": 20},
     )
 
     TestCase.maxDiff = None

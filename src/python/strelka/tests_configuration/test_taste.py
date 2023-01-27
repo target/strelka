@@ -1,18 +1,20 @@
 import os
+from pathlib import Path
+from unittest import TestCase
+
+import pytest
 import redis
 import yaml
-import pytest
-
-from pathlib import Path
-from unittest import TestCase, mock
 
 from strelka import strelka
-
 
 taste_expectations: dict = {
     "test.7z": {"mime": ["application/x-7z-compressed"], "yara": ["_7zip_file"]},
     "test.b64": {"mime": ["text/plain"], "yara": []},  # FIXME: No file-specific match
-    "test.bat": {"mime": ["text/x-msdos-batch"], "yara": []},  # FIXME: Not in backend.cfg
+    "test.bat": {
+        "mime": ["text/x-msdos-batch"],
+        "yara": [],
+    },  # FIXME: Not in backend.cfg
     "test.bz2": {"mime": ["application/x-bzip2"], "yara": ["bzip2_file"]},
     "test.cpio": {"mime": ["application/x-cpio"], "yara": []},
     "test.deb": {
@@ -47,7 +49,10 @@ taste_expectations: dict = {
         "yara": ["olecf_file"],
     },  # TODO: CDF format needs subtypes
     "test.pcap": {"mime": ["application/vnd.tcpdump.pcap"], "yara": ["pcap_file"]},
-    "test.pcapng": {"mime": ["application/octet-stream"], "yara": []},  # FIXME: pcapng_file broken
+    "test.pcapng": {
+        "mime": ["application/octet-stream"],
+        "yara": [],
+    },  # FIXME: pcapng_file broken
     "test.pdf": {"mime": ["application/pdf"], "yara": ["pdf_file"]},
     "test.pem": {"mime": ["text/plain"], "yara": ["x509_pem_file"]},
     "test.plist": {"mime": ["text/xml"], "yara": ["plist_file", "xml_file"]},
@@ -56,13 +61,19 @@ taste_expectations: dict = {
     "test.tar": {"mime": ["application/x-tar"], "yara": ["tar_file"]},
     "test.txt": {"mime": ["text/plain"], "yara": []},
     "test.txt.asc": {"mime": ["text/PGP"], "yara": ["pgp_file"]},
-    "test.txt.gpg": {"mime": ["application/octet-stream"], "yara": []},  # FIXME: Need binary PGP yara signature
+    "test.txt.gpg": {
+        "mime": ["application/octet-stream"],
+        "yara": [],
+    },  # FIXME: Need binary PGP yara signature
     "test.url": {"mime": ["text/plain"], "yara": []},
     "test.vhd": {"mime": ["application/octet-stream"], "yara": ["vhd_file"]},
     "test.vhdx": {"mime": ["application/octet-stream"], "yara": ["vhdx_file"]},
     "test.webp": {"mime": ["image/webp"], "yara": []},
     "test.xar": {"mime": ["application/x-xar"], "yara": ["xar_file"]},
-    "test.xls": {"mime": ["application/vnd.ms-excel"], "yara": ["excel4_file", "olecf_file"]},
+    "test.xls": {
+        "mime": ["application/vnd.ms-excel"],
+        "yara": ["excel4_file", "olecf_file"],
+    },
     "test.xml": {"mime": ["text/xml"], "yara": ["xml_file"]},
     "test.xz": {"mime": ["application/x-xz"], "yara": ["xz_file"]},
     "test.yara": {"mime": ["text/plain"], "yara": []},
@@ -85,22 +96,34 @@ taste_expectations: dict = {
         "mime": ["application/json"],
         "yara": ["browser_manifest", "json_file"],
     },
-    "test_password.7z": {"mime": ["application/x-7z-compressed"], "yara": ["_7zip_file"]},
+    "test_password.7z": {
+        "mime": ["application/x-7z-compressed"],
+        "yara": ["_7zip_file"],
+    },
     "test_password.doc": {"mime": ["application/msword"], "yara": ["olecf_file"]},
     "test_password.docx": {
         "mime": ["application/encrypted"],
         "yara": ["encrypted_word_document", "olecf_file"],
     },
-    "test_password_brute.7z": {"mime": ["application/x-7z-compressed"], "yara": ["_7zip_file"]},
+    "test_password_brute.7z": {
+        "mime": ["application/x-7z-compressed"],
+        "yara": ["_7zip_file"],
+    },
     "test_password_brute.doc": {"mime": ["application/msword"], "yara": ["olecf_file"]},
     "test_password_brute.docx": {
         "mime": ["application/encrypted"],
         "yara": ["encrypted_word_document", "olecf_file"],
     },
-    "test_password_filenames.7z": {"mime": ["application/x-7z-compressed"], "yara": ["_7zip_file"]},
+    "test_password_filenames.7z": {
+        "mime": ["application/x-7z-compressed"],
+        "yara": ["_7zip_file"],
+    },
     "test_pe.b64": {"mime": ["text/plain"], "yara": ["base64_pe"]},
     "test_pe_object.doc": {"mime": ["application/msword"], "yara": ["olecf_file"]},
-    "test_pe_object_classic.doc": {"mime": ["application/msword"], "yara": ["olecf_file"]},
+    "test_pe_object_classic.doc": {
+        "mime": ["application/msword"],
+        "yara": ["olecf_file"],
+    },
     "test_pe_overlay.bmp": {"mime": ["image/bmp"], "yara": ["bmp_file"]},
     "test_pe_overlay.jpg": {"mime": ["image/jpeg"], "yara": ["jpeg_file"]},
     "test_pe_overlay.png": {"mime": ["image/png"], "yara": ["png_file"]},
@@ -134,7 +157,9 @@ taste_expectations: dict = {
 }
 
 
-@pytest.mark.parametrize("fixture_path,expected", [(k, v) for k, v in taste_expectations.items()])
+@pytest.mark.parametrize(
+    "fixture_path,expected", [(k, v) for k, v in taste_expectations.items()]
+)
 def test_fixture_taste_output(fixture_path, expected) -> None:
     """
     Pass: All test fixtures match the given yara and mime matches.
@@ -144,7 +169,9 @@ def test_fixture_taste_output(fixture_path, expected) -> None:
     if os.path.exists("/etc/strelka/backend.yaml"):
         backend_cfg_path: str = "/etc/strelka/backend.yaml"
     else:
-        backend_cfg_path: str = Path(Path(__file__).parent / "../../../../configs/python/backend/backend.yaml")
+        backend_cfg_path: str = Path(
+            Path(__file__).parent / "../../../../configs/python/backend/backend.yaml"
+        )
 
     with open(backend_cfg_path, "r") as f:
         backend_cfg = yaml.safe_load(f.read())
@@ -174,4 +201,8 @@ def test_taste_required() -> None:
     )
 
     for test_fixture in test_fixtures:
-        TestCase().assertIn(os.path.basename(test_fixture), taste_expectations.keys(), msg="Fixture does not have a taste expectation")
+        TestCase().assertIn(
+            os.path.basename(test_fixture),
+            taste_expectations.keys(),
+            msg="Fixture does not have a taste expectation",
+        )

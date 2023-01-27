@@ -82,7 +82,9 @@ class ScanDmg(strelka.Scanner):
                             continue
 
                         # Skip duplicate files created with these extended attributes
-                        if str(name).endswith(":com.apple.quarantine") or str(name).endswith(":com.apple.FinderInfo"):
+                        if str(name).endswith(":com.apple.quarantine") or str(
+                            name
+                        ).endswith(":com.apple.FinderInfo"):
                             continue
 
                         if self.event["total"]["extracted"] >= file_limit:
@@ -235,7 +237,7 @@ class ScanDmg(strelka.Scanner):
                                 continue
 
                             # No DMG sample available has a file property of hidden
-                            #if "hidden" in modes_list and "directory" in modes_list:
+                            # if "hidden" in modes_list and "directory" in modes_list:
                             #    self.event["hidden_dirs"].append(match.group("name"))
 
                             if "directory" not in modes_list:

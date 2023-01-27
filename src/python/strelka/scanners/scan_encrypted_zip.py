@@ -1,9 +1,10 @@
-import subprocess
-import tempfile
 import io
 import os
-import pyzipper
+import subprocess
+import tempfile
 import zlib
+
+import pyzipper
 
 from strelka import strelka
 
@@ -176,11 +177,13 @@ class ScanEncryptedZip(strelka.Scanner):
                                 if extract_data:
 
                                     # Send extracted file back to Strelka
-                                    self.emit_file(extract_data, name=file_item.filename)
+                                    self.emit_file(
+                                        extract_data, name=file_item.filename
+                                    )
 
                                     self.event["total"]["extracted"] += 1
 
-                            except NotImplementedError as e:
+                            except NotImplementedError:
                                 self.flags.append("unsupported_compression")
                             except RuntimeError:
                                 self.flags.append("runtime_error")

@@ -20,7 +20,7 @@ def test_scan_tlsh(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.txt",
-        options={"location": str(Path(Path(__file__).parent / "fixtures/test.yaml"))}
+        options={"location": str(Path(Path(__file__).parent / "fixtures/test.yaml"))},
     )
 
     TestCase.maxDiff = None

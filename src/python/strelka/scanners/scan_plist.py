@@ -12,13 +12,14 @@ class ScanPlist(strelka.Scanner):
         keys: plist key values to log in the event.
             Defaults to all.
     """
+
     def scan(self, data, file, options, expire_at):
-        keys = options.get('keys', [])
+        keys = options.get("keys", [])
 
         try:
             plist = plistlib.loads(data)
 
-            self.event['keys'] = []
+            self.event["keys"] = []
             for k, v in plist.items():
                 if keys and k not in keys:
                     continue
@@ -28,9 +29,11 @@ class ScanPlist(strelka.Scanner):
                 except (ValueError, SyntaxError):
                     pass
 
-                self.event['keys'].append({
-                    'key': k,
-                    'value': v,
-                })
+                self.event["keys"].append(
+                    {
+                        "key": k,
+                        "value": v,
+                    }
+                )
         except xml.parsers.expat.ExpatError:
-            self.flags.append('invalid_format')
+            self.flags.append("invalid_format")

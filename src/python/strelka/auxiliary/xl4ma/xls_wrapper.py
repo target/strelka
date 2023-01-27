@@ -1,9 +1,10 @@
 # Authors: Ryan Borre
 
-import xlrd
-import xlrd2
 from enum import Enum
 from os import devnull
+
+import xlrd
+import xlrd2
 
 
 class VISIBILITY(Enum):
@@ -73,7 +74,7 @@ class XLSWrapper:
                                     .value,
                                 }
                             )
-                    except:
+                    except Exception:
                         pass
 
             results["sheets"].append(
