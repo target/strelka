@@ -24,4 +24,4 @@ jobs:
         run: |
           python -m black --extend-exclude .*_pb2.*\.py --check --diff src/python
           python -m flake8 --exclude src/python/build/,src/python/strelka/proto/ src/python
-          python -m isort --profile black --check-only src/python
+          python -m isort --extend-skip-glob *_pb2*.py --profile black --check-only src/python
