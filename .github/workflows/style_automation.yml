@@ -1,12 +1,12 @@
 ---
-version: '1'
+name: Style Automation
 on:
   push:
   pull_request:
-    branches: [master]
+    branches:
+      - master
 jobs:
-  strelka:
-    name: Style Automation
+  style:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
