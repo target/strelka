@@ -311,6 +311,7 @@ scanners:
       priority: 5
       options:
         beautify: True
+        max_strings: 50
   'ScanJpeg':
     - positive:
         flavors:
