@@ -1,14 +1,20 @@
 ---
-version: "1"
-
-steps:
-  - name: python checks
-    image: python:3.10
-    commands:
-      - python -m venv /tmp/.venv
-      - . /tmp/.venv/bin/activate
-      - pip install -r src/python/requirements.txt
-      - python -m black --check --diff .
-      - python -m mypy .
-      - python -m flake8 .
-      - python -m isort --check-only .
+version: '1'
+on:
+  push:
+  pull_request:
+    branches: [master]
+jobs:
+  strelka:
+    name: Style Automation
+    steps:
+      - name: python checks
+        image: python:3.10
+        commands:
+          - python -m venv /tmp/.venv
+          - . /tmp/.venv/bin/activate
+          - pip install -r src/python/requirements.txt
+          - python -m black --check --diff .
+          - python -m mypy .
+          - python -m flake8 .
+          - python -m isort --check-only .
