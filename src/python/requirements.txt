@@ -9,7 +9,7 @@ docker==5.0.0
 eml-parser>=1.17
 esprima==4.0.1
 flare-capa==4.0.1
-formulas==1.2.2
+formulas==1.2.6
 git+https://github.com/jshlbrd/python-entropy.git   # v0.11 as of this freeze (package installed as 'entropy')
 grpcio-tools==1.42.0
 grpcio==1.42.0
@@ -49,6 +49,7 @@ rarfile==4.0
 redis==3.5.3
 requests==2.25.1
 rpmfile==1.0.8
+schedula==1.4.9
 signify==0.4.0
 speakeasy-emulator==1.5.2
 ssdeep==3.4

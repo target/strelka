@@ -62,9 +62,11 @@ taste_expectations: dict = {
     "test.vhdx": {"mime": ["application/octet-stream"], "yara": ["vhdx_file"]},
     "test.webp": {"mime": ["image/webp"], "yara": []},
     "test.xar": {"mime": ["application/x-xar"], "yara": ["xar_file"]},
+    "test.xls": {"mime": ["application/vnd.ms-excel"], "yara": ["excel4_file", "olecf_file"]},
     "test.xml": {"mime": ["text/xml"], "yara": ["xml_file"]},
     "test.xz": {"mime": ["application/x-xz"], "yara": ["xz_file"]},
     "test.yara": {"mime": ["text/plain"], "yara": []},
+    "test.yaml": {"mime": ["text/plain"], "yara": []},
     "test.zip": {"mime": ["application/zip"], "yara": ["zip_file"]},
     "test_aes256_password.zip": {
         "mime": ["application/zip"],
@@ -74,6 +76,7 @@ taste_expectations: dict = {
     "test_classic.doc": {"mime": ["application/msword"], "yara": ["olecf_file"]},
     "test_embed_rar.jpg": {"mime": ["image/jpeg"], "yara": ["jpeg_file"]},
     "test_embed_rar.png": {"mime": ["image/png"], "yara": ["png_file"]},
+    "test_hyperlinks.html": {"mime": ["text/html"], "yara": ["html_file"]},
     "test_lzx.cab": {
         "mime": ["application/vnd.ms-cab-compressed"],
         "yara": ["cab_file"],

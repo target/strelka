@@ -267,6 +267,7 @@ scanners:
       priority: 5
       options:
         parser: "html5lib"
+        max_hyperlinks: 50
 #  'ScanIni':
 #    - positive:
 #        filename: '(\.([Cc][Ff][Gg]|[Ii][Nn][Ii])|PROJECT)$'
@@ -311,6 +312,7 @@ scanners:
       priority: 5
       options:
         beautify: True
+        max_strings: 50
   'ScanJpeg':
     - positive:
         flavors:
@@ -378,8 +380,9 @@ scanners:
   'ScanMsi':
     - positive:
         flavors:
-          - 'image/vnd.fpx'
-          - 'application/x-msi'
+          - "image/vnd.fpx"
+          - "application/vnd.ms-msi"
+          - "application/x-msi"
       priority: 5
       options:
         tmp_directory: '/dev/shm/'

@@ -6,7 +6,6 @@ import os
 
 
 class Interpreter:
-
     def __init__(self, defined_names):
         self.results = set()
         self.defined_names = defined_names
@@ -41,21 +40,27 @@ class Interpreter:
     def eval_formula(self, args):
         if len(args) == 2:
             x, y = args
-            if isinstance(x, formulas.ranges.Ranges) and isinstance(y, formulas.functions.Array):
+            if isinstance(x, formulas.ranges.Ranges) and isinstance(
+                y, formulas.functions.Array
+            ):
                 # y[0][0] = x.value[0][0]
-                y[0][0] = str(x.value[0][0]).replace('"&"', '')
+                y[0][0] = str(x.value[0][0]).replace('"&"', "")
                 self.results.add(y[0][0])
                 return y[0][0]
 
-            if isinstance(x, formulas.functions.Array) and isinstance(y, formulas.ranges.Ranges):
+            if isinstance(x, formulas.functions.Array) and isinstance(
+                y, formulas.ranges.Ranges
+            ):
                 # y.value[0][0] = x[0][0]
-                y.value[0][0] = str(x[0][0]).replace('"&"', '')
+                y.value[0][0] = str(x[0][0]).replace('"&"', "")
                 self.results.add(y.value[0][0])
                 return y.value[0][0]
 
-            if isinstance(x, formulas.ranges.Ranges) and isinstance(y, formulas.ranges.Ranges):
+            if isinstance(x, formulas.ranges.Ranges) and isinstance(
+                y, formulas.ranges.Ranges
+            ):
                 # y.value[0][0] = x.value[0][0]
-                y.value[0][0] = str(x.value[0][0]).replace('"&"', '')
+                y.value[0][0] = str(x.value[0][0]).replace('"&"', "")
                 self.results.add(y.value[0][0])
                 return y.value[0][0]
 
@@ -71,7 +76,7 @@ class Interpreter:
 
     def eval_set_name(self, args):
         name, arg = args
-        self.results.add(str(arg).replace('^', ''))
+        self.results.add(str(arg).replace("^", ""))
         return arg
 
     def eval_custom(self, args, name=""):
@@ -85,7 +90,7 @@ class Interpreter:
                 if isinstance(arg.tolist(), str):
                     func_args.append(arg.tolist())
             if isinstance(arg, str):
-                func_args.append(str(arg).replace('^', ''))
+                func_args.append(str(arg).replace("^", ""))
             if isinstance(arg, int):
                 func_args.append(str(arg))
             if isinstance(arg, float):
@@ -104,43 +109,45 @@ class Interpreter:
 
     def calculate(self, temp_file):
         FUNCTIONS = formulas.get_functions()
-        FUNCTIONS['ALERT'] = lambda *args: None
-        FUNCTIONS['ARGUMENT'] = lambda *args: None
-        FUNCTIONS['BEEP'] = lambda *args: None
-        FUNCTIONS['_XLFN.BITXOR'] = lambda *args: args[0] ^ args[1]
-        FUNCTIONS['CALL'] = lambda *args: self.eval_call(args, 'CALL')
-        FUNCTIONS['CHAR'] = lambda x: self.eval_char(x)
-        FUNCTIONS['CLOSE'] = lambda *args: None
-        FUNCTIONS['COUNTBLANK'] = lambda *args: None
-        FUNCTIONS['DOCUMENTS'] = lambda *args: None
-        FUNCTIONS['ECHO'] = lambda *args: None
-        FUNCTIONS['END.IF'] = lambda *args: None
-        FUNCTIONS['ERROR'] = lambda *args: None
-        FUNCTIONS['EXEC'] = lambda *args: self.eval_custom(args, 'EXEC')
-        FUNCTIONS['FORMULA'] = lambda *args: self.eval_formula(args)
-        FUNCTIONS['FORMULA.ARRAY'] = lambda *args: self.eval_formula(args)
-        FUNCTIONS['FORMULA.CONVERT'] = lambda *args: None
-        FUNCTIONS['FORMULA.FILL'] = lambda *args: self.eval_formula(args)
-        FUNCTIONS['GET.DOCUMENT'] = lambda *args: None
-        FUNCTIONS['GET.NAME'] = lambda *args: None
-        FUNCTIONS['GET.WORKSPACE'] = lambda *args: None
-        FUNCTIONS['HALT'] = lambda *args: None
-        FUNCTIONS['OPEN'] = lambda *args: None
-        FUNCTIONS['REGISTER'] = lambda *args: self.eval_custom(args, 'REGISTER')
-        FUNCTIONS['RESULT'] = lambda *args: None
-        FUNCTIONS['RETURN'] = lambda *args: None
-        FUNCTIONS['RUN'] = lambda *args: self.eval_run(args)
-        FUNCTIONS['SET.NAME'] = lambda *args: self.eval_set_name(args)
-        FUNCTIONS['SUBSTITUTE'] = lambda *args: None
-        FUNCTIONS['T'] = lambda x: x
-        FUNCTIONS['TEXT'] = lambda x, y: x
-        FUNCTIONS['WAIT'] = lambda *args: None
-        FUNCTIONS['WINDOW.MINIMIZE'] = lambda *args: None
-        FUNCTIONS['WORKBOOK.HIDE'] = lambda *args: None
+        FUNCTIONS["ALERT"] = lambda *args: None
+        FUNCTIONS["ARGUMENT"] = lambda *args: None
+        FUNCTIONS["BEEP"] = lambda *args: None
+        FUNCTIONS["_XLFN.BITXOR"] = lambda *args: args[0] ^ args[1]
+        FUNCTIONS["CALL"] = lambda *args: self.eval_call(args, "CALL")
+        FUNCTIONS["CHAR"] = lambda x: self.eval_char(x)
+        FUNCTIONS["CLOSE"] = lambda *args: None
+        FUNCTIONS["COUNTBLANK"] = lambda *args: None
+        FUNCTIONS["DOCUMENTS"] = lambda *args: None
+        FUNCTIONS["ECHO"] = lambda *args: None
+        FUNCTIONS["END.IF"] = lambda *args: None
+        FUNCTIONS["ERROR"] = lambda *args: None
+        FUNCTIONS["EXEC"] = lambda *args: self.eval_custom(args, "EXEC")
+        FUNCTIONS["FORMULA"] = lambda *args: self.eval_formula(args)
+        FUNCTIONS["FORMULA.ARRAY"] = lambda *args: self.eval_formula(args)
+        FUNCTIONS["FORMULA.CONVERT"] = lambda *args: None
+        FUNCTIONS["FORMULA.FILL"] = lambda *args: self.eval_formula(args)
+        FUNCTIONS["GET.DOCUMENT"] = lambda *args: None
+        FUNCTIONS["GET.NAME"] = lambda *args: None
+        FUNCTIONS["GET.WORKSPACE"] = lambda *args: None
+        FUNCTIONS["HALT"] = lambda *args: None
+        FUNCTIONS["OPEN"] = lambda *args: None
+        FUNCTIONS["REGISTER"] = lambda *args: self.eval_custom(args, "REGISTER")
+        FUNCTIONS["RESULT"] = lambda *args: None
+        FUNCTIONS["RETURN"] = lambda *args: None
+        FUNCTIONS["RUN"] = lambda *args: self.eval_run(args)
+        FUNCTIONS["SET.NAME"] = lambda *args: self.eval_set_name(args)
+        FUNCTIONS["SUBSTITUTE"] = lambda *args: None
+        FUNCTIONS["T"] = lambda x: x
+        FUNCTIONS["TEXT"] = lambda x, y: x
+        FUNCTIONS["WAIT"] = lambda *args: None
+        FUNCTIONS["WINDOW.MINIMIZE"] = lambda *args: None
+        FUNCTIONS["WORKBOOK.HIDE"] = lambda *args: None
 
         for name in self.defined_names:
             if name.upper() not in FUNCTIONS:
-                FUNCTIONS[name.upper()] = lambda *args: self.eval_custom(args, name=name)
+                FUNCTIONS[name.upper()] = lambda *args: self.eval_custom(
+                    args, name=name
+                )
 
         try:
             xl_model = formulas.ExcelModel().loads(temp_file.name).finish()
