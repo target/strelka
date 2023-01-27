@@ -76,6 +76,7 @@ taste_expectations: dict = {
     "test_classic.doc": {"mime": ["application/msword"], "yara": ["olecf_file"]},
     "test_embed_rar.jpg": {"mime": ["image/jpeg"], "yara": ["jpeg_file"]},
     "test_embed_rar.png": {"mime": ["image/png"], "yara": ["png_file"]},
+    "test_hyperlinks.html": {"mime": ["text/html"], "yara": ["html_file"]},
     "test_lzx.cab": {
         "mime": ["application/vnd.ms-cab-compressed"],
         "yara": ["cab_file"],
