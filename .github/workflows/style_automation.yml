@@ -22,9 +22,6 @@ jobs:
 
       - name: Code quality checks
         run: |
-          python -m venv /tmp/.venv
-          . /tmp/.venv/bin/activate
-          pip
           python -m black --check --diff .
           python -m mypy .
           python -m flake8 .
