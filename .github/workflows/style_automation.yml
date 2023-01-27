@@ -9,12 +9,22 @@ jobs:
     name: Style Automation
     runs-on: ubuntu-latest
     steps:
-      - name: python checks
-        image: python:3.10
-        commands:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.10
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r src/python/requirements.txt
+
+      - name: Code quality checks
+        run: |
           - python -m venv /tmp/.venv
           - . /tmp/.venv/bin/activate
-          - pip install -r src/python/requirements.txt
+          - pip
           - python -m black --check --diff .
           - python -m mypy .
           - python -m flake8 .
