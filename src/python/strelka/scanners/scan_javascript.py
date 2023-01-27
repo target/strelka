@@ -15,7 +15,7 @@ class ScanJavascript(strelka.Scanner):
 
     def scan(self, data, file, options, expire_at):
         beautify = options.get("beautify", True)
-        limits = options.get("limits", 50)
+        max_strings = options.get("max_strings", 50)
 
         self.event.setdefault("tokens", set())
         self.event.setdefault("keywords", set())
@@ -68,12 +68,12 @@ class ScanJavascript(strelka.Scanner):
                     if t.value not in self.event["regular_expressions"]:
                         self.event["regular_expressions"].add(t.value)
 
-            self.event["tokens"] = list(self.event["tokens"])[:limits]
-            self.event["keywords"] = list(self.event["keywords"])[:limits]
-            self.event["strings"] = list(self.event["strings"])[:limits]
-            self.event["identifiers"] = list(self.event["identifiers"])[:limits]
+            self.event["tokens"] = list(self.event["tokens"])[:max_strings]
+            self.event["keywords"] = list(self.event["keywords"])[:max_strings]
+            self.event["strings"] = list(self.event["strings"])[:max_strings]
+            self.event["identifiers"] = list(self.event["identifiers"])[:max_strings]
             self.event["regular_expressions"] = list(self.event["regular_expressions"])[
-                :limits
+                :max_strings
             ]
         except strelka.ScannerTimeout:
             raise

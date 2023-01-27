@@ -127,7 +127,7 @@ def test_scan_javascript(mocker):
     TestCase().assertDictEqual(test_scan_event, scanner_event)
 
 
-def test_scan_javascript_character_limits(mocker):
+def test_scan_javascript_character_max_strings(mocker):
     """
     Pass: Sample event matches output of scanner.
     Failure: Unable to load file or sample event fails to match.
@@ -155,7 +155,7 @@ def test_scan_javascript_character_limits(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.js",
-        options={"limits": 5},
+        options={"max_strings": 5},
     )
 
     TestCase.maxDiff = None
