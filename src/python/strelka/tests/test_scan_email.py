@@ -1,7 +1,7 @@
 from pathlib import Path
-from pytest_unordered import unordered
 from unittest import TestCase, mock
 
+from pytest_unordered import unordered
 from strelka.scanners.scan_email import ScanEmail as ScanUnderTest
 from strelka.tests import run_test_scan
 

@@ -1,6 +1,14 @@
 import uuid
-from strelka.cstructs.lnk import ShellLinkHeader, LinkTargetIDList, LinkInfo, CommonNetworkRelativeLink, ExtraData
-from construct import Struct, Int16ul, Bytes, StringEncoded, this, IfThenElse
+
+from construct import Bytes, IfThenElse, Int16ul, StringEncoded, Struct, this
+from strelka.cstructs.lnk import (
+    CommonNetworkRelativeLink,
+    ExtraData,
+    LinkInfo,
+    LinkTargetIDList,
+    ShellLinkHeader,
+)
+
 from strelka import strelka
 
 
@@ -24,16 +32,19 @@ class ScanLNK(strelka.Scanner):
             if header.LinkFlags.HasLinkInfo:
                 linkinfo = LinkInfo.parse(data[offset:])
                 if linkinfo.VolumeID.DriveType:
-                    self.event['drive_type'] = linkinfo.VolumeID.DriveType
+                    self.event["drive_type"] = linkinfo.VolumeID.DriveType
                 if linkinfo.VolumeID.DriveSerialNumber:
-                    self.event["drive_serial_number"] = '{0:x}'.format(linkinfo.VolumeID.DriveSerialNumber)
+                    self.event["drive_serial_number"] = "{0:x}".format(
+                        linkinfo.VolumeID.DriveSerialNumber
+                    )
                 if linkinfo.VolumeID.Data:
                     self.event["volume_label"] = linkinfo.VolumeID.Data
                 if linkinfo.LocalBasePath:
                     self.event["local_base_path"] = linkinfo.LocalBasePath
                 if linkinfo.CommonNetworkRelativeLink:
                     commonnetworkrelativelink = CommonNetworkRelativeLink.parse(
-                        data[offset + linkinfo.CommonNetworkRelativeLinkOffset:])
+                        data[offset + linkinfo.CommonNetworkRelativeLinkOffset :]
+                    )
                     self.event["net_name"] = commonnetworkrelativelink.NetName
                 offset += linkinfo.LinkInfoSize
         except strelka.ScannerTimeout:
@@ -43,8 +54,12 @@ class ScanLNK(strelka.Scanner):
 
         StringData = "StringData" / Struct(
             "CountCharacters" / Int16ul,
-            "String" / IfThenElse(header.LinkFlags.IsUnicode, StringEncoded(Bytes(this.CountCharacters * 2), "utf16"),
-                                  StringEncoded(Bytes(this.CountCharacters), "utf8"))
+            "String"
+            / IfThenElse(
+                header.LinkFlags.IsUnicode,
+                StringEncoded(Bytes(this.CountCharacters * 2), "utf16"),
+                StringEncoded(Bytes(this.CountCharacters), "utf8"),
+            ),
         )
 
         try:
@@ -52,9 +67,9 @@ class ScanLNK(strelka.Scanner):
                 NAME_STRING = StringData.parse(data[offset:])
                 self.event["name_string"] = NAME_STRING.String
                 if header.LinkFlags.IsUnicode:
-                    offset += (len(NAME_STRING.String) * 2 + 2)
+                    offset += len(NAME_STRING.String) * 2 + 2
                 else:
-                    offset += (len(NAME_STRING.String) + 2)
+                    offset += len(NAME_STRING.String) + 2
         except strelka.ScannerTimeout:
             raise
         except Exception:
@@ -65,9 +80,9 @@ class ScanLNK(strelka.Scanner):
                 RELATIVE_PATH = StringData.parse(data[offset:])
                 self.event["relative_path"] = RELATIVE_PATH.String
                 if header.LinkFlags.IsUnicode:
-                    offset += (len(RELATIVE_PATH.String) * 2 + 2)
+                    offset += len(RELATIVE_PATH.String) * 2 + 2
                 else:
-                    offset += (len(RELATIVE_PATH.String) + 2)
+                    offset += len(RELATIVE_PATH.String) + 2
         except strelka.ScannerTimeout:
             raise
         except Exception:
@@ -78,9 +93,9 @@ class ScanLNK(strelka.Scanner):
                 WORKING_DIR = StringData.parse(data[offset:])
                 self.event["working_dir"] = WORKING_DIR.String
                 if header.LinkFlags.IsUnicode:
-                    offset += (len(WORKING_DIR.String) * 2 + 2)
+                    offset += len(WORKING_DIR.String) * 2 + 2
                 else:
-                    offset += (len(WORKING_DIR.String) + 2)
+                    offset += len(WORKING_DIR.String) + 2
         except strelka.ScannerTimeout:
             raise
         except Exception:
@@ -91,9 +106,9 @@ class ScanLNK(strelka.Scanner):
                 COMMAND_LINE_ARGUMENTS = StringData.parse(data[offset:])
                 self.event["command_line_args"] = COMMAND_LINE_ARGUMENTS.String
                 if header.LinkFlags.IsUnicode:
-                    offset += (len(COMMAND_LINE_ARGUMENTS.String) * 2 + 2)
+                    offset += len(COMMAND_LINE_ARGUMENTS.String) * 2 + 2
                 else:
-                    offset += (len(COMMAND_LINE_ARGUMENTS.String) + 2)
+                    offset += len(COMMAND_LINE_ARGUMENTS.String) + 2
         except strelka.ScannerTimeout:
             raise
         except Exception:
@@ -104,9 +119,9 @@ class ScanLNK(strelka.Scanner):
                 ICON_LOCATION = StringData.parse(data[offset:])
                 self.event["icon_location"] = ICON_LOCATION.String
                 if header.LinkFlags.IsUnicode:
-                    offset += (len(ICON_LOCATION.String) * 2 + 2)
+                    offset += len(ICON_LOCATION.String) * 2 + 2
                 else:
-                    offset += (len(ICON_LOCATION.String) + 2)
+                    offset += len(ICON_LOCATION.String) + 2
         except strelka.ScannerTimeout:
             raise
         except Exception:
@@ -125,15 +140,21 @@ class ScanLNK(strelka.Scanner):
 
                 try:
                     if extradata.IconEnvironmentDataBlock:
-                        self.event["icon_target"] = extradata.IconEnvironmentDataBlock.TargetAnsi
+                        self.event[
+                            "icon_target"
+                        ] = extradata.IconEnvironmentDataBlock.TargetAnsi
                 except strelka.ScannerTimeout:
                     raise
                 except Exception:
                     self.flags.append("Unable to parse IconEnvironmentDataBlock")
 
                 if extradata.TrackerDataBlock:
-                    self.event["machine_id"] = extradata.TrackerDataBlock.MachineID.strip(b'\x00')
-                    self.event["mac"] = str(uuid.UUID(bytes_le=extradata.TrackerDataBlock.Droid[16:])).split('-')[-1]
+                    self.event[
+                        "machine_id"
+                    ] = extradata.TrackerDataBlock.MachineID.strip(b"\x00")
+                    self.event["mac"] = str(
+                        uuid.UUID(bytes_le=extradata.TrackerDataBlock.Droid[16:])
+                    ).split("-")[-1]
 
                 offset += extradata.BlockSize
 

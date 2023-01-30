@@ -13,9 +13,7 @@ def test_scan_delay(mocker):
     test_scan_event = {"elapsed": mock.ANY, "flags": ["timed_out"]}
 
     scanner_event = run_test_scan(
-        mocker=mocker,
-        scan_class=ScanUnderTest,
-        options={"scanner_timeout": 1}
+        mocker=mocker, scan_class=ScanUnderTest, options={"scanner_timeout": 1}
     )
 
     TestCase.maxDiff = None

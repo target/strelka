@@ -11,10 +11,11 @@ class ScanTar(strelka.Scanner):
         limit: Maximum number of files to extract.
             Defaults to 1000.
     """
-    def scan(self, data, file, options, expire_at):
-        file_limit = options.get('limit', 1000)
 
-        self.event['total'] = {'files': 0, 'extracted': 0}
+    def scan(self, data, file, options, expire_at):
+        file_limit = options.get("limit", 1000)
+
+        self.event["total"] = {"files": 0, "extracted": 0}
 
         with io.BytesIO(data) as tar_io:
             try:
@@ -22,10 +23,10 @@ class ScanTar(strelka.Scanner):
                     tar_members = tar_obj.getmembers()
                     for tar_member in tar_members:
                         if not tar_member.isdir():
-                            self.event['total']['files'] += 1
+                            self.event["total"]["files"] += 1
                     for tar_member in tar_members:
                         if tar_member.isfile():
-                            if self.event['total']['extracted'] >= file_limit:
+                            if self.event["total"]["extracted"] >= file_limit:
                                 break
 
                             try:
@@ -33,12 +34,14 @@ class ScanTar(strelka.Scanner):
                                 if tar_file is not None:
 
                                     # Send extracted file back to Strelka
-                                    self.emit_file(tar_file.read(), name=tar_member.name)
+                                    self.emit_file(
+                                        tar_file.read(), name=tar_member.name
+                                    )
 
-                                    self.event['total']['extracted'] += 1
+                                    self.event["total"]["extracted"] += 1
 
                             except KeyError:
-                                self.flags.append('key_error')
+                                self.flags.append("key_error")
 
             except tarfile.ReadError:
-                self.flags.append('tarfile_read_error')
+                self.flags.append("tarfile_read_error")

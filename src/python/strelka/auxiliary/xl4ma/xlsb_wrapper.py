@@ -9,7 +9,7 @@ class XLSBWrapper:
     def __init__(self, file_path):
         try:
             self.workbook = open_workbook(file_path)
-        except Exception as e:
+        except Exception:
             return
 
     def get_defined_names(self):
@@ -54,7 +54,7 @@ class XLSBWrapper:
                                     "value": cell.value,
                                 }
                             )
-            except:
+            except Exception:
                 pass
             results["sheets"].append(
                 {

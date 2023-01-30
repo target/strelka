@@ -1,7 +1,8 @@
 import os
+
 import requests
-from requests.auth import HTTPBasicAuth
 import urllib3
+from requests.auth import HTTPBasicAuth
 
 from strelka import strelka
 
@@ -36,23 +37,21 @@ class ScanFalconSandbox(strelka.Scanner):
                                             100: ‘Windows 7 32 bit’
             Defaults to [100]
     """
+
     def init(self):
         self.api_key = None
         self.api_secret = None
-        self.server = ''
+        self.server = ""
         self.auth_check = False
         self.depth = 0
         self.env_id = [100]
 
     def submit_file(self, file, env_id):
-        url = self.server + '/api/submit'
+        url = self.server + "/api/submit"
         # TODO data is never referenced so this will crash
-        files = {'file': data}
+        files = {"file": None}  # data
 
-        data = {
-            'nosharevt': 1,
-            'environmentId': env_id,
-            'allowCommunityAccess': 1}
+        data = {"nosharevt": 1, "environmentId": env_id, "allowCommunityAccess": 1}
 
         try:
             response = requests.post(
@@ -62,40 +61,46 @@ class ScanFalconSandbox(strelka.Scanner):
                 verify=False,
                 files=files,
                 timeout=self.timeout,
-                headers={'User-Agent': 'VxApi CLI Connector'},
+                headers={"User-Agent": "VxApi CLI Connector"},
                 auth=(HTTPBasicAuth(self.api_key, self.api_secret)),
             )
 
-            if response.status_code == 200 and response.json()['response_code'] == 0:
-                sha256 = response.json()['response']['sha256']  # Successfully submitted file
-                self.event['sha256'] = sha256
+            if response.status_code == 200 and response.json()["response_code"] == 0:
+                sha256 = response.json()["response"][
+                    "sha256"
+                ]  # Successfully submitted file
+                self.event["sha256"] = sha256
 
-            elif response.status_code == 200 and response.json()['response_code'] == -1:
-                self.flags.append('duplicate_submission')  # Submission Failed - duplicate
+            elif response.status_code == 200 and response.json()["response_code"] == -1:
+                self.flags.append(
+                    "duplicate_submission"
+                )  # Submission Failed - duplicate
 
             else:
-                self.flags.append('upload_failed')  # Upload Failed
+                self.flags.append("upload_failed")  # Upload Failed
 
         except requests.exceptions.ConnectTimeout:
-            self.flags.append('connect_timeout')
+            self.flags.append("connect_timeout")
 
         return
 
     def scan(self, data, file, options, expire_at):
-        self.depth = options.get('depth', 0)
+        self.depth = options.get("depth", 0)
 
         if file.depth > self.depth:
-            self.flags.append('file_depth_exceeded')
+            self.flags.append("file_depth_exceeded")
             return
 
-        self.server = options.get('server', '')
-        self.priority = options.get('priority', 3)
-        self.timeout = options.get('timeout', 60)
-        self.env_id = options.get('env_id', [100])
+        self.server = options.get("server", "")
+        self.priority = options.get("priority", 3)
+        self.timeout = options.get("timeout", 60)
+        self.env_id = options.get("env_id", [100])
 
         if not self.auth_check:
-            self.api_key = options.get('api_key', None) or os.environ.get('FS_API_KEY')
-            self.api_secret = options.get('api_secret', None) or os.environ.get('FS_API_SECKEY')
+            self.api_key = options.get("api_key", None) or os.environ.get("FS_API_KEY")
+            self.api_secret = options.get("api_secret", None) or os.environ.get(
+                "FS_API_SECKEY"
+            )
             self.auth_check = True
 
         # Allow submission to multiple environments (e.g. 32-bit and 64-bit)

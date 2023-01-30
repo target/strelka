@@ -1,9 +1,10 @@
-import io
 import collections
 import datetime
-import pycdlib
+import io
 
+import pycdlib
 from pycdlib.dates import DirectoryRecordDate
+
 from strelka import strelka
 
 

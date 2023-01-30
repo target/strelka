@@ -1,14 +1,11 @@
 import datetime
 from pathlib import Path
+
 from strelka.strelka import File
 
 
 def run_test_scan(
-    mocker,
-    scan_class,
-    fixture_path=None,
-    options=None,
-    backend_cfg=None
+    mocker, scan_class, fixture_path=None, options=None, backend_cfg=None
 ):
     if options is None:
         options = {}

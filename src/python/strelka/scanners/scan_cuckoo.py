@@ -1,4 +1,5 @@
 import os
+
 import requests
 
 from strelka import strelka
@@ -31,29 +32,34 @@ class ScanCuckoo(strelka.Scanner):
         username: See description above.
         password: See description above.
     """
+
     def init(self):
         self.username = None
         self.password = None
         self.auth_check = False
 
     def scan(self, data, file, options, expire_at):
-        url = options.get('url', None)
-        priority = options.get('priority', 3)
-        timeout = options.get('timeout', 10)
-        unique = options.get('unique', True)
+        url = options.get("url", None)
+        priority = options.get("priority", 3)
+        timeout = options.get("timeout", 10)
+        unique = options.get("unique", True)
         if not self.auth_check:
-            self.username = options.get('username', None) or os.environ.get('CUCKOO_USERNAME')
-            self.password = options.get('password', None) or os.environ.get('CUCKOO_PASSWORD')
+            self.username = options.get("username", None) or os.environ.get(
+                "CUCKOO_USERNAME"
+            )
+            self.password = options.get("password", None) or os.environ.get(
+                "CUCKOO_PASSWORD"
+            )
             self.auth_check = True
 
         if url is not None:
-            url += '/tasks/create/file'
+            url += "/tasks/create/file"
             form = {
-                'file': (f'strelka_{file.uid}', data),
-                'priority': priority,
+                "file": (f"strelka_{file.uid}", data),
+                "priority": priority,
             }
             if unique:
-                form['unique'] = 'True'
+                form["unique"] = "True"
 
             try:
                 response = requests.post(
@@ -64,11 +70,11 @@ class ScanCuckoo(strelka.Scanner):
                 )
 
                 if response.status_code == 200:
-                    self.event['taskId'] = response.json()['task_id']
+                    self.event["taskId"] = response.json()["task_id"]
                 elif response.status_code == 400:
-                    self.flags.append('duplicate_upload')
+                    self.flags.append("duplicate_upload")
                 else:
-                    self.flags.append('upload_failed')
+                    self.flags.append("upload_failed")
 
             except requests.exceptions.ConnectTimeout:
-                self.flags.append('connect_timeout')
+                self.flags.append("connect_timeout")

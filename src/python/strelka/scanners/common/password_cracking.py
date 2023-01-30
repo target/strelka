@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 import subprocess
@@ -152,7 +151,9 @@ def crack_john(
                 hashes_per_second = 0.0
 
                 for statistic in re_statistics.finditer(stderr):
-                    hashes_per_second = convert_unit_john(statistic.group("ccps").decode("utf-8"))
+                    hashes_per_second = convert_unit_john(
+                        statistic.group("ccps").decode("utf-8")
+                    )
 
                 self.event["performance"] = {
                     "keyspace": {

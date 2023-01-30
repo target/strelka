@@ -79,11 +79,13 @@ def test_scan_html_max_hyperlinks(mocker):
         },
         "title": "Sample HTML File",
         "hyperlinks_count": 7,
-        "hyperlinks": ['https://www.example.com',
-                       'https://www.example2.com',
-                       'https://www.example3.com',
-                       'https://www.example.com/downloads/example.pdf',
-                       'https://www.example.com/images/example.jpg'],
+        "hyperlinks": [
+            "https://www.example.com",
+            "https://www.example2.com",
+            "https://www.example3.com",
+            "https://www.example.com/downloads/example.pdf",
+            "https://www.example.com/images/example.jpg",
+        ],
         "forms": [],
         "frames": [],
         "inputs": [],
@@ -95,9 +97,11 @@ def test_scan_html_max_hyperlinks(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test_hyperlinks.html",
-        options={"max_hyperlinks": MAX_SIZE_OPTION}
+        options={"max_hyperlinks": MAX_SIZE_OPTION},
     )
 
     TestCase.maxDiff = None
-    TestCase().assertLessEqual(len(test_scan_event['hyperlinks']), MAX_SIZE_OPTION)
-    TestCase().assertTrue(test_scan_event["hyperlinks_count"], scanner_event["hyperlinks_count"])
+    TestCase().assertLessEqual(len(test_scan_event["hyperlinks"]), MAX_SIZE_OPTION)
+    TestCase().assertTrue(
+        test_scan_event["hyperlinks_count"], scanner_event["hyperlinks_count"]
+    )

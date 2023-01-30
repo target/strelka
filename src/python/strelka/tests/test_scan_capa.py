@@ -1,7 +1,7 @@
 from pathlib import Path
-from pytest_unordered import unordered
 from unittest import TestCase, mock
 
+from pytest_unordered import unordered
 from strelka.scanners.scan_capa import ScanCapa as ScanUnderTest
 from strelka.tests import run_test_scan
 
@@ -24,7 +24,7 @@ def test_scan_capa_dotnet(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.exe",
-        options={"scanner_timeout": 20}
+        options={"scanner_timeout": 20},
     )
 
     TestCase.maxDiff = None
@@ -49,7 +49,7 @@ def test_scan_capa_elf(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.elf",
-        options={"scanner_timeout": 20}
+        options={"scanner_timeout": 20},
     )
 
     TestCase.maxDiff = None
@@ -65,13 +65,15 @@ def test_scan_capa_pe_xor(mocker):
     test_scan_event = {
         "elapsed": mock.ANY,
         "flags": [],
-        "matches": unordered([
-            "encode data using XOR",
-            "contains PDB path",
-            "contain a resource (.rsrc) section",
-            "parse PE header",
-            "contain loop",
-        ]),
+        "matches": unordered(
+            [
+                "encode data using XOR",
+                "contains PDB path",
+                "contain a resource (.rsrc) section",
+                "parse PE header",
+                "contain loop",
+            ]
+        ),
         "mitre_ids": unordered(["T1129", "T1027"]),
         "mitre_techniques": unordered(
             [
@@ -85,7 +87,7 @@ def test_scan_capa_pe_xor(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test_xor.exe",
-        options={"scanner_timeout": 20}
+        options={"scanner_timeout": 20},
     )
 
     TestCase.maxDiff = None

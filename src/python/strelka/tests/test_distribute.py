@@ -1,10 +1,10 @@
 import os
 import time
 import uuid
-import yaml
-
 from pathlib import Path
 from unittest import TestCase, mock
+
+import yaml
 
 from strelka import strelka
 
@@ -105,7 +105,7 @@ def test_distribute(mocker):
         backend = strelka.Backend(backend_cfg, coordinator=None)
 
         with open(
-            Path(Path(__file__).parent / f"../tests/fixtures/test.html"), "rb"
+            Path(Path(__file__).parent / "../tests/fixtures/test.html"), "rb"
         ) as test_file:
             data = test_file.read()
             file = strelka.File(data=data)

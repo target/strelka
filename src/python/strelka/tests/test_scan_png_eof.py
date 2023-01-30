@@ -34,10 +34,7 @@ def test_scan_png_eof_normal(mocker):
     Failure: Unable to load file or sample event fails to match.
     """
 
-    test_scan_event = {
-        "elapsed": mock.ANY,
-        "flags": ["no_trailer"]
-    }
+    test_scan_event = {"elapsed": mock.ANY, "flags": ["no_trailer"]}
 
     scanner_event = run_test_scan(
         mocker=mocker,
@@ -55,10 +52,7 @@ def test_scan_png_eof_no_iend(mocker):
     Failure: Unable to load file or sample event fails to match.
     """
 
-    test_scan_event = {
-        "elapsed": mock.ANY,
-        "flags": ["no_iend_chunk"]
-    }
+    test_scan_event = {"elapsed": mock.ANY, "flags": ["no_iend_chunk"]}
 
     scanner_event = run_test_scan(
         mocker=mocker,

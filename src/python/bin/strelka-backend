@@ -8,9 +8,9 @@ import argparse
 import logging.config
 import os
 import sys
+
 import redis
 import yaml
-
 
 from strelka import strelka
 

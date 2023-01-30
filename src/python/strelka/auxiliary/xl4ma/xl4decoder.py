@@ -1,12 +1,13 @@
 # Authors: Ryan Borre
 
 import tempfile
+from os import devnull
+
 import xlrd2
 from openpyxl.workbook import Workbook
 from pyxlsb2 import open_workbook
 from pyxlsb2.formula import Formula
 from pyxlsb2.records import ErrorValue
-from os import devnull
 from strelka.auxiliary.xl4ma.xl4interpreter import Interpreter
 
 
@@ -47,7 +48,7 @@ def _decode_xls(file_path, defined_names):
                         book_sheet.cell(
                             row + 1, col + 1, wb[sheet_name].cell(row, col).value
                         )
-                except:
+                except Exception:
                     pass
     temp_file = tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False)
     book.save(temp_file.name)
@@ -96,7 +97,7 @@ def _decode_xlsb(file_path, defined_names):
                                 cell.col + 1,
                                 str(cell.value).rstrip("\x00"),
                             )
-        except:
+        except Exception:
             pass
     temp_file = tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False)
     book.save(temp_file.name)
@@ -107,7 +108,7 @@ def _decode_xlsb(file_path, defined_names):
 
 # XLSM
 def _decode_xlsm(file_path, defined_names):
-    with tempfile.NamedTemporaryFile(suffix=f".xlsm", delete=False) as temp_file, open(
+    with tempfile.NamedTemporaryFile(suffix=".xlsm", delete=False) as temp_file, open(
         file_path, "rb"
     ) as fp:
         temp_file.write(fp.read())

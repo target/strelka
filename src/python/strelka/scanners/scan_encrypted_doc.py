@@ -1,8 +1,9 @@
 import io
 import os
-import msoffcrypto
 import subprocess
 import tempfile
+
+import msoffcrypto
 
 from strelka import strelka
 
@@ -13,7 +14,7 @@ def crack_word(
     jtr_path,
     tmp_dir,
     password_file,
-        min_length=1,
+    min_length=1,
     max_length=10,
     scanner_timeout=150,
     brute=False,
@@ -81,7 +82,7 @@ def crack_word(
                         ],
                         stdout=subprocess.PIPE,
                         stderr=subprocess.DEVNULL,
-                    ).communicate(timeout=scanner_timeout+5)
+                    ).communicate(timeout=scanner_timeout + 5)
 
                     if b"oldoffice" in stdout.split(b"\n")[0]:
                         if stdout.split(b"\n")[2]:

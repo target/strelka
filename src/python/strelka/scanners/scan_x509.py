@@ -15,22 +15,27 @@ class ScanX509(strelka.Scanner):
             scanned. Must be either 'der' or 'pem'.
             Defaults to empty string.
     """
-    def scan(self, data, file, options, expire_at):
-        file_type = options.get('type', '')
 
-        if file_type == 'der':
+    def scan(self, data, file, options, expire_at):
+        file_type = options.get("type", "")
+
+        if file_type == "der":
             cert = X509.load_cert_der_string(data)
         else:
             cert = X509.load_cert_string(data)
 
-        self.event['issuer'] = cert.get_issuer().as_text()
-        self.event['subject'] = cert.get_subject().as_text()
-        self.event['serial_number'] = str(cert.get_serial_number())
-        self.event['fingerprint'] = cert.get_fingerprint()
-        self.event['version'] = cert.get_version()
-        self.event['not_after'] = int(cert.get_not_after().get_datetime().strftime('%s'))
-        self.event['not_before'] = int(cert.get_not_before().get_datetime().strftime('%s'))
-        if self.event['not_after'] < time.time():
-            self.event['expired'] = True
+        self.event["issuer"] = cert.get_issuer().as_text()
+        self.event["subject"] = cert.get_subject().as_text()
+        self.event["serial_number"] = str(cert.get_serial_number())
+        self.event["fingerprint"] = cert.get_fingerprint()
+        self.event["version"] = cert.get_version()
+        self.event["not_after"] = int(
+            cert.get_not_after().get_datetime().strftime("%s")
+        )
+        self.event["not_before"] = int(
+            cert.get_not_before().get_datetime().strftime("%s")
+        )
+        if self.event["not_after"] < time.time():
+            self.event["expired"] = True
         else:
-            self.event['expired'] = False
+            self.event["expired"] = False

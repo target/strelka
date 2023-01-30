@@ -28,7 +28,7 @@ def test_scan_x509_pem(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.pem",
-        options={"type": "pem"}
+        options={"type": "pem"},
     )
 
     TestCase.maxDiff = None
@@ -58,7 +58,7 @@ def test_scan_x509_der(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.der",
-        options={"type": "der"}
+        options={"type": "der"},
     )
 
     TestCase.maxDiff = None

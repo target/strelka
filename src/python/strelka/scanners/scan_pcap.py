@@ -14,6 +14,7 @@ class ScanPcap(strelka.Scanner):
         limit: Maximum number of files to extract.
             Defaults to 1000.
     """
+
     def scan(self, data, file, options, expire_at):
         file_limit = options.get("limit", 1000)
         tmp_directory = options.get("tmp_file_directory", "/tmp/")
@@ -39,22 +40,28 @@ class ScanPcap(strelka.Scanner):
 
                 try:
                     (stdout, stderr) = subprocess.Popen(
-                        ["zeek",
-                         "-r",
-                         tmp_data.name,
-                         "/opt/zeek/share/zeek/policy/frameworks/files/extract-all-files.zeek",
-                         f"FileExtract::prefix={tmp_extract}",
-                         "LogAscii::use_json=T"],
+                        [
+                            "zeek",
+                            "-r",
+                            tmp_data.name,
+                            "/opt/zeek/share/zeek/policy/frameworks/files/extract-all-files.zeek",
+                            f"FileExtract::prefix={tmp_extract}",
+                            "LogAscii::use_json=T",
+                        ],
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
-                        cwd=tmp_extract
+                        cwd=tmp_extract,
                     ).communicate(timeout=scanner_timeout)
 
                     if os.path.exists(os.path.join(tmp_extract, "files.log")):
-                        with open(os.path.join(tmp_extract, "files.log"), "r") as json_file:
+                        with open(
+                            os.path.join(tmp_extract, "files.log"), "r"
+                        ) as json_file:
 
                             # files.log is one JSON object per line, convert to array
-                            file_events = json.loads("[" + ",".join(json_file.read().splitlines()) + "]")
+                            file_events = json.loads(
+                                "[" + ",".join(json_file.read().splitlines()) + "]"
+                            )
 
                             for file_event in file_events:
 
@@ -65,7 +72,9 @@ class ScanPcap(strelka.Scanner):
                                 self.event["total"]["files"] += 1
                                 self.event["files"].append(file_event)
 
-                                extracted_file_path = os.path.join(tmp_extract, file_event["extracted"])
+                                extracted_file_path = os.path.join(
+                                    tmp_extract, file_event["extracted"]
+                                )
 
                                 try:
                                     if os.path.exists(extracted_file_path):

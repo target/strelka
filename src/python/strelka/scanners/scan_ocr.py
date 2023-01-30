@@ -15,10 +15,11 @@ class ScanOcr(strelka.Scanner):
         tmp_directory: Location where tempfile writes temporary files.
             Defaults to '/tmp/'.
     """
+
     def scan(self, data, file, options, expire_at):
-        extract_text = options.get('extract_text', False)
-        split_words = options.get('split_words', True)
-        tmp_directory = options.get('tmp_directory', '/tmp/')
+        extract_text = options.get("extract_text", False)
+        split_words = options.get("split_words", True)
+        tmp_directory = options.get("tmp_directory", "/tmp/")
 
         with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
             tmp_data.write(data)
@@ -26,31 +27,37 @@ class ScanOcr(strelka.Scanner):
 
             with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_tess:
                 try:
-                    tess_txt_name = f'{tmp_tess.name}.txt'
+                    tess_txt_name = f"{tmp_tess.name}.txt"
 
                     completed_process = subprocess.run(
-                        ['tesseract', tmp_data.name, tmp_tess.name],
+                        ["tesseract", tmp_data.name, tmp_tess.name],
                         capture_output=True,
-                        check=True
+                        check=True,
                     )
 
-                    with open(tess_txt_name, 'rb') as tess_txt:
+                    _ = completed_process
+
+                    with open(tess_txt_name, "rb") as tess_txt:
                         ocr_file = tess_txt.read()
 
                         if ocr_file:
 
                             if split_words:
-                                self.event['text'] = ocr_file.split()
+                                self.event["text"] = ocr_file.split()
                             else:
-                                self.event['text'] = ocr_file.replace(b'\r', b'').replace(b'\n', b'').replace(b'\f', b'')
+                                self.event["text"] = (
+                                    ocr_file.replace(b"\r", b"")
+                                    .replace(b"\n", b"")
+                                    .replace(b"\f", b"")
+                                )
 
                             if extract_text:
 
                                 # Send extracted file back to Strelka
-                                self.emit_file(ocr_file, name='text')
+                                self.emit_file(ocr_file, name="text")
 
                     os.remove(tess_txt_name)
 
                 except subprocess.CalledProcessError as e:
-                    self.flags.append('tesseract_process_error')
+                    self.flags.append("tesseract_process_error")
                     raise strelka.ScannerException(e.stderr)

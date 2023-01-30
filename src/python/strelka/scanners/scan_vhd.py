@@ -256,4 +256,6 @@ class ScanVhd(strelka.Scanner):
         with open(name, "rb") as extracted_file:
 
             # Send extracted file back to Strelka
-            self.emit_file(extracted_file.read(), name=os.path.basename(extracted_file.name))
+            self.emit_file(
+                extracted_file.read(), name=os.path.basename(extracted_file.name)
+            )

@@ -23,7 +23,7 @@ def test_scan_yara(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.txt",
-        options={"location": str(Path(Path(__file__).parent / "fixtures/test.yara"))}
+        options={"location": str(Path(Path(__file__).parent / "fixtures/test.yara"))},
     )
 
     TestCase.maxDiff = None

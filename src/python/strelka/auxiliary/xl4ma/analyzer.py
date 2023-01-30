@@ -5,11 +5,12 @@ import logging
 import os
 import tempfile
 from pathlib import Path
+
 from strelka.auxiliary.xl4ma.extract import iocs
+from strelka.auxiliary.xl4ma.xl4decoder import decode
 from strelka.auxiliary.xl4ma.xls_wrapper import XLSWrapper
 from strelka.auxiliary.xl4ma.xlsb_wrapper import XLSBWrapper
 from strelka.auxiliary.xl4ma.xlsm_wrapper import XLSMWrapper
-from strelka.auxiliary.xl4ma.xl4decoder import decode
 
 
 def _make_temp_file(data, file_type):

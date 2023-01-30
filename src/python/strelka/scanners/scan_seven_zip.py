@@ -1,4 +1,3 @@
-import logging
 import os
 import pathlib
 import re
@@ -215,7 +214,7 @@ class ScanSevenZip(strelka.Scanner):
         regex_mode_properties = re.compile(r"^(--|----)$")
 
         # Comment =
-        regex_property = re.compile(r"^(.+) = (.+)$")
+        # regex_property = re.compile(r"^(.+) = (.+)$")
 
         #    Date      Time    Attr         Size   Compressed  Name
         regex_mode_files = re.compile(
