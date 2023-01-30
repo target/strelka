@@ -16,14 +16,14 @@ def test_scan_iso(mocker):
         "flags": [],
         "total": {"files": 1, "extracted": 1},
         "files": [
-            {"filename": "/lorem.txt", "size": 4015, "date_utc": "2022-12-11T18:44:49Z"}
+            {"filename": "/lorem.txt", "size": 4015, "date_utc": "2022-12-11T18:44:49"}
         ],
         "hidden_dirs": [],
         "meta": {
-            "date_created": "2022-12-11T18:42:00Z",
+            "date_created": "2022-12-11T18:42:00",
             "date_effective": None,
             "date_expiration": None,
-            "date_modification": "2022-12-11T18:42:00Z",
+            "date_modification": "2022-12-11T18:42:00",
             "volume_identifier": "NEW_VOLUME                      ",
         },
     }
