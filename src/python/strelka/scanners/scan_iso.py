@@ -148,7 +148,7 @@ class ScanIso(strelka.Scanner):
                 minute,
                 second,
             )
-            return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+            return dt.strftime("%Y-%m-%dT%H:%M:%S")
         except strelka.ScannerTimeout:
             raise
         except Exception:
@@ -183,7 +183,7 @@ class ScanIso(strelka.Scanner):
                     iso_date.minute,
                     iso_date.second,
                 )
-                dt = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+                dt = dt.strftime("%Y-%m-%dT%H:%M:%S")
             except strelka.ScannerTimeout:
                 raise
             except Exception:
