@@ -453,6 +453,7 @@ scanners:
           - 'hta_file'
           - 'text/rtf'
           - 'rtf_file'
+          - 'onenote_file'
       priority: 5
 #  'ScanSwf':
 #    - positive:
