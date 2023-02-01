@@ -170,6 +170,7 @@ class Backend(object):
         return {"mime": self.taste_mime(data), "yara": self.taste_yara(data)}
 
     def check_scanners(self):
+        """attempt to import all scanners referenced in the backend configuration"""
         logging.info("checking scanners")
         if self.scanners:
             for name in self.scanners:
