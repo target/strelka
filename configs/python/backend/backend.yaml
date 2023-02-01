@@ -48,11 +48,11 @@ scanners:
           - 'application/x-bzip2'
           - 'bzip2_file'
       priority: 5
-  'ScanBITS':
-    - positive:
-        flavors:
-          - 'bits_file'
-      priority: 5
+#  'ScanBITS':
+#    - positive:
+#        flavors:
+#          - 'bits_file'
+#      priority: 5
 #  'ScanCapa':
 #    - positive:
 #        flavors:
@@ -555,11 +555,6 @@ scanners:
       priority: 5
       options:
         limit: 1000
-  'ScanRuby':
-    - positive:
-        flavors:
-          - 'text/x-ruby'
-      priority: 5
   'ScanSevenZip':
     - positive:
         flavors:

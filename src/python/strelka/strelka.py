@@ -169,6 +169,17 @@ class Backend(object):
     def match_flavors(self, data: bytes) -> dict:
         return {"mime": self.taste_mime(data), "yara": self.taste_yara(data)}
 
+    def check_scanners(self):
+        logging.info("checking scanners")
+        if self.scanners:
+            for name in self.scanners:
+                try:
+                    und_name = inflection.underscore(name)
+                    scanner_import = f"strelka.scanners.{und_name}"
+                    importlib.import_module(scanner_import)
+                except ModuleNotFoundError:
+                    raise
+
     def work(self) -> None:
         """Process tasks from Redis coordinator"""
 
@@ -177,6 +188,8 @@ class Backend(object):
         if not self.coordinator:
             logging.error("no coordinator specified")
             return
+
+        self.check_scanners()
 
         count = 0
         work_start = time.time()
