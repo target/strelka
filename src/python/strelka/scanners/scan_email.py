@@ -14,7 +14,6 @@ class ScanEmail(strelka.Scanner):
         self.event["total"] = {"attachments": 0, "extracted": 0}
 
         try:
-
             # Open and parse email byte string
             # If fail to open, return.
             try:

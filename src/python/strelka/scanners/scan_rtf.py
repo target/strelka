@@ -27,17 +27,14 @@ class ScanRtf(strelka.Scanner):
             index = rtf.server.index(rtf_object)
 
             if rtf_object.is_package:
-
                 # Send extracted file back to Strelka
                 self.emit_file(rtf_object.olepkgdata, name=rtf_object.filename)
 
             elif rtf_object.is_ole:
-
                 # Send extracted file back to Strelka
                 self.emit_file(rtf_object.oledata, name=f"rtf_object_{index}")
 
             else:
-
                 # Send extracted file back to Strelka
                 self.emit_file(rtf_object.rawdata, name=f"rtf_object_{index}")
 

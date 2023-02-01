@@ -10,7 +10,6 @@ class ScanJpeg(strelka.Scanner):
     """
 
     def scan(self, data, file, options, expire_at):
-
         offset = 0
 
         # Skip check for length with these markers
@@ -35,7 +34,6 @@ class ScanJpeg(strelka.Scanner):
         # Skip SOI
         offset += 2
         while True:
-
             marker = data[offset : offset + 2]
 
             # Marker must start with 0xff

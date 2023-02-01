@@ -64,7 +64,6 @@ class ScanBITS(strelka.Scanner):
         if len(job_data) < 128:
             return None
         try:
-
             # Because it can be expensive to parse a JOB structure if the data is not valid,
             # do a simple check to see if the job name length is valid
             name_length = struct.unpack_from("<L", job_data, 32)[0]
@@ -295,7 +294,6 @@ class BitsJob:
                 for file in v:
                     file_dict = {}
                     for k1, v1 in file.items():
-
                         # Map the transaction attribute name, skip empty, unmapped, or invalid values
                         t_alias = self.FILE_MAP.get(k1)
                         if not t_alias:

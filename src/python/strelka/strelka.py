@@ -96,7 +96,6 @@ class File(object):
             self.pointer = self.uid
 
     def dictionary(self) -> dict:
-
         return {
             "depth": self.depth,
             "flavors": self.flavors,
@@ -149,7 +148,7 @@ class Backend(object):
                 f"{yara_rules}/**/*.yar*",
                 recursive=True,
             )
-            for (i, entry) in enumerate(globbed_yara):
+            for i, entry in enumerate(globbed_yara):
                 yara_filepaths[f"namespace{i}"] = entry
             self.compiled_yara = yara.compile(filepaths=yara_filepaths)
         else:

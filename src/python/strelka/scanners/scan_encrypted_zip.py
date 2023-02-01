@@ -49,7 +49,6 @@ def crack_zip(
                 return
 
         if b"0 password hashes cracked" in stdout:
-
             with tempfile.NamedTemporaryFile(dir=tmp_dir) as tmp_data:
                 tmp_data.write(zip2john)
                 tmp_data.flush()
@@ -111,7 +110,6 @@ class ScanEncryptedZip(strelka.Scanner):
     """
 
     def scan(self, data, file, options, expire_at):
-
         jtr_path = options.get("jtr_path", "/jtr/")
         tmp_directory = options.get("tmp_file_directory", "/tmp/")
         file_limit = options.get("limit", 1000)
@@ -125,10 +123,8 @@ class ScanEncryptedZip(strelka.Scanner):
 
         with io.BytesIO(data) as zip_io:
             try:
-
                 is_aes = False
                 with pyzipper.ZipFile(zip_io) as zip_obj:
-
                     file_list = zip_obj.filelist  # .filelist
                     for file_list_item in file_list:
                         if not file_list_item.is_dir():
@@ -140,7 +136,6 @@ class ScanEncryptedZip(strelka.Scanner):
                 with pyzipper.AESZipFile(zip_io) if is_aes else pyzipper.ZipFile(
                     zip_io
                 ) as zip_obj:
-
                     file_list = zip_obj.filelist  # .filelist
                     for file_list_item in file_list:
                         if not file_list_item.is_dir():
@@ -175,7 +170,6 @@ class ScanEncryptedZip(strelka.Scanner):
                                 )
 
                                 if extract_data:
-
                                     # Send extracted file back to Strelka
                                     self.emit_file(
                                         extract_data, name=file_item.filename

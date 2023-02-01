@@ -93,7 +93,7 @@ class ScanHtml(strelka.Scanner):
             scripts = soup.find_all("script")
             self.event["total"]["scripts"] = len(scripts)
             self.event.setdefault("scripts", [])
-            for (index, script) in enumerate(scripts):
+            for index, script in enumerate(scripts):
                 script_flavors = [
                     script.get("language", "").lower(),
                     script.get("type", "").lower(),

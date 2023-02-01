@@ -40,7 +40,6 @@ class ScanZip(strelka.Scanner):
 
         with io.BytesIO(data) as zip_io:
             try:
-
                 is_aes = False
                 with pyzipper.ZipFile(zip_io) as zip_obj:
                     filelist = zip_obj.filelist
@@ -62,7 +61,6 @@ class ScanZip(strelka.Scanner):
                     # For each file in zip, gather metadata metrics and pass back to Strelka for recursive extraction.
                     for i, name in enumerate(filelist):
                         if name.file_size > 0 and name.compress_size > 0:
-
                             compress_size_total += name.compress_size
                             file_size_total += name.file_size
 
@@ -118,7 +116,6 @@ class ScanZip(strelka.Scanner):
 
                                 # Suppress sending to coordinator in favor of ScanEncryptedZip
                                 if extract_data and "encrypted" not in self.flags:
-
                                     # Send extracted file back to Strelka
                                     self.emit_file(extract_data, name=name.filename)
 

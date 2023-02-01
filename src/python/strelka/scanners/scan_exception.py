@@ -18,5 +18,4 @@ class ScanException(strelka.Scanner):
         pass
 
     def scan(self, data, file, options, expire_at):
-
         raise Exception("Scanner Exception")

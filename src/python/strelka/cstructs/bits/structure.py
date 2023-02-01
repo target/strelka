@@ -180,7 +180,6 @@ class Structure:
         return len(self.getData())
 
     def pack(self, format, data, field=None):
-
         if field:
             addressField = self.findAddressFieldFor(field)
             if (addressField is not None) and (data is None):
@@ -293,7 +292,6 @@ class Structure:
         return pack(format, data)
 
     def unpack(self, format, data, dataClassOrCode=None, field=None):
-
         if field:
             addressField = self.findAddressFieldFor(field)
             if addressField is not None:
@@ -462,7 +460,6 @@ class Structure:
         return calcsize(format)
 
     def calcUnpackSize(self, format, data, field=None):
-
         # void specifier
         if format[:1] == "_":
             return 0

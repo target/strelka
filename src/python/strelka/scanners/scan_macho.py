@@ -195,7 +195,6 @@ class ScanMacho(strelka.Scanner):
                     tmp_data.flush()
 
                     with open(tmp_data.name, "rb") as f:
-
                         # Send extracted file back to Strelka
                         self.emit_file(f.read(), name=f"binary_{r}")
 

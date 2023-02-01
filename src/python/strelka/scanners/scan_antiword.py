@@ -26,6 +26,5 @@ class ScanAntiword(strelka.Scanner):
             ).communicate()
 
             if stdout:
-
                 # Send extracted file back to Strelka
                 self.emit_file(stdout, name="text")

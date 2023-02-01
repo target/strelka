@@ -75,7 +75,6 @@ class ScanXml(strelka.Scanner):
                         if tag_data not in self.event["tag_data"]:
                             self.event["tag_data"].append(tag_data)
                     elif tag in xml_args["extract_tags"]:
-
                         # Send extracted file back to Strelka
                         self.emit_file(text, name=tag)
 

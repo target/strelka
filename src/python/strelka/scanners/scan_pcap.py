@@ -37,7 +37,6 @@ class ScanPcap(strelka.Scanner):
             tmp_data.seek(0)
 
             with tempfile.TemporaryDirectory() as tmp_extract:
-
                 try:
                     (stdout, stderr) = subprocess.Popen(
                         [
@@ -57,14 +56,12 @@ class ScanPcap(strelka.Scanner):
                         with open(
                             os.path.join(tmp_extract, "files.log"), "r"
                         ) as json_file:
-
                             # files.log is one JSON object per line, convert to array
                             file_events = json.loads(
                                 "[" + ",".join(json_file.read().splitlines()) + "]"
                             )
 
                             for file_event in file_events:
-
                                 if self.event["total"]["extracted"] >= file_limit:
                                     self.flags.append("pcap_file_limit_error")
                                     break
@@ -96,6 +93,5 @@ class ScanPcap(strelka.Scanner):
     def upload(self, name, expire_at):
         """Send extracted file to coordinator"""
         with open(name, "rb") as extracted_file:
-
             # Send extracted file back to Strelka
             self.emit_file(extracted_file.read())
