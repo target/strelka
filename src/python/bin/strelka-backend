@@ -312,7 +312,6 @@ class Backend(object):
                             options = scanner.get('options', {})
 
                             if name == 'ScanYara':
-                                logging.info('scanning')
                                 compiled_custom_yara = []
 
                                 yara_cache_key = self.coordinator.get(f'yara_cache_key:{root_id}')
