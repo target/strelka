@@ -6,8 +6,10 @@ Command line utility for running Strelka backend server components.
 """
 import argparse
 import glob
+import hashlib
 import importlib
 import io
+import json
 import logging.config
 import math
 import os
@@ -23,7 +25,7 @@ import redis
 import yaml
 import yara
 
-from strelka import strelka
+from strelka import strelka, yara_extern
 
 
 class Backend(object):
@@ -63,6 +65,8 @@ class Backend(object):
         logging.info('starting up')
 
         count = 0
+        synced = 0
+
         work_start = time.time()
         work_expire = work_start + self.limits.get('time_to_live')
 
@@ -74,36 +78,149 @@ class Backend(object):
                 if time.time() >= work_expire:
                     break
 
-            task = self.coordinator.bzpopmin('tasks', timeout=5)
+            task = self.coordinator.bzpopmin(['tasks', 'tasks_compile_yara', 'tasks_compile_and_sync_yara'], timeout=5)
             if task is None:
                 continue
 
             (queue_name, root_id, expire_at) = task
             root_id = root_id.decode()
-            file = strelka.File(pointer=root_id)
             expire_at = math.ceil(expire_at)
             timeout = math.ceil(expire_at - time.time())
+
             if timeout <= 0:
                 continue
 
-            try:
-                with interruptingcow.timeout(timeout,
-                                             strelka.RequestTimeout):
-                    self.distribute(root_id, file, expire_at)
-                    p = self.coordinator.pipeline(transaction=False)
-                    p.rpush(f'event:{root_id}', 'FIN')
-                    p.expireat(f'event:{root_id}', expire_at)
-                    p.execute()
+            if queue_name == b'tasks':
+                file = strelka.File(pointer=root_id)
 
-            except strelka.RequestTimeout:
-                logging.debug(f'request {root_id} timed out')
-            except Exception:
-                logging.exception('unknown exception (see traceback below)')
+                try:
+                    with interruptingcow.timeout(timeout,
+                                                 strelka.RequestTimeout):
+                        self.distribute(root_id, file, expire_at)
+                        p = self.coordinator.pipeline(transaction=False)
+                        p.rpush(f'event:{root_id}', 'FIN')
+                        p.expireat(f'event:{root_id}', expire_at)
+                        p.execute()
 
-            count += 1
+                except strelka.RequestTimeout:
+                    logging.debug(f'request {root_id} timed out')
+                except Exception:
+                    logging.exception('unknown exception')
 
-        logging.info(f'shutdown after scanning {count} file(s) and'
+                count += 1
+
+            elif queue_name == b'tasks_compile_yara':
+                try:
+                    with interruptingcow.timeout(timeout,
+                                                 strelka.RequestTimeout):
+                        errMsg = self.compile_yara(root_id)
+
+                        if errMsg:
+                            logging.error(errMsg)
+                            self.coordinator.lpush(f'yara:compile:done:{root_id}', 'ERROR:' + errMsg)
+                        else:
+                            self.coordinator.lpush(f'yara:compile:done:{root_id}', 'FIN')
+
+                except strelka.RequestTimeout:
+                    logging.debug(f'request {root_id}:compile timed out')
+                except Exception:
+                    logging.exception('unknown exception')
+
+            elif queue_name == b'tasks_compile_and_sync_yara':
+                logging.info('syncing yara')
+                try:
+                    with interruptingcow.timeout(timeout,
+                                                 strelka.RequestTimeout):
+                        yara_cache_key = self.coordinator.get(f'yara_cache_key:{root_id}')
+                        if not yara_cache_key:
+                            continue
+                        yara_cache_key = yara_cache_key.decode()
+                        errMsg, nSynced = self.compile_and_sync_yara(yara_cache_key, root_id)
+                        synced += nSynced
+                        logging.info('synced:' + str(nSynced))
+
+                        if errMsg:
+                            self.coordinator.lpush(f'yara:compile_and_sync:done:{root_id}', 'ERROR:' + errMsg)
+                        else:
+                            self.coordinator.lpush(f'yara:compile_and_sync:done:{root_id}', 'FIN')
+
+                except strelka.RequestTimeout:
+                    logging.debug(f'request {root_id}:compile_and_sync timed out')
+                except Exception:
+                    logging.exception('unknown exception')
+
+        logging.info(f'shutdown after scanning {count} file(s),'
+                     f' syncing {synced} yara files, and'
                      f' {time.time() - work_start} second(s)')
+
+    def compile_yara(self, root_id):
+        data = b''
+        errMsg = ''
+
+        try:
+            while 1:
+                pop = self.coordinator.lpop(f'yara:compile:{root_id}')
+                if not pop:
+                    break
+                data += pop
+
+            try:
+                yara.compile(source=data.decode(), externals=yara_extern.EXTERNAL_VARS)
+            except (yara.Error, yara.SyntaxError) as e:
+                errMsg = 'compiling yara: ' + str(e)
+                logging.error(errMsg)
+            except Exception as e2:
+                errMsg = 'compiling yara: ' + str(e2)
+                logging.error(errMsg)
+        except Exception as e3:
+            errMsg = 'retrieving yara: ' + str(e3)
+            logging.error(errMsg)
+
+        return errMsg
+
+    def compile_and_sync_yara(self, yara_cache_key, root_id):
+        synced = 0
+
+        self.coordinator.delete(f'yara:compiled:{yara_cache_key}')
+        self.coordinator.delete(f'yara:hash:{yara_cache_key}')
+
+        hash = hashlib.sha256()
+        errMsg = ''
+
+        while 1:
+            pop = self.coordinator.lpop(f'yara:compile_and_sync:{root_id}')
+            if not pop:
+                break
+
+            data = {}
+            try:
+                data = json.loads(pop.decode())
+            except Exception as e:
+                errMsg = 'loading json: ' + str(e)
+                logging.error(errMsg)
+                continue
+
+            try:
+                compiled_yara = yara.compile(source=data['data'], externals=yara_extern.EXTERNAL_VARS)
+
+                buf = io.BytesIO()
+                compiled_yara.save(file=buf)
+
+                self.coordinator.rpush(f'yara:compiled:{yara_cache_key}', buf.getvalue())
+
+                hash.update(data['data'].encode())
+                synced += 1
+            except (yara.Error, yara.SyntaxError) as e:
+                errMsg = 'compiling yara: ' + str(e)
+                logging.error(errMsg)
+            except Exception as e2:
+                errMsg = 'compiling yara: ' + str(e2)
+                logging.error(errMsg)
+
+        self.coordinator.set(f'yara:hash:{yara_cache_key}', hash.hexdigest())
+        self.coordinator.set(f'yara:synced:{root_id}', synced)
+
+        return errMsg, synced
 
     def taste_mime(self, data):
         """Tastes file data with libmagic."""
@@ -129,7 +246,7 @@ class Backend(object):
                         return
 
                     data = b''
-                    yaraData = b''
+                    legacy_yara_data = b''
                     while 1:
                         pop = self.coordinator.lpop(f'data:{file.pointer}')
                         if pop is None:
@@ -140,7 +257,7 @@ class Backend(object):
                         # since both the parent document and all child documents will
                         # take this path, and we wish to evaluate each against the
                         # same set of yara rules.
-                        yaraData = self.coordinator.get(f'yara:{root_id}')
+                        legacy_yara_data = self.coordinator.get(f'yara:{root_id}') # backcompat
 
                     file.add_flavors({'mime': self.taste_mime(data)})
                     file.add_flavors({'yara': self.taste_yara(data)})
@@ -195,7 +312,23 @@ class Backend(object):
                             options = scanner.get('options', {})
 
                             if name == 'ScanYara':
-                                options['source'] = yaraData.decode()
+                                logging.info('scanning')
+                                compiled_custom_yara = []
+
+                                yara_cache_key = self.coordinator.get(f'yara_cache_key:{root_id}')
+                                if yara_cache_key:
+                                    yara_cache_key = yara_cache_key.decode()
+                                    yaraItems = self.coordinator.lrange(f'yara:compiled:{yara_cache_key}', 0, -1)
+                                    for yaraData in yaraItems:
+                                        if not yaraData:
+                                            break
+                                        buf = io.BytesIO(yaraData)
+                                        yaraDataC = yara.load(file=buf)
+                                        compiled_custom_yara.append(yaraDataC)
+                                    options['compiled_custom_yara'] = compiled_custom_yara
+
+                                if legacy_yara_data: # backcompat
+                                    options['source'] = legacy_yara_data.decode()
 
                             und_name = inflection.underscore(name)
                             scanner_import = f'strelka.scanners.{und_name}'
@@ -219,6 +352,9 @@ class Backend(object):
 
                         except ModuleNotFoundError:
                             logging.exception(f'scanner {name} not found')
+
+                        except Exception as e:
+                            logging.exception('error: ' + str(e))
 
                     event = {
                         **{'file': file_dict},
