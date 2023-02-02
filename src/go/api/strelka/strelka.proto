@@ -3,9 +3,6 @@ option go_package = "github.com/sublime-security/strelka/src/go/api/strelka";
 
 service Frontend {
   rpc ScanFile(stream ScanFileRequest) returns (stream ScanResponse) {}
-  rpc CompileYara(stream CompileYaraRequest) returns (stream CompileYaraResponse) {}
-  rpc SyncYara(stream SyncYaraRequest) returns (stream SyncYaraResponse) {}
-  rpc ShouldUpdateYara(stream ShouldUpdateYaraRequest) returns (stream ShouldUpdateYaraResponse) {}
 }
 
 message Request {
@@ -19,44 +16,6 @@ message Attributes {
   string filename = 1;
   map<string, string> metadata = 2;
   string yaraFilename = 3;
-  string yaraCacheKey = 4;
-}
-
-message YaraData {
-  string id = 1; // sync id
-  string data = 2;
-}
-
-message CompileYaraRequest {
-  Request request = 1;
-  string data = 2;
-}
-
-message CompileYaraResponse {
-  bool ok = 1;
-  string error = 2;
-}
-
-message SyncYaraRequest {
-  Request request = 1;
-  string yaraCacheKey = 2;
-  repeated YaraData data = 3;
-}
-
-message SyncYaraResponse {
-  int32 synced = 1; // number of files synced
-  bytes hash = 2; // just for error checking
-  string error = 3;
-}
-
-message ShouldUpdateYaraRequest {
-  Request request = 1;
-  string yaraCacheKey = 2;
-  bytes hash = 3;
-}
-
-message ShouldUpdateYaraResponse {
-  bool ok = 1;
 }
 
 message ScanFileRequest {
