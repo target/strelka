@@ -33,7 +33,14 @@ class ScanYara(strelka.Scanner):
         if 'description' not in meta:
             meta.append('description')
 
-        # Support some common external variables
+        compiled_custom_yara = []
+        if options.get('compiled_custom_yara'):
+            # custom yara was provided - use it to evaluate this file
+            compiled_custom_yara.extend(options['compiled_custom_yara'])
+
+        # Support some common external variables (backcompat)
+        # The file and data extractions are not available with pre-compiled yara;
+        # in this case, all externals values will be an empty string
         externals = copy.copy(yara_extern.EXTERNAL_VARS)
         externals['filename'] = file.name
         externals['file_name'] = file.name
@@ -46,11 +53,9 @@ class ScanYara(strelka.Scanner):
         externals['sha1'] = hashlib.sha1(data).hexdigest()
         externals['sha256'] = hashlib.sha256(data).hexdigest()
 
-        compiled_custom_yara = None
-        if options.get('source'):
-            # custom yara was provided - use it to evaluate this file
+        if options.get('source') and len(compiled_custom_yara) == 0: # backcompat
             try:
-                compiled_custom_yara = yara.compile(source=options['source'], externals=externals)
+                compiled_custom_yara = [yara.compile(source=options['source'], externals=externals)]
             except (yara.Error, yara.SyntaxError):
                 self.flags.append('compiling_error')
 
@@ -75,15 +80,14 @@ class ScanYara(strelka.Scanner):
             if self.compiled_yara is not None:
                 yara_matches = self.compiled_yara.match(data=data)
 
-            if compiled_custom_yara is not None:
-                custom_yara_matches = compiled_custom_yara.match(data=data)
-                yara_matches.extend(custom_yara_matches)
+            for custom_yara in compiled_custom_yara:
+                yara_matches.extend(custom_yara.match(data=data))
 
             for match in yara_matches:
                 event = { 'name': match.rule, 'tags': [], 'meta': {} }
                 if match.tags:
                     for tag in match.tags:
-                        if not tag in self.event['tags']:
+                        if not tag in event['tags']:
                             event['tags'].append(tag)
 
                 for k, v in match.meta.items():
