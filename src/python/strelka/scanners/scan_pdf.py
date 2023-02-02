@@ -4,7 +4,7 @@
 import io
 import re
 from collections import Counter
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 import fitz
 
