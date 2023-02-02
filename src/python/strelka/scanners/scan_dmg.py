@@ -51,7 +51,6 @@ class ScanDmg(strelka.Scanner):
 
             try:
                 with tempfile.TemporaryDirectory() as tmp_extract:
-
                     try:
                         (stdout, stderr) = subprocess.Popen(
                             ["7zz", "x", tmp_data.name, f"-o{tmp_extract}"],
@@ -94,7 +93,6 @@ class ScanDmg(strelka.Scanner):
                         try:
                             relname = os.path.relpath(name, tmp_extract)
                             with open(name, "rb") as extracted_file:
-
                                 # Send extracted file back to Strelka
                                 self.emit_file(extracted_file.read(), name=relname)
 
@@ -150,7 +148,6 @@ class ScanDmg(strelka.Scanner):
             )
 
             def parse_file_modes(file_modes):
-
                 file_mode_list = []
 
                 for file_mode in file_modes:
@@ -171,7 +168,6 @@ class ScanDmg(strelka.Scanner):
 
             for output_line in output_lines:
                 if output_line:
-
                     # Properties section
                     match = regex_mode_properties.match(output_line)
                     if match:
@@ -195,7 +191,6 @@ class ScanDmg(strelka.Scanner):
 
                     # Header section
                     if not mode:
-
                         match = regex_7zip_version.match(output_line)
                         if match:
                             version = regex_7zip_version.match(output_line).group(1)
@@ -204,11 +199,9 @@ class ScanDmg(strelka.Scanner):
                             continue
 
                     elif mode == "properties":
-
                         # Collect specific properties
                         match = regex_property.match(output_line)
                         if match:
-
                             if match.group(1) == "Label":
                                 partition["label"] = match.group(2)
                             elif match.group(1) == "Path":

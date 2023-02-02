@@ -154,7 +154,6 @@ class ScanSevenZip(strelka.Scanner):
 
                     relname = os.path.relpath(name, tmp_extract)
                     with open(name, "rb") as extracted_file:
-
                         # Send extracted file back to Strelka
                         self.emit_file(extracted_file.read(), name=relname)
 
@@ -175,7 +174,6 @@ class ScanSevenZip(strelka.Scanner):
             self.parse_7zip_stdout(stdout.decode("utf-8"), file_limit)
 
     def parse_7zip_password(self, output_7zip):
-
         # Method = LZMA2:14 7zAES
         regex_method = re.compile(
             r"Method = (?P<compression>[^ ]+) ?(?P<encryption>.*)"
@@ -187,7 +185,6 @@ class ScanSevenZip(strelka.Scanner):
         output_lines = output_7zip.splitlines()
 
         for output_line in output_lines:
-
             # Method property
             match = regex_method.match(output_line)
             if match and match.group("encryption"):
@@ -227,7 +224,6 @@ class ScanSevenZip(strelka.Scanner):
         )
 
         def parse_file_modes(file_modes):
-
             file_mode_list = []
 
             for file_mode in file_modes:
@@ -248,7 +244,6 @@ class ScanSevenZip(strelka.Scanner):
 
         for output_line in output_lines:
             if output_line:
-
                 # Properties section
                 match = regex_mode_properties.match(output_line)
                 if match:
@@ -272,7 +267,6 @@ class ScanSevenZip(strelka.Scanner):
 
                 # Header section
                 if not mode:
-
                     match = regex_7zip_version.match(output_line)
                     if match:
                         version = regex_7zip_version.match(output_line).group(1)

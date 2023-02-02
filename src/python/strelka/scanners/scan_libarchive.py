@@ -26,7 +26,6 @@ class ScanLibarchive(strelka.Scanner):
                         self.event["total"]["files"] += 1
 
             with libarchive.memory_reader(data) as archive:
-
                 for entry in archive:
                     if entry.isfile:
                         if self.event["total"]["extracted"] >= file_limit:

@@ -25,7 +25,7 @@ class ScanJson(strelka.Scanner):
             variable: Variable to recursively parse.
         """
         if isinstance(variable, dict):
-            for (key, value) in variable.items():
+            for key, value in variable.items():
                 if key not in self.event["keys"]:
                     self.event["keys"].append(key)
                 self._get_keys(self, value)

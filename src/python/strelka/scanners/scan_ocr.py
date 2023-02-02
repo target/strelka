@@ -41,7 +41,6 @@ class ScanOcr(strelka.Scanner):
                         ocr_file = tess_txt.read()
 
                         if ocr_file:
-
                             if split_words:
                                 self.event["text"] = ocr_file.split()
                             else:
@@ -52,7 +51,6 @@ class ScanOcr(strelka.Scanner):
                                 )
 
                             if extract_text:
-
                                 # Send extracted file back to Strelka
                                 self.emit_file(ocr_file, name="text")
 

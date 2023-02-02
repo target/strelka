@@ -8,7 +8,6 @@ from strelka import strelka
 
 
 def convert_unit_john(jtr_number: str) -> float:
-
     if jtr_number.endswith("K"):
         return float(jtr_number[:-1]) * 1000
     elif jtr_number.endswith("M"):

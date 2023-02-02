@@ -42,7 +42,6 @@ class ScanPgp(strelka.Scanner):
             self.flags.append("pgpdump_error")
 
     def parse_pgpdump(self, data):
-
         pgpdump_data = None
 
         try:

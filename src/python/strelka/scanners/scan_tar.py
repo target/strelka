@@ -32,7 +32,6 @@ class ScanTar(strelka.Scanner):
                             try:
                                 tar_file = tar_obj.extractfile(tar_member)
                                 if tar_file is not None:
-
                                     # Send extracted file back to Strelka
                                     self.emit_file(
                                         tar_file.read(), name=tar_member.name

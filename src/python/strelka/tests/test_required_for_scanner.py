@@ -5,12 +5,11 @@ from pathlib import Path
 
 
 def test_required_for_scanner(mocker):
-
     scanner_filenames = []
 
     scanner_path = Path(__file__).parent.parent / "scanners"
 
-    for (dirpath, dirnames, filenames) in walk(scanner_path):
+    for dirpath, dirnames, filenames in walk(scanner_path):
         scanner_filenames.extend(filenames)
         break
 

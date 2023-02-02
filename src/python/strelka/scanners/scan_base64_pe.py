@@ -9,7 +9,6 @@ class ScanBase64PE(strelka.Scanner):
     """Decodes base64-encoded file."""
 
     def scan(self, data, file, options, expire_at):
-
         with io.BytesIO(data) as encoded_file:
             extract_data = b""
 
@@ -20,6 +19,5 @@ class ScanBase64PE(strelka.Scanner):
                 self.flags.append("not_decodable_from_base64")
 
             if extract_data:
-
                 # Send extracted file back to Strelka
                 self.emit_file(extract_data)

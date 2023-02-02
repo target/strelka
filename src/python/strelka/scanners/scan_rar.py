@@ -119,7 +119,6 @@ class ScanRar(strelka.Scanner):
                                     self.flags.append("no_password_match_found")
 
                                 if extract_data:
-
                                     # Send extracted file back to Strelka
                                     self.emit_file(
                                         extract_data, name=f"{file_info.filename}"

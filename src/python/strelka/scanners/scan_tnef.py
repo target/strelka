@@ -35,7 +35,6 @@ class ScanTnef(strelka.Scanner):
         tnef_attachments = getattr(tnef, "attachments", [])
         self.event["total"]["attachments"] = len(tnef_attachments)
         for attachment in tnef_attachments:
-
             # Send extracted file back to Strelka
             self.emit_file(attachment.data, name=attachment.name.decode())
 
@@ -43,6 +42,5 @@ class ScanTnef(strelka.Scanner):
 
         tnef_html = getattr(tnef, "htmlbody", None)
         if tnef_html:
-
             # Send extracted file back to Strelka
             self.emit_file(tnef_html, name="htmlbody")

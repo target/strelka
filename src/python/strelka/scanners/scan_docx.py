@@ -19,7 +19,6 @@ class ScanDocx(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         extract_text = options.get("extract_text", False)
         with io.BytesIO(data) as docx_io:
-
             try:
                 docx_doc = docx.Document(docx_io)
                 self.event["author"] = docx_doc.core_properties.author
@@ -53,7 +52,6 @@ class ScanDocx(strelka.Scanner):
                 self.event["image_count"] = 0
 
                 for paragraph in docx_doc.paragraphs:
-
                     soup = BeautifulSoup(paragraph.paragraph_format.element.xml, "xml")
                     color_list = soup.select("color")
 
@@ -77,7 +75,6 @@ class ScanDocx(strelka.Scanner):
                     self.event["white_text_in_doc"] = True
 
                 if extract_text:
-
                     text = ""
                     for paragraph in docx_doc.paragraphs:
                         text += f"{paragraph.text}\n"

@@ -23,7 +23,7 @@ class ScanRpm(strelka.Scanner):
             try:
                 with rpmfile.open(tmp_data.name) as rpm_obj:
                     extract_name = ""
-                    for (key, value) in rpm_obj.headers.items():
+                    for key, value in rpm_obj.headers.items():
                         if key == "arch":
                             self.event["architecture"] = value
                         elif key == "archive_compression":

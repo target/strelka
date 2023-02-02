@@ -49,7 +49,6 @@ def crack_word(
                 return
 
         if b"0 password hashes cracked" in stdout:
-
             with tempfile.NamedTemporaryFile(dir=tmp_dir) as tmp_data:
                 tmp_data.write(office2john)
                 tmp_data.flush()
@@ -117,7 +116,6 @@ class ScanEncryptedDoc(strelka.Scanner):
     """
 
     def scan(self, data, file, options, expire_at):
-
         jtr_path = options.get("jtr_path", "/jtr/")
         tmp_directory = options.get("tmp_file_directory", "/tmp/")
         password_file = options.get("password_file", "/etc/strelka/passwords.dat")
@@ -127,7 +125,6 @@ class ScanEncryptedDoc(strelka.Scanner):
         max_length = options.get("max_length", 7)
 
         with io.BytesIO(data) as doc_io:
-
             msoff_doc = msoffcrypto.OfficeFile(doc_io)
             output_doc = io.BytesIO()
             if extracted_pw := crack_word(
