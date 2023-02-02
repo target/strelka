@@ -1,10 +1,10 @@
 # https://pymupdf.readthedocs.io/en/latest/index.html
 # https://www.osti.gov/servlets/purl/1030303
 
-import datetime
 import io
 import re
 from collections import Counter
+from datetime import datetime, timedelta, timezone
 
 import fitz
 
@@ -24,10 +24,11 @@ class ScanPdf(strelka.Scanner):
     @staticmethod
     def _convert_timestamp(timestamp):
         try:
-            return str(
-                datetime.datetime.strptime(
-                    timestamp.replace("'", ""), "D:%Y%m%d%H%M%S%z"
-                )
+            # Date string is converted to DateTime, timezone is set to UTC, and returned as ISO string
+            return (
+                datetime.strptime(timestamp.replace("'", ""), "D:%Y%m%d%H%M%S%z")
+                .astimezone(timezone.utc)
+                .strftime("%Y-%m-%dT%H:%M:%SZ")
             )
         except strelka.ScannerTimeout:
             raise
