@@ -440,6 +440,13 @@ scanners:
           - 'application/msword'
           - 'olecf_file'
       priority: 5
+  'ScanOnenote':
+    - positive:
+        flavors:
+          - 'application/onenote'
+          - 'application/msonenote'
+          - 'onenote_file'
+      priority: 5
   'ScanPcap':
     - positive:
         flavors:
