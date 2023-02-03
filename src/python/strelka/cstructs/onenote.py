@@ -1,15 +1,15 @@
 # Authors: Ryan Borre
 
 from construct import (
-    this,
-    Struct,
+    BitsInteger,
     BitStruct,
-    Enum,
     Bytes,
+    Enum,
     Int8ul,
     Int32ul,
     Int64ul,
-    BitsInteger,
+    Struct,
+    this,
 )
 
 FileNodeHeader = "FileNodeHeader" / Struct(

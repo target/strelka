@@ -3,8 +3,9 @@
 import binascii
 import hashlib
 import re
-from strelka.cstructs.onenote import FileDataStoreObject
+
 from strelka import strelka
+from strelka.cstructs.onenote import FileDataStoreObject
 
 
 class ScanOnenote(strelka.Scanner):
