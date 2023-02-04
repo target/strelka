@@ -2,7 +2,7 @@
 Strelka is a real-time, container-based file scanning system used for threat hunting, threat detection, and incident response. Originally based on the design established by Lockheed Martin's [Laika BOSS](https://github.com/lmco/laikaboss) and similar projects (see: [related projects](#related-projects)), Strelka's purpose is to perform file extraction and metadata collection at enterprise scale.
 
 Strelka differs from its sibling projects in a few significant ways:
-* Core codebase is Go and Python3.6+
+* Core codebase is Go and Python 3.9+
 * Server components run in containers for ease and flexibility of deployment
 * OS-native client applications for Windows, Mac, and Linux
 * Built using [libraries and formats](#architecture) that allow cross-platform, cross-language support
@@ -70,7 +70,7 @@ File metadata is an additional pillar of data (alongside network, endpoint, auth
 ### "Should I switch from my current file scanning system to Strelka?"
 It depends -- we recommend reviewing the features of each and choosing the most appropriate tool for your needs. We believe the most significant motivating factors for switching to Strelka are:
 * More scanners (40+ at release) and file types (60+ at release) than [related projects](#related-projects)
-* Modern codebase (Go and Python3.6+)
+* Modern codebase (Go and Python 3.9+)
 * Server components run in containers for ease and flexibility of deployment
 * Performant, OS-native client applications compatible with Windows, Mac, and Linux
 * OS-native client applications for Windows, Mac, and Linux
@@ -191,7 +191,7 @@ Strelka's core client apps are written in Go and can be run natively on a host o
     ```
 
 ### Server Install
-Strelka's core server components are written in Go and Python3.6 and are run from containers. The simplest way to run them is to use docker-compose -- see `build/docker-compose.yaml` for a sample configuration.
+Strelka's core server components are written in Go and Python 3.9+ and are run from containers. The simplest way to run them is to use docker-compose -- see `build/docker-compose.yaml` for a sample configuration.
 
 #### Docker
 1. Clone this repository
