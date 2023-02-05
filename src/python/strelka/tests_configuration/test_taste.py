@@ -49,7 +49,10 @@ taste_expectations: dict = {
         "yara": ["olecf_file"],
     },  # TODO: CDF format needs subtypes
     "test.one": {"mime": ["application/octet-stream"], "yara": ["onenote_file"]},
-    "test.onepkg": {"mime": ["application/vnd.ms-cab-compressed"], "yara": ["cab_file"]},
+    "test.onepkg": {
+        "mime": ["application/vnd.ms-cab-compressed"],
+        "yara": ["cab_file"],
+    },
     "test.pcap": {"mime": ["application/vnd.tcpdump.pcap"], "yara": ["pcap_file"]},
     "test.pcapng": {
         "mime": ["application/octet-stream"],
