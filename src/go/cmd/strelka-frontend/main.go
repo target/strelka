@@ -377,18 +377,22 @@ func (s *server) SyncYara(stream strelka.Frontend_SyncYaraServer) error {
 		keyYaraHash = fmt.Sprintf("yara:hash:%s", yaraCacheKey)
 		p.Set(stream.Context(), keyYaraCacheKey, yaraCacheKey, time.Until(deadline))
 
-		if len(in.Data) > 0 {
-			for _, inData := range in.Data {
-				outData, err := json.Marshal(*inData)
-				if err != nil {
-					return fmt.Errorf("marshaling: %w", err)
-				}
-
-				// Send for compilation
-				p.RPush(stream.Context(), keyYaraSync, outData)
-				p.ExpireAt(stream.Context(), keyYaraSync, deadline)
+		for _, inData := range in.Data {
+			outData, err := json.Marshal(*inData)
+			if err != nil {
+				return fmt.Errorf("marshaling: %w", err)
 			}
 
+			// Send for compilation and sync
+			p.RPush(stream.Context(), keyYaraSync, outData)
+			p.ExpireAt(stream.Context(), keyYaraSync, deadline)
+
+			if _, err := p.Exec(stream.Context()); err != nil {
+				return fmt.Errorf("redis exec: %w", err)
+			}
+		}
+
+		if len(in.Data) == 0 {
 			if _, err := p.Exec(stream.Context()); err != nil {
 				return fmt.Errorf("redis exec: %w", err)
 			}
