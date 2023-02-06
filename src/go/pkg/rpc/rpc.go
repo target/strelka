@@ -129,15 +129,19 @@ func DiscardResponses(responses <-chan *strelka.ScanResponse) {
 }
 
 func ScanFile(client strelka.FrontendClient, timeout time.Duration, req structs.ScanFileRequest, responses chan<- *strelka.ScanResponse) {
+
 	deadline := time.Now().Add(timeout)
 	ctx, cancel := context.WithDeadline(context.Background(), deadline)
 	defer cancel()
 
+	// Read in file
 	file, err := os.Open(req.Attributes.Filename)
 	if err != nil {
 		log.Printf("failed to open file %s: %v", req.Attributes.Filename, err)
 		return
 	}
+
+	// If specified, delete or move file to processed directory
 	if req.Delete {
 		defer os.Remove(req.Attributes.Filename)
 	} else if req.Processed != "" {
@@ -158,6 +162,7 @@ func ScanFile(client strelka.FrontendClient, timeout time.Duration, req structs.
 		return
 	}
 
+	// Send file to the frontend in chunks
 	buffer := make([]byte, req.Chunk)
 	for {
 		n, err := file.Read(buffer)
@@ -170,7 +175,9 @@ func ScanFile(client strelka.FrontendClient, timeout time.Duration, req structs.
 			break
 		}
 
+		// Adhere to send delay
 		time.Sleep(req.Delay)
+
 		scanFile.Send(
 			&strelka.ScanFileRequest{
 				Data:       buffer[:n],
@@ -185,6 +192,7 @@ func ScanFile(client strelka.FrontendClient, timeout time.Duration, req structs.
 		return
 	}
 
+	// Wait for the response from the frontend containing the event
 	for {
 		resp, err := scanFile.Recv()
 		if err == io.EOF {
@@ -195,6 +203,7 @@ func ScanFile(client strelka.FrontendClient, timeout time.Duration, req structs.
 			break
 		}
 
+		// Add the event to the responses channel
 		responses <- resp
 	}
 }

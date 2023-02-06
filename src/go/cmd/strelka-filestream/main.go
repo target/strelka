@@ -58,7 +58,10 @@ func main() {
 	}
 
 	serv := conf.Conn.Server
+
+	// Set up gRPC authentication
 	auth := rpc.SetAuth(conf.Conn.Cert)
+
 	ctx, cancel := context.WithTimeout(context.Background(), conf.Conn.Timeout.Dial)
 	defer cancel()
 	conn, err := grpc.DialContext(ctx, serv, auth, grpc.WithBlock())
@@ -70,12 +73,18 @@ func main() {
 	var wgRequest sync.WaitGroup
 	var wgResponse sync.WaitGroup
 
+	// Connect to frontend
 	frontend := strelka.NewFrontendClient(conn)
+
+	// Create buffered channel to track concurrency
 	sem := make(chan int, conf.Throughput.Concurrency)
 	defer close(sem)
+
+	// Create buffered channel to collect responses
 	responses := make(chan *strelka.ScanResponse, 100)
 	defer close(responses)
 
+	// Set callback for completed requests, returning events
 	wgResponse.Add(1)
 	if conf.Response.Log != "" {
 		go func() {
@@ -107,16 +116,20 @@ func main() {
 		log.Fatalf("failed to retrieve hostname: %v", err)
 	}
 
+	// Create request metadata
 	request := &strelka.Request{
 		Client:     client,
 		Source:     hostname,
 		Gatekeeper: conf.Files.Gatekeeper,
 	}
 
+	// Collect files from staging directory
 	staging := conf.Staging
 	if _, err := os.Stat(staging); os.IsNotExist(err) {
 		os.Mkdir(staging, 0600)
 	} else {
+
+		// Find matching files in the stage directory
 		match, err := filepath.Glob(filepath.Join(staging, "*"))
 		if err != nil {
 			log.Fatalf("failed to glob staging %s: %v", staging, err)
@@ -129,22 +142,27 @@ func main() {
 				continue
 			}
 
+			// Ignore non-file paths
 			if fi.Mode()&os.ModeType != 0 {
 				continue
 			}
 
+			// Create request
 			req := structs.ScanFileRequest{
 				Request: request,
 				Attributes: &strelka.Attributes{
 					Filename: f,
 				},
-				Chunk:  conf.Throughput.Chunk,
-				Delay:  conf.Throughput.Delay,
-				Delete: conf.Files.Delete,
-				Processed:   conf.Files.Processed,
+				Chunk:     conf.Throughput.Chunk,
+				Delay:     conf.Throughput.Delay,
+				Delete:    conf.Files.Delete,
+				Processed: conf.Files.Processed,
 			}
 
+			// Increment request concurrency channel
+			// This will block if the channel is full
 			sem <- 1
+			// Add request to asyncronous wait group
 			wgRequest.Add(1)
 			go func() {
 				rpc.ScanFile(
@@ -154,14 +172,18 @@ func main() {
 					responses,
 				)
 				wgRequest.Done()
+				// Decrement request concurrency channel
 				<-sem
 			}()
 		}
 	}
 
+	// Collect files from configuration-specified directories
 	for {
 		t := time.Now()
 		for _, p := range conf.Files.Patterns {
+
+			// Find matching files
 			match, err := filepath.Glob(p)
 			if err != nil {
 				log.Printf("failed to glob pattern %s: %v", p, err)
@@ -175,10 +197,12 @@ func main() {
 					continue
 				}
 
+				// Ignore non-file paths
 				if fi.Mode()&os.ModeType != 0 {
 					continue
 				}
 
+				// Ignore older files
 				if t.Sub(fi.ModTime()) < conf.Delta {
 					continue
 				}
@@ -190,18 +214,23 @@ func main() {
 					log.Fatalf("failed to stage file %s: %v", s, err)
 				}
 
+				// Create request
 				req := structs.ScanFileRequest{
 					Request: request,
 					Attributes: &strelka.Attributes{
 						Filename: s,
 					},
-					Chunk:  conf.Throughput.Chunk,
-					Delay:  conf.Throughput.Delay,
-					Delete: conf.Files.Delete,
-					Processed:   conf.Files.Processed,
+					Chunk:     conf.Throughput.Chunk,
+					Delay:     conf.Throughput.Delay,
+					Delete:    conf.Files.Delete,
+					Processed: conf.Files.Processed,
 				}
 
+				// Increment request concurrency channel
+				// This will block if the channel is full
 				sem <- 1
+
+				// Add request to asyncronous wait group
 				wgRequest.Add(1)
 				go func() {
 					rpc.ScanFile(
@@ -211,6 +240,7 @@ func main() {
 						responses,
 					)
 					wgRequest.Done()
+					// Decrement request concurrency channel
 					<-sem
 				}()
 			}
@@ -221,7 +251,11 @@ func main() {
 
 	// TODO: the app never actually gets to this point, we need some kind of signal handling
 	wgRequest.Wait()
+
+	// Adding nil to the end of the responses channel
+	// When a nil is reached, the Responses output functions exit
 	responses <- nil
+
 	wgResponse.Wait()
 
 	if *heapProf {
