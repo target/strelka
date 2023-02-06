@@ -73,10 +73,10 @@ func main() {
 	var wgRequest sync.WaitGroup
 	var wgResponse sync.WaitGroup
 
-    // Connect to frontend
+	// Connect to frontend
 	frontend := strelka.NewFrontendClient(conn)
 
-    // Create buffered channel to track concurrency
+	// Create buffered channel to track concurrency
 	sem := make(chan int, conf.Throughput.Concurrency)
 	defer close(sem)
 
@@ -84,7 +84,7 @@ func main() {
 	responses := make(chan *strelka.ScanResponse, 100)
 	defer close(responses)
 
-    // Set callback for completed requests, returning events
+	// Set callback for completed requests, returning events
 	wgResponse.Add(1)
 	if conf.Response.Log != "" {
 		go func() {
@@ -116,7 +116,7 @@ func main() {
 		log.Fatalf("failed to retrieve hostname: %v", err)
 	}
 
-    // Create request metadata
+	// Create request metadata
 	request := &strelka.Request{
 		Client:     client,
 		Source:     hostname,
@@ -142,27 +142,27 @@ func main() {
 				continue
 			}
 
-            // Ignore non-file paths
+			// Ignore non-file paths
 			if fi.Mode()&os.ModeType != 0 {
 				continue
 			}
 
-            // Create request
+			// Create request
 			req := structs.ScanFileRequest{
 				Request: request,
 				Attributes: &strelka.Attributes{
 					Filename: f,
 				},
-				Chunk:  conf.Throughput.Chunk,
-				Delay:  conf.Throughput.Delay,
-				Delete: conf.Files.Delete,
-				Processed:   conf.Files.Processed,
+				Chunk:     conf.Throughput.Chunk,
+				Delay:     conf.Throughput.Delay,
+				Delete:    conf.Files.Delete,
+				Processed: conf.Files.Processed,
 			}
 
-            // Increment request concurrency channel
-            // This will block if the channel is full
-            sem <- 1
-            // Add request to asyncronous wait group
+			// Increment request concurrency channel
+			// This will block if the channel is full
+			sem <- 1
+			// Add request to asyncronous wait group
 			wgRequest.Add(1)
 			go func() {
 				rpc.ScanFile(
@@ -183,7 +183,7 @@ func main() {
 		t := time.Now()
 		for _, p := range conf.Files.Patterns {
 
-		    // Find matching files
+			// Find matching files
 			match, err := filepath.Glob(p)
 			if err != nil {
 				log.Printf("failed to glob pattern %s: %v", p, err)
@@ -197,12 +197,12 @@ func main() {
 					continue
 				}
 
-                // Ignore non-file paths
+				// Ignore non-file paths
 				if fi.Mode()&os.ModeType != 0 {
 					continue
 				}
 
-                // Ignore older files
+				// Ignore older files
 				if t.Sub(fi.ModTime()) < conf.Delta {
 					continue
 				}
@@ -214,20 +214,20 @@ func main() {
 					log.Fatalf("failed to stage file %s: %v", s, err)
 				}
 
-                // Create request
+				// Create request
 				req := structs.ScanFileRequest{
 					Request: request,
 					Attributes: &strelka.Attributes{
 						Filename: s,
 					},
-					Chunk:  conf.Throughput.Chunk,
-					Delay:  conf.Throughput.Delay,
-					Delete: conf.Files.Delete,
-					Processed:   conf.Files.Processed,
+					Chunk:     conf.Throughput.Chunk,
+					Delay:     conf.Throughput.Delay,
+					Delete:    conf.Files.Delete,
+					Processed: conf.Files.Processed,
 				}
 
-                // Increment request concurrency channel
-                // This will block if the channel is full
+				// Increment request concurrency channel
+				// This will block if the channel is full
 				sem <- 1
 
 				// Add request to asyncronous wait group

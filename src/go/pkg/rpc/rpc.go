@@ -156,7 +156,6 @@ func ScanFile(client strelka.FrontendClient, timeout time.Duration, req structs.
 	}
 	defer file.Close()
 
-
 	scanFile, err := client.ScanFile(ctx, grpc.WaitForReady(true))
 	if err != nil {
 		log.Println(errToMsg(err))

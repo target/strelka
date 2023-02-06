@@ -67,7 +67,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 	var attr *strelka.Attributes
 	var req *strelka.Request
 
-    // Recieve gRPC data from client
+	// Recieve gRPC data from client
 	for {
 		in, err := stream.Recv()
 		if err == io.EOF {
@@ -86,7 +86,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 
 		hash.Write(in.Data)
 
-        // Send file data to coordinator Redis
+		// Send file data to coordinator Redis
 		p := s.coordinator.cli.Pipeline()
 		p.RPush(stream.Context(), keyd, in.Data)
 		p.ExpireAt(stream.Context(), keyd, deadline)
@@ -102,7 +102,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		req.Id = id
 	}
 
-    // Generate file hash
+	// Generate file hash
 	sha := fmt.Sprintf("hash:%x", hash.Sum(nil))
 
 	// Embed metadata for request in event
@@ -115,17 +115,17 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		Time:       time.Now().Unix(),
 	}
 
-    // If the client requests gatekeeper caching support
+	// If the client requests gatekeeper caching support
 	if req.Gatekeeper {
 
-	    // Check Redis for an event attached to the file hash
+		// Check Redis for an event attached to the file hash
 		lrange := s.gatekeeper.cli.LRange(stream.Context(), sha, 0, -1).Val()
 
 		// If the gatekeeper has a cached event
 		if len(lrange) > 0 {
 			for _, e := range lrange {
 
-			    // Add cached event data
+				// Add cached event data
 				if err := json.Unmarshal([]byte(e), &em); err != nil {
 					return err
 				}
@@ -135,20 +135,20 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 					return err
 				}
 
-                // Generate a response with cached event
+				// Generate a response with cached event
 				resp := &strelka.ScanResponse{
 					Id:    req.Id,
 					Event: string(event),
 				}
 
-                // Send gRPC response back to client
+				// Send gRPC response back to client
 				s.responses <- resp
 				if err := stream.Send(resp); err != nil {
 					return err
 				}
 			}
 
-            // Delete file data from Redis coordinator
+			// Delete file data from Redis coordinator
 			if err := s.coordinator.cli.Del(stream.Context(), keyd).Err(); err != nil {
 				return err
 			}
@@ -162,10 +162,10 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		return err
 	}
 
-    // Add request task to Redis coordinator with expiration timestamp
-    // Backend will be waiting for new tasks to appear in this list
+	// Add request task to Redis coordinator with expiration timestamp
+	// Backend will be waiting for new tasks to appear in this list
 	if err := s.coordinator.cli.ZAdd(
-	    stream.Context(),
+		stream.Context(),
 		"tasks",
 		&redis.Z{
 			Score:  float64(deadline.Unix()),
@@ -175,13 +175,13 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		return err
 	}
 
-    // Delete any existing event from gatekeeper cache based on file hash
+	// Delete any existing event from gatekeeper cache based on file hash
 	tx := s.gatekeeper.cli.TxPipeline()
 	tx.Del(stream.Context(), sha)
 
 	for {
 
-	    // Wait for event to appear in the coordinator
+		// Wait for event to appear in the coordinator
 		lpop, err := s.coordinator.cli.LPop(stream.Context(), keye).Result()
 		if err != nil {
 			time.Sleep(250 * time.Millisecond)
@@ -191,7 +191,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 			break
 		}
 
-        // Send event to gatekeeper cache
+		// Send event to gatekeeper cache
 		tx.RPush(stream.Context(), sha, lpop)
 		if err := json.Unmarshal([]byte(lpop), &em); err != nil {
 			return err
@@ -202,20 +202,20 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 			return err
 		}
 
-        // Generate a response with event data
+		// Generate a response with event data
 		resp := &strelka.ScanResponse{
 			Id:    req.Id,
 			Event: string(event),
 		}
 
-        // Send gRPC response back to client
+		// Send gRPC response back to client
 		s.responses <- resp
 		if err := stream.Send(resp); err != nil {
 			return err
 		}
 	}
 
-    // Set expiration on chached event
+	// Set expiration on chached event
 	tx.Expire(stream.Context(), sha, s.gatekeeper.ttl)
 	if _, err := tx.Exec(stream.Context()); err != nil {
 		return err
