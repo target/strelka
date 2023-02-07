@@ -3,6 +3,7 @@ import zipfile
 
 import docx
 from bs4 import BeautifulSoup
+from datetime import timezone
 
 from strelka import strelka
 
@@ -26,9 +27,7 @@ class ScanDocx(strelka.Scanner):
                 self.event["comments"] = docx_doc.core_properties.comments
                 self.event["content_status"] = docx_doc.core_properties.content_status
                 if docx_doc.core_properties.created is not None:
-                    self.event["created"] = int(
-                        docx_doc.core_properties.created.strftime("%s")
-                    )
+                    self.event["created"] = docx_doc.core_properties.created.isoformat()
                 self.event["identifier"] = docx_doc.core_properties.identifier
                 self.event["keywords"] = docx_doc.core_properties.keywords
                 self.event["language"] = docx_doc.core_properties.language
@@ -36,13 +35,9 @@ class ScanDocx(strelka.Scanner):
                     "last_modified_by"
                 ] = docx_doc.core_properties.last_modified_by
                 if docx_doc.core_properties.last_printed is not None:
-                    self.event["last_printed"] = int(
-                        docx_doc.core_properties.last_printed.strftime("%s")
-                    )
+                    self.event["last_printed"] = docx_doc.core_properties.last_printed.isoformat()
                 if docx_doc.core_properties.modified is not None:
-                    self.event["modified"] = int(
-                        docx_doc.core_properties.modified.strftime("%s")
-                    )
+                    self.event["modified"] = docx_doc.core_properties.modified.isoformat()
                 self.event["revision"] = docx_doc.core_properties.revision
                 self.event["subject"] = docx_doc.core_properties.subject
                 self.event["title"] = docx_doc.core_properties.title
