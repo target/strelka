@@ -1,6 +1,9 @@
 ---
 name: Feature Request
 about: Suggest an enhancement for the project
+title: "[REQUEST]"
+labels: enhancement
+assignees: phutelmyer
 
 ---
 
