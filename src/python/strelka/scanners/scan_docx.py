@@ -1,9 +1,9 @@
 import io
 import zipfile
+from datetime import timezone
 
 import docx
 from bs4 import BeautifulSoup
-from datetime import timezone
 
 from strelka import strelka
 
@@ -35,9 +35,13 @@ class ScanDocx(strelka.Scanner):
                     "last_modified_by"
                 ] = docx_doc.core_properties.last_modified_by
                 if docx_doc.core_properties.last_printed is not None:
-                    self.event["last_printed"] = docx_doc.core_properties.last_printed.isoformat()
+                    self.event[
+                        "last_printed"
+                    ] = docx_doc.core_properties.last_printed.isoformat()
                 if docx_doc.core_properties.modified is not None:
-                    self.event["modified"] = docx_doc.core_properties.modified.isoformat()
+                    self.event[
+                        "modified"
+                    ] = docx_doc.core_properties.modified.isoformat()
                 self.event["revision"] = docx_doc.core_properties.revision
                 self.event["subject"] = docx_doc.core_properties.subject
                 self.event["title"] = docx_doc.core_properties.title
