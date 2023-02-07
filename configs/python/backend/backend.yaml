@@ -336,6 +336,21 @@ scanners:
           - 'application/msword'
           - 'olecf_file'
       priority: 5
+  'ScanOnenote':
+    - positive:
+        flavors:
+          - 'application/onenote'
+          - 'application/msonenote'
+          - 'onenote_file'
+      priority: 5
+  'ScanPcap':
+    - positive:
+        flavors:
+          - 'pcap_file'
+          - 'pcapng_file'
+      priority: 5
+      options:
+        scanner_timeout: 20
   'ScanPdf':
     - positive:
         flavors:

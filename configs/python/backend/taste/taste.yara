@@ -219,6 +219,30 @@ rule doc_subheader_file {
         uint32(0) == 0x00C1A5EC
 }
 
+rule excel4_file
+{
+    meta:
+        type = "excel4"
+    strings:
+        $excel4 = { 45 78 63 65 6c (20 34 | 34) } // Excel4 or Excel 4
+        $rels = /xl\/_rels\/workbook\.(xml|bin)\.rels/
+        $sheet = "xl/macrosheets"
+        $xlsstr = "xl/sharedStrings"
+    condition:
+        (uint32be(0) == 0xd0cf11e0 and $excel4) or
+        (uint32be(0) == 0x504b0304 and $rels and $sheet and $xlsstr)
+}
+
+rule onenote_file
+{
+    meta:
+        type = "document"
+    strings:
+        $guid = { e4 52 5c 7b 8c d8 a7 4d ae b1 53 78 d0 29 96 d3 }
+    condition:
+        $guid at 0
+}
+
 rule mso_file {
     meta:
         type = "document"

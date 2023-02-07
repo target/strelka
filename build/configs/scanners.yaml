@@ -345,6 +345,13 @@ scanners:
       options:
         extract_text: True
         limit: 2000
+  'ScanOnenote':
+    - positive:
+        flavors:
+          - 'application/onenote'
+          - 'application/msonenote'
+          - 'onenote_file'
+      priority: 5
 #  'ScanPe': This is too slow for now
 #    - positive:
 #        flavors:
@@ -455,6 +462,8 @@ scanners:
           - 'rtf_file'
           - 'pdf_file'
           - 'onenote_file'
+          - 'application/onenote'
+          - 'application/msonenote'
       priority: 5
 #  'ScanSwf':
 #    - positive:
