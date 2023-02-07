@@ -1,6 +1,5 @@
 import io
 import zipfile
-from datetime import timezone
 
 import docx
 from bs4 import BeautifulSoup
