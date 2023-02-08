@@ -1,6 +1,13 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-02-08
+- Changing output timestamps for `ScanDocx`, `ScanPDF` to ISO time.
+- Updating `cryptography` dependency across project.
+- Added 'ScanOnenote' and associated tests.
+- Removed `ScanBITS` and associated references.
+- Added style / formatting Github action automations
+
 ## 2023-01-27
 ### Changed
 - Added tests and option limiters to `ScanHtml` and `ScanJavascript`
