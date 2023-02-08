@@ -27,7 +27,7 @@ class XLSMWrapper:
 
         for sheet in self.workbook.sheetnames:
             # check if the sheet is a Worksheet
-            if hasattr(self.workbook[sheet], 'rows'):
+            if hasattr(self.workbook[sheet], "rows"):
                 sheet_count += 1
                 formulas = []
                 values = []

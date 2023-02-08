@@ -9,6 +9,8 @@ class ScanXl4ma(strelka.Scanner):
 
     def scan(self, data, file, options, expire_at):
         results = {}
+
+        # Attempt to process Excel data using analyzer
         try:
             results = analyzer.process_data(data=data, filename=file.name)
         except strelka.ScannerTimeout:
@@ -18,6 +20,7 @@ class ScanXl4ma(strelka.Scanner):
             print(str(e))
             return
 
+        # If processing successful, extract keys and apply to IOC scanner.
         if results:
             self.event["decoded"] = results.get("decoded", [])
             self.event["iocs"] = results.get("iocs", [])
