@@ -35,5 +35,6 @@ class BackendConfig:
 
     def configure_logging(self):
         log_cfg_path = self.dictionary.get("logging_cfg")
-        with open(log_cfg_path) as f:
-            logging.config.dictConfig(yaml.safe_load(f.read()))
+        if os.path.exists(log_cfg_path):
+            with open(log_cfg_path) as f:
+                logging.config.dictConfig(yaml.safe_load(f.read()))
