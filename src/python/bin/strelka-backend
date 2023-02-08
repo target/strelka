@@ -5,14 +5,9 @@ strelka-backend
 Command line utility for running Strelka backend server components.
 """
 import argparse
-import logging.config
-import os
-import sys
 
-import redis
-import yaml
-
-from strelka import strelka
+import strelka.strelka
+import strelka.config
 
 
 def main():
@@ -30,45 +25,16 @@ def main():
     )
     args = parser.parse_args()
 
-    backend_cfg_path = ""
     if args.backend_cfg_path:
-        if not os.path.exists(args.backend_cfg_path):
-            logging.exception(
-                f"backend configuration {args.backend_cfg_path} does not exist"
-            )
-            sys.exit()
-        backend_cfg_path = args.backend_cfg_path
-    elif os.path.exists("/etc/strelka/backend.yaml"):
-        backend_cfg_path = "/etc/strelka/backend.yaml"
+        config = strelka.config.BackendConfig(args.backend_cfg_path)
     else:
-        logging.exception("no backend configuration found")
-        sys.exit()
+        config = strelka.config.BackendConfig()
 
-    with open(backend_cfg_path) as f:
-        backend_cfg = yaml.safe_load(f.read())
-
-    log_cfg_path = backend_cfg.get("logging_cfg")
-    with open(log_cfg_path) as f:
-        logging.config.dictConfig(yaml.safe_load(f.read()))
-    logging.info(f"using backend configuration {backend_cfg_path}")
-
-    try:
-        coordinator_cfg = backend_cfg.get("coordinator")
-        coordinator_addr = coordinator_cfg.get("addr").split(":")
-        coordinator = redis.StrictRedis(
-            host=coordinator_addr[0],
-            port=coordinator_addr[1],
-            db=coordinator_cfg.get("db"),
-        )
-        if coordinator.ping():
-            logging.debug("verified coordinator is up")
-
-    except Exception:
-        logging.exception("coordinator unavailable")
-        sys.exit()
-
-    backend = strelka.Backend(backend_cfg, coordinator)
-    backend.work()
+    if config:
+        backend = strelka.strelka.Backend(config.dictionary, coordinator=True)
+        backend.work()
+    else:
+        raise Exception("failed to initialize configuration")
 
 
 if __name__ == "__main__":
