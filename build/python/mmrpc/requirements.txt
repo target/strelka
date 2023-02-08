@@ -1,4 +1,4 @@
-cryptography==3.3.2
+cryptography==39.0.1
 grpcio==1.42.0
 grpcio-tools==1.42.0
 git+https://github.com/egaus/MaliciousMacroBot
