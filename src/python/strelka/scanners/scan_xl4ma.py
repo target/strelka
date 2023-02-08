@@ -8,13 +8,14 @@ class ScanXl4ma(strelka.Scanner):
     """Extracts Excel 4 cell contents and attempts to extract IOCs"""
 
     def scan(self, data, file, options, expire_at):
+        results = {}
         try:
             results = analyzer.process_data(data=data, filename=file.name)
         except strelka.ScannerTimeout:
             raise
         except Exception as e:
-            self.flags.append(e)
-            print(e)
+            self.flags.append(str(e))
+            print(str(e))
             return
 
         if results:
