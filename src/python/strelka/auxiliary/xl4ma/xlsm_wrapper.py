@@ -26,41 +26,41 @@ class XLSMWrapper:
         sheet_count = 0
 
         for sheet in self.workbook.sheetnames:
-            sheet_count += 1
-            formulas = []
-            values = []
-            for row in self.workbook[sheet].rows:
-                for cell in row:
-                    if cell.value:
-                        if cell.data_type == "f":
-                            formula_count += 1
-                            formulas.append(
-                                {"cell": cell.coordinate, "value": cell.value}
-                            )
-                            if re.match(r"^=?\w+?\(\)$", cell.value):
-                                worksheet = self.workbook[sheet]
-                                worksheet[cell.coordinate] = ""
-                        elif cell.data_type == "n":
-                            value_count += 1
-                            values.append(
-                                {"cell": cell.coordinate, "value": cell.value}
-                            )
-                        elif cell.data_type == "s":
-                            value_count += 1
-                            values.append(
-                                {"cell": cell.coordinate, "value": cell.value}
-                            )
+            # check if the sheet is a Worksheet
+            if hasattr(self.workbook[sheet], "rows"):
+                sheet_count += 1
+                formulas = []
+                values = []
+                for row in self.workbook[sheet].rows:
+                    for cell in row:
+                        if cell.value:
+                            if cell.data_type == "f":
+                                formula_count += 1
+                                formulas.append(
+                                    {"cell": cell.coordinate, "value": cell.value}
+                                )
+                                if re.match(r"^=?\w+?\(\)$", cell.value):
+                                    worksheet = self.workbook[sheet]
+                                    worksheet[cell.coordinate] = ""
+                            elif cell.data_type == "n":
+                                value_count += 1
+                                values.append(
+                                    {"cell": cell.coordinate, "value": cell.value}
+                                )
+                            elif cell.data_type == "s":
+                                value_count += 1
+                                values.append(
+                                    {"cell": cell.coordinate, "value": cell.value}
+                                )
 
-            results["sheets"].append(
-                {
-                    # 'sheet_number': sheet.sheetId,
-                    "sheet_name": sheet,
-                    # 'sheet_type': sheet.type.upper(),
-                    "visibility": self.workbook[sheet].sheet_state.upper(),
-                    "formulas": formulas,
-                    "values": values,
-                }
-            )
+                results["sheets"].append(
+                    {
+                        "sheet_name": sheet,
+                        "visibility": self.workbook[sheet].sheet_state.upper(),
+                        "formulas": formulas,
+                        "values": values,
+                    }
+                )
 
         results["defined_names"] = self.get_defined_names()
         results["meta"] = {
