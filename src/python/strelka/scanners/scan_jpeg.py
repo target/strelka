@@ -79,6 +79,6 @@ class ScanJpeg(strelka.Scanner):
 
                 # Send extracted file back to Strelka
                 self.emit_file(trailer_data)
-        except:
+        except Exception:
             self.flags.append("jpeg_general_parsing_error")
             return

@@ -51,7 +51,7 @@ class ScanPkcs7(strelka.Scanner):
                             self.emit_file(
                                 cert.as_der(), name=f"sn_{cert.get_serial_number()}"
                             )
-                        except Exception as e:
+                        except Exception:
                             self.flags(
                                 f"{self.__class__.__name__} Exception:  Error processing PKCS7 signers."
                             )
