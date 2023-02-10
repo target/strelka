@@ -15,7 +15,9 @@ class ScanZlib(strelka.Scanner):
             # Send extracted file back to Strelka
             self.emit_file(decompressed, name=file.name)
         except zlib.error:
-            self.flags(f"{self.__class__.__name__} Exception: Invalid compression or decompression data.")
+            self.flags(
+                f"{self.__class__.__name__} Exception: Invalid compression or decompression data."
+            )
         except Exception as e:
             self.flags(f"{self.__class__.__name__} Exception: {str(e[:50])}")
             return

@@ -63,7 +63,9 @@ class ScanJpeg(strelka.Scanner):
                     offset += 2
                     break
                 else:
-                    marker_length = struct.unpack(">H", data[offset + 2 : offset + 4])[0]
+                    marker_length = struct.unpack(">H", data[offset + 2 : offset + 4])[
+                        0
+                    ]
                     offset += 2
                     offset += marker_length
 
