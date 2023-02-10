@@ -7,6 +7,8 @@ from strelka.tests import run_test_scan
 
 def test_scan_tlsh(mocker):
     """
+    This test matches on multiple TLSH hashes in `test.yaml`.
+    This test should end up with the correct answer, a score of 0, rather than a score 9, which it will match on first.
     Pass: Sample event matches output of scanner.
     Failure: Unable to load file or sample event fails to match.
     """
