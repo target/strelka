@@ -1,6 +1,6 @@
 # Authors: Ryan Borre
 
-from construct import this, Struct, Bytes, Int64ul
+from construct import Bytes, Int64ul, Struct, this
 
 FileDataStoreObject = "FileDataStoreObject" / Struct(
     "guidHeader" / Bytes(16),
