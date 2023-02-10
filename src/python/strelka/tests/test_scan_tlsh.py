@@ -12,14 +12,18 @@ def test_scan_tlsh(mocker):
     """
     test_scan_event = {
         "elapsed": mock.ANY,
-        "match": {"family": "TestMatchA", "score": 0},
+        "match": {
+            "family": "TestMatchA",
+            "score": 0,
+            "tlsh": "T120957D477C8041A6C0AA9336896652D17B30BC991F2127D32F60F7F92F367E85E7931A",
+        },
         "flags": [],
     }
 
     scanner_event = run_test_scan(
         mocker=mocker,
         scan_class=ScanUnderTest,
-        fixture_path=Path(__file__).parent / "fixtures/test.txt",
+        fixture_path=Path(__file__).parent / "fixtures/test.tlsh",
         options={"location": str(Path(Path(__file__).parent / "fixtures/test.yaml"))},
     )
 

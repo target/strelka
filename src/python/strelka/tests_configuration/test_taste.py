@@ -64,6 +64,10 @@ taste_expectations: dict = {
     "test.png": {"mime": ["image/png"], "yara": ["png_file"]},
     "test.rar": {"mime": ["application/x-rar"], "yara": ["rar_file"]},
     "test.tar": {"mime": ["application/x-tar"], "yara": ["tar_file"]},
+    "test.tlsh": {
+        "mime": ["application/x-mach-binary"],
+        "yara": ["macho_file", "credit_cards"],
+    },
     "test.txt": {"mime": ["text/plain"], "yara": []},
     "test.txt.asc": {"mime": ["text/PGP"], "yara": ["pgp_file"]},
     "test.txt.gpg": {
