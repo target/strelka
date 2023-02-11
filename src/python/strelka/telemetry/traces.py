@@ -44,7 +44,7 @@ def get_tracer(traces_config: dict, meta: Optional[dict] = None) -> trace.Tracer
             processor = BatchSpanProcessor(
                 OTLPSpanExporter(
                     endpoint=traces_config.get("addr", ""),
-                    insecure=traces_config.get("insecure", False),
+                    insecure=False if traces_config.get("auth", {}) else True,
                 )
             )
 
