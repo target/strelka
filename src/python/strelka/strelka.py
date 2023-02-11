@@ -21,7 +21,7 @@ import redis
 import validators  # type: ignore
 import yara  # type: ignore
 from boltons import iterutils  # type: ignore
-from opentelemetry import trace
+from opentelemetry import context, trace
 from tldextract import TLDExtract  # type: ignore
 
 from . import __namespace__
@@ -302,16 +302,12 @@ class Backend(object):
             TraceContextTextMapPropagator,
         )
 
-        ctx = None
-
         if traceparent:
             carrier = {"traceparent": traceparent}
             ctx = TraceContextTextMapPropagator().extract(carrier)
+            context.attach(ctx)
 
-        with self.tracer.start_as_current_span(
-            "distribute",
-            context=ctx,
-        ) as current_span:
+        with self.tracer.start_as_current_span("distribute") as current_span:
             try:
                 data = b""
                 files = []
