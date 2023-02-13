@@ -196,6 +196,9 @@ scanners:
           - 'application/x-shockwave-flash'
           - 'fws_file'
           - 'image/webp'
+          - 'image/avif'
+          - 'image/heic'
+          - 'image/heif'
       priority: 5
       options:
         keys:
@@ -350,6 +353,9 @@ scanners:
           - 'image/x-ms-bmp'
           - 'bmp_file'
           - 'image/webp'
+      negative:
+        source:
+          - 'ScanTranscode'
       priority: 5
   'ScanLzma':
     - positive:
@@ -415,6 +421,9 @@ scanners:
           - 'image/x-ms-bmp'
           - 'bmp_file'
           - 'image/webp'
+      negative:
+        source:
+          - 'ScanTranscode'
       priority: 5
   'ScanOcr':
     - positive:
@@ -519,6 +528,9 @@ scanners:
         flavors:
           - 'image/png'
           - 'png_file'
+      negative:
+        source:
+          - 'ScanTranscode'
       priority: 5
   'ScanQr':
     - positive:
@@ -605,6 +617,12 @@ scanners:
           - 'application/vnd.ms-tnef'
           - 'tnef_file'
       priority: 5
+  'ScanTranscode':
+    - positive:
+        flavors:
+          - 'image/avif'
+          - 'image/heic'
+          - 'image/heif'
   'ScanUpx':
     - positive:
         flavors:
