@@ -129,7 +129,12 @@ def timeout_handler(ex):
 
 
 class Backend(object):
-    def __init__(self, backend_cfg: dict, coordinator: bool = True) -> None:
+    def __init__(
+        self,
+        backend_cfg: dict,
+        coordinator: Optional[redis.StrictRedis] = None,
+        disable_coordinator: Optional[bool] = False,
+    ) -> None:
         self.scanner_cache: dict = {}
         self.backend_cfg: dict = backend_cfg
         self.coordinator: Optional[redis.StrictRedis] = None
@@ -164,7 +169,21 @@ class Backend(object):
         else:
             self.compiled_yara = yara.compile(filepath=yara_rules)
 
-        if coordinator:
+        # If a coordinator is supplied, use it unless explicitly disabled
+        if coordinator and disable_coordinator is False:
+            self.coordinator = coordinator
+            if self.coordinator.ping():
+                logging.debug("coordinator up")
+            else:
+                raise Exception("coordinator ping failed")
+
+        #  If a coordinator is not supplied, try to make one from the config file
+        #  unless explicitly disabled
+        elif (
+            not coordinator
+            and disable_coordinator is False
+            and backend_cfg.get("coordinator")
+        ):
             try:
                 coordinator_cfg = backend_cfg.get("coordinator")
                 coordinator_addr = coordinator_cfg.get("addr").split(":")
@@ -180,6 +199,9 @@ class Backend(object):
             except Exception:
                 logging.exception("coordinator unavailable")
                 raise
+
+        if not self.coordinator:
+            logging.info("backend started without coordinator")
 
     def taste_mime(self, data: bytes) -> list:
         """Tastes file data with libmagic."""

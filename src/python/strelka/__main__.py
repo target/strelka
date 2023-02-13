@@ -67,7 +67,7 @@ def main():
 
         print(backend_cfg)
 
-        backend = strelka.strelka.Backend(backend_cfg, coordinator=False)
+        backend = strelka.strelka.Backend(backend_cfg, disable_coordinator=True)
 
         with open(args.filename, "rb") as analysis_file:
             data = analysis_file.read()

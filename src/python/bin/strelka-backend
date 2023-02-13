@@ -31,7 +31,7 @@ def main():
         config = strelka.config.BackendConfig()
 
     if config:
-        backend = strelka.strelka.Backend(config.dictionary, coordinator=True)
+        backend = strelka.strelka.Backend(config.dictionary)
         backend.work()
     else:
         raise Exception("failed to initialize configuration")
