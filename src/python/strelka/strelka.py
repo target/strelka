@@ -329,7 +329,7 @@ class Backend(object):
             ctx = TraceContextTextMapPropagator().extract(carrier)
             context.attach(ctx)
 
-        with self.tracer.start_as_current_span("distribute") as current_span:
+        with self.tracer.start_as_current_span("distribute") as distribute_span:
             try:
                 data = b""
                 files = []
@@ -352,10 +352,7 @@ class Backend(object):
                         data = file.data
                     elif self.coordinator:
                         # Pull data for file from coordinator
-                        with self.tracer.start_as_current_span("lpop") as current_span:
-                            # logging.debug(
-                            #    f"Fetch file data for {file.pointer} from Redis"
-                            # )
+                        with self.tracer.start_as_current_span("lpop"):
                             while True:
                                 pop = self.coordinator.lpop(f"data:{file.pointer}")
                                 if pop is None:
@@ -391,39 +388,45 @@ class Backend(object):
                     file.tree = tree_dict
 
                     # Set span attributes for the File object
-                    current_span.set_attribute(
+
+                    print(f"{__namespace__}.file.depth", file.depth)
+                    distribute_span.set_attribute(
                         f"{__namespace__}.file.depth", file.depth
                     )
-                    current_span.set_attribute(
+                    distribute_span.set_attribute(
                         f"{__namespace__}.file.flavors.mime",
                         file.flavors.get("mime", ""),
                     )
-                    current_span.set_attribute(
+                    distribute_span.set_attribute(
                         f"{__namespace__}.file.flavors.yara",
                         file.flavors.get("yara", ""),
                     )
-                    current_span.set_attribute(
+                    distribute_span.set_attribute(
                         f"{__namespace__}.file.flavors.external",
                         file.flavors.get("external", ""),
                     )
-                    current_span.set_attribute(f"{__namespace__}.file.name", file.name)
-                    current_span.set_attribute(
+                    distribute_span.set_attribute(
+                        f"{__namespace__}.file.name", file.name
+                    )
+                    distribute_span.set_attribute(
                         f"{__namespace__}.file.pointer", file.pointer
                     )
-                    current_span.set_attribute(
+                    distribute_span.set_attribute(
                         f"{__namespace__}.file.scanners", file.scanners
                     )
-                    current_span.set_attribute(f"{__namespace__}.file.size", file.size)
-                    current_span.set_attribute(
+                    distribute_span.set_attribute(
+                        f"{__namespace__}.file.size", file.size
+                    )
+                    distribute_span.set_attribute(
                         f"{__namespace__}.file.source", file.source
                     )
-                    current_span.set_attribute(
+                    distribute_span.set_attribute(
                         f"{__namespace__}.file.tree.node", file.tree.get("node", "")
                     )
-                    current_span.set_attribute(
+                    distribute_span.set_attribute(
                         f"{__namespace__}.file.tree.parent", file.tree.get("parent", "")
                     )
-                    current_span.set_attribute(
+                    distribute_span.set_attribute(
                         f"{__namespace__}.file.tree.root", file.tree.get("root", "")
                     )
 
