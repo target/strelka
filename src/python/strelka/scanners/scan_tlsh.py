@@ -1,4 +1,4 @@
-# Authors: Ryan Borre
+# Authors: Ryan Borre, Paul Hutelmyer
 
 import glob
 import os
@@ -30,19 +30,23 @@ class ScanTlsh(strelka.Scanner):
         self.tlsh_rules = None
 
     def scan(self, data, file, options, expire_at):
+        # Get the location of the TLSH rule files and the score threshold
         location = options.get("location", "/etc/strelka/tlsh/")
         score_threshold = options.get("score", 30)
 
+        # Hash the data
         tlsh_file = tlsh.hash(data)
 
+        # If the hash is "TNULL", add a flag and return
         if tlsh_file == "TNULL":
-            self.flags.append("null_tlsh")
             return
 
         try:
+            # If the TLSH rules have not been loaded yet, load them from the specified location
             if self.tlsh_rules is None:
                 if os.path.isdir(location):
                     self.tlsh_rules = {}
+                    # Load all YAML files in the directory recursively
                     for filepath in glob.iglob(f"{location}/**/*.yaml", recursive=True):
                         with open(filepath, "r") as tlsh_rules:
                             try:
@@ -60,20 +64,30 @@ class ScanTlsh(strelka.Scanner):
         except FileNotFoundError:
             self.flags.append("tlsh_files_not_found")
 
+        # Initialize variables to store the family, score, and matched TLSH hash
         this_family = None
-        this_score = None
+        this_score = score_threshold
+        matched_tlsh_hash = None
 
+        # Iterate over the TLSH rule hashes
         for family, tlsh_hashes in self.tlsh_rules.items():
             for tlsh_hash in tlsh_hashes:
                 try:
+                    # Calculate the difference score between the file hash and the rule hash
                     score = tlsh.diff(tlsh_file, tlsh_hash)
                 except ValueError:
                     self.flags.append(f"bad_tlsh: {tlsh_hash}")
                     continue
                 if score < score_threshold:
-                    this_score = score
+                    # If the score is less than the threshold, update matches
                     if score <= this_score:
                         this_family = family
                         this_score = score
+                        matched_tlsh_hash = tlsh_hash
 
-        self.event["match"] = {"family": this_family, "score": this_score}
+        if this_family:
+            self.event["match"] = {
+                "family": this_family,
+                "score": this_score,
+                "tlsh": matched_tlsh_hash,
+            }
