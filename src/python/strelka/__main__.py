@@ -58,14 +58,10 @@ def main():
             logging.exception("no logging configuration path found")
             sys.exit(1)
 
-        print(logging_config_path)
-
         backend_cfg = config.dictionary
         backend_cfg["tasting"]["yara_rules"] = taste_path
         backend_cfg["scanners"]["ScanYara"][0]["options"]["location"] = yara_rules_path
         backend_cfg["logging_cfg"] = logging_config_path
-
-        print(backend_cfg)
 
         backend = strelka.strelka.Backend(backend_cfg, disable_coordinator=True)
 
