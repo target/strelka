@@ -447,10 +447,10 @@ class Backend(object):
             positives = mapping.get("positive", {})
             neg_flavors = negatives.get("flavors", [])
             neg_filename = negatives.get("filename", None)
-            neg_source = negatives.get("source", None)
+            neg_source = negatives.get("source", [])
             pos_flavors = positives.get("flavors", [])
             pos_filename = positives.get("filename", None)
-            pos_source = positives.get("source", None)
+            pos_source = positives.get("source", [])
             assigned = {
                 "name": scanner,
                 "priority": mapping.get("priority", 5),
@@ -460,22 +460,23 @@ class Backend(object):
             for neg_flavor in neg_flavors:
                 if neg_flavor in itertools.chain(*file.flavors.values()):
                     return {}
-            if neg_filename is not None:
-                if re.search(neg_filename, file.name) is not None:
+            if neg_filename:
+                if re.search(neg_filename, file.name):
                     return {}
-            if neg_source is not None:
-                if re.search(neg_source, file.source) is not None:
+            if neg_source:
+                print(file.source, neg_source)
+                if file.source in neg_source:
                     return {}
             for pos_flavor in pos_flavors:
                 if (
                     pos_flavor == "*" and not ignore_wildcards
                 ) or pos_flavor in itertools.chain(*file.flavors.values()):
                     return assigned
-            if pos_filename is not None:
-                if re.search(pos_filename, file.name) is not None:
+            if pos_filename:
+                if re.search(pos_filename, file.name):
                     return assigned
-            if pos_source is not None:
-                if re.search(pos_source, file.source) is not None:
+            if pos_source:
+                if file.source in pos_source:
                     return assigned
 
         return {}
