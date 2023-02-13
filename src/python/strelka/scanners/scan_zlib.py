@@ -19,5 +19,5 @@ class ScanZlib(strelka.Scanner):
                 f"{self.__class__.__name__} Exception: Invalid compression or decompression data."
             )
         except Exception as e:
-            self.flags(f"{self.__class__.__name__} Exception: {str(e[:50])}")
+            self.flags(f"{self.__class__.__name__} Exception: {str(e)[:50]}")
             return
