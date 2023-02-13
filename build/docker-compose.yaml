@@ -1,7 +1,7 @@
 version: '2'
 
 networks:
-  strelka_net:
+  strelkanet:
 
 volumes:
   logs:
@@ -15,7 +15,7 @@ services:
     ports:
       - 57314:57314  # must match the port in frontend.yaml
     networks:
-      - strelka_net
+      - strelkanet
     volumes:
       - ../configs/go/frontend/:/etc/strelka/:ro
       - logs:/var/log/strelka/
@@ -32,7 +32,7 @@ services:
     command: strelka-backend
     shm_size: 512mb  # increase as necessary, required for some scanners
     networks:
-      - strelka_net
+      - strelkanet
     volumes:
       - ../configs/python/backend/:/etc/strelka/:ro
     restart: unless-stopped
@@ -48,7 +48,7 @@ services:
     restart: unless-stopped
     container_name: strelka_manager_1
     networks:
-      - strelka_net
+      - strelkanet
     volumes:
       - ../configs/go/manager/:/etc/strelka/:ro
     depends_on:
@@ -61,21 +61,21 @@ services:
     command: strelka-mmrpc --threads 2 --address [::]:33907
     container_name: strelka_mmrpc_1
     networks:
-      - strelka_net
+      - strelkanet
 
   coordinator:
     image: redis:alpine
     command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
     container_name: strelka_coordinator_1
     networks:
-      - strelka_net
+      - strelkanet
 
   gatekeeper:
     image: redis:alpine
     command: redis-server --save "" --appendonly no --maxmemory-policy allkeys-lru  # alt: use config file via volume mapping
     container_name: strelka_gatekeeper_1
     networks:
-      - strelka_net
+      - strelkanet
 
   jaeger:
     image: jaegertracing/all-in-one:1.42
@@ -84,7 +84,7 @@ services:
     environment:
       - COLLECTOR_OTLP_ENABLED=true
     networks:
-      - strelka_net
+      - strelkanet
     ports:
       - 16686:16686    # HTTP query     frontend UI
       - 6831:6831/udp  # UDP  agent     accept jaeger.thrift over Thrift-compact protocol (used by most SDKs)
