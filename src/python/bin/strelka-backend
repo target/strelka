@@ -6,8 +6,9 @@ Command line utility for running Strelka backend server components.
 """
 import argparse
 
-import strelka.strelka
 import strelka.config
+
+import strelka.strelka
 
 
 def main():
