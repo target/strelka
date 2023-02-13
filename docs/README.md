@@ -542,7 +542,7 @@ Below is a description of the keys included in the `ScanHttpRequest` protobuf. A
 
 ### Tracing
 
-Strelka backend can currently emit tracing telemtry to otel and jaeger compatible collectors.
+Strelka backend can currently emit tracing telemetry to otel and jaeger compatible collectors.
 
 Traces allow you to put a microscope to the lifecycle of Strelka requests to look at problems with individual scanners and files.
 
@@ -565,6 +565,8 @@ telemetry:
     exporter: jaeger-udp-thrift
     addr: strelka_tracing_1:6831
 ```
+
+Sampling is a float between 0.0 and 1.0 that represents the percentage of traces that should be emitted. If the volume of traces is too large for your collector or storage, reducing this value to 0.1, 0.01, 0.001 is recommended.
 
 #### Visualization
 
