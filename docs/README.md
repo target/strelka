@@ -572,8 +572,9 @@ Strelka ships with a Jaeger all-in-one docker container for visualizing traces.
 
 Navigate to the Jaeger UI at http://localhost:16686/ to view traces.
 
-![jaeger search interface](docs/images/strelka-traces-006.jpg?raw=true)
-![jaeger trace view](docs/images/strelka-traces-008.jpg?raw=true)
+![jaeger search interface](images/strelka-traces-006.jpg?raw=true)
+
+![jaeger trace view](images/strelka-traces-008.jpg?raw=true)
 
 ## Scanners
 Each scanner parses files of a specific flavor and performs data collection and/or file extraction on them. Scanners are typically named after the type of file they are intended to scan (e.g. "ScanHtml", "ScanPe", "ScanRar") but may also be named after the type of function or tool they use to perform their tasks (e.g. "ScanExiftool", "ScanHeader", "ScanOcr").
