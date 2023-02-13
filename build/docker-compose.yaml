@@ -1,7 +1,7 @@
 version: '2'
 
 networks:
-  net:
+  strelka_net:
 
 volumes:
   logs:
@@ -13,9 +13,9 @@ services:
       dockerfile: build/go/frontend/Dockerfile
     command: strelka-frontend
     ports:
-      - "57314:57314"  # must match the port in frontend.yaml
+      - 57314:57314  # must match the port in frontend.yaml
     networks:
-      - net
+      - strelka_net
     volumes:
       - ../configs/go/frontend/:/etc/strelka/:ro
       - logs:/var/log/strelka/
@@ -32,7 +32,7 @@ services:
     command: strelka-backend
     shm_size: 512mb  # increase as necessary, required for some scanners
     networks:
-      - net
+      - strelka_net
     volumes:
       - ../configs/python/backend/:/etc/strelka/:ro
     restart: unless-stopped
@@ -48,7 +48,7 @@ services:
     restart: unless-stopped
     container_name: strelka_manager_1
     networks:
-      - net
+      - strelka_net
     volumes:
       - ../configs/go/manager/:/etc/strelka/:ro
     depends_on:
@@ -61,37 +61,33 @@ services:
     command: strelka-mmrpc --threads 2 --address [::]:33907
     container_name: strelka_mmrpc_1
     networks:
-      - net
+      - strelka_net
 
   coordinator:
     image: redis:alpine
     command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
     container_name: strelka_coordinator_1
     networks:
-      - net
+      - strelka_net
 
   gatekeeper:
     image: redis:alpine
     command: redis-server --save "" --appendonly no --maxmemory-policy allkeys-lru  # alt: use config file via volume mapping
     container_name: strelka_gatekeeper_1
     networks:
-      - net
+      - strelka_net
 
   jaeger:
+    image: jaegertracing/all-in-one:1.42
     container_name: strelka_jaeger_1
+    restart: unless-stopped
     environment:
-      - 'COLLECTOR_ZIPKIN_HOST_PORT=:9411'
       - COLLECTOR_OTLP_ENABLED=true
     networks:
-      - net
+      - strelka_net
     ports:
-      - '16686:16686'    # HTTP query     frontend UI
-      - '6831:6831/udp'  # UDP  agent     accept jaeger.thrift over Thrift-compact protocol (used by most SDKs)
-      - '6832:6832/udp'  # UDP  agent     accept accept jaeger.thrift over Thrift-binary protocol (used by Node.js SDK)
-      - '5778:5778'      # UDP  agent     serve configs
-      - '4317:4317'      # HTTP collector accept OpenTelemetry Protocol (OTLP) over gRPC
-      - '4318:4318'      # HTTP collector accept OpenTelemetry Protocol (OTLP) over HTTP
-      - '14250:14250'    # HTTP collector accept model.proto
-      - '14268:14268'    # HTTP collector accept jaeger.thrift
-      - '9411:9411'      # HTTP collector Zipkin compatible endpoint
-    image: 'jaegertracing/all-in-one:1.42'
+      - 16686:16686    # HTTP query     frontend UI
+      - 6831:6831/udp  # UDP  agent     accept jaeger.thrift over Thrift-compact protocol (used by most SDKs)
+      - 4317:4317      # HTTP collector accept OpenTelemetry Protocol (OTLP) over gRPC
+      - 4318:4318      # HTTP collector accept OpenTelemetry Protocol (OTLP) over HTTP
+      - 14268:14268    # HTTP collector accept jaeger.thrift

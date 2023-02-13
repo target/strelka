@@ -17,7 +17,7 @@ def get_tracer(traces_config: dict, meta: Optional[dict] = None) -> trace.Tracer
     if (
         "PYTEST_CURRENT_TEST" not in os.environ
         and "pytest" not in sys.modules
-        and traces_config.get("enabled")
+        and traces_config.get("exporter")
     ):
         try:
             rate = float(traces_config.get("sampling", default_traces_sampling))
