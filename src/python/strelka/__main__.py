@@ -33,7 +33,6 @@ def main():
         config = strelka.config.BackendConfig()
 
     if config:
-
         if os.path.exists("/etc/strelka/taste/taste.yara"):
             taste_path = "/etc/strelka/taste/taste.yara"
         elif os.path.exists(files("strelka.config").joinpath("taste.yara")):

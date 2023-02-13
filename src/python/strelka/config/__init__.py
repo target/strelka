@@ -8,7 +8,6 @@ import yaml
 
 class BackendConfig:
     def __init__(self, backend_cfg_path: str = "/etc/strelka/backend.yaml") -> None:
-
         self.dictionary: dict = {}
 
         if not os.path.exists(backend_cfg_path):
