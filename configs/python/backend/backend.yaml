@@ -316,6 +316,9 @@ scanners:
         flavors:
           - 'image/jpeg'
           - 'jpeg_file'
+      negative:
+        source:
+          - 'ScanTranscode'
       priority: 5
   'ScanJson':
     - positive:
@@ -623,6 +626,8 @@ scanners:
           - 'image/avif'
           - 'image/heic'
           - 'image/heif'
+      options:
+        output_format: jpeg  # "gif", "webp", "jpeg", "bmp", "png", "tiff"
   'ScanUpx':
     - positive:
         flavors:
