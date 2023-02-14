@@ -147,7 +147,7 @@ Strelka's core client apps are written in Go and can be run natively on a host o
     cd /opt/strelka/src/go/cmd/strelka-oneshot/
     go build -o strelka-oneshot .
     ```
-   
+
 #### strelka-oneshot (container)
 1. Clone this repository
     ```sh
@@ -159,7 +159,7 @@ Strelka's core client apps are written in Go and can be run natively on a host o
     cd /opt/strelka/
     docker build -f build/go/oneshot/Dockerfile -t strelka-oneshot .
     ```
-   
+
 #### strelka-filestream (Build the binary directly from github)
 1. Build the binary
     ```sh
@@ -224,6 +224,18 @@ Terminal 1 runs a full Strelka cluster with logs printed to stdout and Terminal 
 You can also provide a list of MD5 hashes to exclude from file submission with a `-e <PATH/TO/HASHES>` argument.
 Additional logging can be observed using `-v`
 
+## Fileshot UI
+
+[Strelka's UI](https://github.com/target/strelka-ui) is available when you build the provided containers. This web interface allows you to upload files to Strelka and capture the events, which are stored locally.
+
+Navigate to http://localhost:9980/ and use the login strelka/strelka.
+
+![Strelka UI login screen](images/strelka-ui-014.jpg)
+
+![Strelka UI dashboard with file upload and recent uploads](images/strelka-ui-015.jpg)
+
+![Strelka UI result page with json event](images/strelka-ui-016.jpg)
+
 ## Deployment
 ### Client Apps
 Strelka's core client apps are designed to efficiently integrate a wide-range of systems (Windows, Mac, Linux) with a cluster. Out of the box client apps are written in Go and custom clients can be written in any language supported by gRPC.
@@ -284,7 +296,7 @@ For the options below, only one response setting may be configured.
 * "files.maxsize": Checks the file size for a file to be scanned. If size exceeds this number (in bytes), ignore file. (If no specified, no check is run).
 * "files.limitpattern":  Checks the amount of files submitted in this scan. If total scanned in a specific pattern is greater than this number, scan no more in that    pattern. (If no specified, no check is run).
 * "files.limittotal": Checks the amount of files submitted in this scan. If total scanned is greater than this number, scan no more. (If no specified, no check is run).
-* "files.modified": Checks last modified time of file and if time is greater than this number (in hours), ignore. (If no specified, no check is run). 
+* "files.modified": Checks last modified time of file and if time is greater than this number (in hours), ignore. (If no specified, no check is run).
 * "files.mimetypes": List of inclusion mimetypes to be scanned. Mimetypes not in the list will not be scanned. (If no specified, no check is run).
 * "files.delay": artificial sleep between the submission of each chunk
 * "files.delete": boolean that determines if files should be deleted after being sent for scanning (defaults to false -- does not delete files)
@@ -564,7 +576,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanFloss         | Analyzes executable files with FireEye [floss](https://github.com/fireeye/flare-floss) | `tempfile_directory` -- location where `tempfile` will write temporary files (defaults to `/tmp/`)<br>`limit` -- Maximum amount of strings to collect. (defaults to `100`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ScanFooter        | Collects file footer                                                                   | `length` -- number of footer characters to log as metadata (defaults to `50`) <br> `encodings` -- list of output encodings, any of `classic`, `raw`, `hex`, `backslash`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ScanGif           | Extracts data embedded in GIF files                                                    | N/A                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ScanGzip          | Decompresses gzip files                                                                | N/A                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+| ScanGzip          | Decompresses gzip files                                                                | N/A
 | ScanHash          | Calculates file hash values                                                            | N/A                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ScanHeader        | Collects file header                                                                   | `length` -- number of header characters to log as metadata (defaults to `50`) <br> `encodings` -- list of output encodings, any of `classic`, `raw`, `hex`, `backslash`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ScanHtml          | Collects metadata and extracts embedded files from HTML files                          | `parser` -- sets the HTML parser used during scanning (defaults to `html.parser`) <br> `max_links` -- Maximum amount of links to output in hyperlinks field (defaults to `50`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
@@ -610,7 +622,7 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanXml           | Log metadata and extract files from XML files                                          | `extract_tags` -- list of XML tags that will have their text extracted as child files (defaults to empty list)<br>`metadata_tags` -- list of XML tags that will have their text logged as metadata (defaults to empty list)                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | ScanYara          | Scans files with YARA rules                                                            | `location` -- location of the YARA rules file or directory (defaults to `/etc/strelka/yara/`)<br>`metadata_identifiers` -- list of YARA rule metadata identifiers (e.g. "Author") that should be logged as metadata (defaults to empty list)                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | ScanZip           | Extracts files from zip archives                                                       | `limit` -- maximum number of files to extract (defaults to `1000`)<br>`password_file` -- location of passwords file for zip archives (defaults to `/etc/strelka/passwords.dat`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| ScanZlib          | Decompresses gzip files                                                                | N/A                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+| ScanZlib          | Decompresses gzip files                                                                | N/A
 
 ## Tests
 As Strelka consists of many scanners and dependencies for those scanners. Pytests are particularly valuable for testing the ongoing functionality of Strelka and it's scanners. Tests allow users to write test cases that verify the correct behavior of Strelka scanners to ensure that the scanners remain reliable and accurate. Additionally, using pytests can help streamline the development process, allowing developers to focus on writing new features and improvements for the scanners. Strelka contains a set of standard test fixture files that represent the types of files Strelka ingests.
