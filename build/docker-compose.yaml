@@ -76,3 +76,29 @@ services:
     container_name: strelka_gatekeeper_1
     networks:
       - net
+
+  ui:
+    build: https://github.com/target/strelka-ui.git#main
+    container_name: strelka_ui_1
+    environment:
+      - DATABASE_HOST=strelka_postgresdb_1
+      - DATABASE_NAME=strelka_ui
+      - DATABASE_PASSWORD=postgres
+      - DATABASE_USERNAME=postgres
+      - STRELKA_HOST=strelka_frontend_1
+    networks:
+      - net
+    ports:
+      - "9980:8080"
+    depends_on:
+      - postgresdb
+
+  postgresdb:
+    image: docker.io/bitnami/postgresql:11
+    container_name: strelka_postgresdb_1
+    environment:
+      - POSTGRESQL_DATABASE=strelka_ui
+      - POSTGRESQL_PASSWORD=postgres
+      - POSTGRESQL_USERNAME=postgres
+    networks:
+      - net
