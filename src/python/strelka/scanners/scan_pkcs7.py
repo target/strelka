@@ -62,4 +62,4 @@ class ScanPkcs7(strelka.Scanner):
                 f"{self.__class__.__name__} Exception: Error creating temporary file for PKCS7 file."
             )
         except Exception as e:
-            self.flags(f"{self.__class__.__name__} Exception: {str(e[:50])}")
+            self.flags(f"{self.__class__.__name__} Exception: {str(e)[:50]}")

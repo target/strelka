@@ -639,7 +639,7 @@ class Scanner(object):
             **{"flags": self.flags},
             **self.event,
         }
-        return (self.files, {self.key: self.event})
+        return self.files, {self.key: self.event}
 
     def emit_file(
         self, data: bytes, name: str = "", flavors: Optional[list[str]] = None
