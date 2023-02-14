@@ -23,7 +23,9 @@ class ScanNf(strelka.Scanner):
         try:
             # Convert image to HSV color space
             np_array = np.fromstring(data, np.uint8)
-            np_image = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+            np_image = cv2.imdecode(
+                np_array, cv2.IMREAD_IGNORE_ORIENTATION | cv2.IMREAD_COLOR
+            )
             image = cv2.cvtColor(np_image, cv2.COLOR_BGR2HSV)
 
             # Calculate histogram of saturation channel
@@ -44,4 +46,8 @@ class ScanNf(strelka.Scanner):
             else:
                 self.event["noise_floor"] = False  # Not dangerous
         except cv2.error:
-            self.flags.append("cv2_image_error")
+            self.flags(
+                f"{self.__class__.__name__} Exception:  Error loading image with cv2 library."
+            )
+        except Exception as e:
+            self.flags(f"{self.__class__.__name__} Exception: {str(e)[:50]}")

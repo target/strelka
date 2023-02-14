@@ -33,7 +33,9 @@ class ScanJavascript(strelka.Scanner):
         except strelka.ScannerTimeout:
             raise
         except Exception:
-            self.flags.append("beautify_failed")
+            self.flags(
+                f"{self.__class__.__name__} Exception:  Javascript beautification failed."
+            )
 
         try:
             if js is None:
@@ -41,7 +43,9 @@ class ScanJavascript(strelka.Scanner):
         except strelka.ScannerTimeout:
             raise
         except Exception:
-            self.flags.append("decode_failed")
+            self.flags(
+                f"{self.__class__.__name__} Exception:  Javascript decoding failure."
+            )
 
         try:
             tokens = esprima.tokenize(
@@ -68,6 +72,14 @@ class ScanJavascript(strelka.Scanner):
                     if t.value not in self.event["regular_expressions"]:
                         self.event["regular_expressions"].add(t.value)
 
+        except strelka.ScannerTimeout:
+            raise
+        except Exception:
+            self.flags(
+                f"{self.__class__.__name__} Exception:  Javascript tokenization failed."
+            )
+
+        try:
             self.event["tokens"] = list(self.event["tokens"])[:max_strings]
             self.event["keywords"] = list(self.event["keywords"])[:max_strings]
             self.event["strings"] = list(self.event["strings"])[:max_strings]
@@ -75,7 +87,7 @@ class ScanJavascript(strelka.Scanner):
             self.event["regular_expressions"] = list(self.event["regular_expressions"])[
                 :max_strings
             ]
-        except strelka.ScannerTimeout:
-            raise
         except Exception:
-            self.flags.append("tokenization_failed")
+            self.flags(
+                f"{self.__class__.__name__} Exception:  Error converting event data from set to list."
+            )
