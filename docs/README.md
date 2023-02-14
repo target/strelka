@@ -224,6 +224,18 @@ Terminal 1 runs a full Strelka cluster with logs printed to stdout and Terminal 
 You can also provide a list of MD5 hashes to exclude from file submission with a `-e <PATH/TO/HASHES>` argument.
 Additional logging can be observed using `-v`
 
+## Fileshot UI
+
+[Strelka's UI](https://github.com/target/strelka-ui) is available when you build the provided containers. This web interface allows you to upload files to Strelka and capture the events, which are stored locally.
+
+Navigate to http://localhost:9980/ and use the login strelka/strelka.
+
+![Strelka UI login screen](images/strelka-ui-014.jpg)
+
+![Strelka UI dashboard with file upload and recent uploads](images/strelka-ui-015.jpg)
+
+![Strelka UI result page with json event](images/strelka-ui-016.jpg)
+
 ## Deployment
 ### Client Apps
 Strelka's core client apps are designed to efficiently integrate a wide-range of systems (Windows, Mac, Linux) with a cluster. Out of the box client apps are written in Go and custom clients can be written in any language supported by gRPC.
