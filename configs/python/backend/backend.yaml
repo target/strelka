@@ -41,6 +41,9 @@ scanners:
         flavors:
           - 'image/x-ms-bmp'
           - 'bmp_file'
+      negative:
+        source:
+          - 'ScanTranscode'
       priority: 5
   'ScanBzip2':
     - positive:
