@@ -29,7 +29,7 @@ class ScanPkcs7(strelka.Scanner):
                     else:
                         pkcs7 = SMIME.load_pkcs7(tmp_data.name)
                 except SMIME.SMIME_Error:
-                    self.flags(
+                    self.flags.append(
                         f"{self.__class__.__name__} Exception:  Error loading PKCS7 key file with SMIME error."
                     )
                     return
@@ -38,7 +38,7 @@ class ScanPkcs7(strelka.Scanner):
                 try:
                     certs = pkcs7.get0_signers(X509.X509_Stack())
                 except X509.X509Error:
-                    self.flags(
+                    self.flags.append(
                         f"{self.__class__.__name__} Exception:  Error collecting PKCS7 signers."
                     )
                     return
@@ -52,14 +52,14 @@ class ScanPkcs7(strelka.Scanner):
                                 cert.as_der(), name=f"sn_{cert.get_serial_number()}"
                             )
                         except Exception:
-                            self.flags(
+                            self.flags.append(
                                 f"{self.__class__.__name__} Exception:  Error processing PKCS7 signers."
                             )
                             return
                         self.event["total"]["extracted"] += 1
         except tempfile.NamedTemporaryFile:
-            self.flags(
+            self.flags.append(
                 f"{self.__class__.__name__} Exception: Error creating temporary file for PKCS7 file."
             )
         except Exception as e:
-            self.flags(f"{self.__class__.__name__} Exception: {str(e)[:50]}")
+            self.flags.append(f"{self.__class__.__name__} Exception: {str(e)[:50]}")
