@@ -388,8 +388,6 @@ class Backend(object):
                     file.tree = tree_dict
 
                     # Set span attributes for the File object
-
-                    print(f"{__namespace__}.file.depth", file.depth)
                     distribute_span.set_attribute(
                         f"{__namespace__}.file.depth", file.depth
                     )
