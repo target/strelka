@@ -46,8 +46,8 @@ class ScanNf(strelka.Scanner):
             else:
                 self.event["noise_floor"] = False  # Not dangerous
         except cv2.error:
-            self.flags(
+            self.flags.append(
                 f"{self.__class__.__name__} Exception:  Error loading image with cv2 library."
             )
         except Exception as e:
-            self.flags(f"{self.__class__.__name__} Exception: {str(e)[:50]}")
+            self.flags.append(f"{self.__class__.__name__} Exception: {str(e)[:50]}")

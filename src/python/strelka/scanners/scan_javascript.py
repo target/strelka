@@ -33,7 +33,7 @@ class ScanJavascript(strelka.Scanner):
         except strelka.ScannerTimeout:
             raise
         except Exception:
-            self.flags(
+            self.flags.append(
                 f"{self.__class__.__name__} Exception:  Javascript beautification failed."
             )
 
@@ -43,7 +43,7 @@ class ScanJavascript(strelka.Scanner):
         except strelka.ScannerTimeout:
             raise
         except Exception:
-            self.flags(
+            self.flags.append(
                 f"{self.__class__.__name__} Exception:  Javascript decoding failure."
             )
 
@@ -75,7 +75,7 @@ class ScanJavascript(strelka.Scanner):
         except strelka.ScannerTimeout:
             raise
         except Exception:
-            self.flags(
+            self.flags.append(
                 f"{self.__class__.__name__} Exception:  Javascript tokenization failed."
             )
 
@@ -88,6 +88,6 @@ class ScanJavascript(strelka.Scanner):
                 :max_strings
             ]
         except Exception:
-            self.flags(
+            self.flags.append(
                 f"{self.__class__.__name__} Exception:  Error converting event data from set to list."
             )
