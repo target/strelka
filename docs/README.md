@@ -550,6 +550,46 @@ Below is a description of the keys included in the `ScanHttpRequest` protobuf. A
 * "attributes.filename": string containing the name of the file in the request
 * "attributes.metadata": map of strings that contains metadata associated with the request
 
+## Telemetery
+
+### Tracing
+
+Strelka backend can currently emit tracing telemetry to otel and jaeger compatible collectors.
+
+Traces allow you to put a microscope to the lifecycle of Strelka requests to look at problems with individual scanners and files.
+
+Configure the backend with one of the following sections, depending on your environment:
+
+```yaml
+telemetry:
+  traces:
+    sampling: 1.0
+# OTLP-gRPC
+    exporter: otlp-grpc
+    addr: strelka_tracing_1:4317
+# OTLP-HTTP
+    exporter: otlp-http
+    addr: http://strelka_tracing_1:4318/v1/traces
+# Jaeger Thrift Collector
+    exporter: jaeger-http-thrift
+    addr: http://strelka_tracing_1:14268/api/traces
+# Jaeger Thrift Agent
+    exporter: jaeger-udp-thrift
+    addr: strelka_tracing_1:6831
+```
+
+Sampling is a float between 0.0 and 1.0 that represents the percentage of traces that should be emitted. If the volume of traces is too large for your collector or storage, reducing this value to 0.1, 0.01, 0.001 is recommended.
+
+#### Visualization
+
+Strelka ships with a Jaeger all-in-one docker container for visualizing traces.
+
+Navigate to the Jaeger UI at http://localhost:16686/ to view traces.
+
+![jaeger search interface](images/strelka-traces-006.jpg?raw=true)
+
+![jaeger trace view](images/strelka-traces-008.jpg?raw=true)
+
 ## Scanners
 Each scanner parses files of a specific flavor and performs data collection and/or file extraction on them. Scanners are typically named after the type of file they are intended to scan (e.g. "ScanHtml", "ScanPe", "ScanRar") but may also be named after the type of function or tool they use to perform their tasks (e.g. "ScanExiftool", "ScanHeader", "ScanOcr").
 

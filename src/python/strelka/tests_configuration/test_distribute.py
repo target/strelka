@@ -102,7 +102,7 @@ def test_distribute(mocker):
     with open(backend_cfg_path, "r") as f:
         backend_cfg = yaml.safe_load(f.read())
 
-        backend = strelka.Backend(backend_cfg, coordinator=None)
+        backend = strelka.Backend(backend_cfg, disable_coordinator=True)
 
         with open(
             Path(Path(__file__).parent / "../tests/fixtures/test.html"), "rb"
