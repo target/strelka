@@ -542,10 +542,10 @@ class Backend(object):
             positives = mapping.get("positive", {})
             neg_flavors = negatives.get("flavors", [])
             neg_filename = negatives.get("filename", None)
-            neg_source = negatives.get("source", None)
+            neg_source = negatives.get("source", [])
             pos_flavors = positives.get("flavors", [])
             pos_filename = positives.get("filename", None)
-            pos_source = positives.get("source", None)
+            pos_source = positives.get("source", [])
             assigned = {
                 "name": scanner,
                 "priority": mapping.get("priority", 5),
@@ -555,22 +555,23 @@ class Backend(object):
             for neg_flavor in neg_flavors:
                 if neg_flavor in itertools.chain(*file.flavors.values()):
                     return {}
-            if neg_filename is not None:
-                if re.search(neg_filename, file.name) is not None:
+            if neg_filename:
+                if re.search(neg_filename, file.name):
                     return {}
-            if neg_source is not None:
-                if re.search(neg_source, file.source) is not None:
+            if neg_source:
+                print(file.source, neg_source)
+                if file.source in neg_source:
                     return {}
             for pos_flavor in pos_flavors:
                 if (
                     pos_flavor == "*" and not ignore_wildcards
                 ) or pos_flavor in itertools.chain(*file.flavors.values()):
                     return assigned
-            if pos_filename is not None:
-                if re.search(pos_filename, file.name) is not None:
+            if pos_filename:
+                if re.search(pos_filename, file.name):
                     return assigned
-            if pos_source is not None:
-                if re.search(pos_source, file.source) is not None:
+            if pos_source:
+                if file.source in pos_source:
                     return assigned
 
         return {}
@@ -753,28 +754,46 @@ class Scanner(object):
         self, data: bytes, name: str = "", flavors: Optional[list[str]] = None
     ) -> None:
         """Re-ingest extracted file"""
+
         with self.tracer.start_as_current_span("emit_file") as current_span:
-            extract_file = File(
-                name=name,
-                source=self.name,
-            )
-            if flavors:
-                extract_file.add_flavors({"external": flavors})
+            try:
+                extract_file = File(
+                    name=name,
+                    source=self.name,
+                )
+                if flavors:
+                    extract_file.add_flavors({"external": flavors})
 
-            current_span.set_attribute(f"{__namespace__}.file.name", name)
-            current_span.set_attribute(f"{__namespace__}.file.size", len(data))
-            current_span.set_attribute(f"{__namespace__}.file.source", self.name)
+                current_span.set_attribute(f"{__namespace__}.file.name", name)
+                current_span.set_attribute(f"{__namespace__}.file.size", len(data))
+                current_span.set_attribute(f"{__namespace__}.file.source", self.name)
 
-            if self.coordinator:
-                for c in chunk_string(data):
-                    self.upload_to_coordinator(
-                        extract_file.pointer,
-                        c,
-                        self.expire_at,
-                    )
-            else:
-                extract_file.data = data
-            self.files.append(extract_file)
+                if self.coordinator:
+                    for c in chunk_string(data):
+                        self.upload_to_coordinator(
+                            extract_file.pointer,
+                            c,
+                            self.expire_at,
+                        )
+                else:
+                    extract_file.data = data
+
+                self.files.append(extract_file)
+
+                if self.coordinator:
+                    for c in chunk_string(data):
+                        self.upload_to_coordinator(
+                            extract_file.pointer,
+                            c,
+                            self.expire_at,
+                        )
+                else:
+                    extract_file.data = data
+                self.files.append(extract_file)
+
+            except Exception:
+                logging.exception("failed to emit file")
+                self.flags.append("failed_to_emit_file")
 
     def upload_to_coordinator(self, pointer, chunk, expire_at) -> None:
         """Uploads data to coordinator.
