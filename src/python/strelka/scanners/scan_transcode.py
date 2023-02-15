@@ -32,8 +32,10 @@ class ScanTranscode(strelka.Scanner):
                 return f.getvalue()
 
         try:
+            converted_image = convert(Image.open(io.BytesIO(data)))
+
             # Send extracted file back to Strelka
-            self.emit_file(convert(Image.open(io.BytesIO(data))), name=file.name)
+            self.emit_file(converted_image, name=file.name)
         except UnidentifiedImageError:
             self.flags.append("unidentified_image")
             return

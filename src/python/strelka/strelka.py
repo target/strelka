@@ -645,23 +645,31 @@ class Scanner(object):
         self, data: bytes, name: str = "", flavors: Optional[list[str]] = None
     ) -> None:
         """Re-ingest extracted file"""
-        extract_file = File(
-            name=name,
-            source=self.name,
-        )
-        if flavors:
-            extract_file.add_flavors({"external": flavors})
 
-        if self.coordinator:
-            for c in chunk_string(data):
-                self.upload_to_coordinator(
-                    extract_file.pointer,
-                    c,
-                    self.expire_at,
-                )
-        else:
-            extract_file.data = data
-        self.files.append(extract_file)
+        try:
+            extract_file = File(
+                name=name,
+                source=self.name,
+            )
+
+            if flavors:
+                extract_file.add_flavors({"external": flavors})
+
+            if self.coordinator:
+                for c in chunk_string(data):
+                    self.upload_to_coordinator(
+                        extract_file.pointer,
+                        c,
+                        self.expire_at,
+                    )
+            else:
+                extract_file.data = data
+
+            self.files.append(extract_file)
+
+        except Exception:
+            logging.exception("failed to emit file")
+            self.flags.append("failed_to_emit_file")
 
     def upload_to_coordinator(self, pointer, chunk, expire_at) -> None:
         """Uploads data to coordinator.
