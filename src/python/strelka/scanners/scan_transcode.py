@@ -2,7 +2,7 @@ import io
 import logging
 
 import pillow_avif
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from pillow_heif import register_heif_opener
 
 from strelka import strelka
@@ -31,7 +31,10 @@ class ScanTranscode(strelka.Scanner):
                 im.save(f, format=f"{output_format}", quality=90)
                 return f.getvalue()
 
-        # Send extracted file back to Strelka
-        self.emit_file(convert(Image.open(io.BytesIO(data))), name=file.name)
+        try:
+            # Send extracted file back to Strelka
+            self.emit_file(convert(Image.open(io.BytesIO(data))), name=file.name)
+        except UnidentifiedImageError:
+            self.flags.append("unidentified_image")
 
         self.flags.append("transcoded")
