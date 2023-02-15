@@ -17,7 +17,7 @@ register_heif_opener()
 
 class ScanTranscode(strelka.Scanner):
     """
-    Converts supported images to PNG for easier scanning
+    Converts supported images for easier scanning
 
     Typical supported output options:
     gif webp jpeg bmp png tiff
