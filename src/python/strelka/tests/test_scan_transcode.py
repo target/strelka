@@ -66,3 +66,21 @@ def test_scan_transcode_heif(mocker, output_format) -> None:
 
     TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_event, scanner_event)
+
+
+def test_scan_transcode_broken_heic(mocker) -> None:
+    """
+    Pass: Sample event matches output of scanner.
+    Failure: Unable to load file or sample event fails to match.
+    """
+
+    test_scan_event = {"elapsed": mock.ANY, "flags": ["unidentified_image"]}
+
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_broken.heic",
+    )
+
+    TestCase.maxDiff = None
+    TestCase().assertDictEqual(test_scan_event, scanner_event)
