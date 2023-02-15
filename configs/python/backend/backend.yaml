@@ -1,3 +1,4 @@
+version: 2023-02-13-release
 logging_cfg: '/etc/strelka/logging.yaml'
 limits:
   max_files: 5000
@@ -13,6 +14,21 @@ tasting:
   yara_rules: '/etc/strelka/taste/'
 caching:
   scanner: true
+telemetry:
+  traces:
+    sampling: 1.0
+# OTLP-gRPC
+    exporter: otlp-grpc
+    addr: strelka_jaeger_1:4317
+# OTLP-HTTP
+#    exporter: otlp-http
+#    addr: http://strelka_jaeger_1:4318/v1/traces
+# Jaeger Thrift Collector
+#    exporter: jaeger-http-thrift
+#    addr: http://strelka_jaeger_1:14268/api/traces
+# Jaeger Thrift Agent
+#    exporter: jaeger-udp-thrift
+#    addr: strelka_jaeger_1:6831
 scanners:
   #'ScanAntiword':
   #  - positive:

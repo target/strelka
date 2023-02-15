@@ -13,7 +13,7 @@ services:
       dockerfile: build/go/frontend/Dockerfile
     command: strelka-frontend
     ports:
-      - "57314:57314"  # must match the port in frontend.yaml
+      - 57314:57314  # must match the port in frontend.yaml
     networks:
       - net
     volumes:
@@ -76,6 +76,21 @@ services:
     container_name: strelka_gatekeeper_1
     networks:
       - net
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.42
+    container_name: strelka_jaeger_1
+    restart: unless-stopped
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - net
+    ports:
+      - 16686:16686    # HTTP query     frontend UI
+      - 6831:6831/udp  # UDP  agent     accept jaeger.thrift over Thrift-compact protocol (used by most SDKs)
+      - 4317:4317      # HTTP collector accept OpenTelemetry Protocol (OTLP) over gRPC
+      - 4318:4318      # HTTP collector accept OpenTelemetry Protocol (OTLP) over HTTP
+      - 14268:14268    # HTTP collector accept jaeger.thrift
 
   ui:
     build: https://github.com/target/strelka-ui.git#main

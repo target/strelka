@@ -178,7 +178,6 @@ RUN cd /strelka/ && \
     python3-dev \
     python3-pip \
     python3-wheel && \
-    apt-get purge -qq python3-setuptools  && \
     apt-get clean -qq && \
     rm -rf /var/lib/apt/lists/* /tmp/yara* && \
 # Assign permissions to Strelka scan result logging directory
