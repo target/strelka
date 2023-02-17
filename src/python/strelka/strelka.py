@@ -165,9 +165,9 @@ class Backend(object):
             )
             for i, entry in enumerate(globbed_yara):
                 yara_filepaths[f"namespace{i}"] = entry
-            self.compiled_yara = yara.compile(filepaths=yara_filepaths)
+            self.compiled_taste_yara = yara.compile(filepaths=yara_filepaths)
         else:
-            self.compiled_yara = yara.compile(filepath=yara_rules)
+            self.compiled_taste_yara = yara.compile(filepath=yara_rules)
 
         # If a coordinator is supplied, use it unless explicitly disabled
         if coordinator and disable_coordinator is False:
@@ -209,13 +209,36 @@ class Backend(object):
 
     def taste_yara(self, data: bytes) -> list:
         """Tastes file data with YARA."""
+
+        taste_yara_matches = self.compiled_taste_yara.match(data=data)
+
+        return [match.rule for match in taste_yara_matches]
+
+    def transform_leading_whitespace(self, data):
         encoded_whitespace = string.whitespace.encode()
-        stripped_data = data.lstrip(encoded_whitespace)
-        yara_matches = self.compiled_yara.match(data=stripped_data)
-        return [match.rule for match in yara_matches]
+        return data.lstrip(encoded_whitespace)
 
     def match_flavors(self, data: bytes) -> dict:
-        return {"mime": self.taste_mime(data), "yara": self.taste_yara(data)}
+
+        mimes = []
+        yaras = []
+
+        mimes.extend(self.taste_mime(data))
+        yaras.extend(self.taste_yara(data))
+
+        # Taste transformations (yara only)
+        if data:
+            try:
+                # Remove leading whitespace
+                if data[0] in string.whitespace.encode():
+                    # mimes.extend(self.taste_mime(self.transform_leading_whitespace(data)))
+                    yaras.extend(
+                        self.taste_yara(self.transform_leading_whitespace(data))
+                    )
+            except Exception:
+                logging.exception("file transformation failed")
+
+        return {"mime": list(set(mimes)), "yara": list(set(yaras))}
 
     def work(self) -> None:
         """Process tasks from Redis coordinator"""
@@ -557,7 +580,6 @@ class Backend(object):
                 if re.search(neg_filename, file.name):
                     return {}
             if neg_source:
-                print(file.source, neg_source)
                 if file.source in neg_source:
                     return {}
             for pos_flavor in pos_flavors:
@@ -776,17 +798,6 @@ class Scanner(object):
                 else:
                     extract_file.data = data
 
-                self.files.append(extract_file)
-
-                if self.coordinator:
-                    for c in chunk_string(data):
-                        self.upload_to_coordinator(
-                            extract_file.pointer,
-                            c,
-                            self.expire_at,
-                        )
-                else:
-                    extract_file.data = data
                 self.files.append(extract_file)
 
             except Exception:
