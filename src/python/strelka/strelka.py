@@ -791,17 +791,6 @@ class Scanner(object):
 
                 self.files.append(extract_file)
 
-                if self.coordinator:
-                    for c in chunk_string(data):
-                        self.upload_to_coordinator(
-                            extract_file.pointer,
-                            c,
-                            self.expire_at,
-                        )
-                else:
-                    extract_file.data = data
-                self.files.append(extract_file)
-
             except Exception:
                 logging.exception("failed to emit file")
                 self.flags.append("failed_to_emit_file")
