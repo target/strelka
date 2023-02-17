@@ -240,6 +240,18 @@ class Backend(object):
 
         return {"mime": list(set(mimes)), "yara": list(set(yaras))}
 
+    def check_scanners(self):
+        """attempt to import all scanners referenced in the backend configuration"""
+        logging.info("checking scanners")
+        if self.scanners:
+            for name in self.scanners:
+                try:
+                    und_name = inflection.underscore(name)
+                    scanner_import = f"strelka.scanners.{und_name}"
+                    importlib.import_module(scanner_import)
+                except ModuleNotFoundError:
+                    raise
+
     def work(self) -> None:
         """Process tasks from Redis coordinator"""
 
@@ -248,6 +260,8 @@ class Backend(object):
         if not self.coordinator:
             logging.error("no coordinator specified")
             return
+
+        self.check_scanners()
 
         count = 0
         work_start = time.time()
