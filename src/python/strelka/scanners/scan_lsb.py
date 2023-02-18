@@ -9,7 +9,7 @@ class ScanLsb(strelka.Scanner):
 
     def scan(self, data, file, options, expire_at):
         try:
-            image = np.fromstring(data, np.uint8)
+            image = np.frombuffer(data, np.uint8)
             image = cv2.imdecode(image, cv2.IMREAD_COLOR)
             bits = self._get_bits(image)
             bytes_ = self._get_bytes(bits)
