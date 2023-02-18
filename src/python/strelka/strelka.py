@@ -219,7 +219,6 @@ class Backend(object):
         return data.lstrip(encoded_whitespace)
 
     def match_flavors(self, data: bytes) -> dict:
-
         mimes = []
         yaras = []
 
