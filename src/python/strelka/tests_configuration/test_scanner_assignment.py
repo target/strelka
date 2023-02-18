@@ -78,6 +78,7 @@ test_assignments_expected: dict = {
     "test.yara": ["ScanUrl"],
     "test.zip": ["ScanZip"],
     "test_aes256_password.zip": ["ScanEncryptedZip", "ScanZip"],
+    "test_broken.heic": ["ScanExiftool", "ScanTranscode"],
     "test_broken_iend.png": [
         "ScanExiftool",
         "ScanLsb",
@@ -165,6 +166,9 @@ test_assignments_expected: dict = {
     "test_pii.csv": [],  # NOTE: ScanCcn not enabled
     "test_private.pgp": ["ScanPgp"],
     "test_public.pgp": ["ScanPgp"],
+    "test_qr.avif": ["ScanExiftool", "ScanTranscode"],
+    "test_qr.heic": ["ScanExiftool", "ScanTranscode"],
+    "test_qr.heif": ["ScanExiftool", "ScanTranscode"],
     "test_qr.jpg": [
         "ScanExiftool",
         "ScanJpeg",
