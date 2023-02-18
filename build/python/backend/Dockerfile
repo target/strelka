@@ -147,15 +147,13 @@ RUN mkdir jtr && cd jtr && git init && git remote add origin https://github.com/
   && chmod -R 777 /jtr \
   && chown -R 1001:1001 /jtr
 
-# Install Python packages
-COPY ./build/python/backend/requirements.txt /strelka/requirements.txt
-RUN pip3 install --no-cache-dir -r /strelka/requirements.txt && \
-    pip3 install --index-url https://lief-project.github.io/packages --trusted-host lief.quarkslab.com lief
-
 # Copy Strelka files
 COPY ./src/python/ /strelka/
-COPY ./build/python/backend/setup.py /strelka/setup.py
 COPY ./configs/python/backend/ /etc/strelka/
+
+# Install Python packages
+RUN pip3 install --no-cache-dir -r /strelka/requirements.txt && \
+    pip3 install --index-url https://lief-project.github.io/packages --trusted-host lief.quarkslab.com lief
 
 # Install Strelka
 RUN cd /strelka/ && \
