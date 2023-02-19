@@ -63,7 +63,7 @@ go build github.com/target/strelka/src/go/cmd/strelka-oneshot
 
 #### Step 5: Prepare a file to analyze
 
-Use any malware sample, or other file you'd like Strelka to analyze. 
+Use any malware sample, or other file you'd like Strelka to analyze.
 
 ```bash
 wget https://github.com/ytisf/theZoo/raw/master/malware/Binaries/Win32.Emotet/Win32.Emotet.zip -P samples/
@@ -189,6 +189,14 @@ If Strelka was deployed and ingesting files in your environment, you might be co
 scan.yara.tags:("Technique_AntiDebugging" && "SubTechnique_SEH")
 ```
 
+## Fileshot UI
+
+[Strelka's UI](https://github.com/target/strelka-ui) is available when you build the provided containers. This web interface allows you to upload files to Strelka and capture the events, which are stored locally.
+
+Navigate to http://localhost:9980/ and use the login strelka/strelka.
+
+![Strelka UI](docs/images/strelka-ui-014.jpg)
+
 ## Potential Uses
 With over 50 file scanners for the most common file types (e.g., exe, docx, js, zip), Strelka provides users with the ability to gain new insights into files on their host, network, or enterprise. While Strelka *is not* a detection engine itself (although it does utilize [YARA](https://virustotal.github.io/yara/), it can provide enough metadata to identify suspicious or malicious files. Some potential uses for Strelka include:
 
@@ -244,8 +252,3 @@ Badges
 [img-pr-badge]:https://img.shields.io/badge/PRs-welcome-orange.svg?style=for-the-badge&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJzdmcyIiB3aWR0aD0iNjQ1IiBoZWlnaHQ9IjU4NSIgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPiA8ZyBpZD0ibGF5ZXIxIj4gIDxwYXRoIGlkPSJwYXRoMjQxNyIgZD0ibTI5Ny4zIDU1MC44N2MtMTMuNzc1LTE1LjQzNi00OC4xNzEtNDUuNTMtNzYuNDM1LTY2Ljg3NC04My43NDQtNjMuMjQyLTk1LjE0Mi03Mi4zOTQtMTI5LjE0LTEwMy43LTYyLjY4NS01Ny43Mi04OS4zMDYtMTE1LjcxLTg5LjIxNC0xOTQuMzQgMC4wNDQ1MTItMzguMzg0IDIuNjYwOC01My4xNzIgMTMuNDEtNzUuNzk3IDE4LjIzNy0zOC4zODYgNDUuMS02Ni45MDkgNzkuNDQ1LTg0LjM1NSAyNC4zMjUtMTIuMzU2IDM2LjMyMy0xNy44NDUgNzYuOTQ0LTE4LjA3IDQyLjQ5My0wLjIzNDgzIDUxLjQzOSA0LjcxOTcgNzYuNDM1IDE4LjQ1MiAzMC40MjUgMTYuNzE0IDYxLjc0IDUyLjQzNiA2OC4yMTMgNzcuODExbDMuOTk4MSAxNS42NzIgOS44NTk2LTIxLjU4NWM1NS43MTYtMTIxLjk3IDIzMy42LTEyMC4xNSAyOTUuNSAzLjAzMTYgMTkuNjM4IDM5LjA3NiAyMS43OTQgMTIyLjUxIDQuMzgwMSAxNjkuNTEtMjIuNzE1IDYxLjMwOS02NS4zOCAxMDguMDUtMTY0LjAxIDE3OS42OC02NC42ODEgNDYuOTc0LTEzNy44OCAxMTguMDUtMTQyLjk4IDEyOC4wMy01LjkxNTUgMTEuNTg4LTAuMjgyMTYgMS44MTU5LTI2LjQwOC0yNy40NjF6IiBmaWxsPSIjZGQ1MDRmIi8%2BIDwvZz48L3N2Zz4%3D
 [img-license-badge]:https://img.shields.io/badge/license-apache-ff69b4.svg?style=for-the-badge&logo=apache
 [img-docker-badge]:https://img.shields.io/badge/Supports-Docker-yellow.svg?style=for-the-badge&logo=docker
-
-
-
-
-

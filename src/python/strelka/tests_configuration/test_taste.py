@@ -9,6 +9,7 @@ from strelka import strelka
 
 taste_expectations: dict = {
     "test.7z": {"mime": ["application/x-7z-compressed"], "yara": ["_7zip_file"]},
+    "test_qr.avif": {"mime": ["image/avif"], "yara": []},
     "test.b64": {"mime": ["text/plain"], "yara": []},  # FIXME: No file-specific match
     "test.bat": {
         "mime": ["text/x-msdos-batch"],
@@ -35,6 +36,8 @@ taste_expectations: dict = {
     "test.exe": {"mime": ["application/x-dosexec"], "yara": ["mz_file"]},
     "test.gif": {"mime": ["image/gif"], "yara": ["gif_file"]},
     "test.gz": {"mime": ["application/gzip"], "yara": ["gzip_file"]},
+    "test_qr.heic": {"mime": ["image/heic"], "yara": []},
+    "test_qr.heif": {"mime": ["image/heif"], "yara": []},
     "test.html": {"mime": ["text/html"], "yara": ["html_file"]},
     "test.ini": {"mime": ["text/plain"], "yara": ["ini_file"]},
     "test.iso": {"mime": ["application/x-iso9660-image"], "yara": ["iso_file"]},
@@ -56,7 +59,7 @@ taste_expectations: dict = {
     "test.pcapng": {
         "mime": ["application/octet-stream"],
         "yara": [],
-    },  # FIXME: pcapng_file broken
+    },  # FIXME: pcapng_file broken https://github.com/target/strelka/issues/284
     "test.pdf": {"mime": ["application/pdf"], "yara": ["pdf_file"]},
     "test.pem": {"mime": ["text/plain"], "yara": ["x509_pem_file"]},
     "test.plist": {"mime": ["text/xml"], "yara": ["plist_file", "xml_file"]},
@@ -95,6 +98,7 @@ taste_expectations: dict = {
     "test_classic.doc": {"mime": ["application/msword"], "yara": ["olecf_file"]},
     "test_embed_rar.jpg": {"mime": ["image/jpeg"], "yara": ["jpeg_file"]},
     "test_embed_rar.png": {"mime": ["image/png"], "yara": ["png_file"]},
+    "test_broken.heic": {"mime": ["image/heic"], "yara": []},
     "test_hyperlinks.html": {"mime": ["text/html"], "yara": ["html_file"]},
     "test_lzx.cab": {
         "mime": ["application/vnd.ms-cab-compressed"],
