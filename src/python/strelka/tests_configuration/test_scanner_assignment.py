@@ -49,7 +49,7 @@ test_assignments_expected: dict = {
     "test.one": ["ScanOnenote"],
     "test.onepkg": ["ScanLibarchive"],
     "test.pcap": ["ScanPcap"],
-    "test.pcapng": [],
+    "test.pcapng": ["ScanPcap"],
     "test.pdf": ["ScanExiftool", "ScanPdf"],
     "test.pem": ["ScanUrl", "ScanX509"],
     "test.plist": ["ScanPlist", "ScanXml"],
