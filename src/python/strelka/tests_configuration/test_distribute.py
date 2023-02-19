@@ -137,7 +137,7 @@ def test_distribute_spaces(mocker):
                     "ScanTlsh",
                     "ScanYara",
                 ],
-                "size": 5883,
+                "size": 5880,
                 "source": "",
                 "tree": {
                     "node": mock.ANY,
