@@ -22,7 +22,7 @@ class ScanNf(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         try:
             # Convert image to HSV color space
-            np_array = np.fromstring(data, np.uint8)
+            np_array = np.frombuffer(data, np.uint8)
             np_image = cv2.imdecode(
                 np_array, cv2.IMREAD_IGNORE_ORIENTATION | cv2.IMREAD_COLOR
             )
