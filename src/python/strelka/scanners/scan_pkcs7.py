@@ -33,6 +33,11 @@ class ScanPkcs7(strelka.Scanner):
                         f"{self.__class__.__name__} Exception:  Error loading PKCS7 key file with SMIME error."
                     )
                     return
+                except Exception as e:
+                    self.flags.append(
+                        f"{self.__class__.__name__} Exception: {str(e)[:50]}"
+                    )
+                    return
 
                 # Try to get the signers from the PKCS7 file.
                 try:
@@ -40,6 +45,11 @@ class ScanPkcs7(strelka.Scanner):
                 except X509.X509Error:
                     self.flags.append(
                         f"{self.__class__.__name__} Exception:  Error collecting PKCS7 signers."
+                    )
+                    return
+                except Exception as e:
+                    self.flags.append(
+                        f"{self.__class__.__name__} Exception: {str(e)[:50]}"
                     )
                     return
 
