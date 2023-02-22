@@ -1,4 +1,5 @@
 import io
+import logging
 import os
 import subprocess
 import tempfile
@@ -6,6 +7,9 @@ import tempfile
 import msoffcrypto
 
 from strelka import strelka
+
+# Set logging level to INFO to prevent passwords from getting logged
+logging.getLogger("msoffcrypto").setLevel(logging.INFO)
 
 
 def crack_word(

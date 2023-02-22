@@ -3,7 +3,6 @@ from pathlib import Path
 from unittest import TestCase
 
 import pytest
-import redis
 import yaml
 
 from strelka import strelka
@@ -50,7 +49,7 @@ test_assignments_expected: dict = {
     "test.one": ["ScanOnenote"],
     "test.onepkg": ["ScanLibarchive"],
     "test.pcap": ["ScanPcap"],
-    "test.pcapng": [],
+    "test.pcapng": ["ScanPcap"],
     "test.pdf": ["ScanExiftool", "ScanPdf"],
     "test.pem": ["ScanUrl", "ScanX509"],
     "test.plist": ["ScanPlist", "ScanXml"],
@@ -79,6 +78,7 @@ test_assignments_expected: dict = {
     "test.yara": ["ScanUrl"],
     "test.zip": ["ScanZip"],
     "test_aes256_password.zip": ["ScanEncryptedZip", "ScanZip"],
+    "test_broken.heic": ["ScanExiftool", "ScanTranscode"],
     "test_broken_iend.png": [
         "ScanExiftool",
         "ScanLsb",
@@ -166,6 +166,9 @@ test_assignments_expected: dict = {
     "test_pii.csv": [],  # NOTE: ScanCcn not enabled
     "test_private.pgp": ["ScanPgp"],
     "test_public.pgp": ["ScanPgp"],
+    "test_qr.avif": ["ScanExiftool", "ScanTranscode"],
+    "test_qr.heic": ["ScanExiftool", "ScanTranscode"],
+    "test_qr.heif": ["ScanExiftool", "ScanTranscode"],
     "test_qr.jpg": [
         "ScanExiftool",
         "ScanJpeg",
@@ -228,9 +231,7 @@ def test_fixture_scanner_assignment(fixture_path, expected) -> None:
     with open(backend_cfg_path, "r") as f:
         backend_cfg = yaml.safe_load(f.read())
 
-        coordinator = redis.StrictRedis(host="127.0.0.1", port=65535, db=0)
-
-        backend = strelka.Backend(backend_cfg, coordinator)
+        backend = strelka.Backend(backend_cfg, disable_coordinator=True)
 
         assignments = []
 

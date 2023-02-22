@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 
-import redis
 import yaml
 
 from strelka import strelka
@@ -23,8 +22,6 @@ def test_scanner_import() -> None:
     with open(backend_cfg_path, "r") as f:
         backend_cfg = yaml.safe_load(f.read())
 
-        coordinator = redis.StrictRedis(host="127.0.0.1", port=65535, db=0)
-
-        backend = strelka.Backend(backend_cfg, coordinator)
+        backend = strelka.Backend(backend_cfg, disable_coordinator=True)
 
         backend.check_scanners()

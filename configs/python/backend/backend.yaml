@@ -1,3 +1,4 @@
+version: 2023-02-13-release
 logging_cfg: '/etc/strelka/logging.yaml'
 limits:
   max_files: 5000
@@ -13,6 +14,21 @@ tasting:
   yara_rules: '/etc/strelka/taste/'
 caching:
   scanner: true
+telemetry:
+  traces:
+    sampling: 1.0
+# OTLP-gRPC
+    exporter: otlp-grpc
+    addr: strelka_jaeger_1:4317
+# OTLP-HTTP
+#    exporter: otlp-http
+#    addr: http://strelka_jaeger_1:4318/v1/traces
+# Jaeger Thrift Collector
+#    exporter: jaeger-http-thrift
+#    addr: http://strelka_jaeger_1:14268/api/traces
+# Jaeger Thrift Agent
+#    exporter: jaeger-udp-thrift
+#    addr: strelka_jaeger_1:6831
 scanners:
   #'ScanAntiword':
   #  - positive:
@@ -41,6 +57,9 @@ scanners:
         flavors:
           - 'image/x-ms-bmp'
           - 'bmp_file'
+      negative:
+        source:
+          - 'ScanTranscode'
       priority: 5
   'ScanBzip2':
     - positive:
@@ -196,6 +215,9 @@ scanners:
           - 'application/x-shockwave-flash'
           - 'fws_file'
           - 'image/webp'
+          - 'image/avif'
+          - 'image/heic'
+          - 'image/heif'
       priority: 5
       options:
         keys:
@@ -313,6 +335,9 @@ scanners:
         flavors:
           - 'image/jpeg'
           - 'jpeg_file'
+      negative:
+        source:
+          - 'ScanTranscode'
       priority: 5
   'ScanJson':
     - positive:
@@ -350,6 +375,9 @@ scanners:
           - 'image/x-ms-bmp'
           - 'bmp_file'
           - 'image/webp'
+      negative:
+        source:
+          - 'ScanTranscode'
       priority: 5
   'ScanLzma':
     - positive:
@@ -415,6 +443,9 @@ scanners:
           - 'image/x-ms-bmp'
           - 'bmp_file'
           - 'image/webp'
+      negative:
+        source:
+          - 'ScanTranscode'
       priority: 5
   'ScanOcr':
     - positive:
@@ -519,6 +550,9 @@ scanners:
         flavors:
           - 'image/png'
           - 'png_file'
+      negative:
+        source:
+          - 'ScanTranscode'
       priority: 5
   'ScanQr':
     - positive:
@@ -605,6 +639,14 @@ scanners:
           - 'application/vnd.ms-tnef'
           - 'tnef_file'
       priority: 5
+  'ScanTranscode':
+    - positive:
+        flavors:
+          - 'image/avif'
+          - 'image/heic'
+          - 'image/heif'
+      options:
+        output_format: jpeg  # "gif", "webp", "jpeg", "bmp", "png", "tiff"
   'ScanUpx':
     - positive:
         flavors:
