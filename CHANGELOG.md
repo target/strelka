@@ -1,8 +1,29 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-02-22
+- Adding default password file reference to `EncryptedZip` and `EncryptedDoc` scanners.
+- Bug fixes for multiple scanners.
+- Moving `strelka-ui` in `docker-compose.yaml` to a prebuilt image to reduce error potential and decrease build time.
+
+## 2023-02-19
+- Bug fix for YARA scanner (@ryanohoro)
+- Removing redundant Python setup/requirements (@ryanohoro)
+
+## 2023-02-18
+- Adding Strelka UI to default `docker-compose.yaml`. (@ryanohoro)
+- Adding Scanner checker on worker start to display scanner load errors. (@ryanohoro)
+
+## 2023-02-16
+- Adding `ScanTranscode` which converts new or uncommon image formats. (@ryanohoro)
+
+## 2023-02-11
+- Adding `Jaeger` support service for tracing. (@ryanohoro)
+
+## 2023-02-10
+- Telemetry tracing support added. (@ryanohoro)
+
 ## 2023-02-08
-- Changing output timestamps for `ScanDocx`, `ScanPDF` to ISO time.
 - Updating `cryptography` dependency across project.
 - Added 'ScanOnenote' and associated tests.
 - Removed `ScanBITS` and associated references.
