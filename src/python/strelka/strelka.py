@@ -747,10 +747,22 @@ class Scanner(object):
                 "scanner_timeout", self.scanner_timeout or 10
             )
 
+            # Add attributes for tracing
             current_span.set_attribute(f"{__namespace__}.scanner.name", self.name)
             current_span.set_attribute(
                 f"{__namespace__}.scanner.timeout", self.scanner_timeout
             )
+
+            attribute_options = options.copy()
+            try:
+                attribute_options.pop("scanner_timeout")
+            except Exception:
+                pass
+
+            if attribute_options:
+                current_span.set_attribute(
+                    f"{__namespace__}.scanner.options", json.dumps(attribute_options)
+                )
 
             try:
                 signal.signal(signal.SIGALRM, self.timeout_handler)
