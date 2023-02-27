@@ -15,7 +15,13 @@ def test_scan_capa_dotnet(mocker):
     test_scan_event = {
         "elapsed": mock.ANY,
         "flags": [],
-        "matches": unordered(["contains PDB path", "compiled to the .NET platform", "manipulate console buffer"]),
+        "matches": unordered(
+            [
+                "contains PDB path",
+                "compiled to the .NET platform",
+                "manipulate console buffer",
+            ]
+        ),
         "mitre_ids": [],
         "mitre_techniques": [],
     }
