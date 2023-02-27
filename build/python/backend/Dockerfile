@@ -14,7 +14,7 @@ RUN groupadd --gid $USER_GID $USERNAME \
 
 ARG YARA_VERSION=4.2.3
 ARG YARA_PYTHON_VERSION=4.2.3
-ARG CAPA_VERSION=4.0.1
+ARG CAPA_VERSION=5.0.0
 ARG EXIFTOOL_VERSION=12.52
 
 # Set up package pinning for future releases (kinetic 22.10, 7zip 22.01+dfsg-2)

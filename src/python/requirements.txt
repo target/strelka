@@ -8,7 +8,7 @@ cryptography==39.0.1
 docker==5.0.0
 eml-parser>=1.17
 esprima==4.0.1
-flare-capa==4.0.1
+flare-capa==5.0.0
 formulas==1.2.6
 git+https://github.com/jshlbrd/python-entropy.git   # v0.11 as of this freeze (package installed as 'entropy')
 grpcio-tools==1.42.0
@@ -39,7 +39,7 @@ pgpdump3==1.5.2
 pre-commit==3.0.1
 py-tlsh==4.7.2
 pycdlib==1.13.0
-pyelftools==0.28
+pyelftools==0.29
 pygments==2.9.0
 pylzma==0.5.0
 pytesseract==0.3.7
