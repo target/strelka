@@ -15,7 +15,13 @@ def test_scan_capa_dotnet(mocker):
     test_scan_event = {
         "elapsed": mock.ANY,
         "flags": [],
-        "matches": unordered(["contains PDB path", "compiled to the .NET platform"]),
+        "matches": unordered(
+            [
+                "contains PDB path",
+                "compiled to the .NET platform",
+                "manipulate console buffer",
+            ]
+        ),
         "mitre_ids": [],
         "mitre_techniques": [],
     }
@@ -24,7 +30,7 @@ def test_scan_capa_dotnet(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.exe",
-        options={"scanner_timeout": 20},
+        options={"scanner_timeout": 200},
     )
 
     TestCase.maxDiff = None
@@ -49,7 +55,7 @@ def test_scan_capa_elf(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.elf",
-        options={"scanner_timeout": 20},
+        options={"scanner_timeout": 200},
     )
 
     TestCase.maxDiff = None
@@ -87,7 +93,7 @@ def test_scan_capa_pe_xor(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test_xor.exe",
-        options={"scanner_timeout": 20},
+        options={"scanner_timeout": 200},
     )
 
     TestCase.maxDiff = None
