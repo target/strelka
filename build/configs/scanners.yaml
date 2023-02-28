@@ -460,7 +460,6 @@ scanners:
           - 'hta_file'
           - 'text/rtf'
           - 'rtf_file'
-          - 'pdf_file'
           - 'onenote_file'
           - 'application/onenote'
           - 'application/msonenote'
