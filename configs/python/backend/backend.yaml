@@ -297,7 +297,7 @@ scanners:
   'ScanIso':
     - positive:
         flavors:
-          - 'iso_file'
+          - 'application/x-iso9660-image'
       priority: 5
       options:
         limit: 50
