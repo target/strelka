@@ -1,6 +1,16 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+
+## 2023-03-01
+- Changing `ScanIso` pattern configuration in `backend.yml` (@ryanohoro)
+
+## 2023-2-28
+- Go client updates to address vulnerability.
+
+## 2023-02-27
+- Updating `capa` and associated tests.
+
 ## 2023-02-22
 - Adding default password file reference to `EncryptedZip` and `EncryptedDoc` scanners.
 - Bug fixes for multiple scanners.
