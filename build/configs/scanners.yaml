@@ -451,6 +451,7 @@ scanners:
           - 'text/plain'
           - 'xml_file'
           - 'soap_file'
+          - 'pdf_file'
           - 'plist_file'
           - 'php_file'
           - 'json_file'
