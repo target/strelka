@@ -24,6 +24,7 @@ class ScanUrl(strelka.Scanner):
     """
 
     max_scanner_timeout = 3
+    max_file_size = 4 * 1024 * 1024
 
     def init(self):
         self.regexes = {'default': re.compile(
