@@ -248,29 +248,31 @@ def parse_rich(pe):
     try:
         if rich_data := pe.parse_rich_header():
             rich_dict = {
-                'key': rich_data['key'].hex(),
-                'clear_data': {
-                    'data': base64.b64encode(rich_data['clear_data']),
-                    'md5': hashlib.md5(rich_data['clear_data']).hexdigest(),
+                "key": rich_data["key"].hex(),
+                "clear_data": {
+                    "data": base64.b64encode(rich_data["clear_data"]),
+                    "md5": hashlib.md5(rich_data["clear_data"]).hexdigest(),
                 },
-                'raw_data': {
-                    'data': base64.b64encode(rich_data['raw_data']),
-                    'md5': hashlib.md5(rich_data['raw_data']).hexdigest(),
+                "raw_data": {
+                    "data": base64.b64encode(rich_data["raw_data"]),
+                    "md5": hashlib.md5(rich_data["raw_data"]).hexdigest(),
                 },
             }
 
-            values = rich_data['values']
-            rich_dict.update({'info': []})
+            values = rich_data["values"]
+            rich_dict.update({"info": []})
             for i in range(0, len(values), 2):
-                rich_dict['info'].append({
-                    'toolid': values[i] >> 16,
-                    'version': values[i] & 0xffff,
-                    'count': values[i + 1]
-                })
+                rich_dict["info"].append(
+                    {
+                        "toolid": values[i] >> 16,
+                        "version": values[i] & 0xFFFF,
+                        "count": values[i + 1],
+                    }
+                )
 
             return rich_dict
     except pefile.PEFormatError:
-        logging.error('pe_format_error')
+        logging.error("pe_format_error")
         return
 
 
