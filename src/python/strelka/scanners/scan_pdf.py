@@ -88,7 +88,7 @@ class ScanPdf(strelka.Scanner):
             self.event["phones"] = list(set(phones))
 
             # iterate through xref objects
-            self.event["xref_object"] = [] 
+            self.event["xref_object"] = []
             for xref in range(1, reader.xref_length()):
                 xref_object = reader.xref_object(xref, compressed=True)
                 if xref_object not in self.event["xref_object"]:
