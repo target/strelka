@@ -72,7 +72,7 @@ class ScanPdf(strelka.Scanner):
             self.event["subject"] = reader.metadata["subject"]
             self.event["title"] = reader.metadata["title"]
             self.event["xrefs"] = reader.xref_length() - 1
-             
+
             # collect phones
             phones = []
             for i in range(self.event["pages"]):
