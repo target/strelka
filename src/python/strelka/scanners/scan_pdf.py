@@ -1,5 +1,14 @@
-# https://pymupdf.readthedocs.io/en/latest/index.html
-# https://www.osti.gov/servlets/purl/1030303
+"""
+This module contains a scanner for extracting metadata and files from PDF files.
+
+Resources:
+- https://pymupdf.readthedocs.io/en/latest/index.html
+- https://www.osti.gov/servlets/purl/1030303
+
+Requirements:
+- PyMuPDF
+"""
+
 
 import io
 import re
@@ -10,8 +19,10 @@ import fitz
 
 from strelka import strelka
 
-# hide PyMuPDF warnings
+# Hide PyMuPDF warnings
 fitz.TOOLS.mupdf_display_errors(False)
+
+# Regex to extract phone numbers from PDF file
 phone_numbers = re.compile(
     r"[+]?(?:\d{1,2})?\s?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{2,4}?-?\d{2,4}?",
     flags=0,
@@ -19,10 +30,22 @@ phone_numbers = re.compile(
 
 
 class ScanPdf(strelka.Scanner):
-    """Collects metadata and extracts files from PDF files."""
+    """
+    A scanner that collects metadata and extracts files from PDF files.
+    """
 
     @staticmethod
     def _convert_timestamp(timestamp):
+        """
+        Converts a date string to a DateTime object, sets the timezone to UTC, and returns it as an ISO string.
+
+        Args:
+            timestamp (str): A date string in the format 'D:%Y%m%d%H%M%S%z'.
+
+        Returns:
+            str: An ISO-formatted date string in the format '%Y-%m-%dT%H:%M:%SZ'.
+        """
+
         try:
             # Date string is converted to DateTime, timezone is set to UTC, and returned as ISO string
             return (
