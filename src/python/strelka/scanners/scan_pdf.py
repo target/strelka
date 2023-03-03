@@ -36,17 +36,22 @@ class ScanPdf(strelka.Scanner):
             return
 
     def scan(self, data, file, options, expire_at):
+        # Set maximum XREF objects to be collected (default: 250)
+        max_objects = options.get("max_objects", 250)
+
+        # Set Default Variables
         self.event["images"] = 0
         self.event["lines"] = 0
         self.event["links"] = []
         self.event["words"] = 0
+        self.event.setdefault("xref_object", set())
         keys = list()
 
         try:
             with io.BytesIO(data) as pdf_io:
                 reader = fitz.open(stream=pdf_io, filetype="pdf")
 
-            # collect metadata
+            # Collect Metadata
             self.event["author"] = reader.metadata["author"]
             self.event["creator"] = reader.metadata["creator"]
             self.event["creation_date"] = self._convert_timestamp(
@@ -73,7 +78,7 @@ class ScanPdf(strelka.Scanner):
             self.event["title"] = reader.metadata["title"]
             self.event["xrefs"] = reader.xref_length() - 1
 
-            # collect phones
+            # Collect Phones Numbers
             phones = []
             for i in range(self.event["pages"]):
                 phones.extend(
@@ -87,21 +92,24 @@ class ScanPdf(strelka.Scanner):
                 )
             self.event["phones"] = list(set(phones))
 
-            # iterate through xref objects
-            self.event["xref_object"] = []
+            # iterate through xref objects. Collect, count, and extract objects
+            self.event["xref_object"] = set()
             for xref in range(1, reader.xref_length()):
                 xref_object = reader.xref_object(xref, compressed=True)
                 if xref_object not in self.event["xref_object"]:
-                    self.event["xref_object"].append(xref_object)
+                    self.event["xref_object"].add(xref_object)
                 for obj in options.get("objects", []):
                     pattern = f"/{obj}"
                     if pattern in xref_object:
                         keys.append(obj.lower())
-                # extract urls from xref
+                # Extract urls from xref
                 self.event["links"].extend(re.findall('"(https?://.*?)"', xref_object))
             self.event["objects"] = dict(Counter(keys))
 
-            # submit embedded files to strelka
+            # Convert unique xref_object set back to list
+            self.event["xref_object"] = list(self.event["xref_object"])[:max_objects]
+
+            # Submit embedded files to strelka
             try:
                 for i in range(reader.embfile_count()):
                     props = reader.embfile_info(i)
@@ -114,7 +122,7 @@ class ScanPdf(strelka.Scanner):
             except Exception:
                 self.flags.append("embedded_parsing_failure")
 
-            # submit extracted images to strelka
+            # Submit extracted images to strelka
             try:
                 for i in range(len(reader)):
                     for img in reader.get_page_images(i):
@@ -129,7 +137,7 @@ class ScanPdf(strelka.Scanner):
             except Exception:
                 self.flags.append("image_parsing_failure")
 
-            # parse data from each page
+            # Parse data from each page
             try:
                 text = ""
                 for page in reader:
