@@ -909,13 +909,15 @@ rule credit_cards {
 rule vsto_file
 {
     meta:
-        description = "Detects Microsoft Office VSTO files with a specific format"
+        description = "Detects Microsoft Office VSTO files"
         reference = "https://www.deepinstinct.com/blog/no-macro-no-worries-vsto-being-weaponized-by-threat-actors"
         type = "text"
     strings:
-        $ = /<vt:lpwstr>\w+\.vsto\|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\|vstolocal<\/vt:lpwstr>/
         $ = "urn:schemas-microsoft-com:asm.v1"
+        $ = /assemblyIdentity name=('|")[\w.]+\.vsto('|")/
+        $ = /dependencyType=('|")install('|")/
+        $ = /codebase=('|")[\w.]+\.manifest('|")/
     condition:
         magic.mime_type() == "text/xml" and
-        any of them
+        all of them
 }
