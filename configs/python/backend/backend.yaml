@@ -682,6 +682,11 @@ scanners:
       priority: 5
       options:
         analyze_macros: True
+  'ScanVsto':
+    - positive:
+        flavors:
+          - 'vsto_file'
+      priority: 5
   'ScanX509':
     - positive:
         flavors:
