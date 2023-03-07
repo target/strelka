@@ -259,9 +259,21 @@ def parse_rich(pe):
                 },
             }
 
+            values = rich_data["values"]
+            rich_dict.update({"info": []})
+            for i in range(0, len(values), 2):
+                rich_dict["info"].append(
+                    {
+                        "toolid": values[i] >> 16,
+                        "version": values[i] & 0xFFFF,
+                        "count": values[i + 1],
+                    }
+                )
+
             return rich_dict
     except pefile.PEFormatError:
-        return "pe_format_error"
+        logging.error("pe_format_error")
+        return
 
 
 def parse_certificates(data):
