@@ -506,6 +506,7 @@ scanners:
           - 'OpenAction'
           - 'URI'
           - 'XObject'
+        max_objects: 250
   'ScanPe':
     - positive:
         flavors:
