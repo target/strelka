@@ -1,6 +1,14 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-03-07
+- Ading `ScanVsto` to extract VSTO file metadata.
+
+## 2023-03-03
+- Adding `ScanPDF` XREF collection with limiters, tests, and updated docstrings.
+
+## 2023-03-02
+- Adding rich fields to `ScanPE`
 
 ## 2023-03-01
 - Changing `ScanIso` pattern configuration in `backend.yml` (@ryanohoro)
