@@ -494,6 +494,11 @@ data:
           priority: 5
           options:
             limit: 100
+      'ScanVsto':
+        - positive:
+            flavors:
+              - 'vsto_file'
+          priority: 5
       'ScanX509':
         - positive:
             flavors:
