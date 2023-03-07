@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Properties xmlns="http://schemas.microsoft.com/office/2006/01/customui">
+  <metadata>
+    <asmv1:assembly xmlns:asmv1="urn:schemas-microsoft-com:asm.v1">
+      <asmv1:assemblyIdentity name="Contoso AddIn" />
+      <dependency>
+        <dependentAssembly>
+          <assemblyIdentity name="Dependency 1" />
+          <codebase>http://example.com/Dependency1.dll</codebase>
+        </dependentAssembly>
+        <dependentAssembly>
+          <assemblyIdentity name="Dependency 2" />
+          <codebase>http://example.com/Dependency2.dll</codebase>
+        </dependentAssembly>
+      </dependency>
+      <publisherIdentity name="Contoso" />
+      <Signature>
+        <KeyInfo>
+          <Signature>
+            <Object>
+              <msod:sig xmlns:msod="http://schemas.microsoft.com/office/2009/07/customui">
+                <msod:digitallySignedData>
+                  <msrel:RelData xmlns:msrel="http://schemas.microsoft.com/windows/rel/2005/reldata">
+                    <r:license xmlns:r="http://schemas.microsoft.com/windows/rel/2005/reldata">
+                      <r:issuer>
+                        <Signature>
+                          <KeyInfo>
+                            <X509Data>
+                              <X509Certificate>
+                                MIICwDCCAagCCQD0LWt9b1t+TANBgkqhkiG9w0BAQsFADA0MQswCQYDVQQGEwJVUzEPMA0GA1UECgwGU29mdHdhcmUxEDAOBgNVBAMMB1NvZnQgVGVzdDAeFw0yMzAzMDYxMTA2NDRaFw0zMDAzMDYxMTA2NDRaMDQxCzAJBgNVBAYTAlVTMQ8wDQYDVQQKDAZTb2Z0d2FyZTEQMA4GA1UEAwwHU29mdCBUZXN0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtpoJm+Z
+                              </X509Certificate>
+                            </X509Data>
+                          </KeyInfo>
+                        </Signature>
+                      </r:issuer>
+                    </r:license>
+                  </msrel:RelData>
+                </msod:digitallySignedData>
+              </msod:sig>
+            </Object>
+          </Signature>
+        </KeyInfo>
+      </Signature>
+    </asmv1:assembly>
+  </metadata>
+   <vt:lpwstr>Contoso AddIn|vstolocal</vt:lpwstr>
+</Properties>
