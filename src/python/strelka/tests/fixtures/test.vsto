@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<asmv1:assembly xsi:schemaLocation="urn:schemas-microsoft-com:asm.v1 assembly.adaptive.xsd" manifestVersion="1.0"
+	xmlns:asmv1="urn:schemas-microsoft-com:asm.v1"
+	xmlns="urn:schemas-microsoft-com:asm.v2"
+	xmlns:asmv2="urn:schemas-microsoft-com:asm.v2"
+	xmlns:xrml="urn:mpeg:mpeg21:2003:01-REL-R-NS"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:asmv3="urn:schemas-microsoft-com:asm.v3"
+	xmlns:dsig="http://www.w3.org/2000/09/xmldsig#"
+	xmlns:co.v1="urn:schemas-microsoft-com:clickonce.v1"
+	xmlns:co.v2="urn:schemas-microsoft-com:clickonce.v2">
+	<assemblyIdentity name="TestName.vsto" version="1.0.0.1" publicKeyToken="09fad4d541a5a080" language="neutral" processorArchitecture="msil"
+		xmlns="urn:schemas-microsoft-com:asm.v1" />
+		<description asmv2:publisher="TestPublisher" asmv2:product="TestProduct"
+			xmlns="urn:schemas-microsoft-com:asm.v1" />
+			<deployment install="false" />
+			<compatibleFrameworks
+				xmlns="urn:schemas-microsoft-com:clickonce.v2">
+				<framework targetVersion="4.5" profile="Full" supportedRuntime="4.0.30319" />
+			</compatibleFrameworks>
+			<dependency>
+				<dependentAssembly dependencyType="install" codebase="TestInstaller.dll.manifest" size="13456">
+					<assemblyIdentity name="TestIdentityName.dll" version="1.0.0.1" publicKeyToken="09fad4d541a5a080" language="neutral" processorArchitecture="msil" type="win32" />
+					<hash>
+						<dsig:Transforms>
+							<dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+						</dsig:Transforms>
+						<dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
+						<dsig:DigestValue>hjtoNGCkEXL0ZSfJTK4WsgrsRjtcww3+IrtNnfR8h8o=</dsig:DigestValue>
+					</hash>
+				</dependentAssembly>
+			</dependency>
+			<publisherIdentity name="CN=TEST\test" issuerKeyHash="db88bb5ceab87f9c0fcc2ab36c189c2c" />
+			<Signature Id="StrongNameSignature"
+				xmlns="http://www.w3.org/2000/09/xmldsig#">
+				<SignedInfo>
+					<CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
+					<SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha256" />
+					<Reference URI="">
+						<Transforms>
+							<Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+							<Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
+						</Transforms>
+						<DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
+						<DigestValue>TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQ=</DigestValue>
+					</Reference>
+				</SignedInfo>
+				<SignatureValue>TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQ=</SignatureValue>
+				<KeyInfo Id="StrongNameKeyInfo">
+					<KeyValue>
+						<RSAKeyValue>
+							<Modulus>TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQ=</Modulus>
+							<Exponent>AQAB</Exponent>
+						</RSAKeyValue>
+					</KeyValue>
+					<msrel:RelData
+						xmlns:msrel="http://schemas.microsoft.com/windows/rel/2005/reldata">
+						<r:license
+							xmlns:r="urn:mpeg:mpeg21:2003:01-REL-R-NS"
+							xmlns:as="http://schemas.microsoft.com/windows/pki/2005/Authenticode">
+							<r:grant>
+								<as:ManifestInformation Hash="eb78b614be2e9c728abd7470cbd0a076e757d677e7264da98306d0d19548de86" Description="" Url="">
+									<as:assemblyIdentity name="TestIdentityName.vsto" version="1.0.0.1" publicKeyToken="09fad4d541a5a080" language="neutral" processorArchitecture="msil"
+										xmlns="urn:schemas-microsoft-com:asm.v1" />
+									</as:ManifestInformation>
+									<as:SignedBy />
+									<as:AuthenticodePublisher>
+										<as:X509SubjectName>CN=TEST\test</as:X509SubjectName>
+									</as:AuthenticodePublisher>
+								</r:grant>
+								<r:issuer>
+									<Signature Id="AuthenticodeSignature"
+										xmlns="http://www.w3.org/2000/09/xmldsig#">
+										<SignedInfo>
+											<CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
+											<SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha256" />
+											<Reference URI="">
+												<Transforms>
+													<Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+													<Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
+												</Transforms>
+												<DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
+												<DigestValue>TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQ=</DigestValue>
+											</Reference>
+										</SignedInfo>
+										<SignatureValue>TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQ=</SignatureValue>
+										<KeyInfo>
+											<KeyValue>
+												<RSAKeyValue>
+													<Modulus>TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQ=</Modulus>
+													<Exponent>AQAB</Exponent>
+												</RSAKeyValue>
+											</KeyValue>
+											<X509Data>
+												<X509Certificate>TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdCwgc2VkIGRvIGVpdXNtb2QgdGVtcG9yIGluY2lkaWR1bnQgdXQgbGFib3JlIGV0IGRvbG9yZSBtYWduYSBhbGlxdWEuIFV0IGVuaW0gYWQgbWluaW0gdmVuaWFtLCBxdWlzIG5vc3RydWQgZXhlcmNpdGF0aW9uIHVsbGFtY28gbGFib3JpcyBuaXNpIHV0IGFsaXF1aXAgZXggZWEgY29tbW9kbyBjb25zZXF1YXQuIER1aXMgYXV0ZSBpcnVyZSBkb2xvciBpbiByZXByZWhlbmRlcml0IGluIHZvbHVwdGF0ZSB2ZWxpdCBlc3NlIGNpbGx1bSBkb2xvcmUgZXUgZnVnaWF0IG51bGxhIHBhcmlhdHVyLiBFeGNlcHRldXIgc2ludCBvY2NhZWNhdCBjdXBpZGF0YXQgbm9uIHByb2lkZW50LCBzdW50IGluIGN1bHBhIHF1aSBvZmZpY2lhIGRlc2VydW50IG1vbGxpdCBhbmltIGlkIGVzdCBsYWJvcnVtLg==</X509Certificate>
+											</X509Data>
+										</KeyInfo>
+									</Signature>
+								</r:issuer>
+							</r:license>
+						</msrel:RelData>
+					</KeyInfo>
+				</Signature>
+			</asmv1:assembly>
