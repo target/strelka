@@ -1,3 +1,6 @@
+import "magic"
+import "pe"
+
 // Archive Files
 
 rule _7zip_file {
