@@ -30,7 +30,7 @@ class ScanManifest(strelka.Scanner):
                 "key",
             ]
             for key in required_keys:
-                self.event[key] = str(jsondata[key])
+                self.event[key] = jsondata[key]
             for key in optional_keys:
                 if jsondata.get(key):
                     if isinstance(jsondata[key], list):
