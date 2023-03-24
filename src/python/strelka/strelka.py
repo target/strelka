@@ -150,7 +150,7 @@ class Backend(object):
         )
 
         self.compiled_magic = magic.Magic(
-            magic_file=backend_cfg.get("tasting", {}).get("mime_db", ""),
+            magic_file=backend_cfg.get("tasting", {}).get("mime_db", None),
             mime=True,
         )
 
