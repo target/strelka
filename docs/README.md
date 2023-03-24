@@ -7,8 +7,7 @@ Strelka differs from its sibling projects in a few significant ways:
 * OS-native client applications for Windows, Mac, and Linux
 * Built using [libraries and formats](#architecture) that allow cross-platform, cross-language support
 
-[![Target’s CFC-Open-Source Slack Invitation](https://cfc-slack-inv.herokuapp.com/badge.svg?colorA=155799&colorB=159953)](https://cfc-slack-inv.herokuapp.com/)
-* [Target's CFC Slack Room](https://cfc-open-source.slack.com)
+[![Slack][img-slack-badge]][slack]
 
 ## Table of Contents
 * [FAQ](#frequently-asked-questions)
@@ -1750,3 +1749,13 @@ Guidelines for contributing can be found [here](https://github.com/target/strelk
 
 ## Licensing
 Strelka and its associated code is released under the terms of the Apache 2.0 license.
+
+<!--
+Links
+-->
+[slack]:https://join.slack.com/t/cfc-open-source/shared_invite/zt-e54crchh-a6x4iDy18D5lVwFKQoEeEQ "Slack (external link) ➶"
+
+<!--
+Badges
+-->
+[img-slack-badge]:https://img.shields.io/badge/slack-join-red.svg?style=for-the-badge&logo=slack
