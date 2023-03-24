@@ -53,7 +53,16 @@ git clone https://github.com/Yara-Rules/rules.git configs/python/backend/yara/ru
 echo 'include "./rules/index.yar"' > configs/python/backend/yara/rules.yara
 ```
 
-#### Step 4: Build and start Strelka
+#### Step 4a: Pull precompiled images and start Strelka
+**Note**: You can skip the `go build` process and use the `Strelka UI` at `http://0.0.0.0:9980` to analyze files.
+
+```bash
+docker-compose -f build/docker-compose-no-build.yaml up -d && \
+go build github.com/target/strelka/src/go/cmd/strelka-oneshot
+```
+
+#### Step 4b: Build and start Strelka
+**Note**: You can skip the `go build` process and use the `Strelka UI` at `http://0.0.0.0:9980` to analyze files.
 
 ```bash
 docker-compose -f build/docker-compose.yaml build && \

@@ -7,8 +7,7 @@ Strelka differs from its sibling projects in a few significant ways:
 * OS-native client applications for Windows, Mac, and Linux
 * Built using [libraries and formats](#architecture) that allow cross-platform, cross-language support
 
-[![Target’s CFC-Open-Source Slack Invitation](https://cfc-slack-inv.herokuapp.com/badge.svg?colorA=155799&colorB=159953)](https://cfc-slack-inv.herokuapp.com/)
-* [Target's CFC Slack Room](https://cfc-open-source.slack.com)
+[![Slack][img-slack-badge]][slack]
 
 ## Table of Contents
 * [FAQ](#frequently-asked-questions)
@@ -208,21 +207,166 @@ Strelka's core server components are written in Go and Python 3.9+ and are run f
 ## Quickstart
 By default, Strelka is configured to use a minimal "quickstart" deployment that allows users to test the system. This configuration **is not recommended** for production deployments, but may suffice for environments with very low file volume (<50k files per day). Using two Terminal windows, do the following:
 
-Terminal 1
-```
-$ docker-compose -f build/docker-compose.yaml up
+#### Step 1: Install prerequisites
+
+```bash
+# Ubuntu 22.04
+sudo apt install -y wget git docker docker-compose golang jq && \
+sudo usermod -aG docker $USER && \
+newgrp docker
+````
+
+#### Step 2: Download Strelka
+
+```bash
+git clone https://github.com/target/strelka.git && \
+cd strelka
 ```
 
-Terminal 2:
-```
-$ strelka-fileshot -c fileshot.yaml
-$ cat strelka.log | jq .
+#### Step 3: Download and install preferred yara rules (optional)
+
+```bash
+rm configs/python/backend/yara/rules.yara && \
+git clone https://github.com/Yara-Rules/rules.git configs/python/backend/yara/rules/ && \
+echo 'include "./rules/index.yar"' > configs/python/backend/yara/rules.yara
 ```
 
-Terminal 1 runs a full Strelka cluster with logs printed to stdout and Terminal 2 is used to send files to the cluster. `fileshot.yaml` will need the `patterns` field updated to identify files to scan, by default scan results will be written to `./strelka.log`.
+#### Step 4a: Pull precompiled images and start Strelka
+**Note**: You can skip the `go build` process and use the `Strelka UI` at `http://0.0.0.0:9980` to analyze files.
 
-You can also provide a list of MD5 hashes to exclude from file submission with a `-e <PATH/TO/HASHES>` argument.
-Additional logging can be observed using `-v`
+```bash
+docker-compose -f build/docker-compose-no-build.yaml up -d && \
+go build github.com/target/strelka/src/go/cmd/strelka-oneshot
+```
+
+#### Step 4b: Build and start Strelka
+**Note**: You can skip the `go build` process and use the `Strelka UI` at `http://0.0.0.0:9980` to analyze files.
+
+```bash
+docker-compose -f build/docker-compose.yaml build && \
+docker-compose -f build/docker-compose.yaml up -d && \
+go build github.com/target/strelka/src/go/cmd/strelka-oneshot
+```
+
+#### Step 5: Prepare a file to analyze
+
+Use any malware sample, or other file you'd like Strelka to analyze.
+
+```bash
+wget https://github.com/ytisf/theZoo/raw/master/malware/Binaries/Win32.Emotet/Win32.Emotet.zip -P samples/
+```
+
+#### Step 6: Analyze the file with Strelka using the dockerized oneshot
+
+```bash
+./strelka-oneshot -f samples/Win32.Emotet.zip -l - | jq
+```
+
+#### What's happening here?
+
+1. Strelka determined that the submitted file was an encrypted ZIP (See: [taste.yara](configs/python/backend/taste/taste.yara) [backend.yaml](configs/python/backend/backend.yaml))
+2. [ScanEncryptedZip](src/python/strelka/scanners/scan_encrypted_zip.py) used a dictionary to crack the ZIP file password, and extract the compressed file
+3. The extracted file was sent back into the Strelka pipeline by the scanner, and Strelka determined that the extracted file was an EXE
+4. [ScanPe](src/python/strelka/scanners/scan_pe.py) dissected the EXE file and added useful metadata to the output
+5. [ScanYara](src/python/strelka/scanners/scan_yara.py) analyzed the EXE file, using the provided rules, and added numerous matches to the output, some indicating the file might be malicious
+
+*The following output has been edited for brevity.*
+
+```json
+{
+  "file": {
+    "depth": 0,
+    "flavors": {
+      "mime": ["application/zip"],
+      "yara": ["encrypted_zip", "zip_file"]
+    },
+    "scanners": [
+      "ScanEncryptedZip",
+      "ScanEntropy",
+      "ScanFooter",
+      "ScanHash",
+      "ScanHeader",
+      "ScanYara",
+      "ScanZip"
+    ]
+  },
+  "scan": {
+    "encrypted_zip": {
+      "cracked_password": "infected",
+      "elapsed": 0.114269,
+      "total": {"extracted": 1, "files": 1}
+    }
+  }
+}
+```
+```json
+{
+  "file": {
+    "depth": 1,
+    "flavors": {
+      "mime": ["application/x-dosexec"],
+      "yara": ["mz_file"]
+    },
+    "name": "29D6161522C7F7F21B35401907C702BDDB05ED47.bin",
+    "scanners": [
+      "ScanEntropy",
+      "ScanFooter",
+      "ScanHash",
+      "ScanHeader",
+      "ScanPe",
+      "ScanYara"
+    ]
+  },
+  "scan": {
+    "pe": {
+      "address_of_entry_point": 5168,
+      "base_of_code": 4096,
+      "base_of_data": 32768,
+      "checksum": 47465,
+      "compile_time": "2015-03-31T08:53:51",
+      "elapsed": 0.013076,
+      "file_alignment": 4096,
+      "file_info": {
+        "company_name": "In CSS3",
+        "file_description": "Note: In CSS3, the text-decoration property is a shorthand property for text-decoration-line, text-decoration-color, and text-decoration-style, but this is currently.",
+        "file_version": "1.00.0065",
+        "fixed": {"operating_systems": ["WINDOWS32"]},
+        "internal_name": "Callstb",
+        "original_filename": "NOFAstb.exe",
+        "product_name": "Goodreads",
+        "product_version": "1.00.0065",
+        "var": {"character_set": "Unicode", "language": "U.S. English"}
+      }
+    },
+    "yara": {
+      "elapsed": 0.068918,
+      "matches": [
+        "SEH__vba",
+        "SEH_Init",
+        "Big_Numbers1",
+        "IsPE32",
+        "IsWindowsGUI",
+        "HasOverlay",
+        "HasRichSignature",
+        "Microsoft_Visual_Basic_v50v60",
+        "Microsoft_Visual_Basic_v50",
+        "Microsoft_Visual_Basic_v50_v60",
+        "Microsoft_Visual_Basic_v50_additional",
+        "Microsoft_Visual_Basic_v50v60_additional"
+      ],
+      "tags": [
+        "AntiDebug",
+        "SEH",
+        "Tactic_DefensiveEvasion",
+        "Technique_AntiDebugging",
+        "SubTechnique_SEH",
+        "PECheck",
+        "PEiD"
+      ]
+    }
+  }
+}
+```
 
 ## Fileshot UI
 
@@ -1605,3 +1749,13 @@ Guidelines for contributing can be found [here](https://github.com/target/strelk
 
 ## Licensing
 Strelka and its associated code is released under the terms of the Apache 2.0 license.
+
+<!--
+Links
+-->
+[slack]:https://join.slack.com/t/cfc-open-source/shared_invite/zt-e54crchh-a6x4iDy18D5lVwFKQoEeEQ "Slack (external link) ➶"
+
+<!--
+Badges
+-->
+[img-slack-badge]:https://img.shields.io/badge/slack-join-red.svg?style=for-the-badge&logo=slack
