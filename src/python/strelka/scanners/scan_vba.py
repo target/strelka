@@ -1,6 +1,9 @@
-from oletools import olevba
+import logging
 
+from oletools import olevba
 from strelka import strelka
+
+logging.getLogger("olevba").setLevel(logging.WARNING)
 
 
 class ScanVba(strelka.Scanner):
@@ -21,7 +24,12 @@ class ScanVba(strelka.Scanner):
             if vba.detect_vba_macros():
                 extract_macros = list(vba.extract_macros())
                 self.event["total"]["files"] = len(extract_macros)
-                for filename, stream_path, vba_filename, vba_code in extract_macros:
+                for (
+                    filename,
+                    stream_path,
+                    vba_filename,
+                    vba_code,
+                ) in extract_macros:
                     # Send extracted file back to Strelka
                     self.emit_file(vba_code, name=f"{vba_filename}")
 
