@@ -5,6 +5,8 @@ on:
 jobs:
   strelka:
     name: "Strelka Pull Request Build"
+    env:
+        DOCKER_BUILDKIT: 1
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master

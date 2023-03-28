@@ -33,7 +33,7 @@ class ScanFloss(strelka.Scanner):
                         try:
                             subprocess.Popen(
                                 [
-                                    "/tmp/floss",
+                                    "floss",
                                     "-q",
                                     "--no-static-strings",
                                     "-o",

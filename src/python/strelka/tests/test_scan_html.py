@@ -19,7 +19,7 @@ def test_scan_html(mocker):
             "forms": 0,
             "inputs": 0,
             "frames": 0,
-            "extracted": 0,
+            "extracted": 1,
             "spans": 35,
         },
         "title": "Lorem Ipsum",
@@ -38,13 +38,22 @@ def test_scan_html(mocker):
         "spans": [
             {"class": None, "style": "font-size:11pt"},
             {"class": None, "style": "background-color:white"},
-            {"class": None, "style": "font-family:Calibri,sans-serif"},
+            {
+                "class": None,
+                "style": "font-family:Calibri,sans-serif",
+            },
             {"class": None, "style": "font-size:52.5pt"},
             {"class": None, "style": "color:black"},
             {"class": None, "style": "font-size:12pt"},
-            {"class": None, "style": 'font-family:"Times New Roman",serif'},
+            {
+                "class": None,
+                "style": 'font-family:"Times New Roman",serif',
+            },
             {"class": None, "style": "font-size:10.5pt"},
-            {"class": None, "style": 'font-family:"Arial",sans-serif'},
+            {
+                "class": None,
+                "style": 'font-family:"Arial",sans-serif',
+            },
         ],
     }
 
@@ -103,5 +112,6 @@ def test_scan_html_max_hyperlinks(mocker):
     TestCase.maxDiff = None
     TestCase().assertLessEqual(len(test_scan_event["hyperlinks"]), MAX_SIZE_OPTION)
     TestCase().assertTrue(
-        test_scan_event["hyperlinks_count"], scanner_event["hyperlinks_count"]
+        test_scan_event["hyperlinks_count"],
+        scanner_event["hyperlinks_count"],
     )

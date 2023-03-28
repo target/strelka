@@ -8,6 +8,9 @@ ARG USERNAME=strelka
 ARG USER_UID=1001
 ARG USER_GID=$USER_UID
 
+ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE 1
+
 # Create the user
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID --create-home --shell /bin/bash $USERNAME
@@ -21,10 +24,13 @@ ARG EXIFTOOL_VERSION=12.52
 COPY ./build/python/backend/pin.pref /etc/apt/preferences.d/pin.pref
 COPY ./build/python/backend/kinetic.list /etc/apt/sources.list.d/kinetic.list
 
-# Update packages
-RUN apt-get -q update && \
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+
 # Install build packages
-    apt-get install -q -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get -qq update && \
+    apt-get install -qq -y --no-install-recommends \
     automake \
     build-essential \
     cmake \
@@ -46,17 +52,14 @@ RUN apt-get -q update && \
 RUN echo 'deb http://download.opensuse.org/repositories/security:/zeek/xUbuntu_22.04/ /' | tee /etc/apt/sources.list.d/security:zeek.list && \
     curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_22.04/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null
 
-# Add zeek to path
-ENV PATH=$PATH:/opt/zeek/bin
-
-# Install runtime packages
-RUN apt-get -q update && \
-    apt-get install -q -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get -qq update && \
+    apt-get install -qq -y --no-install-recommends \
     7zip \
     antiword \
     binwalk \
     libarchive-dev \
-    # 7z2john.pl
     libcompress-raw-lzma-perl \
     libfuzzy-dev \
     libjansson-dev \
@@ -72,27 +75,23 @@ RUN apt-get -q update && \
     upx \
     jq \
     zeek-lts && \
-# Download and compile Archive library, needed for exiftool to work best
-    cd /tmp/ && \
-    curl -OL https://cpan.metacpan.org/authors/id/P/PH/PHRED/Archive-Zip-1.68.tar.gz && \
-    tar -xzf Archive-Zip-1.68.tar.gz && \
-    cd Archive-Zip-1.68/ && \
-    perl Makefile.PL && \
-    make && \
-    make install && \
+#clean up zeek install
+    cp /opt/zeek/bin/zeek /bin/zeek && \
+    rm -rf /opt/zeek/share/btest /opt/zeek/bin && \
+    rm -rf /opt/zeek/lib/*.a && \
 # Download and compile exiftool
     cd /tmp/ && \
     curl -OL https://github.com/exiftool/exiftool/archive/refs/tags/$EXIFTOOL_VERSION.tar.gz && \
     tar -zxvf $EXIFTOOL_VERSION.tar.gz && \
     cd exiftool-$EXIFTOOL_VERSION/ && \
     perl Makefile.PL && \
-    make && \
-    make install && \
+    make -s && \
+    make -s install && \
 # Install FireEye CAPA rules and signatures
     mkdir -p /etc/capa/rules/ && \
     curl -OL https://github.com/mandiant/capa-rules/archive/refs/tags/v$CAPA_VERSION.zip && \
     unzip v$CAPA_VERSION.zip -d /etc/capa/rules/ && \
-    rm v$CAPA_VERSION.zip && \
+    rm -rf v$CAPA_VERSION.zip && \
     mkdir -p /etc/capa/signatures/ && \
     cd /etc/capa/signatures/ && \
     curl -OL https://github.com/mandiant/capa/raw/master/sigs/1_flare_msvc_rtf_32_64.sig && \
@@ -104,6 +103,7 @@ RUN apt-get -q update && \
     cd /tmp/ && \
     curl -OL https://s3.amazonaws.com/build-artifacts.floss.flare.fireeye.com/travis/linux/dist/floss && \
     chmod +x /tmp/floss && \
+    mv /tmp/floss /bin/floss && \
 # Install YARA
     cd /tmp/ && \
     curl -OL https://github.com/VirusTotal/yara/archive/v$YARA_VERSION.tar.gz && \
@@ -111,7 +111,7 @@ RUN apt-get -q update && \
     cd yara-$YARA_VERSION/ && \
     ./bootstrap.sh && \
     ./configure --with-crypto --enable-magic --enable-cuckoo && \
-    make && make install && make check && \
+    make -s && make -s install && make -s check && \
 # Install yara-python
     cd /tmp/ && \
     curl -OL https://github.com/VirusTotal/yara-python/archive/v$YARA_PYTHON_VERSION.tar.gz && \
@@ -120,29 +120,26 @@ RUN apt-get -q update && \
     python3 setup.py build --dynamic-linking && \
     python3 setup.py install
 
-# Mark zeek as manual (keeps getting autoremoved?)
-RUN apt-mark manual zeek-lts
-
 # Install JTR
-RUN apt-get -q update \
-  && apt-get install -q -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get install -qq -y --no-install-recommends \
     ca-certificates \
-    libssl-dev \
     zlib1g-dev \
     yasm \
     libgmp-dev \
     libpcap-dev \
     libbz2-dev \
-    libgomp1
+    libgomp1 && \
 # The maintainer isn't big on releases or tags so grab an arbitrary, but consistent, commit.
 # Additionally jump through some extra hoops to get the single commit to save some download time.
-RUN mkdir jtr && cd jtr && git init && git remote add origin https://github.com/openwall/john.git && git fetch --depth 1 origin b5c10480f56ff1b5d76c6cbdaf9c817582ee2228 && git reset --hard FETCH_HEAD \
+    mkdir jtr && cd jtr && git init && git remote add origin https://github.com/openwall/john.git && git fetch --depth 1 origin b5c10480f56ff1b5d76c6cbdaf9c817582ee2228 && git reset --hard FETCH_HEAD \
   && rm -rf /jtr/.git \
   && cd /jtr/src \
   && ./configure \
   && make -s clean \
   && make -sj4 \
-  && make install \
+  && make -s install \
   && cp -Tr /jtr/run/ /jtr && rm -rf /jtr/run \
   && chmod -R 777 /jtr \
   && chown -R 1001:1001 /jtr
@@ -152,8 +149,8 @@ COPY ./src/python/ /strelka/
 COPY ./configs/python/backend/ /etc/strelka/
 
 # Install Python packages
-RUN pip3 install --no-cache-dir -r /strelka/requirements.txt && \
-    pip3 install --index-url https://lief-project.github.io/packages --trusted-host lief.quarkslab.com lief
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip3 -q --disable-pip-version-check install -r /strelka/requirements.txt
 
 # Install Strelka
 RUN cd /strelka/ && \
@@ -162,8 +159,7 @@ RUN cd /strelka/ && \
 # Remove build packages
     python3 setup.py -q clean --all && \
     rm -rf dist/ strelka.egg-info && \
-    pip3 uninstall -y grpcio-tools && \
-    apt-get remove -y --purge \
+    apt-get purge -y \
     automake \
     build-essential \
     cmake \
@@ -177,7 +173,7 @@ RUN cd /strelka/ && \
     python3-pip \
     python3-wheel && \
     apt-get clean -qq && \
-    rm -rf /var/lib/apt/lists/* /tmp/yara* && \
+    rm -rf /var/lib/apt/lists/* && \
 # Assign permissions to Strelka scan result logging directory
     mkdir /var/log/strelka/ && \
     chgrp -R 0 /var/log/strelka/ && \
@@ -195,9 +191,11 @@ RUN echo '[+] Run build checks' && \
 
 USER root
 
-# Remove python build directory
+# Remove build directories and unused files
 RUN cd /strelka/ && \
-    rm -rf /strelka/
+    rm -rf /strelka/ && \
+    rm -rf /root/.cache && \
+    rm -rf /tmp/*
 
 # Remove config directory (will bind mount once built)
 RUN rm -rf /etc/strelka/
