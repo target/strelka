@@ -105,15 +105,12 @@ def test_scan_html_max_hyperlinks(mocker):
     scanner_event = run_test_scan(
         mocker=mocker,
         scan_class=ScanUnderTest,
-        fixture_path=Path(__file__).parent
-        / "fixtures/test_hyperlinks.html",
+        fixture_path=Path(__file__).parent / "fixtures/test_hyperlinks.html",
         options={"max_hyperlinks": MAX_SIZE_OPTION},
     )
 
     TestCase.maxDiff = None
-    TestCase().assertLessEqual(
-        len(test_scan_event["hyperlinks"]), MAX_SIZE_OPTION
-    )
+    TestCase().assertLessEqual(len(test_scan_event["hyperlinks"]), MAX_SIZE_OPTION)
     TestCase().assertTrue(
         test_scan_event["hyperlinks_count"],
         scanner_event["hyperlinks_count"],
