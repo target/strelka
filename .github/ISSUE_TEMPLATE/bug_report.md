@@ -14,6 +14,11 @@ A clear and concise description of what the bug is.
 * Operating System: [...]
 * Architecture: [...]
 
+**Pytest Output**
+```
+<Pytest Output>
+```
+
 **Steps to reproduce**
 Steps to reproduce the behavior:
 1. Run [...]
