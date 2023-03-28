@@ -23,17 +23,21 @@ class ScanFloss(strelka.Scanner):
         self.event["stack"] = []
 
         try:
-            with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
+            with tempfile.NamedTemporaryFile(
+                dir=tmp_directory
+            ) as tmp_data:
                 # Write out the sample to a temporary file
                 tmp_data.write(data)
 
                 try:
                     # Write out floss results to a temporary file for processing
-                    with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_output:
+                    with tempfile.NamedTemporaryFile(
+                        dir=tmp_directory
+                    ) as tmp_output:
                         try:
                             subprocess.Popen(
                                 [
-                                    "/tmp/floss",
+                                    "floss",
                                     "-q",
                                     "--no-static-strings",
                                     "-o",
@@ -51,14 +55,16 @@ class ScanFloss(strelka.Scanner):
                             return
 
                         try:
-                            if floss_json["strings"]["decoded_strings"]:
-                                self.event["decoded"] = floss_json["strings"][
-                                    "decoded_strings"
-                                ][:limit]
+                            if floss_json["strings"][
+                                "decoded_strings"
+                            ]:
+                                self.event["decoded"] = floss_json[
+                                    "strings"
+                                ]["decoded_strings"][:limit]
                             if floss_json["strings"]["stack_strings"]:
-                                self.event["stack"] = floss_json["strings"][
-                                    "stack_strings"
-                                ][:limit]
+                                self.event["stack"] = floss_json[
+                                    "strings"
+                                ]["stack_strings"][:limit]
                         except strelka.ScannerTimeout:
                             raise
                         except Exception:
