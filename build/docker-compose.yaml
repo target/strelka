@@ -54,15 +54,6 @@ services:
     depends_on:
       - coordinator
 
-  mmrpc:
-    build:
-      context: ..
-      dockerfile: build/python/mmrpc/Dockerfile
-    command: strelka-mmrpc --threads 2 --address [::]:33907
-    container_name: strelka_mmrpc_1
-    networks:
-      - net
-
   coordinator:
     image: redis:alpine
     command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping

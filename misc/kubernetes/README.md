@@ -18,8 +18,6 @@ kubectl apply -f gatekeeper-service.yaml
 kubectl apply -f gatekeeper-deployment.yaml
 kubectl apply -f coordinator-service.yaml
 kubectl apply -f coordinator-deployment.yaml
-kubectl apply -f mmrpc-service.yaml
-kubectl apply -f mmrpc-deployment.yaml
 kubectl apply -f manager-configmap.yaml
 kubectl apply -f manager-deployment.yaml
 kubectl apply -f frontend-configmap.yaml

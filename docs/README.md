@@ -27,7 +27,6 @@ Strelka differs from its sibling projects in a few significant ways:
         * [strelka-manager](#strelka-manager)
         * [coordinator](#coordinator)
         * [gatekeeper](#gatekeeper)
-        * [mmrpc](#mmrpc)
     * [Configuration Files](#configuration-files)
         * [fileshot](#fileshot)
         * [filestream](#filestream)
@@ -420,9 +419,6 @@ This server component is a Redis server that coordinates tasks and data between 
 #### gatekeeper
 This server component is a Redis server that acts as a temporary event cache. This component is not compatible with Envoy's Redis load balancing capabilities.
 
-#### mmrpc
-This is an optional server component that turns the [MaliciousMacroBot](https://github.com/egaus/MaliciousMacroBot) project into a networked service with gRPC.
-
 ### Configuration Files
 Strelka uses YAML for configuring client and server components. We recommend using the default configurations and modifying the options as needed.
 
@@ -775,7 +771,6 @@ The table below describes each scanner and its options. Each scanner has the hid
 | ScanLzma          | Decompresses lzma files                                                                | N/A                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ScanMacho         | Collects metadata from Mach-O files                                                    | `tempfile_directory` -- location where tempfile writes temporary files (defaults to `/tmp/`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | ScanManifest      | Collects metadata from Chrome Manifest files                                           | N/A                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | [DerekT2](https://github.com/Derekt2)                                                           
-| ScanMmbot         | Collects VB results from a server running mmbotd                                       | `server` -- network address and network port of the mmbotd server (defaults to `127.0.0.1:33907`)<br>`timeout` -- amount of time (in milliseconds) to wait for a response from the server (defaults to 10000)                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ScanMsi           | Collects MSI data parsed by Exiftool                                                   | `tempfile_directory` -- location where tempfile writes temporary files (defaults to `/tmp/`)<br>`keys` -- list of keys to log (defaults to `all`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ScanOcr           | Collects metadata and extracts optical text from image files                           | `extract_text` -- boolean that determines if document text should be extracted as a child file (defaults to `False`)<br>`split_words` -- split output text into a list of individual words (Default: True)<br>`tempfile_directory` -- location where `tempfile` will write temporary files (defaults to `/tmp/`)                                                                                                                                                                                                                                                                                                                                                            |
 | ScanOle           | Extracts files from OLECF files                                                        | N/A                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -1717,21 +1712,6 @@ Below is a partial scan result for a document file that contains VBA/VBScript, t
       "ThisWorkbook",
       "0{00020819-0000-0000-C000-000000000046}"
     ]
-  },
-  "mmbot": {
-    "confidence": 0.94,
-    "prediction": "benign",
-    "lang_features": "cpl_codepanes_declare_getselection_calendar",
-    "avg_param_per_func": 0,
-    "cnt_comment_loc_ratio": 0,
-    "cnt_comments": 0,
-    "cnt_function_loc_ratio": 0,
-    "cnt_functions": 0,
-    "cnt_loc": 8,
-    "entropy_chars": 2.37,
-    "entropy_func_names": 0,
-    "entropy_words": 3.35,
-    "mean_loc_per_func": 8
   },
   "yara": {
     "flags": [ "compiling_error" ]

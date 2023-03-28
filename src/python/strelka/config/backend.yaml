@@ -398,14 +398,6 @@ scanners:
           - 'Title'
           - 'TotalEditTime'
           - 'Words'
-  'ScanMmbot':
-    - positive:
-        flavors:
-          - 'vb_file'
-          - 'vbscript'
-      priority: 5
-      options:
-        server: 'strelka_mmrpc_1:33907'
   'ScanNf':
     - positive:
         flavors:
