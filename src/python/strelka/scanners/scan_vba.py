@@ -1,6 +1,7 @@
 import logging
 
 from oletools import olevba
+
 from strelka import strelka
 
 logging.getLogger("olevba").setLevel(logging.WARNING)
