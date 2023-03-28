@@ -4,7 +4,7 @@ on:
     branches: [ master ]
 jobs:
   strelka:
-    name: "Strelka Pull Request Build"
+    name: "Build Strelka (Pull Request)"
     env:
         DOCKER_BUILDKIT: 1
     runs-on: ubuntu-latest

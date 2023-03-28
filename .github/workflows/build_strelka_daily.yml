@@ -4,7 +4,9 @@ on:
     - cron: '0 2 * * *'
 jobs:
   strelka:
-    name: "Strelka Daily Build"
+    name: "Build Strelka (Nightly)"
+    env:
+        DOCKER_BUILDKIT: 1
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@master

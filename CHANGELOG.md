@@ -3,6 +3,7 @@ Changes to the project will be tracked in this file via the date of change.
 
 ## 2023-03-28
 - Slimming Backend Dockerfile, several scanner fixes (@Derekt2)
+- Updating Github workflows to accomodate above fixes
 - Removing `mmbot` references
 
 ## 2023-03-24

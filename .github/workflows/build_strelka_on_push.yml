@@ -3,11 +3,11 @@ on:
   push
 jobs:
   strelka:
-    name: "Strelka Push Build"
+    name: "Build Strelka (Main Push)"
+    env:
+        DOCKER_BUILDKIT: 1
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@master
       - name: Builds Strelka
-        run:  |
-          export DOCKER_BUILDKIT=1
-          docker-compose -f build/docker-compose.yaml build
+        run: docker-compose -f build/docker-compose.yaml build
