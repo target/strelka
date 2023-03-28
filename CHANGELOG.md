@@ -1,6 +1,19 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-03-28
+- Slimming Backend Dockerfile, several scanner fixes (@Derekt2)
+- Removing `mmbot` references
+
+## 2023-03-24
+- Updating docs / removing broken test / adding no build support
+
+## 2023-03-23
+- Bug fix / updating `ScanManifest` (@Derekt2)
+
+## 2023-03-14
+- Bug fix to account for default mime DB (@jertel)
+ 
 ## 2023-03-07
 - Ading `ScanVsto` to extract VSTO file metadata.
 
