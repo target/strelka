@@ -33,7 +33,7 @@ jobs:
 
       - name: Determine Tags FrontEnd
         id: meta_frontend
-        uses: crazy-max/ghaction-docker-meta@v2
+        uses: docker/metadata-action@v4
         with:
           images: |
             ${{ steps.login-ecr.outputs.registry }}/strelka-frontend
@@ -45,7 +45,7 @@ jobs:
 
       - name: Determine Tags BackEnd
         id: meta_backend
-        uses: crazy-max/ghaction-docker-meta@v2
+        uses: docker/metadata-action@v4
         with:
           images: |
             ${{ steps.login-ecr.outputs.registry }}/strelka-backend
@@ -57,7 +57,7 @@ jobs:
 
       - name: Determine Tags Manager
         id: meta_manager
-        uses: crazy-max/ghaction-docker-meta@v2
+        uses: docker/metadata-action@v4
         with:
           images: |
             ${{ steps.login-ecr.outputs.registry }}/strelka-manager
