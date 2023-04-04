@@ -1,4 +1,4 @@
-"""Compress and Base64 encode raw file data"""
+"""Expose raw file data that has been compressed and encoded"""
 
 import base64
 import bz2
