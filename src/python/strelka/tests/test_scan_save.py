@@ -14,7 +14,7 @@ def test_scan_save(mocker):
     """
 
     # Test file path
-    fixture_path = Path(__file__).parent / "fixtures/test.yaml"
+    fixture_path = Path(__file__).parent / "fixtures/test.txt"
 
     # Compress and encode file contents for comparison
     with open(fixture_path, "rb") as f:
