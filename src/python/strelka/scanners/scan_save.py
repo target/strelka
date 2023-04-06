@@ -9,7 +9,7 @@ from strelka import strelka
 
 
 class ScanSave(strelka.Scanner):
-    """Compress and base64 encode raw file data"""
+    """Compress and encode raw file data"""
 
     def init(self):
         # Compression algorithm choices
