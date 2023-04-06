@@ -45,11 +45,13 @@ class ScanSave(strelka.Scanner):
             except Exception:
                 self.flags.append("save_compression_error")
                 return
+        self.event["compression"] = compression_md
 
         # Verify the encoding algorithm is available
         if encoding not in self.encode_data:
             self.flag.append("save_encoding_value_error")
             return
+        self.event["encoding"] = encoding
 
         # Encode the data for JSON compatibility
         try:
@@ -59,8 +61,4 @@ class ScanSave(strelka.Scanner):
         except Exception:
             self.flags.append("save_encoding_error")
             return
-
-        # Metadata
         self.event["file"] = out_data
-        self.event["compression"] = compression_md
-        self.event["encoding"] = encoding
