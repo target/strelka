@@ -21,7 +21,7 @@ scanners:
 #  'ScanBase64':
 #    - positive:
 #        flavors:
-#          - 'base64_file'
+#          - 'base64'
 #      priority: 5
   'ScanBase64PE':
     - positive:
@@ -564,6 +564,9 @@ scanners:
   #   - positive:
   #       flavors:
   #         - 'mz_file'
+  #   - negative:
+  #       flavors:
+  #         - 'base64'
   #     priority: 5
   'ScanSwf':
     - positive:
