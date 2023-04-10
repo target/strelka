@@ -275,14 +275,11 @@ class Backend(object):
                     break
 
             # Retrieve request task from Redis coordinator
-            task = self.coordinator.zpopmin("tasks", count=1)
-            if len(task) == 0:
-                time.sleep(0.25)
+            task = self.coordinator.bzpopmin("tasks", timeout=5)
+            if task is None:
                 continue
 
-            # Get request metadata and Redis context deadline UNIX timestamp
-            (task_item, expire_at) = task[0]
-
+            (queue_name, task_item, expire_at) = task
             traceparent = None
 
             # Support old (ID only) and new (JSON) style requests
