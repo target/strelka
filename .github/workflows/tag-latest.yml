@@ -23,8 +23,16 @@ jobs:
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1.6.0
+        continue-on-error: true
         with:
-          # Use a role instead of including credentials in secrets, but still hide that role name to be gated by GH environments.
+          role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
+          aws-region: us-east-1
+
+      - name: 2nd Attempt Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1.6.0
+        if: ${{ env.AWS_ACCESS_KEY_ID == '' }}
+        with:
           role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
           role-duration-seconds: 7200 # 2 hours
           aws-region: us-east-1
@@ -64,65 +72,116 @@ jobs:
       - name: Pull, Tag, Push FrontEnd
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          VERSION: ${{ steps.get_ver.outputs.SEM_VER }}
+          SEM_VER: ${{ steps.get_ver.outputs.SEM_VER }}
           MAJOR_VERSION: ${{ steps.get_ver.outputs.MAJOR_VERSION }}
           MINOR_VERSION: ${{ steps.get_ver.outputs.MINOR_VERSION }}
         run: |
-          docker pull $ECR_REGISTRY/strelka-frontend:$VERSION
+          amd_tag=amd64-$SEM_VER
+          arm_tag=arm64-$SEM_VER
+          docker_hub=sublimesec/strelka-frontend
+          ecr=$ECR_REGISTRY/strelka-frontend
 
-          docker tag $ECR_REGISTRY/strelka-frontend:$VERSION $ECR_REGISTRY/strelka-frontend:latest
-          docker tag $ECR_REGISTRY/strelka-frontend:$VERSION sublimesec/strelka-frontend:latest
+          docker manifest create $docker_hub:latest \
+              $docker_hub:$amd_tag \
+              $docker_hub:$arm_tag
+          docker manifest create $ecr:latest \
+              $ecr:$amd_tag \
+              $ecr:$arm_tag
+          docker manifest create $docker_hub:$MAJOR_VERSION \
+              $docker_hub:$amd_tag \
+              $docker_hub:$arm_tag
+          docker manifest create $ecr:$MAJOR_VERSION \
+              $ecr:$amd_tag \
+              $ecr:$arm_tag
+          docker manifest create $docker_hub:$MINOR_VERSION \
+              $docker_hub:$amd_tag \
+              $docker_hub:$arm_tag
+          docker manifest create $ecr:$MINOR_VERSION \
+              $ecr:$amd_tag \
+              $ecr:$arm_tag
 
-          docker tag $ECR_REGISTRY/strelka-frontend:$VERSION $ECR_REGISTRY/strelka-frontend:$MAJOR_VERSION
-          docker tag $ECR_REGISTRY/strelka-frontend:$VERSION sublimesec/strelka-frontend:$MAJOR_VERSION
-
-          docker tag $ECR_REGISTRY/strelka-frontend:$VERSION $ECR_REGISTRY/strelka-frontend:$MINOR_VERSION
-          docker tag $ECR_REGISTRY/strelka-frontend:$VERSION sublimesec/strelka-frontend:$MINOR_VERSION
-
-          docker push --all-tags $ECR_REGISTRY/strelka-frontend
-          docker push --all-tags sublimesec/strelka-frontend
+          docker manifest push $docker_hub:latest
+          docker manifest push $ecr:latest
+          docker manifest push $docker_hub:$MAJOR_VERSION
+          docker manifest push $ecr:$MAJOR_VERSION
+          docker manifest push $docker_hub:$MINOR_VERSION
+          docker manifest push $ecr:$MINOR_VERSION
 
       - name: Pull, Tag, Push BackEnd
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          VERSION: ${{ steps.get_ver.outputs.SEM_VER }}
+          SEM_VER: ${{ steps.get_ver.outputs.SEM_VER }}
           MAJOR_VERSION: ${{ steps.get_ver.outputs.MAJOR_VERSION }}
           MINOR_VERSION: ${{ steps.get_ver.outputs.MINOR_VERSION }}
         run: |
-          docker pull $ECR_REGISTRY/strelka-backend:$VERSION
+          amd_tag=amd64-$SEM_VER
+          arm_tag=arm64-$SEM_VER
+          docker_hub=sublimesec/strelka-backend
+          ecr=$ECR_REGISTRY/strelka-backend
 
-          docker tag $ECR_REGISTRY/strelka-backend:$VERSION $ECR_REGISTRY/strelka-backend:latest
-          docker tag $ECR_REGISTRY/strelka-backend:$VERSION sublimesec/strelka-backend:latest
+          docker manifest create $docker_hub:latest \
+              $docker_hub:$amd_tag \
+              $docker_hub:$arm_tag
+          docker manifest create $ecr:latest \
+              $ecr:$amd_tag \
+              $ecr:$arm_tag
+          docker manifest create $docker_hub:$MAJOR_VERSION \
+              $docker_hub:$amd_tag \
+              $docker_hub:$arm_tag
+          docker manifest create $ecr:$MAJOR_VERSION \
+              $ecr:$amd_tag \
+              $ecr:$arm_tag
+          docker manifest create $docker_hub:$MINOR_VERSION \
+              $docker_hub:$amd_tag \
+              $docker_hub:$arm_tag
+          docker manifest create $ecr:$MINOR_VERSION \
+              $ecr:$amd_tag \
+              $ecr:$arm_tag
 
-          docker tag $ECR_REGISTRY/strelka-backend:$VERSION $ECR_REGISTRY/strelka-backend:$MAJOR_VERSION
-          docker tag $ECR_REGISTRY/strelka-backend:$VERSION sublimesec/strelka-backend:$MAJOR_VERSION
-
-          docker tag $ECR_REGISTRY/strelka-backend:$VERSION $ECR_REGISTRY/strelka-backend:$MINOR_VERSION
-          docker tag $ECR_REGISTRY/strelka-backend:$VERSION sublimesec/strelka-backend:$MINOR_VERSION
-
-          docker push --all-tags $ECR_REGISTRY/strelka-backend
-          docker push --all-tags sublimesec/strelka-backend
+          docker manifest push $docker_hub:latest
+          docker manifest push $ecr:latest
+          docker manifest push $docker_hub:$MAJOR_VERSION
+          docker manifest push $ecr:$MAJOR_VERSION
+          docker manifest push $docker_hub:$MINOR_VERSION
+          docker manifest push $ecr:$MINOR_VERSION
 
       - name: Pull, Tag, Push Manager
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          VERSION: ${{ steps.get_ver.outputs.SEM_VER }}
+          SEM_VER: ${{ steps.get_ver.outputs.SEM_VER }}
           MAJOR_VERSION: ${{ steps.get_ver.outputs.MAJOR_VERSION }}
           MINOR_VERSION: ${{ steps.get_ver.outputs.MINOR_VERSION }}
         run: |
-          docker pull $ECR_REGISTRY/strelka-manager:$VERSION
+          amd_tag=amd64-$SEM_VER
+          arm_tag=arm64-$SEM_VER
+          docker_hub=sublimesec/strelka-manager
+          ecr=$ECR_REGISTRY/strelka-manager
 
-          docker tag $ECR_REGISTRY/strelka-manager:$VERSION $ECR_REGISTRY/strelka-manager:latest
-          docker tag $ECR_REGISTRY/strelka-manager:$VERSION sublimesec/strelka-manager:latest
+          docker manifest create $docker_hub:latest \
+              $docker_hub:$amd_tag \
+              $docker_hub:$arm_tag
+          docker manifest create $ecr:latest \
+              $ecr:$amd_tag \
+              $ecr:$arm_tag
+          docker manifest create $docker_hub:$MAJOR_VERSION \
+              $docker_hub:$amd_tag \
+              $docker_hub:$arm_tag
+          docker manifest create $ecr:$MAJOR_VERSION \
+              $ecr:$amd_tag \
+              $ecr:$arm_tag
+          docker manifest create $docker_hub:$MINOR_VERSION \
+              $docker_hub:$amd_tag \
+              $docker_hub:$arm_tag
+          docker manifest create $ecr:$MINOR_VERSION \
+              $ecr:$amd_tag \
+              $ecr:$arm_tag
 
-          docker tag $ECR_REGISTRY/strelka-manager:$VERSION $ECR_REGISTRY/strelka-manager:$MAJOR_VERSION
-          docker tag $ECR_REGISTRY/strelka-manager:$VERSION sublimesec/strelka-manager:$MAJOR_VERSION
-
-          docker tag $ECR_REGISTRY/strelka-manager:$VERSION $ECR_REGISTRY/strelka-manager:$MINOR_VERSION
-          docker tag $ECR_REGISTRY/strelka-manager:$VERSION sublimesec/strelka-manager:$MINOR_VERSION
-
-          docker push --all-tags $ECR_REGISTRY/strelka-manager
-          docker push --all-tags sublimesec/strelka-manager
+          docker manifest push $docker_hub:latest
+          docker manifest push $ecr:latest
+          docker manifest push $docker_hub:$MAJOR_VERSION
+          docker manifest push $ecr:$MAJOR_VERSION
+          docker manifest push $docker_hub:$MINOR_VERSION
+          docker manifest push $ecr:$MINOR_VERSION
 
       - name: Validate All X-Region Replication
         run: |

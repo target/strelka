@@ -54,4 +54,3 @@ function checkImagesWithTimeout() {
 checkImagesWithTimeout strelka-frontend
 checkImagesWithTimeout strelka-backend
 checkImagesWithTimeout strelka-manager
-checkImagesWithTimeout strelka-mmrpc

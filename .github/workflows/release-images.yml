@@ -8,7 +8,19 @@ on:
 jobs:
   push_to_registry:
     name: Build & Push to Registries
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # GitHub doesn't have ARM runners so we must use BuildJet. QEMU emulation is too slow and will fail on the base
+        # build at least. We'll use BuildJet for AMD too because we can use a slightly faster runner for cheap, but
+        # this could be switched to ubuntu-latest if needed.
+        arch: [arm64, amd64]
+        include:
+          - arch: arm64
+            runner: buildjet-4vcpu-ubuntu-2204-arm
+          - arch: amd64
+            runner: buildjet-4vcpu-ubuntu-2204
+
+    runs-on: ${{ matrix.runner }}
     environment: production
     permissions:
       id-token: write
@@ -21,8 +33,16 @@ jobs:
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1.6.0
+        continue-on-error: true
         with:
-          # Use a role instead of including credentials in secrets, but still hide that role name to be gated by GH environments.
+          role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
+          aws-region: us-east-1
+
+      - name: 2nd Attempt Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1.6.0
+        if: ${{ env.AWS_ACCESS_KEY_ID == '' }}
+        with:
           role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
           role-duration-seconds: 7200 # 2 hours
           aws-region: us-east-1
@@ -31,41 +51,12 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Determine Tags FrontEnd
-        id: meta_frontend
-        uses: docker/metadata-action@v4
-        with:
-          images: |
-            ${{ steps.login-ecr.outputs.registry }}/strelka-frontend
-            sublimesec/strelka-frontend
-          flavor: |
-            latest=false
-          tags: |
-            type=semver,pattern={{version}}
-
-      - name: Determine Tags BackEnd
-        id: meta_backend
-        uses: docker/metadata-action@v4
-        with:
-          images: |
-            ${{ steps.login-ecr.outputs.registry }}/strelka-backend
-            sublimesec/strelka-backend
-          flavor: |
-            latest=false
-          tags: |
-            type=semver,pattern={{version}}
-
-      - name: Determine Tags Manager
-        id: meta_manager
-        uses: docker/metadata-action@v4
-        with:
-          images: |
-            ${{ steps.login-ecr.outputs.registry }}/strelka-manager
-            sublimesec/strelka-manager
-          flavor: |
-            latest=false
-          tags: |
-            type=semver,pattern={{version}}
+      - name: Determine the version from the tag
+        id: get_ver
+        run: |
+          SEM_VER=$(echo "${{ github.ref }}" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]*")
+          test -n "$SEM_VER"
+          echo "::set-output name=SEM_VER::$SEM_VER"
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -73,32 +64,44 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          driver: docker
+
       - name: Build FrontEnd
         uses: docker/build-push-action@v2
         with:
           file: build/go/frontend/Dockerfile
           context: .
+          platforms: linux/${{ matrix.arch }}
           load: true
-          tags: ${{ steps.meta_frontend.outputs.tags }}
-          labels: ${{ steps.meta_frontend.outputs.labels }}
+          tags: |
+            sublimesec/strelka-frontend:${{ matrix.arch }}-${{ steps.get_ver.outputs.SEM_VER }}
+            ${{ steps.login-ecr.outputs.registry }}/strelka-frontend:${{ matrix.arch }}-${{ steps.get_ver.outputs.SEM_VER }}
 
       - name: Build BackEnd
         uses: docker/build-push-action@v2
         with:
           file: build/python/backend/Dockerfile
           context: .
+          platforms: linux/${{ matrix.arch }}
           load: true
-          tags: ${{ steps.meta_backend.outputs.tags }}
-          labels: ${{ steps.meta_backend.outputs.labels }}
+          tags: |
+            sublimesec/strelka-backend:${{ matrix.arch }}-${{ steps.get_ver.outputs.SEM_VER }}
+            ${{ steps.login-ecr.outputs.registry }}/strelka-backend:${{ matrix.arch }}-${{ steps.get_ver.outputs.SEM_VER }}
 
       - name: Build Manager
         uses: docker/build-push-action@v2
         with:
           file: build/go/manager/Dockerfile
           context: .
+          platforms: linux/${{ matrix.arch }}
           load: true
-          tags: ${{ steps.meta_manager.outputs.tags }}
-          labels: ${{ steps.meta_manager.outputs.labels }}
+          tags: |
+            sublimesec/strelka-manager:${{ matrix.arch }}-${{ steps.get_ver.outputs.SEM_VER }}
+            ${{ steps.login-ecr.outputs.registry }}/strelka-manager:${{ matrix.arch }}-${{ steps.get_ver.outputs.SEM_VER }}
 
       - name: Push FrontEnd
         env:
@@ -120,6 +123,126 @@ jobs:
         run: |
           docker push --all-tags $ECR_REGISTRY/strelka-manager
           docker push --all-tags sublimesec/strelka-manager
+
+  manifest_image:
+    name: Build Manifest Image and Push
+    needs: push_to_registry
+    runs-on: ubuntu-20.04
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1.6.0
+        continue-on-error: true
+        with:
+          role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
+          aws-region: us-east-1
+
+      - name: 2nd Attempt Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1.6.0
+        if: ${{ env.AWS_ACCESS_KEY_ID == '' }}
+        with:
+          role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Determine the version from the tag
+        id: get_ver
+        run: |
+          SEM_VER=$(echo "${{ github.ref }}" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]*")
+          test -n "$SEM_VER"
+          echo "::set-output name=SEM_VER::$SEM_VER"
+
+      - name: Build and Push Final Manifests to ECR & DockerHub
+        env:
+          SEM_VER: ${{ steps.get_ver.outputs.SEM_VER }}
+          MINOR_VERSION:  ${{ steps.get_ver.outputs.MINOR_VERSION }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          amd_tag=amd64-$SEM_VER
+          arm_tag=arm64-$SEM_VER
+          
+          # Backend
+          docker_hub=sublimesec/strelka-backend
+          ecr=$ECR_REGISTRY/strelka-backend
+          docker manifest create $docker_hub:$SEM_VER \
+              $docker_hub:$amd_tag \
+              $docker_hub:$arm_tag
+          docker manifest create $ecr:$SEM_VER \
+              $ecr:$amd_tag \
+              $ecr:$arm_tag
+
+          docker manifest push $docker_hub:$SEM_VER
+          docker manifest push $ecr:$SEM_VER
+
+          # Frontend
+          docker_hub=sublimesec/strelka-frontend
+          ecr=$ECR_REGISTRY/strelka-frontend
+          docker manifest create $docker_hub:$SEM_VER \
+              $docker_hub:$amd_tag \
+              $docker_hub:$arm_tag
+          docker manifest create $ecr:$SEM_VER \
+              $ecr:$amd_tag \
+              $ecr:$arm_tag
+
+          docker manifest push $docker_hub:$SEM_VER
+          docker manifest push $ecr:$SEM_VER
+
+          # Manager
+          docker_hub=sublimesec/strelka-manager
+          ecr=$ECR_REGISTRY/strelka-manager
+          docker manifest create $docker_hub:$SEM_VER \
+              $docker_hub:$amd_tag \
+              $docker_hub:$arm_tag
+          docker manifest create $ecr:$SEM_VER \
+              $ecr:$amd_tag \
+              $ecr:$arm_tag
+
+          docker manifest push $docker_hub:$SEM_VER
+          docker manifest push $ecr:$SEM_VER
+
+  validate_x_region_replication:
+    name: Validate that ECR Images Have Propagated to All Regions
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    needs: manifest_image
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1.6.0
+        continue-on-error: true
+        with:
+          role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
+          aws-region: us-east-1
+
+      - name: 2nd Attempt Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1.6.0
+        if: ${{ env.AWS_ACCESS_KEY_ID == '' }}
+        with:
+          role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
+          aws-region: us-east-1
 
       - name: Validate All X-Region Replication
         run: |
