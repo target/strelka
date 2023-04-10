@@ -11,6 +11,7 @@ from strelka.tests import run_test_scan
 
 def test_scan_save_b64_gzip(mocker):
     """
+    Test gzip compression and base64 encoding
     Pass: Sample event matches output of scanner.
     Failure: Unable to load file or sample event fails to match.
     """
@@ -27,7 +28,7 @@ def test_scan_save_b64_gzip(mocker):
     test_scan_event = {
         "elapsed": mock.ANY,
         "file": file_contents,
-        "compression": {"enabled": True, "algorithm": compression},
+        "compression": compression,
         "encoding": encoding,
         "flags": [],
     }
@@ -46,6 +47,7 @@ def test_scan_save_b64_gzip(mocker):
 
 def test_scan_save_b64_bzip2(mocker):
     """
+    Test bzip2 compression and base64 encoding
     Pass: Sample event matches output of scanner.
     Failure: Unable to load file or sample event fails to match.
     """
@@ -62,7 +64,7 @@ def test_scan_save_b64_bzip2(mocker):
     test_scan_event = {
         "elapsed": mock.ANY,
         "file": file_contents,
-        "compression": {"enabled": True, "algorithm": compression},
+        "compression": compression,
         "encoding": encoding,
         "flags": [],
     }
@@ -80,6 +82,7 @@ def test_scan_save_b64_bzip2(mocker):
 
 def test_scan_save_b85_lzma(mocker):
     """
+    Test lzma compression and base85 encoding
     Pass: Sample event matches output of scanner.
     Failure: Unable to load file or sample event fails to match.
     """
@@ -96,7 +99,42 @@ def test_scan_save_b85_lzma(mocker):
     test_scan_event = {
         "elapsed": mock.ANY,
         "file": file_contents,
-        "compression": {"enabled": True, "algorithm": compression},
+        "compression": compression,
+        "encoding": encoding,
+        "flags": [],
+    }
+
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=fixture_path,
+        options={"compression": compression, "encoding": encoding},
+    )
+
+    TestCase.maxDiff = None
+    TestCase().assertDictEqual(test_scan_event, scanner_event)
+
+
+def test_scan_save_b64_none(mocker):
+    """
+    Test no compression and base64 encoding
+    Pass: Sample event matches output of scanner.
+    Failure: Unable to load file or sample event fails to match.
+    """
+
+    # Test parameters
+    compression = "none"
+    encoding = "base64"
+    fixture_path = Path(__file__).parent / "fixtures/test.txt"
+
+    # Encode file contents for comparison
+    with open(fixture_path, "rb") as f:
+        file_contents = b64encode(f.read())
+
+    test_scan_event = {
+        "elapsed": mock.ANY,
+        "file": file_contents,
+        "compression": compression,
         "encoding": encoding,
         "flags": [],
     }

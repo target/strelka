@@ -30,14 +30,12 @@ class ScanSave(strelka.Scanner):
         compression = options.get("compression", "gzip")
 
         # Compress the data
-        compression_md = {"enabled": True if compression != "none" else False}
         if compression != "none":
             # Verify the compression algorithm is available
             if compression not in self.compress_data:
                 self.flags.append("save_compression_value_error")
                 return
 
-            compression_md["algorithm"] = compression
             try:
                 data = self.compress_data[compression](data)
             except strelka.ScannerTimeout:
@@ -45,7 +43,7 @@ class ScanSave(strelka.Scanner):
             except Exception:
                 self.flags.append("save_compression_error")
                 return
-        self.event["compression"] = compression_md
+        self.event["compression"] = compression
 
         # Verify the encoding algorithm is available
         if encoding not in self.encode_data:
