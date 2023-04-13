@@ -1,3 +1,4 @@
+# --index-url https://lief-project.github.io/packages --trusted-host lief.quarkslab.com
 arc4==0.0.4
 beautifulsoup4==4.9.3
 boltons==20.2.1
@@ -14,7 +15,12 @@ inflection==0.5.1
 interruptingcow==0.8
 jsbeautifier==1.13.13
 libarchive-c==2.9
-lief==0.12.1
+
+
+# lief doesn't have prebuilt binaries for ARM64 in PyPi, use our own prebuilt binary
+https://sublime-python-deps.s3.amazonaws.com/lief-0.12.3-cp310-cp310-linux_aarch64.whl; sys_platform == 'linux' and (platform_machine == 'arm64' or platform_machine == 'aarch64')
+lief==0.12.3; sys_platform != 'linux' or (platform_machine != 'arm64' and platform_machine != 'aarch64')
+
 lxml==4.9.1
 M2Crypto==0.38.0
 nested-lookup==0.2.22
