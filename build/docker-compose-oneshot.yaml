@@ -12,6 +12,5 @@ services:
       context: ..
       dockerfile: build/go/oneshot/Dockerfile
     command: strelka-oneshot
-    container_name: strelka_oneshot_1
     networks:
       - net
