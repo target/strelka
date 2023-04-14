@@ -98,7 +98,6 @@ services:
 
   postgresdb:
     image: docker.io/bitnami/postgresql:11
-    container_name: postgresdb
     environment:
       - POSTGRESQL_DATABASE=strelka_ui
       - POSTGRESQL_PASSWORD=postgres
