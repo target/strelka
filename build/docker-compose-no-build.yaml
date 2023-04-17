@@ -6,7 +6,6 @@ networks:
 volumes:
   logs:
 
-# the  strelka- i
 services:
   frontend:
     image: ghcr.io/target/strelka/frontend:20230324
