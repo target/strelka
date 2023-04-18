@@ -7,7 +7,7 @@ limits:
   distribution: 600
   scanner: 150
 coordinator:
-  addr: 'strelka_coordinator_1:6379'
+  addr: 'coordinator:6379'
   db: 0
 tasting:
   mime_db: null
@@ -19,23 +19,23 @@ telemetry:
     sampling: 1.0
 # OTLP-gRPC
     exporter: otlp-grpc
-    addr: strelka_jaeger_1:4317
+    addr: jaeger:4317
 # OTLP-HTTP
 #    exporter: otlp-http
-#    addr: http://strelka_jaeger_1:4318/v1/traces
+#    addr: http://jaeger:4318/v1/traces
 # Jaeger Thrift Collector
 #    exporter: jaeger-http-thrift
-#    addr: http://strelka_jaeger_1:14268/api/traces
+#    addr: http://jaeger:14268/api/traces
 # Jaeger Thrift Agent
 #    exporter: jaeger-udp-thrift
-#    addr: strelka_jaeger_1:6831
+#    addr: jaeger:6831
 scanners:
-  #'ScanAntiword':
-  #  - positive:
-  #      flavors:
-  #        - 'application/msword'
-  #        - 'olecf_file'
-  #    priority: 5
+#  'ScanAntiword':
+#    - positive:
+#        flavors:
+#          - 'application/msword'
+#          - 'olecf_file'
+#      priority: 5
 #  'ScanBase64':
 #    - positive:
 #        flavors:
@@ -586,6 +586,14 @@ scanners:
       priority: 5
       options:
         limit: 1000
+#  'ScanSave':
+#    - positive:
+#        flavors:
+#          - '*'
+#      priority: 5
+#      options:
+#        compression: 'gzip'
+#        encoding: 'base64'
   'ScanSevenZip':
     - positive:
         flavors:
@@ -599,14 +607,14 @@ scanners:
         crack_pws: True
         log_pws: True
 #        brute_force: True
-  # 'ScanStrings':
-  #   - positive:
-  #       flavors:
-  #         - 'mz_file'
-  #   - negative:
-  #       flavors:
-  #         - 'base64'
-  #     priority: 5
+#  'ScanStrings':
+#    - positive:
+#        flavors:
+#          - 'mz_file'
+#    - negative:
+#        flavors:
+#          - 'base64'
+#      priority: 5
   'ScanSwf':
     - positive:
         flavors:

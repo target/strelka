@@ -688,6 +688,7 @@ rule javascript_file {
         type = "script"
     strings:
         $var = { 76 61 72 20 } // var
+        $let = { 6C 65 74 20 } // let
         $function1 = { 66 75 6E 63 74 69 6F 6E } // function
         $function2 = { 28 66 75 6E 63 74 69 6F 6E } // (function
         $function3 = { 66 75 6E 63 74 69 6F 6E [0-1] 28 } // function[0-1](
@@ -707,6 +708,7 @@ rule javascript_file {
         $unescape = { 75 6E 65 73 63 61 70 65 28 } // unescape(
     condition:
         $var at 0 or
+        $let at 0 or
         $function1 at 0 or
         $function2 at 0 or
         $if at 0 or
