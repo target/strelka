@@ -1,4 +1,4 @@
-module github.com/target/strelka/src/go
+module github.com/target/strelka
 
 go 1.19
 
