@@ -6,11 +6,11 @@ LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
 # Copy source files and set the working directory
 COPY ./src/go/ /go/src/github.com/target/strelka/src/go/
-WORKDIR /go/src/github.com/target/strelka/src/go/cmd/strelka-filestream
+WORKDIR /go/src/github.com/target/strelka/src/go/
 
 # Statically compile and output to tmp
 RUN go mod download && \
-    CGO_ENABLED=0 go build -o /tmp/strelka-filestream .
+    CGO_ENABLED=0 go build -o /tmp/strelka-filestream cmd/strelka-filestream/main.go
 
 # Initialize runtime container
 FROM alpine

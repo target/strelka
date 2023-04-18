@@ -58,7 +58,7 @@ echo 'include "./rules/index.yar"' > configs/python/backend/yara/rules.yara
 
 ```bash
 docker-compose -f build/docker-compose-no-build.yaml up -d && \
-go build github.com/target/strelka/src/go/cmd/strelka-oneshot
+go build -C src/go github.com/target/strelka/src/go/cmd/strelka-oneshot
 ```
 
 #### Step 4b: Build and start Strelka
@@ -67,7 +67,7 @@ go build github.com/target/strelka/src/go/cmd/strelka-oneshot
 ```bash
 docker-compose -f build/docker-compose.yaml build && \
 docker-compose -f build/docker-compose.yaml up -d && \
-go build github.com/target/strelka/src/go/cmd/strelka-oneshot
+go build -C src/go github.com/target/strelka/src/go/cmd/strelka-oneshot
 ```
 
 #### Step 5: Prepare a file to analyze
@@ -81,7 +81,7 @@ wget https://github.com/ytisf/theZoo/raw/master/malware/Binaries/Win32.Emotet/Wi
 #### Step 6: Analyze the file with Strelka using the dockerized oneshot
 
 ```bash
-./strelka-oneshot -f samples/Win32.Emotet.zip -l - | jq
+./src/go/strelka-oneshot -f samples/Win32.Emotet.zip -l - | jq
 ```
 
 #### What's happening here?
