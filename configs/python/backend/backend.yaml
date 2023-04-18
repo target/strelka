@@ -586,6 +586,14 @@ scanners:
       priority: 5
       options:
         limit: 1000
+#  'ScanSave':
+#    - positive:
+#        flavors:
+#          - '*'
+#      priority: 5
+#      options:
+#        compression: 'gzip'
+#        encoding: 'base64'
   'ScanSevenZip':
     - positive:
         flavors:
