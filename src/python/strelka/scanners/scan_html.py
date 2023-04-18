@@ -1,6 +1,10 @@
+import re
+
 import bs4  # type: ignore
 
 from strelka import strelka
+
+base64Re = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
 
 
 class ScanHtml(strelka.Scanner):
@@ -38,7 +42,11 @@ class ScanHtml(strelka.Scanner):
 
                 if link and link.startswith("data:") and ";base64," in link:
                     hyperlink_data = link.split(";base64,")[1]
-                    self.emit_file(hyperlink_data.encode(), name="base64_hyperlink")
+                    self.emit_file(
+                        hyperlink_data.encode(),
+                        name="base64_hyperlink",
+                        flavors=["base64"],
+                    )
                 else:
                     if link not in self.event["hyperlinks"]:
                         self.event["hyperlinks"].append(link)
@@ -124,6 +132,17 @@ class ScanHtml(strelka.Scanner):
                 }
                 if span_entry not in self.event["spans"]:
                     self.event["spans"].append(span_entry)
+
+            divs = soup.find_all("div")
+            for div in divs:
+                div_content = div.string
+                if div_content is None:
+                    continue
+
+                is_maybe_base64 = base64Re.search(div_content)
+
+                if is_maybe_base64:
+                    self.emit_file(div_content, name="base64_div", flavors=["base64"])
 
         except TypeError:
             self.flags.append("type_error")
