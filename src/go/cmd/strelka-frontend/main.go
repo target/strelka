@@ -35,7 +35,7 @@ type gate struct {
 
 type server struct {
 	coordinator coord
-	gatekeeper  gate
+	gatekeeper  *gate
 	responses   chan<- *strelka.ScanResponse
 }
 
@@ -116,9 +116,8 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		Time:       time.Now().Unix(),
 	}
 
-	// If the client requests gatekeeper caching support
-	if req.Gatekeeper {
-
+	// If the client requests gatekeeper caching support & gatekeeper is enabled/present
+	if req.Gatekeeper && s.gatekeeper != nil {
 		// Check Redis for an event attached to the file hash
 		lrange := s.gatekeeper.cli.LRange(stream.Context(), sha, 0, -1).Val()
 
@@ -176,9 +175,12 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		return err
 	}
 
-	// Delete any existing event from gatekeeper cache based on file hash
-	tx := s.gatekeeper.cli.TxPipeline()
-	tx.Del(stream.Context(), sha)
+	var tx redis.Pipeliner
+	if s.gatekeeper != nil {
+		// Delete any existing event from gatekeeper cache based on file hash
+		tx = s.gatekeeper.cli.TxPipeline()
+		tx.Del(stream.Context(), sha)
+	}
 
 	for {
 
@@ -192,8 +194,10 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 			break
 		}
 
-		// Send event to gatekeeper cache
-		tx.RPush(stream.Context(), sha, lpop)
+		// Send event to gatekeeper cache (if gatekeeper/resulting tx is present)
+		if tx != nil {
+			tx.RPush(stream.Context(), sha, lpop)
+		}
 		if err := json.Unmarshal([]byte(lpop), &em); err != nil {
 			return err
 		}
@@ -216,10 +220,12 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		}
 	}
 
-	// Set expiration on chached event
-	tx.Expire(stream.Context(), sha, s.gatekeeper.ttl)
-	if _, err := tx.Exec(stream.Context()); err != nil {
-		return err
+	// Set expiration on cached event (if gatekeeper/resulting tx is present)
+	if tx != nil {
+		tx.Expire(stream.Context(), sha, s.gatekeeper.ttl)
+		if _, err := tx.Exec(stream.Context()); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -278,14 +284,22 @@ func main() {
 		log.Fatalf("failed to connect to coordinator: %v", err)
 	}
 
-	gk := redis.NewClient(&redis.Options{
-		Addr:        conf.Gatekeeper.Addr,
-		DB:          conf.Gatekeeper.DB,
-		PoolSize:    conf.Gatekeeper.Pool,
-		ReadTimeout: conf.Gatekeeper.Read,
-	})
-	if err := gk.Ping(gk.Context()).Err(); err != nil {
-		log.Fatalf("failed to connect to gatekeeper: %v", err)
+	var gatekeeper *gate
+	if conf.Gatekeeper.Addr != "" {
+		gk := redis.NewClient(&redis.Options{
+			Addr:        conf.Gatekeeper.Addr,
+			DB:          conf.Gatekeeper.DB,
+			PoolSize:    conf.Gatekeeper.Pool,
+			ReadTimeout: conf.Gatekeeper.Read,
+		})
+		if err := gk.Ping(gk.Context()).Err(); err != nil {
+			log.Fatalf("failed to connect to gatekeeper: %v", err)
+		}
+
+		gatekeeper = &gate{
+			cli: gk,
+			ttl: conf.Gatekeeper.TTL,
+		}
 	}
 
 	s := grpc.NewServer()
@@ -293,11 +307,8 @@ func main() {
 		coordinator: coord{
 			cli: cd,
 		},
-		gatekeeper: gate{
-			cli: gk,
-			ttl: conf.Gatekeeper.TTL,
-		},
-		responses: responses,
+		gatekeeper: gatekeeper,
+		responses:  responses,
 	}
 
 	strelka.RegisterFrontendServer(s, opts)
