@@ -18,7 +18,6 @@ services:
       - ../configs/go/frontend/:/etc/strelka/:ro
       - logs:/var/log/strelka/
     restart: unless-stopped
-    container_name: strelka_frontend_1
     depends_on:
       - coordinator
       - gatekeeper
@@ -32,15 +31,17 @@ services:
     volumes:
       - ../configs/python/backend/:/etc/strelka/:ro
     restart: unless-stopped
-    container_name: strelka_backend_1
     depends_on:
       - coordinator
+    # deploy:
+    #   mode: replicated
+    #   replicas: 2
+    #   endpoint_mode: vip
 
   manager:
     image: ghcr.io/target/strelka/manager:20230324
     command: strelka-manager
     restart: unless-stopped
-    container_name: strelka_manager_1
     networks:
       - net
     volumes:
@@ -51,20 +52,17 @@ services:
   coordinator:
     image: redis:alpine
     command: redis-server --save "" --appendonly no  # alt: use config file via volume mapping
-    container_name: strelka_coordinator_1
     networks:
       - net
 
   gatekeeper:
     image: redis:alpine
     command: redis-server --save "" --appendonly no --maxmemory-policy allkeys-lru  # alt: use config file via volume mapping
-    container_name: strelka_gatekeeper_1
     networks:
       - net
 
   jaeger:
     image: jaegertracing/all-in-one:1.42
-    container_name: strelka_jaeger_1
     restart: unless-stopped
     environment:
       - COLLECTOR_OTLP_ENABLED=true
@@ -79,13 +77,12 @@ services:
 
   ui:
     image: ghcr.io/target/strelka-ui/strelka-ui:20230221
-    container_name: strelka_ui_1
     environment:
-      - DATABASE_HOST=strelka_postgresdb_1
+      - DATABASE_HOST=postgresdb
       - DATABASE_NAME=strelka_ui
       - DATABASE_PASSWORD=postgres
       - DATABASE_USERNAME=postgres
-      - STRELKA_HOST=strelka_frontend_1
+      - STRELKA_HOST=frontend
     networks:
       - net
     ports:
@@ -95,7 +92,6 @@ services:
 
   postgresdb:
     image: docker.io/bitnami/postgresql:11
-    container_name: strelka_postgresdb_1
     environment:
       - POSTGRESQL_DATABASE=strelka_ui
       - POSTGRESQL_PASSWORD=postgres
