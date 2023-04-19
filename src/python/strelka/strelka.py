@@ -140,7 +140,9 @@ class Backend(object):
         self.coordinator: Optional[redis.StrictRedis] = None
         self.limits: dict = backend_cfg.get("limits", {})
         self.scanners: dict = backend_cfg.get("scanners", {})
-        self.blocking_pop_time_sec: int = backend_cfg.get("coordinator", {}).get("blocking_pop_time_sec", 0)
+        self.blocking_pop_time_sec: int = backend_cfg.get("coordinator", {}).get(
+            "blocking_pop_time_sec", 0
+        )
 
         self.tracer = get_tracer(
             backend_cfg.get("telemetry", {}).get("traces", {}),
@@ -277,7 +279,9 @@ class Backend(object):
 
             # Retrieve request task from Redis coordinator
             if self.blocking_pop_time_sec > 0:
-                task = self.coordinator.bzpopmin("tasks", timeout=self.blocking_pop_time_sec)
+                task = self.coordinator.bzpopmin(
+                    "tasks", timeout=self.blocking_pop_time_sec
+                )
                 if task is None:
                     continue
 
