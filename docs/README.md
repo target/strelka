@@ -467,6 +467,7 @@ For the options below, only one response setting may be configured.
 * "server": network address of the frontend server (defaults to :57314)
 * "coordinator.addr": network address of the coordinator (defaults to strelka_coordinator_1:6379)
 * "coordinator.db": Redis database of the coordinator (defaults to 0)
+* "coordinator.blockingpoptime": If set (and >0) use redis blocking calls for task results. Incompatible with Envoy!
 * "gatekeeper.addr": network address of the gatekeeper (defaults to strelka_gatekeeper_1:6379)
 * "gatekeeper.db": Redis database of the gatekeeper (defaults to 0)
 * "gatekeeper.ttl": time-to-live for events added to the gatekeeper (defaults to 1 hour)
@@ -488,6 +489,7 @@ The backend configuration contains two sections: one that controls the backend p
 * "limits.scanner": amount of time (in seconds) that a scanner can spend scanning a file (defaults to 150 seconds / 1.5 minutes, can be overridden per-scanner)
 * "coordinator.addr": network address of the coordinator (defaults to strelka_coordinator_1:6379)
 * "coordinator.db": Redis database of the coordinator (defaults to 0)
+* "coordinator.blocking_pop_time_sec": If set (and >0) use redis blocking calls to retrieve file tasks. Incompatible with Envoy!
 * "tasting.mime_db": location of the MIME database used to taste files (defaults to None, system default)
 * "tasting.yara_rules": location of the directory of YARA files that contains rules used to taste files (defaults to /etc/strelka/taste/)
 

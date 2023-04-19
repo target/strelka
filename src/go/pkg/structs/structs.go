@@ -40,10 +40,11 @@ type ConfFiles struct {
 }
 
 type ConfCoordinator struct {
-	Addr string        // required
-	DB   int           // required
-	Pool int           // required
-	Read time.Duration // required
+	Addr            string        // required
+	DB              int           // required
+	Pool            int           // required
+	Read            time.Duration // required
+	BlockingPopTime time.Duration // optional, defaults to 0/non-blocking (polling).
 }
 
 type ConfGatekeeper struct {
