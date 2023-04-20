@@ -82,7 +82,7 @@ services:
       - 14268:14268    # HTTP collector accept jaeger.thrift
 
   ui:
-    image: ghcr.io/target/strelka-ui/strelka-ui:20230221
+    image: ghcr.io/target/strelka-ui/strelka-ui:20230322
     environment:
       - DATABASE_HOST=postgresdb
       - DATABASE_NAME=strelka_ui
