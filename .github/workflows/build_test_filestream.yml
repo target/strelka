@@ -1,0 +1,11 @@
+name: "Filestream"
+on:
+  push:
+jobs:
+  strelka:
+    name: "build strelka filestream adhoc"
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Builds Strelka Filestream
+        run: docker build -f build/go/filestream/Dockerfile .
