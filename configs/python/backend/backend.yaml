@@ -307,6 +307,7 @@ scanners:
           - 'application/x-vhd'
           - 'vhd_file'
           - 'vhdx_file'
+          - 'udf_file'
       priority: 5
       options:
         limit: 100
