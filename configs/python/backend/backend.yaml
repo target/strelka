@@ -308,6 +308,9 @@ scanners:
           - 'vhd_file'
           - 'vhdx_file'
           - 'udf_file'
+      negative:
+        flavors:
+          - 'application/x-iso9660-image'
       priority: 5
       options:
         limit: 100
