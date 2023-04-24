@@ -25,7 +25,9 @@ type FrontendClient interface {
 	ScanFile(ctx context.Context, opts ...grpc.CallOption) (Frontend_ScanFileClient, error)
 	CompileYara(ctx context.Context, opts ...grpc.CallOption) (Frontend_CompileYaraClient, error)
 	SyncYara(ctx context.Context, opts ...grpc.CallOption) (Frontend_SyncYaraClient, error)
+	SyncYaraV2(ctx context.Context, opts ...grpc.CallOption) (Frontend_SyncYaraV2Client, error)
 	ShouldUpdateYara(ctx context.Context, opts ...grpc.CallOption) (Frontend_ShouldUpdateYaraClient, error)
+	GetYaraHash(ctx context.Context, opts ...grpc.CallOption) (Frontend_GetYaraHashClient, error)
 }
 
 type frontendClient struct {
@@ -129,8 +131,39 @@ func (x *frontendSyncYaraClient) Recv() (*SyncYaraResponse, error) {
 	return m, nil
 }
 
+func (c *frontendClient) SyncYaraV2(ctx context.Context, opts ...grpc.CallOption) (Frontend_SyncYaraV2Client, error) {
+	stream, err := c.cc.NewStream(ctx, &Frontend_ServiceDesc.Streams[3], "/Frontend/SyncYara_v2", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &frontendSyncYaraV2Client{stream}
+	return x, nil
+}
+
+type Frontend_SyncYaraV2Client interface {
+	Send(*SyncYaraRequestV2) error
+	Recv() (*SyncYaraResponse, error)
+	grpc.ClientStream
+}
+
+type frontendSyncYaraV2Client struct {
+	grpc.ClientStream
+}
+
+func (x *frontendSyncYaraV2Client) Send(m *SyncYaraRequestV2) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *frontendSyncYaraV2Client) Recv() (*SyncYaraResponse, error) {
+	m := new(SyncYaraResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *frontendClient) ShouldUpdateYara(ctx context.Context, opts ...grpc.CallOption) (Frontend_ShouldUpdateYaraClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Frontend_ServiceDesc.Streams[3], "/Frontend/ShouldUpdateYara", opts...)
+	stream, err := c.cc.NewStream(ctx, &Frontend_ServiceDesc.Streams[4], "/Frontend/ShouldUpdateYara", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -160,6 +193,37 @@ func (x *frontendShouldUpdateYaraClient) Recv() (*ShouldUpdateYaraResponse, erro
 	return m, nil
 }
 
+func (c *frontendClient) GetYaraHash(ctx context.Context, opts ...grpc.CallOption) (Frontend_GetYaraHashClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Frontend_ServiceDesc.Streams[5], "/Frontend/GetYaraHash", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &frontendGetYaraHashClient{stream}
+	return x, nil
+}
+
+type Frontend_GetYaraHashClient interface {
+	Send(*GetYaraHashRequest) error
+	Recv() (*GetYaraHashResponse, error)
+	grpc.ClientStream
+}
+
+type frontendGetYaraHashClient struct {
+	grpc.ClientStream
+}
+
+func (x *frontendGetYaraHashClient) Send(m *GetYaraHashRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *frontendGetYaraHashClient) Recv() (*GetYaraHashResponse, error) {
+	m := new(GetYaraHashResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // FrontendServer is the server API for Frontend service.
 // All implementations should embed UnimplementedFrontendServer
 // for forward compatibility
@@ -167,7 +231,9 @@ type FrontendServer interface {
 	ScanFile(Frontend_ScanFileServer) error
 	CompileYara(Frontend_CompileYaraServer) error
 	SyncYara(Frontend_SyncYaraServer) error
+	SyncYaraV2(Frontend_SyncYaraV2Server) error
 	ShouldUpdateYara(Frontend_ShouldUpdateYaraServer) error
+	GetYaraHash(Frontend_GetYaraHashServer) error
 }
 
 // UnimplementedFrontendServer should be embedded to have forward compatible implementations.
@@ -183,8 +249,14 @@ func (UnimplementedFrontendServer) CompileYara(Frontend_CompileYaraServer) error
 func (UnimplementedFrontendServer) SyncYara(Frontend_SyncYaraServer) error {
 	return status.Errorf(codes.Unimplemented, "method SyncYara not implemented")
 }
+func (UnimplementedFrontendServer) SyncYaraV2(Frontend_SyncYaraV2Server) error {
+	return status.Errorf(codes.Unimplemented, "method SyncYaraV2 not implemented")
+}
 func (UnimplementedFrontendServer) ShouldUpdateYara(Frontend_ShouldUpdateYaraServer) error {
 	return status.Errorf(codes.Unimplemented, "method ShouldUpdateYara not implemented")
+}
+func (UnimplementedFrontendServer) GetYaraHash(Frontend_GetYaraHashServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetYaraHash not implemented")
 }
 
 // UnsafeFrontendServer may be embedded to opt out of forward compatibility for this service.
@@ -276,6 +348,32 @@ func (x *frontendSyncYaraServer) Recv() (*SyncYaraRequest, error) {
 	return m, nil
 }
 
+func _Frontend_SyncYaraV2_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(FrontendServer).SyncYaraV2(&frontendSyncYaraV2Server{stream})
+}
+
+type Frontend_SyncYaraV2Server interface {
+	Send(*SyncYaraResponse) error
+	Recv() (*SyncYaraRequestV2, error)
+	grpc.ServerStream
+}
+
+type frontendSyncYaraV2Server struct {
+	grpc.ServerStream
+}
+
+func (x *frontendSyncYaraV2Server) Send(m *SyncYaraResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *frontendSyncYaraV2Server) Recv() (*SyncYaraRequestV2, error) {
+	m := new(SyncYaraRequestV2)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func _Frontend_ShouldUpdateYara_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(FrontendServer).ShouldUpdateYara(&frontendShouldUpdateYaraServer{stream})
 }
@@ -296,6 +394,32 @@ func (x *frontendShouldUpdateYaraServer) Send(m *ShouldUpdateYaraResponse) error
 
 func (x *frontendShouldUpdateYaraServer) Recv() (*ShouldUpdateYaraRequest, error) {
 	m := new(ShouldUpdateYaraRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _Frontend_GetYaraHash_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(FrontendServer).GetYaraHash(&frontendGetYaraHashServer{stream})
+}
+
+type Frontend_GetYaraHashServer interface {
+	Send(*GetYaraHashResponse) error
+	Recv() (*GetYaraHashRequest, error)
+	grpc.ServerStream
+}
+
+type frontendGetYaraHashServer struct {
+	grpc.ServerStream
+}
+
+func (x *frontendGetYaraHashServer) Send(m *GetYaraHashResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *frontendGetYaraHashServer) Recv() (*GetYaraHashRequest, error) {
+	m := new(GetYaraHashRequest)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -329,8 +453,20 @@ var Frontend_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 		{
+			StreamName:    "SyncYara_v2",
+			Handler:       _Frontend_SyncYaraV2_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+		{
 			StreamName:    "ShouldUpdateYara",
 			Handler:       _Frontend_ShouldUpdateYara_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "GetYaraHash",
+			Handler:       _Frontend_GetYaraHash_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

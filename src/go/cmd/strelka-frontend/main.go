@@ -474,6 +474,159 @@ func (s *server) SyncYara(stream strelka.Frontend_SyncYaraServer) error {
 	return nil
 }
 
+// Sync Yara using provided (not calculated) hash
+// We'll still calculate a hash, in case we can use for error checking.
+func (s *server) SyncYaraV2(stream strelka.Frontend_SyncYaraV2Server) error {
+	var yaraCacheKey string
+	var req *strelka.Request
+
+	deadline, ok := stream.Context().Deadline()
+	if ok == false {
+		return nil
+	}
+
+	id := uuid.New().String()
+
+	var keyYaraHash string
+	var keyYaraProvidedHash string
+	var yaraProvidedHash string
+
+	keyYaraCacheKey := fmt.Sprintf("yara_cache_key:%s", id)
+	keyYaraSync := fmt.Sprintf("yara:compile_and_sync:%s", id)
+	keyYaraSyncDone := fmt.Sprintf("yara:compile_and_sync:done:%s", id)
+
+	for {
+		if err := stream.Context().Err(); err != nil {
+			return fmt.Errorf("context closed: %w", err)
+		}
+
+		in, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("receive stream: %w", err)
+		}
+
+		if req == nil {
+			req = in.Request
+		}
+
+		if yaraCacheKey == "" {
+			yaraCacheKey = in.YaraCacheKey
+			keyYaraProvidedHash = fmt.Sprintf("yara:provided_hash:%s", yaraCacheKey)
+		}
+
+		if yaraProvidedHash == "" {
+			yaraProvidedHash = in.YaraHash
+		}
+
+		p := s.coordinator.cli.Pipeline()
+		keyYaraHash = fmt.Sprintf("yara:hash:%s", yaraCacheKey)
+		p.Set(stream.Context(), keyYaraCacheKey, yaraCacheKey, time.Until(deadline))
+
+		for _, inData := range in.Data {
+			outData, err := json.Marshal(*inData)
+			if err != nil {
+				return fmt.Errorf("marshaling: %w", err)
+			}
+
+			// Send for compilation and sync
+			p.RPush(stream.Context(), keyYaraSync, outData)
+			p.ExpireAt(stream.Context(), keyYaraSync, deadline)
+
+			if _, err := p.Exec(stream.Context()); err != nil {
+				return fmt.Errorf("redis exec: %w", err)
+			}
+		}
+
+		if len(in.Data) == 0 {
+			if _, err := p.Exec(stream.Context()); err != nil {
+				return fmt.Errorf("redis exec: %w", err)
+			}
+		}
+	}
+
+	// skip gatekeeper, we're not sending it
+
+	// send task to backend
+	if err := s.coordinator.cli.ZAdd(
+		stream.Context(),
+		"tasks_compile_and_sync_yara",
+		&redis.Z{
+			Score:  float64(deadline.Unix()),
+			Member: id,
+		},
+	).Err(); err != nil {
+		return fmt.Errorf("sending task: %w", err)
+	}
+
+	var errMsg string
+
+	for {
+		if err := stream.Context().Err(); err != nil {
+			return fmt.Errorf("context closed: %w", err)
+		}
+
+		res, err := s.coordinator.cli.BLPop(
+			stream.Context(),
+			5*time.Second,
+			keyYaraSyncDone,
+		).Result()
+		if err != nil {
+			if err != redis.Nil {
+				// Delay to prevent fast looping over errors
+				log.Printf("err: %v\n", err)
+				time.Sleep(250 * time.Millisecond)
+			}
+			continue
+		}
+
+		if res[1] == "FIN" {
+			break
+		}
+
+		if strings.HasPrefix(res[1], "ERROR:") {
+			errMsg = strings.Replace(res[1], "ERROR:", "", 1)
+			break
+		}
+	}
+
+	if errMsg == "" {
+		// write provided hash to redis if no errors
+		s.coordinator.cli.Set(stream.Context(), keyYaraProvidedHash, yaraProvidedHash, 0)
+	}
+
+	resp := &strelka.SyncYaraResponse{}
+
+	resp.Synced = 0
+	hash, err := s.coordinator.cli.Get(stream.Context(), keyYaraHash).Result()
+	if err != nil {
+		return fmt.Errorf("getting hash: %w", err)
+	}
+
+	synced, err := s.coordinator.cli.Get(stream.Context(), fmt.Sprintf("yara:synced:%s", id)).Result()
+	if err != nil {
+		return fmt.Errorf("getting sync count: %w", err)
+	}
+
+	nSynced, err := strconv.Atoi(synced)
+	if err != nil {
+		// bye bye bye
+		return fmt.Errorf("converting string: %w", err)
+	}
+
+	resp.Hash = []byte(hash)
+	resp.Error = errMsg
+	resp.Synced = int32(nSynced)
+
+	if err := stream.Send(resp); err != nil {
+		return fmt.Errorf("send stream: %w", err)
+	}
+
+	return nil
+}
+
 func (s *server) ShouldUpdateYara(stream strelka.Frontend_ShouldUpdateYaraServer) error {
 	var keyYaraHash string
 	var yaraCacheKey string
@@ -520,6 +673,54 @@ func (s *server) ShouldUpdateYara(stream strelka.Frontend_ShouldUpdateYaraServer
 
 	if err := stream.Send(&strelka.ShouldUpdateYaraResponse{
 		Ok: string(hash) != currentHash,
+	}); err != nil {
+		return fmt.Errorf("send stream: %w", err)
+	}
+
+	return nil
+}
+
+// Retrieves the provided hash
+func (s *server) GetYaraHash(stream strelka.Frontend_GetYaraHashServer) error {
+	var keyYaraHash string
+	var yaraCacheKey string
+
+	for {
+		if err := stream.Context().Err(); err != nil {
+			return fmt.Errorf("context closed: %w", err)
+		}
+
+		in, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("receive stream: %w", err)
+		}
+
+		if yaraCacheKey == "" {
+			yaraCacheKey = in.YaraCacheKey
+			keyYaraHash = fmt.Sprintf("yara:provided_hash:%s", yaraCacheKey)
+		}
+	}
+
+	var currentHash string
+
+	res := s.coordinator.cli.Get(stream.Context(), keyYaraHash)
+	err := res.Err()
+	if err == redis.Nil {
+		// do nothing
+	} else if err != nil {
+		return fmt.Errorf("getting hash: %w", err)
+	}
+
+	currentHash, err = res.Result()
+	if err != nil {
+		return fmt.Errorf("getting hash: %w", err)
+	}
+
+	if err := stream.Send(&strelka.GetYaraHashResponse{
+		Hash: currentHash,
 	}); err != nil {
 		return fmt.Errorf("send stream: %w", err)
 	}

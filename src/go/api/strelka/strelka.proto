@@ -5,7 +5,9 @@ service Frontend {
   rpc ScanFile(stream ScanFileRequest) returns (stream ScanResponse) {}
   rpc CompileYara(stream CompileYaraRequest) returns (stream CompileYaraResponse) {}
   rpc SyncYara(stream SyncYaraRequest) returns (stream SyncYaraResponse) {}
+  rpc SyncYara_v2(stream SyncYaraRequest_v2) returns (stream SyncYaraResponse) {}
   rpc ShouldUpdateYara(stream ShouldUpdateYaraRequest) returns (stream ShouldUpdateYaraResponse) {}
+  rpc GetYaraHash(stream GetYaraHashRequest) returns (stream GetYaraHashResponse) {}
 }
 
 message Request {
@@ -43,6 +45,13 @@ message SyncYaraRequest {
   repeated YaraData data = 3;
 }
 
+message SyncYaraRequest_v2 {
+  Request request = 1;
+  string yaraCacheKey = 2;
+  string yaraHash = 3;
+  repeated YaraData data = 4;
+}
+
 message SyncYaraResponse {
   int32 synced = 1; // number of files synced
   bytes hash = 2; // just for error checking
@@ -57,6 +66,15 @@ message ShouldUpdateYaraRequest {
 
 message ShouldUpdateYaraResponse {
   bool ok = 1;
+}
+
+message GetYaraHashRequest {
+  Request request = 1;
+  string yaraCacheKey = 2;
+}
+
+message GetYaraHashResponse {
+  string hash = 1;
 }
 
 message ScanFileRequest {
