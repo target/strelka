@@ -2,6 +2,7 @@ import copy
 import glob
 import hashlib
 import os
+import time
 
 import yara
 
@@ -77,11 +78,13 @@ class ScanYara(strelka.Scanner):
         try:
             yara_matches = []
 
+            timeout = expire_at - time.time()
             if self.compiled_yara is not None:
-                yara_matches = self.compiled_yara.match(data=data)
+                yara_matches = self.compiled_yara.match(data=data, timeout=timeout)
 
             for custom_yara in compiled_custom_yara:
-                yara_matches.extend(custom_yara.match(data=data))
+                timeout = expire_at - time.time()
+                yara_matches.extend(custom_yara.match(data=data, timeout=timeout))
 
             for match in yara_matches:
                 event = { 'name': match.rule, 'tags': [], 'meta': {} }
