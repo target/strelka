@@ -301,16 +301,19 @@ scanners:
       priority: 5
       options:
         limit: 50
+  'ScanUdf':
+    - positive:
+        flavors:
+          - 'udf_file'
+      priority: 5
+      options:
+        limit: 50
   'ScanVhd':
     - positive:
         flavors:
           - 'application/x-vhd'
           - 'vhd_file'
           - 'vhdx_file'
-          - 'udf_file'
-      negative:
-        flavors:
-          - 'application/x-iso9660-image'
       priority: 5
       options:
         limit: 100

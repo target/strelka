@@ -205,6 +205,7 @@ test_assignments_expected: dict = {
         "ScanQr",
     ],
     "test_text.webp": ["ScanExiftool", "ScanLsb", "ScanNf", "ScanOcr", "ScanQr"],
+    "test_udf_1.50.img": ["ScanUdf"],
     "test_upx.exe": ["ScanPe", "ScanUpx"],
     "test_xor.exe": ["ScanPe"],
     "test_zip.cab": ["ScanLibarchive"],
