@@ -301,22 +301,6 @@ scanners:
       priority: 5
       options:
         limit: 50
-  'ScanUdf':
-    - positive:
-        flavors:
-          - 'udf_file'
-      priority: 5
-      options:
-        limit: 50
-  'ScanVhd':
-    - positive:
-        flavors:
-          - 'application/x-vhd'
-          - 'vhd_file'
-          - 'vhdx_file'
-      priority: 5
-      options:
-        limit: 100
   'ScanJarManifest':
     - positive:
         flavors:
@@ -660,6 +644,13 @@ scanners:
           - 'image/heif'
       options:
         output_format: jpeg  # "gif", "webp", "jpeg", "bmp", "png", "tiff"
+  'ScanUdf':
+    - positive:
+        flavors:
+          - 'udf_file'
+      priority: 5
+      options:
+        limit: 50
   'ScanUpx':
     - positive:
         flavors:
@@ -693,6 +684,15 @@ scanners:
       priority: 5
       options:
         analyze_macros: True
+  'ScanVhd':
+    - positive:
+        flavors:
+          - 'application/x-vhd'
+          - 'vhd_file'
+          - 'vhdx_file'
+      priority: 5
+      options:
+        limit: 100
   'ScanVsto':
     - positive:
         flavors:
