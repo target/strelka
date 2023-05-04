@@ -113,7 +113,6 @@ def test_distribute(mocker):
             events = backend.distribute(str(uuid.uuid4()), file, int(time.time()) + 300)
 
             TestCase.maxDiff = None
-            print(events)
             TestCase().assertListEqual(expected, events)
 
 
