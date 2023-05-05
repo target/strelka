@@ -1,0 +1,37 @@
+name: publish_latest
+
+on:
+  push:
+    branches: [publish-images]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: clone
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3
+      - run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: build and tag docker image
+        run: |
+          export COMMIT_HASH=$(git rev-parse --short HEAD)
+          export TAG_NAME=$(git describe --tags --abbrev=0)
+          export IMAGE_NAME=target/strelka-fileshot
+
+          docker build -f build/go/fileshot/Dockerfile -t $IMAGE_NAME:$COMMIT_HASH -t $IMAGE_NAME:$TAG_NAME .
+
+      - name: push docker images
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+          export COMMIT_HASH=$(git rev-parse --short HEAD)
+          export TAG_NAME=$(git describe --tags --abbrev=0)
+          export IMAGE_NAME=target/strelka-fileshot
+          
+          docker push $IMAGE_NAME:$COMMIT_HASH
+          docker push $IMAGE_NAME:$TAG_NAME
