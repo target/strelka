@@ -1,4 +1,4 @@
-name: publish_latest
+name: Publish Latest Images to Docker Hub
 
 on:
   push:
@@ -11,12 +11,18 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: clone
+      - name: Clone Action Repository
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3
         with:
           fetch-depth: 0
 
-      - name: build and tag docker image
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Tag Images
         run: |
           export COMMIT_HASH=$(git rev-parse --short HEAD)
           export TAG_NAME=$(git describe --tags --abbrev=0)
@@ -24,12 +30,8 @@ jobs:
 
           docker build -f build/go/fileshot/Dockerfile -t $IMAGE_NAME:$COMMIT_HASH -t $IMAGE_NAME:$TAG_NAME .
 
-      - name: push docker images
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Push Images to Docker Hub
         run: |
-          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
           export COMMIT_HASH=$(git rev-parse --short HEAD)
           export TAG_NAME=$(git describe --tags --abbrev=0)
           export IMAGE_NAME=target/strelka-fileshot
