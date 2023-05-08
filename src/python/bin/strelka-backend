@@ -181,11 +181,12 @@ class Backend(object):
     def compile_and_sync_yara(self, yara_cache_key, root_id):
         synced = 0
 
-        self.coordinator.delete(f'yara:compiled:{yara_cache_key}')
+        self.coordinator.delete(f'yara:compiled_all:{yara_cache_key}')
         self.coordinator.delete(f'yara:hash:{yara_cache_key}')
 
         hash = hashlib.sha256()
         errMsg = ''
+        yara_src = ''
 
         while 1:
             pop = self.coordinator.lpop(f'yara:compile_and_sync:{root_id}')
@@ -201,14 +202,11 @@ class Backend(object):
                 continue
 
             try:
+                # compile single signature for validation
                 compiled_yara = yara.compile(source=data['data'], externals=yara_extern.EXTERNAL_VARS)
 
-                buf = io.BytesIO()
-                compiled_yara.save(file=buf)
-
-                self.coordinator.rpush(f'yara:compiled:{yara_cache_key}', buf.getvalue())
-
-                hash.update(data['data'].encode())
+                # append to source if compilation succeeds
+                yara_src += data['data']
                 synced += 1
             except (yara.Error, yara.SyntaxError) as e:
                 errMsg = 'compiling yara: ' + str(e)
@@ -216,6 +214,25 @@ class Backend(object):
             except Exception as e2:
                 errMsg = 'compiling yara: ' + str(e2)
                 logging.error(errMsg)
+
+        if yara_src:
+            # compile all valid signatures into single object for faster execution
+            try:
+                compiled_yara = yara.compile(source=yara_src, externals=yara_extern.EXTERNAL_VARS)
+                buf = io.BytesIO()
+                compiled_yara.save(file=buf)
+
+                hash.update(yara_src.encode())
+
+                self.coordinator.set(f'yara:compiled_all:{yara_cache_key}', buf.getvalue())
+            except (yara.Error, yara.SyntaxError) as e:
+                errMsg = 'compiling yara: ' + str(e)
+                logging.error(errMsg)
+                synced = 0
+            except Exception as e2:
+                errMsg = 'compiling yara: ' + str(e2)
+                logging.error(errMsg)
+                synced = 0
 
         self.coordinator.set(f'yara:hash:{yara_cache_key}', hash.hexdigest())
         self.coordinator.set(f'yara:synced:{root_id}', synced)
@@ -312,19 +329,14 @@ class Backend(object):
                             options = scanner.get('options', {})
 
                             if name == 'ScanYara':
-                                compiled_custom_yara = []
-
                                 yara_cache_key = self.coordinator.get(f'yara_cache_key:{root_id}')
                                 if yara_cache_key:
                                     yara_cache_key = yara_cache_key.decode()
-                                    yaraItems = self.coordinator.lrange(f'yara:compiled:{yara_cache_key}', 0, -1)
-                                    for yaraData in yaraItems:
-                                        if not yaraData:
-                                            break
-                                        buf = io.BytesIO(yaraData)
-                                        yaraDataC = yara.load(file=buf)
-                                        compiled_custom_yara.append(yaraDataC)
-                                    options['compiled_custom_yara'] = compiled_custom_yara
+                                    yara_data = self.coordinator.get(f'yara:compiled_all:{yara_cache_key}')
+                                    if yara_data:
+                                        buf = io.BytesIO(yara_data)
+                                        yara_dataC = yara.load(file=buf)
+                                        options['compiled_custom_yara_all'] = yara_dataC
 
                                 if legacy_yara_data: # backcompat
                                     options['source'] = legacy_yara_data.decode()

@@ -161,6 +161,7 @@ class Scanner(object):
             **{'flags': self.flags},
             **self.event,
         }
+
         return (
             self.files,
             {self.key: self.event}

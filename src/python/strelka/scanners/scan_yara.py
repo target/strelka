@@ -1,6 +1,7 @@
 import copy
 import glob
 import hashlib
+import logging
 import math
 import os
 import time
@@ -35,10 +36,10 @@ class ScanYara(strelka.Scanner):
         if 'description' not in meta:
             meta.append('description')
 
-        compiled_custom_yara = []
-        if options.get('compiled_custom_yara'):
+        compiled_custom_yara_all = ''
+        if options.get('compiled_custom_yara_all'):
             # custom yara was provided - use it to evaluate this file
-            compiled_custom_yara.extend(options['compiled_custom_yara'])
+            compiled_custom_yara_all = options['compiled_custom_yara_all']
 
         # Support some common external variables (backcompat)
         # The file and data extractions are not available with pre-compiled yara;
@@ -54,12 +55,6 @@ class ScanYara(strelka.Scanner):
         externals['md5'] = hashlib.md5(data).hexdigest()
         externals['sha1'] = hashlib.sha1(data).hexdigest()
         externals['sha256'] = hashlib.sha256(data).hexdigest()
-
-        if options.get('source') and len(compiled_custom_yara) == 0: # backcompat
-            try:
-                compiled_custom_yara = [yara.compile(source=options['source'], externals=externals)]
-            except (yara.Error, yara.SyntaxError):
-                self.flags.append('compiling_error')
 
         try:
             if self.compiled_yara is None and os.path.exists(location):
@@ -84,9 +79,9 @@ class ScanYara(strelka.Scanner):
             if self.compiled_yara is not None:
                 yara_matches = self.compiled_yara.match(data=data, timeout=timeout)
 
-            for custom_yara in compiled_custom_yara:
+            if compiled_custom_yara_all:
                 timeout = math.ceil(expire_at - time.time())
-                yara_matches.extend(custom_yara.match(data=data, timeout=timeout))
+                yara_matches = compiled_custom_yara_all.match(data=data, timeout=timeout)
 
             for match in yara_matches:
                 event = { 'name': match.rule, 'tags': [], 'meta': {} }
