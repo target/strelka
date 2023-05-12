@@ -96,7 +96,7 @@ rule encrypted_zip
         // make sure we have a local file header
         $local_file and
         // go through each local file header and see if the encrypt bits are set
-        for any i in (1..#local_file): (uint16(@local_file[i]+6) & 0x1 == 0x1)		
+        for any i in (1..#local_file): (uint16(@local_file[i]+6) & 0x1 == 0x1)
 }
 
 rule encrypted_word_document
@@ -110,7 +110,7 @@ rule encrypted_word_document
         $ = "StrongEncryptionTransform" wide
     condition:
         uint32be(0) == 0xd0cf11e0 and
-        any of them		
+        any of them
 }
 
 rule hfsplus_disk_image {
@@ -161,6 +161,23 @@ rule tar_file {
         uint16(0) == 0x9D1F or
         uint16(0) == 0xA01F or
         $a at 257
+}
+
+rule udf_file {
+    meta:
+        type = "archive"
+    strings:
+        $cd_def_1 = "CD001"
+        $cd_def_2 = "BEA01"
+        $udf_def_1 = "NSR0"
+        $udf_def_2 = "BEA01"
+        $udf_def_3 = "NSR02"
+        $udf_def_4 = "NSR03"
+        $udf_def_5 = "TEA01"
+    condition:
+        for any of ($cd_def_*) : ( $ at 32769 )
+            and
+        for any of ($udf_def_*) : ( $ in (34817..filesize) )
 }
 
 rule vhd_file {
@@ -449,7 +466,7 @@ rule base64_pe {
         $s4 = "TVpQAAIAAAAEAA8A//8AALgAAAA" wide ascii
         $s5 = "TVqQAAMAAAAEAAAA//8AALgAAAA" wide ascii
     condition:
-        not uint16(0) == 0x5a4d and 
+        not uint16(0) == 0x5a4d and
         any of them
 }
 

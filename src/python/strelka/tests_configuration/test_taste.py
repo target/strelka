@@ -154,11 +154,13 @@ taste_expectations: dict = {
     "test_text.jpg": {"mime": ["image/jpeg"], "yara": ["jpeg_file"]},
     "test_text.png": {"mime": ["image/png"], "yara": ["png_file"]},
     "test_text.webp": {"mime": ["image/webp"], "yara": []},
+    "test_udf_1.50.img": {"mime": ["application/octet-stream"], "yara": ["udf_file"]},
     "test_upx.exe": {
         "mime": ["application/x-dosexec"],
         "yara": unordered(["mz_file", "upx_file"]),
     },
     "test_whitespace.html": {"mime": ["text/html"], "yara": ["html_file"]},
+    "test.vsto": {"mime": ["text/xml"], "yara": unordered(["vsto_file", "xml_file"])},
     "test_xor.exe": {"mime": ["application/x-dosexec"], "yara": ["mz_file"]},
     "test_zip.cab": {
         "mime": ["application/vnd.ms-cab-compressed"],
