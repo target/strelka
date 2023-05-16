@@ -9,6 +9,7 @@ limits:
 coordinator:
   addr: 'coordinator:6379'
   db: 0
+#  blocking_pop_time_sec: 5
 tasting:
   mime_db: null
   yara_rules: '/etc/strelka/taste/'

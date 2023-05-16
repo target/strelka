@@ -4,6 +4,7 @@ coordinator:
   db: 0
   pool: 100
   read: 10s
+#  blockingpoptime: 5s
 gatekeeper:
   addr: 'gatekeeper:6379'
   db: 0

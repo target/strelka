@@ -140,6 +140,9 @@ class Backend(object):
         self.coordinator: Optional[redis.StrictRedis] = None
         self.limits: dict = backend_cfg.get("limits", {})
         self.scanners: dict = backend_cfg.get("scanners", {})
+        self.blocking_pop_time_sec: int = backend_cfg.get("coordinator", {}).get(
+            "blocking_pop_time_sec", 0
+        )
 
         self.tracer = get_tracer(
             backend_cfg.get("telemetry", {}).get("traces", {}),
@@ -275,13 +278,22 @@ class Backend(object):
                     break
 
             # Retrieve request task from Redis coordinator
-            task = self.coordinator.zpopmin("tasks", count=1)
-            if len(task) == 0:
-                time.sleep(0.25)
-                continue
+            if self.blocking_pop_time_sec > 0:
+                task = self.coordinator.bzpopmin(
+                    "tasks", timeout=self.blocking_pop_time_sec
+                )
+                if task is None:
+                    continue
 
-            # Get request metadata and Redis context deadline UNIX timestamp
-            (task_item, expire_at) = task[0]
+                (queue_name, task_item, expire_at) = task
+            else:
+                task = self.coordinator.zpopmin("tasks", count=1)
+                if len(task) == 0:
+                    time.sleep(0.25)
+                    continue
+
+                # Get request metadata and Redis context deadline UNIX timestamp
+                (task_item, expire_at) = task[0]
 
             traceparent = None
 

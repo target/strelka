@@ -25,7 +25,8 @@ import (
 )
 
 type coord struct {
-	cli *redis.Client
+	cli             *redis.Client
+	blockingPopTime time.Duration
 }
 
 type gate struct {
@@ -183,13 +184,19 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 	}
 
 	for {
+		if err := stream.Context().Err(); err != nil {
+			return err
+		}
 
 		// Wait for event to appear in the coordinator
-		lpop, err := s.coordinator.cli.LPop(stream.Context(), keye).Result()
+		lpop, err := s.coordinator.LPop(stream.Context(), keye)
 		if err != nil {
 			time.Sleep(250 * time.Millisecond)
 			continue
+		} else if lpop == "" {
+			continue
 		}
+
 		if lpop == "FIN" {
 			break
 		}
@@ -305,7 +312,8 @@ func main() {
 	s := grpc.NewServer()
 	opts := &server{
 		coordinator: coord{
-			cli: cd,
+			cli:             cd,
+			blockingPopTime: conf.Coordinator.BlockingPopTime,
 		},
 		gatekeeper: gatekeeper,
 		responses:  responses,
@@ -314,4 +322,37 @@ func main() {
 	strelka.RegisterFrontendServer(s, opts)
 	grpc_health_v1.RegisterHealthServer(s, opts)
 	s.Serve(listen)
+}
+
+// LPop consolidate behavior of blocking (BLPop) and standard (LPop) calls based on configured usage.
+// An error is returned such that callers can always sleep if an error is returned
+// The string result, which is only valid when err is nil, may also be empty in which callers should retry.
+func (c coord) LPop(ctx context.Context, key string) (string, error) {
+	if c.blockingPopTime > 0 {
+		res, err := c.cli.BLPop(ctx, c.blockingPopTime, key).Result()
+		if err != nil {
+			if err == redis.Nil {
+				// Return empty but suppress the error because a consumer of a blocking call should go back to trying
+				// if a result isn't available yet.
+				return "", nil
+			}
+			// Return unexpected errors. Consumers should generally wait to retry to prevent fast looping on a
+			// misconfig or service interruption.
+			return "", err
+		}
+
+		if len(res) != 2 {
+			return "", fmt.Errorf("unexpected result length")
+		}
+
+		return res[1], nil
+	}
+
+	lpop, err := c.cli.LPop(ctx, key).Result()
+	if err != nil {
+		// Return any error, including redis.Nil. Consumers of non-blocking calls should wait to retry.
+		return "", err
+	}
+
+	return lpop, nil
 }
