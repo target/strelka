@@ -1,6 +1,24 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-05-16
+- Added support for Docker Hub Tag submission
+
+## 2023-05-02
+- Changes for `ScanUdf` / New Tests for `ScanHtml` (@ryanohoro)
+
+## 2023-04-21
+- Updating YARA dependency
+- Add support / tests for UDF image files using `ScanVhd` (@ryanohoro)
+
+## 2023-04-18
+- Adding `ScanSave` scanner (@keiche)
+- Updating `go.mod` files (@cameron-dunn-sublime)
+- Updating `docker` container names (@malvidin)
+
+## 2023-03-31
+- Bumping Redis Dependency
+
 ## 2023-03-28
 - Slimming Backend Dockerfile, several scanner fixes (@Derekt2)
 - Updating Github workflows to accomodate above fixes
