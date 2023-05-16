@@ -6,7 +6,7 @@ name: Build and Attach Go Binaries to Release
 on:
   push:
     branches:
-      - test-go-binary-build
+      - test-go-binary0build
   
 
 permissions:
