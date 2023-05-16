@@ -51,4 +51,4 @@ jobs:
           done
 
       - name: Logout from Docker Hub
-        uses: docker/logout-action@v1
+        run: docker logout
