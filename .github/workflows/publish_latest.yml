@@ -51,6 +51,7 @@ jobs:
             docker build -f "${path}/Dockerfile" -t "${IMAGE_NAME}:${COMMIT_HASH}" -t "${IMAGE_NAME}:${TAG_NAME}" .
             docker push "${IMAGE_NAME}:${COMMIT_HASH}"
             docker push "${IMAGE_NAME}:${TAG_NAME}"
+            docker push "${IMAGE_NAME}:latest"
           done
 
       - name: Logout from Docker Hub
