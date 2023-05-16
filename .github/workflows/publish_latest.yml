@@ -27,6 +27,9 @@ jobs:
           # Stop the script on errors
           set -e
           
+          # Enable Docker BuildKit
+          export DOCKER_BUILDKIT=1
+          
           # Set tag variables
           COMMIT_HASH=$(git rev-parse --short HEAD)
           TAG_NAME=$(git describe --tags --abbrev=0)
