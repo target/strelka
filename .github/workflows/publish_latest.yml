@@ -2,7 +2,7 @@ name: Publish Latest Images to Docker Hub
 
 on:
   push:
-    branches: [publish-images]
+    branches: [publish-images-all]
 
 permissions:
   contents: read
@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone Action Repository
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -22,19 +22,33 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Tag Images
+      - name: Build, Tag and Push Images
         run: |
-          export COMMIT_HASH=$(git rev-parse --short HEAD)
-          export TAG_NAME=$(git describe --tags --abbrev=0)
-          export IMAGE_NAME=target/strelka-fileshot
-
-          docker build -f build/go/fileshot/Dockerfile -t $IMAGE_NAME:$COMMIT_HASH -t $IMAGE_NAME:$TAG_NAME .
-
-      - name: Push Images to Docker Hub
-        run: |
-          export COMMIT_HASH=$(git rev-parse --short HEAD)
-          export TAG_NAME=$(git describe --tags --abbrev=0)
-          export IMAGE_NAME=target/strelka-fileshot
+          # Stop the script on errors
+          set -e
           
-          docker push $IMAGE_NAME:$COMMIT_HASH
-          docker push $IMAGE_NAME:$TAG_NAME
+          # Set tag variables
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          TAG_NAME=$(git describe --tags --abbrev=0)
+          
+          # Define a dictionary with paths to Dockerfiles as keys and image names as values
+          declare -A images
+          images=(
+            ["build/python/backend"]="target/strelka-backend"
+            ["build/go/frontend"]="target/strelka-frontend"
+            ["build/go/fileshot"]="target/strelka-fileshot"
+            ["build/go/filestream"]="target/strelka-filestream"
+            ["build/go/oneshot"]="target/strelka-oneshot"
+            ["build/go/manager"]="target/strelka-manager"
+          )
+          
+          # Build, tag, and push each image
+          for path in "${!images[@]}"; do
+            IMAGE_NAME=${images[$path]}
+            docker build -f "${path}/Dockerfile" -t "${IMAGE_NAME}:${COMMIT_HASH}" -t "${IMAGE_NAME}:${TAG_NAME}" .
+            docker push "${IMAGE_NAME}:${COMMIT_HASH}"
+            docker push "${IMAGE_NAME}:${TAG_NAME}"
+          done
+
+      - name: Logout from Docker Hub
+        uses: docker/logout-action@v1
