@@ -1,8 +1,9 @@
 name: Publish Latest Images to Docker Hub
 
 on:
-  push:
-    branches: [publish-images-all]
+  create:
+    tags:
+      - '*'
 
 permissions:
   contents: read
@@ -48,8 +49,7 @@ jobs:
           # Build, tag, and push each image
           for path in "${!images[@]}"; do
             IMAGE_NAME=${images[$path]}
-            docker build -f "${path}/Dockerfile" -t "${IMAGE_NAME}:${COMMIT_HASH}" -t "${IMAGE_NAME}:${TAG_NAME}" -t "${IMAGE_NAME}:latest" .
-            docker push "${IMAGE_NAME}:${COMMIT_HASH}"
+            docker build -f "${path}/Dockerfile" -t "${IMAGE_NAME}:${TAG_NAME}" -t "${IMAGE_NAME}:latest" .
             docker push "${IMAGE_NAME}:${TAG_NAME}"
             docker push "${IMAGE_NAME}:latest"
           done
