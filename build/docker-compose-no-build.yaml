@@ -8,7 +8,7 @@ volumes:
 
 services:
   frontend:
-    image: ghcr.io/target/strelka/frontend:20230324
+    image: target/strelka-frontend:latest
     command: strelka-frontend
     ports:
       - 57314:57314  # must match the port in frontend.yaml
@@ -23,7 +23,7 @@ services:
       - gatekeeper
 
   backend:
-    image: ghcr.io/target/strelka/backend:20230324
+    image: target/strelka-backend:latest
     command: strelka-backend
     shm_size: 512mb  # increase as necessary, required for some scanners
     networks:
@@ -39,7 +39,7 @@ services:
     #   endpoint_mode: vip
 
   manager:
-    image: ghcr.io/target/strelka/manager:20230324
+    image: target/strelka-manager:latest
     command: strelka-manager
     restart: unless-stopped
     networks:
@@ -76,7 +76,7 @@ services:
       - 14268:14268    # HTTP collector accept jaeger.thrift
 
   ui:
-    image: ghcr.io/target/strelka-ui/strelka-ui:20230322
+    image: target/strelka-ui:latest
     environment:
       - DATABASE_HOST=postgresdb
       - DATABASE_NAME=strelka_ui
