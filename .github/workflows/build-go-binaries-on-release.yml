@@ -1,13 +1,9 @@
 name: Build and Attach Go Binaries to Release
 
-# on:
-#   release:
-#     types: [created]
 on:
   push:
     branches:
       - test-go-binary0build
-  
 
 permissions:
   contents: write
@@ -17,24 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        goos: [linux, windows, darwin, darwin]
-        goarch: [arm64, amd64, amd64, arm64]
+        goos: [windows, linux, darwin, darwin]
+        goarch: [amd64, amd64, amd64, arm64]
         executable: [strelka-fileshot, strelka-filestream, strelka-oneshot]
-        suffix: ['-linux', '-win.exe', '-mac64', '-macarm']
+        suffix: ['-win.exe', '-linux', '-mac64', '-macarm']
         include:
-          - goos: windows
-            goarch: amd64
-            suffix: '.exe'
-        exclude:
-          - goos: linux
-            goarch: arm64
-            suffix: '-win.exe'
-          - goos: darwin
-            goarch: amd64
-            suffix: '-win.exe'
           - goos: darwin
             goarch: arm64
-            suffix: '-win.exe'
+            suffix: '-macarm'
     steps:
       - name: Clone Action Repository
         uses: actions/checkout@v3
@@ -55,7 +41,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          #upload_url: ${{ github.event.release.upload_url }} 
           upload_url: "https://github.com/upload/releases/108463777"
           asset_path: ./${{ matrix.executable }}${{ matrix.suffix }}
           asset_name: ${{ matrix.executable }}${{ matrix.suffix }}
