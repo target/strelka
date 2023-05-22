@@ -20,7 +20,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.19
+          go-version: 1.17
 
       - name: Build and Upload Windows x64 Binary
         run: |
@@ -61,29 +61,29 @@ jobs:
         with:
           upload_url: "https://github.com/upload/releases/108463777"
           asset_path: |
-            strelka-fileshot-win.exe,
-            strelka-filestream-win.exe,
-            strelka-oneshot-win.exe,
-            strelka-fileshot-linux,
-            strelka-filestream-linux,
-            strelka-oneshot-linux,
-            strelka-fileshot-mac64,
-            strelka-filestream-mac64,
-            strelka-oneshot-mac64,
-            strelka-fileshot-macarm,
-            strelka-filestream-macarm,
+            strelka-fileshot-win.exe
+            strelka-filestream-win.exe
+            strelka-oneshot-win.exe
+            strelka-fileshot-linux
+            strelka-filestream-linux
+            strelka-oneshot-linux
+            strelka-fileshot-mac64
+            strelka-filestream-mac64
+            strelka-oneshot-mac64
+            strelka-fileshot-macarm
+            strelka-filestream-macarm
             strelka-oneshot-macarm
           asset_name: |
-            strelka-fileshot-win.exe,
-            strelka-filestream-win.exe,
-            strelka-oneshot-win.exe,
-            strelka-fileshot-linux,
-            strelka-filestream-linux,
-            strelka-oneshot-linux,
-            strelka-fileshot-mac64,
-            strelka-filestream-mac64,
-            strelka-oneshot-mac64,
-            strelka-fileshot-macarm,
-            strelka-filestream-macarm,
+            strelka-fileshot-win.exe
+            strelka-filestream-win.exe
+            strelka-oneshot-win.exe
+            strelka-fileshot-linux
+            strelka-filestream-linux
+            strelka-oneshot-linux
+            strelka-fileshot-mac64
+            strelka-filestream-mac64
+            strelka-oneshot-mac64
+            strelka-fileshot-macarm
+            strelka-filestream-macarm
             strelka-oneshot-macarm
           asset_content_type: application/octet-stream
