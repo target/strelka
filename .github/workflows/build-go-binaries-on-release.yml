@@ -23,32 +23,33 @@ jobs:
           go-version: 1.17
 
       - name: Build and Upload Windows x64 Binary
+        id: build_windows
         run: |
           GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o strelka-fileshot-win.exe src/go/cmd/strelka-fileshot/main.go
+          echo "::set-output name=win_asset_path::strelka-fileshot-win.exe"
+          echo "::set-output name=win_asset_name::strelka-fileshot-win.exe"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "::set-output name=asset_path::strelka-fileshot-win.exe"
-          echo "::set-output name=asset_name::strelka-fileshot-win.exe"
 
       - name: Upload Windows x64 Binary
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          # Replace the upload_url with the URL obtained dynamically after creating a new release.
           upload_url: "https://github.com/upload/releases/108463777"
-          asset_path: ${{ needs.build_and_upload.outputs.asset_path }}
-          asset_name: ${{ needs.build_and_upload.outputs.asset_name }}
+          asset_path: ${{ steps.build_windows.outputs.win_asset_path }}
+          asset_name: ${{ steps.build_windows.outputs.win_asset_name }}
           asset_content_type: application/octet-stream
 
       - name: Build and Upload Linux x64 Binary
+        id: build_linux
         run: |
           GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o strelka-fileshot-linux src/go/cmd/strelka-fileshot/main.go
+          echo "::set-output name=linux_asset_path::strelka-fileshot-linux"
+          echo "::set-output name=linux_asset_name::strelka-fileshot-linux"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "::set-output name=asset_path::strelka-fileshot-linux"
-          echo "::set-output name=asset_name::strelka-fileshot-linux"
 
       - name: Upload Linux x64 Binary
         uses: actions/upload-release-asset@v1
@@ -56,18 +57,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: "https://github.com/upload/releases/108463777"
-          asset_path: ${{ needs.build_and_upload.outputs.asset_path }}
-          asset_name: ${{ needs.build_and_upload.outputs.asset_name }}
+          asset_path: ${{ steps.build_linux.outputs.linux_asset_path }}
+          asset_name: ${{ steps.build_linux.outputs.linux_asset_name }}
           asset_content_type: application/octet-stream
 
       - name: Build and Upload Mac x64 Binary
+        id: build_mac64
         run: |
           GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o strelka-fileshot-mac64 src/go/cmd/strelka-fileshot/main.go
+          echo "::set-output name=mac64_asset_path::strelka-fileshot-mac64"
+          echo "::set-output name=mac64_asset_name::strelka-fileshot-mac64"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "::set-output name=asset_path::strelka-fileshot-mac64"
-          echo "::set-output name=asset_name::strelka-fileshot-mac64"
 
       - name: Upload Mac x64 Binary
         uses: actions/upload-release-asset@v1
@@ -75,18 +76,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: "https://github.com/upload/releases/108463777"
-          asset_path: ${{ needs.build_and_upload.outputs.asset_path }}
-          asset_name: ${{ needs.build_and_upload.outputs.asset_name }}
+          asset_path: ${{ steps.build_mac64.outputs.mac64_asset_path }}
+          asset_name: ${{ steps.build_mac64.outputs.mac64_asset_name }}
           asset_content_type: application/octet-stream
 
       - name: Build and Upload Mac ARM Binary
+        id: build_macarm
         run: |
           GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o strelka-fileshot-macarm src/go/cmd/strelka-fileshot/main.go
+          echo "::set-output name=macarm_asset_path::strelka-fileshot-macarm"
+          echo "::set-output name=macarm_asset_name::strelka-fileshot-macarm"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "::set-output name=asset_path::strelka-fileshot-macarm"
-          echo "::set-output name=asset_name::strelka-fileshot-macarm"
 
       - name: Upload Mac ARM Binary
         uses: actions/upload-release-asset@v1
@@ -94,6 +95,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: "https://github.com/upload/releases/108463777"
-          asset_path: ${{ needs.build_and_upload.outputs.asset_path }}
-          asset_name: ${{ needs.build_and_upload.outputs.asset_name }}
+          asset_path: ${{ steps.build_macarm.outputs.macarm_asset_path }}
+          asset_name: ${{ steps.build_macarm.outputs.macarm_asset_name }}
           asset_content_type: application/octet-stream
