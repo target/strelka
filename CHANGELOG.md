@@ -1,6 +1,9 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-05-22
+- Added compilation script for project `Go` binaries to be used for local compilation, testing, and releases.
+- 
 ## 2023-05-16
 - Added support for Docker Hub Tag submission
 
