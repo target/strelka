@@ -25,65 +25,75 @@ jobs:
       - name: Build and Upload Windows x64 Binary
         run: |
           GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o strelka-fileshot-win.exe src/go/cmd/strelka-fileshot/main.go
-          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o strelka-filestream-win.exe src/go/cmd/strelka-filestream/main.go
-          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o strelka-oneshot-win.exe src/go/cmd/strelka-oneshot/main.go
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and Upload Linux x64 Binary
         run: |
-          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o strelka-fileshot-linux src/go/cmd/strelka-fileshot/main.go
-          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o strelka-filestream-linux src/go/cmd/strelka-filestream/main.go
-          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o strelka-oneshot-linux src/go/cmd/strelka-oneshot/main.go
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "::set-output name=asset_path::strelka-fileshot-win.exe"
+          echo "::set-output name=asset_name::strelka-fileshot-win.exe"
 
-      - name: Build and Upload Mac x64 Binary
-        run: |
-          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o strelka-fileshot-mac64 src/go/cmd/strelka-fileshot/main.go
-          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o strelka-filestream-mac64 src/go/cmd/strelka-filestream/main.go
-          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o strelka-oneshot-mac64 src/go/cmd/strelka-oneshot/main.go
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and Upload Mac ARM Binary
-        run: |
-          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o strelka-fileshot-macarm src/go/cmd/strelka-fileshot/main.go
-          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o strelka-filestream-macarm src/go/cmd/strelka-filestream/main.go
-          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o strelka-oneshot-macarm src/go/cmd/strelka-oneshot/main.go
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload release assets
+      - name: Upload Windows x64 Binary
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: "https://github.com/upload/releases/108463777"
-          asset_path: |
-            strelka-fileshot-win.exe
-            strelka-filestream-win.exe
-            strelka-oneshot-win.exe
-            strelka-fileshot-linux
-            strelka-filestream-linux
-            strelka-oneshot-linux
-            strelka-fileshot-mac64
-            strelka-filestream-mac64
-            strelka-oneshot-mac64
-            strelka-fileshot-macarm
-            strelka-filestream-macarm
-            strelka-oneshot-macarm
-          asset_name: |
-            strelka-fileshot-win.exe
-            strelka-filestream-win.exe
-            strelka-oneshot-win.exe
-            strelka-fileshot-linux
-            strelka-filestream-linux
-            strelka-oneshot-linux
-            strelka-fileshot-mac64
-            strelka-filestream-mac64
-            strelka-oneshot-mac64
-            strelka-fileshot-macarm
-            strelka-filestream-macarm
-            strelka-oneshot-macarm
+          asset_path: ${{ needs.build_and_upload.outputs.asset_path }}
+          asset_name: ${{ needs.build_and_upload.outputs.asset_name }}
+          asset_content_type: application/octet-stream
+
+      - name: Build and Upload Linux x64 Binary
+        run: |
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o strelka-fileshot-linux src/go/cmd/strelka-fileshot/main.go
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "::set-output name=asset_path::strelka-fileshot-linux"
+          echo "::set-output name=asset_name::strelka-fileshot-linux"
+
+      - name: Upload Linux x64 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: "https://github.com/upload/releases/108463777"
+          asset_path: ${{ needs.build_and_upload.outputs.asset_path }}
+          asset_name: ${{ needs.build_and_upload.outputs.asset_name }}
+          asset_content_type: application/octet-stream
+
+      - name: Build and Upload Mac x64 Binary
+        run: |
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o strelka-fileshot-mac64 src/go/cmd/strelka-fileshot/main.go
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "::set-output name=asset_path::strelka-fileshot-mac64"
+          echo "::set-output name=asset_name::strelka-fileshot-mac64"
+
+      - name: Upload Mac x64 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: "https://github.com/upload/releases/108463777"
+          asset_path: ${{ needs.build_and_upload.outputs.asset_path }}
+          asset_name: ${{ needs.build_and_upload.outputs.asset_name }}
+          asset_content_type: application/octet-stream
+
+      - name: Build and Upload Mac ARM Binary
+        run: |
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o strelka-fileshot-macarm src/go/cmd/strelka-fileshot/main.go
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "::set-output name=asset_path::strelka-fileshot-macarm"
+          echo "::set-output name=asset_name::strelka-fileshot-macarm"
+
+      - name: Upload Mac ARM Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: "https://github.com/upload/releases/108463777"
+          asset_path: ${{ needs.build_and_upload.outputs.asset_path }}
+          asset_name: ${{ needs.build_and_upload.outputs.asset_name }}
           asset_content_type: application/octet-stream
