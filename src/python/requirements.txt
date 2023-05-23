@@ -48,7 +48,7 @@ pyzbar==0.1.9
 pyzipper==0.3.6
 rarfile==4.0
 redis==4.5.4
-requests==2.28.2
+requests==2.31.0
 rpmfile==1.1.1
 schedula==1.4.9
 signify==0.5.1
