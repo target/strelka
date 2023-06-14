@@ -85,6 +85,10 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		if req == nil {
 			req = in.Request
 		}
+		if req.Id != "" {
+			keyd = fmt.Sprintf("data:%v", req.Id)
+			keye = fmt.Sprintf("event:%v", req.Id)
+		}
 
 		hash.Write(in.Data)
 
