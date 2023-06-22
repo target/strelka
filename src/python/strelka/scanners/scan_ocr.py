@@ -1,3 +1,4 @@
+import fitz
 import os
 import subprocess
 import tempfile
@@ -18,6 +19,11 @@ class ScanOcr(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         extract_text = options.get('extract_text', False)
         tmp_directory = options.get('tmp_directory', '/tmp/')
+        pdf_to_png = options.get('pdf_to_png', False)
+
+        if pdf_to_png and 'application/pdf' in file.flavors.get('mime', []):
+            doc = fitz.open(stream=data, filetype='pdf')
+            data = doc.get_page_pixmap(0).tobytes('png')
 
         with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
             tmp_data.write(data)

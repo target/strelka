@@ -327,10 +327,13 @@ scanners:
           - 'type_is_tiff'
           - 'image/x-ms-bmp'
           - 'bmp_file'
+          - 'application/pdf'
+          - 'pdf_file'
       priority: 5
       options:
         extract_text: False
         tmp_directory: '/dev/shm/'
+        pdf_to_png: True
   'ScanOle':
     - positive:
         flavors:
