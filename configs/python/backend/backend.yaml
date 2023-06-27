@@ -445,11 +445,14 @@ scanners:
           - 'image/x-ms-bmp'
           - 'bmp_file'
           - 'image/webp'
+          - 'application/pdf'
+          - 'pdf_file'
       priority: 5
       options:
         extract_text: False
         split_words: True
         tmp_directory: '/dev/shm/'
+        pdf_to_png: True
   'ScanOle':
     - positive:
         flavors:
