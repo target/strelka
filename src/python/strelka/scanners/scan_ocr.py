@@ -21,7 +21,7 @@ class ScanOcr(strelka.Scanner):
         extract_text = options.get("extract_text", False)
         split_words = options.get("split_words", True)
         tmp_directory = options.get("tmp_directory", "/tmp/")
-        pdf_to_png = options.get('pdf_to_png', False)
+        pdf_to_png = options.get("pdf_to_png", False)
 
         if pdf_to_png and "application/pdf" in file.flavors.get("mime", []):
             doc = fitz.open(stream=data, filetype="pdf")
