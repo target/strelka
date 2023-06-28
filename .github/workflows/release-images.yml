@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1.6.0
+        uses: aws-actions/configure-aws-credentials@v2.2.0
         continue-on-error: true
         with:
           role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
@@ -40,7 +40,7 @@ jobs:
           aws-region: us-east-1
 
       - name: 2nd Attempt Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1.6.0
+        uses: aws-actions/configure-aws-credentials@v2.2.0
         if: ${{ env.AWS_ACCESS_KEY_ID == '' }}
         with:
           role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
@@ -135,7 +135,7 @@ jobs:
 
     steps:
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1.6.0
+        uses: aws-actions/configure-aws-credentials@v2.2.0
         continue-on-error: true
         with:
           role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
@@ -143,7 +143,7 @@ jobs:
           aws-region: us-east-1
 
       - name: 2nd Attempt Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1.6.0
+        uses: aws-actions/configure-aws-credentials@v2.2.0
         if: ${{ env.AWS_ACCESS_KEY_ID == '' }}
         with:
           role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
@@ -229,7 +229,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1.6.0
+        uses: aws-actions/configure-aws-credentials@v2.2.0
         continue-on-error: true
         with:
           role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
@@ -237,7 +237,7 @@ jobs:
           aws-region: us-east-1
 
       - name: 2nd Attempt Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1.6.0
+        uses: aws-actions/configure-aws-credentials@v2.2.0
         if: ${{ env.AWS_ACCESS_KEY_ID == '' }}
         with:
           role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
