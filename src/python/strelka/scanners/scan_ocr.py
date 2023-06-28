@@ -1,7 +1,8 @@
-import fitz
 import os
 import subprocess
 import tempfile
+
+import fitz
 
 from strelka import strelka
 
