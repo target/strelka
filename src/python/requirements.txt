@@ -8,7 +8,7 @@ esprima==4.0.1
 flare-capa==5.0.0
 formulas==1.2.6
 git+https://github.com/jshlbrd/python-entropy.git   # v0.11 as of this freeze (package installed as 'entropy')
-grpcio==1.51.3
+grpcio==1.53.0
 html5lib==1.1
 inflection==0.5.1
 jsbeautifier==1.14.7
