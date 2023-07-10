@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-07-10
+- Adds feature to ScanOCR that will perform OCR on PDF documents (If enabled). (@alexk307)
+- Bumps `grpcio` dependencies for `python` and `go`
+
 ## 2023-06-14
 - Bug fix for Frontend Request ID (@nighttardis)
 
