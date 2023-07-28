@@ -33,7 +33,7 @@ pillow-heif==0.10.0
 pgpdump3==1.5.2
 py-tlsh==4.7.2
 pycdlib==1.14.0
-pygments==2.14.0
+pygments==2.15.0
 pylzma==0.5.0
 pytesseract==0.3.10
 pytest-mock==3.10.0
