@@ -477,6 +477,7 @@ class Backend(object):
                     )
 
                     scan: dict = {}
+                    iocs: list = []
 
                     for scanner in scanner_list:
                         try:
@@ -507,29 +508,36 @@ class Backend(object):
                             options = scanner.get("options", {})
 
                             # Run the scanner
-                            (scanner_files, scanner_event) = plugin.scan_wrapper(
+                            (
+                                scanner_files,
+                                scanner_event,
+                                scanner_iocs,
+                            ) = plugin.scan_wrapper(
                                 data,
                                 file,
                                 options,
                                 expire_at,
                             )
 
-                            # Collect extracted files
+                            # Collect extracted files and iocs
                             files.extend(scanner_files)
+                            iocs.extend(scanner_iocs)
 
-                            scan = {
-                                **scan,
-                                **scanner_event,
-                            }
+                            # clear the scanner ioc list after each use
+                            plugin.iocs = []
+
+                            scan = {**scan, **scanner_event}
 
                         except ModuleNotFoundError:
                             logging.exception(
-                                f'scanner {scanner.get("name", "__missing__")} not found'
+                                f'scanner {scanner.get("name", "__missing__")} not'
+                                " found"
                             )
 
                     event = {
                         **{"file": file.dictionary()},
                         **{"scan": scan},
+                        **{"iocs": iocs},
                     }
 
                     # Collect events for local-only
@@ -793,7 +801,7 @@ class Scanner(object):
                 **{"flags": self.flags},
                 **self.event,
             }
-            return (self.files, {self.key: self.event})
+            return self.files, {self.key: self.event}, self.iocs
 
     def emit_file(
         self, data: bytes, name: str = "", flavors: Optional[list[str]] = None

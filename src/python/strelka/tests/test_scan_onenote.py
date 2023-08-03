@@ -11,7 +11,11 @@ def test_scan_onenote(mocker):
     Failure: Unable to load file or sample event fails to match.
     """
 
-    test_scan_event = {"elapsed": mock.ANY, "flags": []}
+    test_scan_event = {
+        "elapsed": mock.ANY,
+        "total": {"extracted": 2, "files": 2},
+        "flags": [],
+    }
 
     scanner_event = run_test_scan(
         mocker=mocker,
@@ -29,7 +33,11 @@ def test_scan_onenotepkg(mocker):
     Failure: Unable to load file or sample event fails to match.
     """
 
-    test_scan_event = {"elapsed": mock.ANY, "flags": []}
+    test_scan_event = {
+        "elapsed": mock.ANY,
+        "total": {"extracted": 0, "files": 0},
+        "flags": [],
+    }
 
     scanner_event = run_test_scan(
         mocker=mocker,
