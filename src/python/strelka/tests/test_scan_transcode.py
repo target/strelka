@@ -68,6 +68,7 @@ def test_scan_transcode_heif(mocker, output_format) -> None:
     TestCase().assertDictEqual(test_scan_event, scanner_event)
 
 
+@pytest.mark.skip(reason="2023-08-01: pillow_heif Crashes on Broken HEIC Files")
 def test_scan_transcode_broken_heic(mocker) -> None:
     """
     Pass: Sample event matches output of scanner.
