@@ -4,6 +4,7 @@ import binascii
 import re
 
 from strelka.cstructs.onenote import FileDataStoreObject
+
 from strelka import strelka
 
 # This is the binary string we're searching for in the data.
