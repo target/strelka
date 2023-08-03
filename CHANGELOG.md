@@ -1,6 +1,14 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-08-03
+- Bug fix for IOC collection
+- Adding `ScanOnenote` extraction counter
+- Bug fix for `ScanTranscode` test
+
+## 2023-07-20
+- Updating `pygments` dependency
+
 ## 2023-07-10
 - Adds feature to ScanOCR that will perform OCR on PDF documents (If enabled). (@alexk307)
 - Bumps `grpcio` dependencies for `python` and `go`
