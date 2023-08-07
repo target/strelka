@@ -217,7 +217,7 @@ def test_scan_sevenzip_msi_filenames(mocker):
     scanner_event = run_test_scan(
         mocker=mocker,
         scan_class=ScanUnderTest,
-        fixture_path=Path(__file__).parent / "fixtures/test3.msi",
+        fixture_path=Path(__file__).parent / "fixtures/test.msi",
         options={"crack_pws": False},
     )
 
