@@ -1,4 +1,4 @@
-version: 2023-02-21-release
+version: 2023-07-07-update
 logging_cfg: '/etc/strelka/logging.yaml'
 limits:
   max_files: 5000
@@ -594,6 +594,9 @@ scanners:
         flavors:
           - 'application/x-7z-compressed'
           - '_7zip_file'
+          - "image/vnd.fpx"
+          - "application/vnd.ms-msi"
+          - "application/x-msi"
       priority: 5
       options:
 #        min_length: 1

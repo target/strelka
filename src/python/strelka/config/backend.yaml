@@ -1,3 +1,4 @@
+version: 2023-07-07-update
 logging_cfg: '/etc/strelka/logging.yaml'
 limits:
   max_files: 5000
@@ -6,18 +7,36 @@ limits:
   distribution: 600
   scanner: 150
 coordinator:
-  addr: 'strelka_coordinator_1:6379'
+  addr: 'coordinator:6379'
   db: 0
+#  blocking_pop_time_sec: 5
 tasting:
   mime_db: null
   yara_rules: '/etc/strelka/taste/'
+caching:
+  scanner: true
+telemetry:
+  traces:
+    sampling: 1.0
+# OTLP-gRPC
+    exporter: otlp-grpc
+    addr: jaeger:4317
+# OTLP-HTTP
+#    exporter: otlp-http
+#    addr: http://jaeger:4318/v1/traces
+# Jaeger Thrift Collector
+#    exporter: jaeger-http-thrift
+#    addr: http://jaeger:14268/api/traces
+# Jaeger Thrift Agent
+#    exporter: jaeger-udp-thrift
+#    addr: jaeger:6831
 scanners:
-  #'ScanAntiword':
-  #  - positive:
-  #      flavors:
-  #        - 'application/msword'
-  #        - 'olecf_file'
-  #    priority: 5
+#  'ScanAntiword':
+#    - positive:
+#        flavors:
+#          - 'application/msword'
+#          - 'olecf_file'
+#      priority: 5
 #  'ScanBase64':
 #    - positive:
 #        flavors:
@@ -39,17 +58,15 @@ scanners:
         flavors:
           - 'image/x-ms-bmp'
           - 'bmp_file'
+      negative:
+        source:
+          - 'ScanTranscode'
       priority: 5
   'ScanBzip2':
     - positive:
         flavors:
           - 'application/x-bzip2'
           - 'bzip2_file'
-      priority: 5
-  'ScanBITS':
-    - positive:
-        flavors:
-          - 'bits_file'
       priority: 5
 #  'ScanCapa':
 #    - positive:
@@ -108,17 +125,18 @@ scanners:
         max_length: 5
         scanner_timeout: 150
         log_pws: True
+        password_file: "/etc/strelka/passwords.dat"
         # brute_force: True
   'ScanEncryptedZip':
     - positive:
         flavors:
-          - 'application/msword'
           - 'encrypted_zip'
       priority: 5
       options:
         max_length: 5
         scanner_timeout: 150
         log_pws: True
+        password_file: '/etc/strelka/passwords.dat'
         # brute_force: True
   'ScanEntropy':
     - positive:
@@ -200,6 +218,9 @@ scanners:
           - 'application/x-shockwave-flash'
           - 'fws_file'
           - 'image/webp'
+          - 'image/avif'
+          - 'image/heic'
+          - 'image/heif'
       priority: 5
       options:
         keys:
@@ -266,6 +287,7 @@ scanners:
       priority: 5
       options:
         parser: "html5lib"
+        max_hyperlinks: 50
 #  'ScanIni':
 #    - positive:
 #        filename: '(\.([Cc][Ff][Gg]|[Ii][Nn][Ii])|PROJECT)$'
@@ -276,19 +298,10 @@ scanners:
   'ScanIso':
     - positive:
         flavors:
-          - 'iso_file'
+          - 'application/x-iso9660-image'
       priority: 5
       options:
         limit: 50
-  'ScanVhd':
-    - positive:
-        flavors:
-          - 'application/x-vhd'
-          - 'vhd_file'
-          - 'vhdx_file'
-      priority: 5
-      options:
-        limit: 100
   'ScanJarManifest':
     - positive:
         flavors:
@@ -310,11 +323,15 @@ scanners:
       priority: 5
       options:
         beautify: True
+        max_strings: 50
   'ScanJpeg':
     - positive:
         flavors:
           - 'image/jpeg'
           - 'jpeg_file'
+      negative:
+        source:
+          - 'ScanTranscode'
       priority: 5
   'ScanJson':
     - positive:
@@ -352,6 +369,9 @@ scanners:
           - 'image/x-ms-bmp'
           - 'bmp_file'
           - 'image/webp'
+      negative:
+        source:
+          - 'ScanTranscode'
       priority: 5
   'ScanLzma':
     - positive:
@@ -377,8 +397,9 @@ scanners:
   'ScanMsi':
     - positive:
         flavors:
-          - 'image/vnd.fpx'
-          - 'application/x-msi'
+          - "image/vnd.fpx"
+          - "application/vnd.ms-msi"
+          - "application/x-msi"
       priority: 5
       options:
         tmp_directory: '/dev/shm/'
@@ -408,6 +429,9 @@ scanners:
           - 'image/x-ms-bmp'
           - 'bmp_file'
           - 'image/webp'
+      negative:
+        source:
+          - 'ScanTranscode'
       priority: 5
   'ScanOcr':
     - positive:
@@ -421,16 +445,27 @@ scanners:
           - 'image/x-ms-bmp'
           - 'bmp_file'
           - 'image/webp'
+          - 'application/pdf'
+          - 'pdf_file'
       priority: 5
       options:
         extract_text: False
+        split_words: True
         tmp_directory: '/dev/shm/'
+        pdf_to_png: True
   'ScanOle':
     - positive:
         flavors:
           - 'application/CDFV2'
           - 'application/msword'
           - 'olecf_file'
+      priority: 5
+  'ScanOnenote':
+    - positive:
+        flavors:
+          - 'application/onenote'
+          - 'application/msonenote'
+          - 'onenote_file'
       priority: 5
   'ScanPcap':
     - positive:
@@ -458,6 +493,7 @@ scanners:
           - 'OpenAction'
           - 'URI'
           - 'XObject'
+        max_objects: 250
   'ScanPe':
     - positive:
         flavors:
@@ -504,6 +540,9 @@ scanners:
         flavors:
           - 'image/png'
           - 'png_file'
+      negative:
+        source:
+          - 'ScanTranscode'
       priority: 5
   'ScanQr':
     - positive:
@@ -542,18 +581,22 @@ scanners:
       priority: 5
       options:
         limit: 1000
-  'ScanRuby':
-    - positive:
-        flavors:
-          - 'text/x-ruby'
-      priority: 5
+#  'ScanSave':
+#    - positive:
+#        flavors:
+#          - '*'
+#      priority: 5
+#      options:
+#        compression: 'gzip'
+#        encoding: 'base64'
   'ScanSevenZip':
     - positive:
         flavors:
           - 'application/x-7z-compressed'
           - '_7zip_file'
-          - 'image/vnd.fpx'
-          - 'application/x-msi'
+          - "image/vnd.fpx"
+          - "application/vnd.ms-msi"
+          - "application/x-msi"
       priority: 5
       options:
 #        min_length: 1
@@ -562,14 +605,14 @@ scanners:
         crack_pws: True
         log_pws: True
 #        brute_force: True
-  # 'ScanStrings':
-  #   - positive:
-  #       flavors:
-  #         - 'mz_file'
-  #   - negative:
-  #       flavors:
-  #         - 'base64'
-  #     priority: 5
+#  'ScanStrings':
+#    - positive:
+#        flavors:
+#          - 'mz_file'
+#    - negative:
+#        flavors:
+#          - 'base64'
+#      priority: 5
   'ScanSwf':
     - positive:
         flavors:
@@ -586,12 +629,35 @@ scanners:
       priority: 5
       options:
         limit: 1000
+  'ScanTlsh':
+    - positive:
+        flavors:
+          - '*'
+      priority: 5
+      options:
+        location: '/etc/strelka/tlsh/'
+        score: 30
   'ScanTnef':
     - positive:
         flavors:
           - 'application/vnd.ms-tnef'
           - 'tnef_file'
       priority: 5
+  'ScanTranscode':
+    - positive:
+        flavors:
+          - 'image/avif'
+          - 'image/heic'
+          - 'image/heif'
+      options:
+        output_format: jpeg  # "gif", "webp", "jpeg", "bmp", "png", "tiff"
+  'ScanUdf':
+    - positive:
+        flavors:
+          - 'udf_file'
+      priority: 5
+      options:
+        limit: 50
   'ScanUpx':
     - positive:
         flavors:
@@ -620,9 +686,25 @@ scanners:
           - 'application/msword'
           - 'olecf_file'
           - 'wordml_file'
+          - 'application/vnd.ms-office'
+          - 'application/x-mspublisher'
       priority: 5
       options:
         analyze_macros: True
+  'ScanVhd':
+    - positive:
+        flavors:
+          - 'application/x-vhd'
+          - 'vhd_file'
+          - 'vhdx_file'
+      priority: 5
+      options:
+        limit: 100
+  'ScanVsto':
+    - positive:
+        flavors:
+          - 'vsto_file'
+      priority: 5
   'ScanX509':
     - positive:
         flavors:
