@@ -220,7 +220,7 @@ class ScanSevenZip(strelka.Scanner):
 
         # 2022-12-05 17:23:59 ....A       100656       102400  lorem.txt
         regex_file = re.compile(
-            r"(?P<datetime>\d+-\d+-\d+\s\d+:\d+:\d+)\s+(?P<modes>[A-Z.]{5})(?:\s+(?P<size>\d+))?(?:\s+(?P<compressed>\d+))?\s+(?P<name>.+)"
+            r"(?:(?P<datetime>\d+-\d+-\d+\s\d+:\d+:\d+)\s*)?(?P<modes>[A-Z.]{5})(?:\s+(?P<size>\d+))?(?:\s+(?P<compressed>\d+))?\s+(?P<name>.+)"
         )
 
         def parse_file_modes(file_modes):
@@ -275,7 +275,7 @@ class ScanSevenZip(strelka.Scanner):
                         continue
 
                 elif mode == "files":
-                    match = regex_file.match(output_line)
+                    match = regex_file.search(output_line)
                     if match:
                         modes_list = parse_file_modes(match.group("modes"))
 
@@ -292,10 +292,10 @@ class ScanSevenZip(strelka.Scanner):
 
                         if "directory" not in modes_list:
                             self.event["total"]["files"] += 1
-                            self.event["files"].append(
-                                {
-                                    "filename": match.group("name"),
-                                    "size": match.group("size"),
-                                    "datetime": match.group("datetime"),
-                                }
-                            )
+                            file_info = {
+                                "filename": match.group("name"),
+                                "size": match.group("size"),
+                            }
+                            if match.group("datetime") is not None:
+                                file_info["datetime"] = match.group("datetime")
+                            self.event["files"].append(file_info)
