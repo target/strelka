@@ -60,12 +60,11 @@ class ScanYara(strelka.Scanner):
         # This prevents loading the configs on every execution.
         if not self.loaded_configs:
             self.store_offset = options.get("store_offset", False)
-            self.meta = options.get("meta", [])
-            self.offset_meta_key = self.meta.get("offset_meta_key", "")
-            self.offset_padding = self.meta.get("offset_padding", 32)
+            self.offset_meta_key = options.get("offset_meta_key", "")
+            self.offset_padding = options.get("offset_padding", 32)
             self.loaded_configs = True
 
-            # Initialize the event data structure.
+        # Initialize the event data structure.
         self.hex_dump_cache = {}
         self.event["matches"] = []
         self.event["tags"] = set()
@@ -94,7 +93,7 @@ class ScanYara(strelka.Scanner):
 
             # Append meta information if configured to do so.
             for k, v in match.meta.items():
-                if not self.meta or k in self.meta:
+                if not self.event["meta"] or k in self.event["meta"]:
                     self.event["meta"].append(
                         {"rule": match.rule, "identifier": k, "value": v}
                     )
