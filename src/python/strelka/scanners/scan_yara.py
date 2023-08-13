@@ -59,8 +59,8 @@ class ScanYara(strelka.Scanner):
         # Load YARA configuration options only once.
         # This prevents loading the configs on every execution.
         if not self.loaded_configs:
-            self.store_offset = options.get('store_offset', False)
-            self.meta = options.get('meta', [])
+            self.store_offset = options.get("store_offset", False)
+            self.meta = options.get("meta", [])
             self.offset_meta_key = self.meta.get("offset_meta_key", "")
             self.offset_padding = self.meta.get("offset_padding", 32)
             self.loaded_configs = True
@@ -84,12 +84,20 @@ class ScanYara(strelka.Scanner):
                 if match.meta.get(self.offset_meta_key):
                     for string_data in match.strings:
                         offset, identifier, matched_string = string_data
-                        self.extract_match_hex(match.rule, offset, matched_string, data, self.offset_padding)
+                        self.extract_match_hex(
+                            match.rule,
+                            offset,
+                            matched_string,
+                            data,
+                            self.offset_padding,
+                        )
 
             # Append meta information if configured to do so.
             for k, v in match.meta.items():
                 if not self.meta or k in self.meta:
-                    self.event["meta"].append({"rule": match.rule, "identifier": k, "value": v})
+                    self.event["meta"].append(
+                        {"rule": match.rule, "identifier": k, "value": v}
+                    )
 
         # Convert tags set to a list.
         self.event["tags"] = list(self.event["tags"])
@@ -114,7 +122,10 @@ class ScanYara(strelka.Scanner):
                 globbed_yara_paths = glob.iglob(f"{location}/**/*.yar*", recursive=True)
                 if not globbed_yara_paths:
                     self.flags.append("yara_rules_not_found")
-                yara_filepaths = {f"namespace_{i}": entry for (i, entry) in enumerate(globbed_yara_paths)}
+                yara_filepaths = {
+                    f"namespace_{i}": entry
+                    for (i, entry) in enumerate(globbed_yara_paths)
+                }
                 self.compiled_yara = yara.compile(filepaths=yara_filepaths)
             # Compile YARA rules from a single file.
             elif os.path.isfile(location):
@@ -163,10 +174,9 @@ class ScanYara(strelka.Scanner):
 
         # Loop through the specified data range in 16-byte chunks to generate the hex dump
         for i in range(start_offset, end_offset, 16):
-
             # If this chunk hasn't been processed before, generate its hex and ASCII representations
             if i not in self.hex_dump_cache:
-                chunk = data[i:i + 16]
+                chunk = data[i : i + 16]
 
                 # Convert each byte in the chunk to its hexadecimal representation and join them with spaces.
                 # E.g., a chunk [65, 66, 67] would become the string "41 42 43"
@@ -176,7 +186,9 @@ class ScanYara(strelka.Scanner):
                 # - Use the character itself if it's a printable ASCII character (between 32 and 126 inclusive).
                 # - Replace non-printable characters with a period ('.').
                 # E.g., a chunk [65, 66, 0] would become the string "AB."
-                ascii_values = "".join([chr(byte) if 32 <= byte <= 126 else "." for byte in chunk])
+                ascii_values = "".join(
+                    [chr(byte) if 32 <= byte <= 126 else "." for byte in chunk]
+                )
 
                 # Cache the generated hex and ASCII values to avoid redundant computation in the future
                 self.hex_dump_cache[i] = (hex_values, ascii_values)
