@@ -5,6 +5,7 @@ import pytest
 from strelka.scanners.scan_nf import ScanNf as ScanUnderTest
 from strelka.tests import run_test_scan
 
+
 @pytest.mark.skip(reason="2023-08-14: cv2 Crashes on Execution")
 def test_scan_nf_jpg(mocker):
     """
@@ -28,6 +29,7 @@ def test_scan_nf_jpg(mocker):
 
     TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_event, scanner_event)
+
 
 @pytest.mark.skip(reason="2023-08-14: cv2 Crashes on Execution")
 def test_scan_nf_jpg_embed_rar(mocker):
@@ -53,6 +55,7 @@ def test_scan_nf_jpg_embed_rar(mocker):
     TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_event, scanner_event)
 
+
 @pytest.mark.skip(reason="2023-08-14: cv2 Crashes on Execution")
 def test_scan_nf_png(mocker):
     """
@@ -76,6 +79,7 @@ def test_scan_nf_png(mocker):
 
     TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_event, scanner_event)
+
 
 @pytest.mark.skip(reason="2023-08-14: cv2 Crashes on Execution")
 def test_scan_nf_png_embed_rar(mocker):
