@@ -83,7 +83,6 @@ class ScanYara(strelka.Scanner):
             if self.store_offset and self.offset_meta_key:
                 if match.meta.get(self.offset_meta_key):
                     for string_data in match.strings:
-                        identifier = string_data.identifier
                         for instance in string_data.instances:
                             offset = instance.offset
                             matched_string = instance.matched_data
