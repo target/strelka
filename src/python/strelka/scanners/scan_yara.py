@@ -79,17 +79,21 @@ class ScanYara(strelka.Scanner):
             self.event["tags"].update(match.tags)
 
             # Extract hex representation if configured to store offsets.
+            # Extract hex representation if configured to store offsets.
             if self.store_offset and self.offset_meta_key:
                 if match.meta.get(self.offset_meta_key):
                     for string_data in match.strings:
-                        offset, identifier, matched_string = string_data
-                        self.extract_match_hex(
-                            match.rule,
-                            offset,
-                            matched_string,
-                            data,
-                            self.offset_padding,
-                        )
+                        identifier = string_data.identifier
+                        for instance in string_data.instances:
+                            offset = instance.offset
+                            matched_string = instance.matched_data
+                            self.extract_match_hex(
+                                match.rule,
+                                offset,
+                                matched_string,
+                                data,
+                                self.offset_padding,
+                            )
 
             # Append meta information if configured to do so.
             for k, v in match.meta.items():
