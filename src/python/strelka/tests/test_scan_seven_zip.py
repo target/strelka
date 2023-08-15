@@ -183,6 +183,48 @@ def test_scan_sevenzip_nocrack_filenames(mocker):
     TestCase().assertDictEqual(test_scan_event, scanner_event)
 
 
+def test_scan_sevenzip_msi_filenames(mocker):
+    """
+    Pass: Sample event matches output of scanner.
+    Failure: Unable to load file or sample event fails to match.
+    """
+
+    test_scan_event = {
+        "elapsed": mock.ANY,
+        "flags": [],
+        "total": {"files": 3, "extracted": 3},
+        "files": [
+            {
+                "datetime": "2022-12-12 04:12:56",
+                "filename": "lorem.txt",
+                "size": "4015",
+            },
+            {
+                "datetime": "2022-12-12 04:12:56",
+                "filename": "loremhidden.txt",
+                "size": "4015",
+            },
+            {
+                "datetime": "2022-12-12 04:12:56",
+                "filename": "loremreadonly.txt",
+                "size": "4015",
+            },
+        ],
+        "hidden_dirs": [],
+        "meta": {"7zip_version": "22.01"},
+    }
+
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test.msi",
+        options={"crack_pws": False},
+    )
+
+    TestCase.maxDiff = None
+    TestCase().assertDictEqual(test_scan_event, scanner_event)
+
+
 def test_scan_sevenzip_brute(mocker):
     """
     Pass: Sample event matches output of scanner.

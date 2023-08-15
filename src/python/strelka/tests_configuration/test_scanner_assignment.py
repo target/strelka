@@ -45,6 +45,7 @@ test_assignments_expected: dict = {
         "ScanMsi",
         "ScanOle",
         "ScanVba",
+        "ScanSevenZip",
     ],  # TODO: Needs CDF subtype
     "test.one": ["ScanOnenote"],
     "test.onepkg": ["ScanLibarchive"],
