@@ -15,7 +15,7 @@ class ScanYara(strelka.Scanner):
 
     Options:
         location: Location of the YARA rules file or directory.
-            Defaults to '/etc/yara/'.
+            Defaults to '/etc/strelka/yara/'.
         meta: List of YARA rule meta identifiers
             (e.g. 'Author') that should be logged.
             Defaults to empty list.
