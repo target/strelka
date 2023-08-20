@@ -739,6 +739,9 @@ scanners:
       priority: 5
       options:
         location: '/etc/strelka/yara/rules.yara'
+        store_offset: True
+        offset_meta_key: "StrelkaHexDump"
+        offset_padding: 32
   'ScanZip':
     - positive:
         flavors:
