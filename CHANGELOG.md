@@ -1,6 +1,8 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2024-09-12
+- Updated Ubuntu base image from `22.10` to `23.04`. Updated documentation and references.
 ## 2023-08-03
 - Bug fix for IOC collection
 - Adding `ScanOnenote` extraction counter
