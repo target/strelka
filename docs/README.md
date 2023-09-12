@@ -209,7 +209,7 @@ By default, Strelka is configured to use a minimal "quickstart" deployment that 
 #### Step 1: Install prerequisites
 
 ```bash
-# Ubuntu 22.04
+# Ubuntu 23.04
 sudo apt install -y wget git docker docker-compose golang jq && \
 sudo usermod -aG docker $USER && \
 newgrp docker
