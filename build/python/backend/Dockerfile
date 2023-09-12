@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:23.04
 ARG DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
@@ -10,6 +10,7 @@ ARG USER_GID=$USER_UID
 
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
+ENV PIP_BREAK_SYSTEM_PACKAGES 1
 
 # Create the user
 RUN groupadd --gid $USER_GID $USERNAME \
@@ -20,9 +21,9 @@ ARG YARA_PYTHON_VERSION=4.3.0
 ARG CAPA_VERSION=5.0.0
 ARG EXIFTOOL_VERSION=12.52
 
-# Set up package pinning for future releases (kinetic 22.10, 7zip 22.01+dfsg-2)
+# Set up package pinning for future releases (mantic 23.04, 7zip 23.01+dfsg-2)
 COPY ./build/python/backend/pin.pref /etc/apt/preferences.d/pin.pref
-COPY ./build/python/backend/kinetic.list /etc/apt/sources.list.d/kinetic.list
+COPY ./build/python/backend/lunar.list /etc/apt/sources.list.d/lunar.list
 
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
@@ -49,8 +50,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     pkg-config
 
 # Add zeek repo
-RUN echo 'deb http://download.opensuse.org/repositories/security:/zeek/xUbuntu_22.04/ /' | tee /etc/apt/sources.list.d/security:zeek.list && \
-    curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_22.04/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null
+RUN echo 'deb http://download.opensuse.org/repositories/security:/zeek/xUbuntu_23.04/ /' | tee /etc/apt/sources.list.d/security:zeek.list && \
+    curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_23.04/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
