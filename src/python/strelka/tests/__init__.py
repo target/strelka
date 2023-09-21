@@ -99,14 +99,14 @@ def get_remote_fixture_archive(
                             }
                         )
         except Exception as e:
-            raise
+            raise e
 
     elif mime_type == "application/x-7z-compressed":
         try:
             with py7zr.SevenZipFile(bytesfile, password=password) as archive:
                 allfiles = archive.readall()
         except Exception as e:
-            raise
+            raise e
 
     elif mime_type == "application/gzip":
         try:
@@ -116,7 +116,7 @@ def get_remote_fixture_archive(
                 )
 
         except Exception as e:
-            raise
+            raise e
 
     elif mime_type == "application/x-tar":
         try:
@@ -126,7 +126,7 @@ def get_remote_fixture_archive(
                         allfiles.update({member.name: archive.extractfile(member)})
 
         except Exception as e:
-            raise
+            raise e
 
     else:
         raise ValueError(f"Archive type {mime_type} not supported")
