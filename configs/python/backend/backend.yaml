@@ -86,6 +86,11 @@ scanners:
 #        flavors:
 #          - 'credit_cards'
 #      priority: 5
+  'ScanDonut':
+    - positive:
+        flavors:
+          - 'hacktool_win_shellcode_donut'
+      priority: 5
   'ScanDmg':
     - positive:
         flavors:
