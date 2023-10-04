@@ -1,6 +1,12 @@
 name: "Push Build"
 on:
-  push
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
 jobs:
   strelka:
     name: "Strelka Push Build"
