@@ -166,6 +166,7 @@ scanners:
           - 'bmp_file'
           - 'application/x-shockwave-flash'
           - 'fws_file'
+          - 'image/webp'
       priority: 5
       options:
         keys:
@@ -322,6 +323,7 @@ scanners:
           - 'bmp_file'
           - 'application/pdf'
           - 'pdf'
+          - 'image/webp'
       priority: 5
       options:
         extract_text: True
@@ -408,6 +410,7 @@ scanners:
           - 'type_is_tiff'
           - 'image/x-ms-bmp'
           - 'bmp_file'
+          - 'image/webp'
       priority: 5
   'ScanRar':
     - positive:
