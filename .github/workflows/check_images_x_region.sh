@@ -13,7 +13,7 @@ function checkImages() {
   repo=$1
   primary_sha=$(aws ecr describe-images --region us-east-1 --repository-name $repo --image-ids imageTag=$tag | jq -r '.imageDetails[0].imageDigest')
 
-  for region in us-east-2 us-west-1 us-west-2 eu-west-1 eu-west-2 ca-central-1 eu-central-2; do
+  for region in us-east-2 us-west-1 us-west-2 eu-west-1 eu-west-2 ca-central-1 eu-central-2 ap-southeast-2; do
     sha=$(aws ecr describe-images --region $region --repository-name $repo --image-ids imageTag=$tag | jq -r '.imageDetails[0].imageDigest')
 
     if [[ "$sha" != "$primary_sha" ]]; then
