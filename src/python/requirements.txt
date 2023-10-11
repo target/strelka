@@ -4,7 +4,7 @@ beautifulsoup4==4.12.0
 boltons==23.0.0
 chaskey @ git+https://github.com/volexity/chaskey-lts@2fd80f732dd9422a9e92556758180ceee3b5b4ec  # For donut-decryptor
 construct==2.10.68
-donut-decryptor @ git+https://github.com/volexity/donut-decryptor@57ab87cc6274f4216e81409d66f4c011739bdf1f
+donut-decryptor @ git+https://github.com/volexity/donut-decryptor@5a0f9f87094efe6e8d131d3fa4abf23f31123784
 eml-parser>=1.17.5
 entropy @ git+https://github.com/jshlbrd/python-entropy.git@a49f1addccb88d54115832a6d1982b957a56f329   # v0.11 as of this commit
 esprima==4.0.1
