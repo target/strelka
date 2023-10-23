@@ -115,19 +115,19 @@ def test_scan_macho(mocker):
             },
         ],
         "symbols": {
-            "exported": ['__mh_execute_header', '_main'],
+            "exported": ["__mh_execute_header", "_main"],
             "imported": ["_printf"],
             "libraries": ["/usr/lib/libSystem.B.dylib"],
             "table": [
                 {
                     "export": {"address": 0, "flags": 0},
                     "origin": "LC_SYMTAB",
-                    "symbol": "__mh_execute_header"
+                    "symbol": "__mh_execute_header",
                 },
                 {
                     "export": {"address": 16240, "flags": 0},
                     "origin": "LC_SYMTAB",
-                    "symbol": "_main"
+                    "symbol": "_main",
                 },
                 {
                     "binding": {
@@ -139,17 +139,17 @@ def test_scan_macho(mocker):
                             "timestamp": 2,
                             "version": {
                                 "compatibility": "1.0.0",
-                                "current": "1319.0.0"
-                            }
+                                "current": "1319.0.0",
+                            },
                         },
                         "segment": "__DATA_CONST",
                         "type": None,
-                        "weak_import": False
+                        "weak_import": False,
                     },
                     "origin": "LC_SYMTAB",
-                    "symbol": "_printf"
-                }
-            ]
+                    "symbol": "_printf",
+                },
+            ],
         },
         "commands": {
             "commands": [

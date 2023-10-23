@@ -60,7 +60,7 @@ class ScanYara(strelka.Scanner):
                 return
 
         # Set the total rules loaded
-        self.event['rules_loaded'] = self.rules_loaded
+        self.event["rules_loaded"] = self.rules_loaded
 
         # Load YARA configuration options only once.
         # This prevents loading the configs on every execution.
@@ -127,7 +127,9 @@ class ScanYara(strelka.Scanner):
         try:
             # Load compiled YARA rules from a file.
             if compiled.get("enabled", False):
-                self.compiled_yara = yara.load(os.path.join(location, compiled.get("filename", "rules.compiled")))
+                self.compiled_yara = yara.load(
+                    os.path.join(location, compiled.get("filename", "rules.compiled"))
+                )
         except yara.Error as e:
             self.flags.append(f"compiled_load_error_{e}")
 
@@ -135,7 +137,9 @@ class ScanYara(strelka.Scanner):
             # Compile YARA rules from a directory.
             if not self.compiled_yara:
                 if os.path.isdir(location):
-                    globbed_yara_paths = glob.iglob(f"{location}/**/*.yar*", recursive=True)
+                    globbed_yara_paths = glob.iglob(
+                        f"{location}/**/*.yar*", recursive=True
+                    )
                     if not globbed_yara_paths:
                         self.flags.append("yara_rules_not_found")
                     yara_filepaths = {
@@ -195,7 +199,7 @@ class ScanYara(strelka.Scanner):
         for i in range(start_offset, end_offset, 16):
             # If this chunk hasn't been processed before, generate its hex and ASCII representations
             if i not in self.hex_dump_cache:
-                chunk = data[i: i + 16]
+                chunk = data[i : i + 16]
 
                 # Convert each byte in the chunk to its hexadecimal representation and join them with spaces.
                 # E.g., a chunk [65, 66, 67] would become the string "41 42 43"
