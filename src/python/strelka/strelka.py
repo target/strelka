@@ -1005,7 +1005,7 @@ def format_event(metadata: dict) -> str:
         remap1,
         lambda p, k, v: v != "" and v != [] and v != {} and v is not None,
     )
-    
+
     try:
         return json.dumps(remap2)
     except Exception:
