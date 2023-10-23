@@ -1,43 +1,44 @@
-FROM ubuntu:23.04
+# Base and setup configuration
+FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
+# User configuration
 ARG CONFIG_TESTS=false
 
+ARG YARA_VERSION=4.3.1
+ARG CAPA_VERSION=6.1.0
+ARG EXIFTOOL_VERSION=12.52
+
+# Environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONFAULTHANDLER 1
+ENV PYTHONUNBUFFERED 1
+
+# User configuration
 ARG USERNAME=strelka
 ARG USER_UID=1001
 ARG USER_GID=$USER_UID
-
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PIP_BREAK_SYSTEM_PACKAGES 1
-
-# Create the user
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID --create-home --shell /bin/bash $USERNAME
 
-ARG YARA_VERSION=4.3.0
-ARG YARA_PYTHON_VERSION=4.3.0
-ARG CAPA_VERSION=5.0.0
-ARG EXIFTOOL_VERSION=12.52
-
-# Set up package pinning for future releases (mantic 23.04, 7zip 23.01+dfsg-2)
+# Set up package pinning for release (mantic 23.10, 7zip 23.01+dfsg-2)
 COPY ./build/python/backend/pin.pref /etc/apt/preferences.d/pin.pref
-COPY ./build/python/backend/lunar.list /etc/apt/sources.list.d/lunar.list
+COPY ./build/python/backend/mantic.list /etc/apt/sources.list.d/mantic.list
 
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
 # Install build packages
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get -qq update && \
-    apt-get install -qq -y --no-install-recommends \
+RUN apt-get -q update && \
+    apt-get install -q -y --no-install-recommends \
     automake \
     build-essential \
     cmake \
     curl \
     gcc \
     git \
+    dirmngr \
+    gnupg \
     gpg \
     libglu1-mesa \
     libtool \
@@ -47,21 +48,24 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     python3-pip \
     python3-wheel \
     python-is-python3 \
-    pkg-config
+    pkg-config \
+    supervisor \
+    ncat
 
-# Add zeek repo
-RUN echo 'deb http://download.opensuse.org/repositories/security:/zeek/xUbuntu_23.04/ /' | tee /etc/apt/sources.list.d/security:zeek.list && \
-    curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_23.04/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null
+# Install Zeek
+RUN echo 'deb http://download.opensuse.org/repositories/security:/zeek/xUbuntu_22.04/ /' | tee /etc/apt/sources.list.d/security:zeek.list && \
+    curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_22.04/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null && \
+    apt-get -q update && \
+    apt-get install -q -y --no-install-recommends zeek-lts
+ENV PATH=$PATH:/opt/zeek/bin
 
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get -qq update && \
-    apt-get install -qq -y --no-install-recommends \
+# Install runtime packages
+RUN apt-get -q update && \
+    apt-get install -q -y --no-install-recommends \
     7zip \
     antiword \
     binwalk \
     libarchive-dev \
-    libcompress-raw-lzma-perl \
     libfuzzy-dev \
     libjansson-dev \
     libmagic-dev \
@@ -74,8 +78,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     unrar \
     unzip \
     upx \
-    jq \
-    zeek-lts && \
+    jq && \
 #clean up zeek install
     cp /opt/zeek/bin/zeek /bin/zeek && \
     rm -rf /opt/zeek/share/btest /opt/zeek/bin && \
@@ -115,43 +118,54 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     make -s && make -s install && make -s check && \
 # Install yara-python
     cd /tmp/ && \
-    curl -OL https://github.com/VirusTotal/yara-python/archive/v$YARA_PYTHON_VERSION.tar.gz && \
-    tar -zxvf v$YARA_PYTHON_VERSION.tar.gz && \
-    cd yara-python-$YARA_PYTHON_VERSION/ && \
+    curl -OL https://github.com/VirusTotal/yara-python/archive/v$YARA_VERSION.tar.gz && \
+    tar -zxvf v$YARA_VERSION.tar.gz && \
+    cd yara-python-$YARA_VERSION/ && \
     python3 setup.py build --dynamic-linking && \
     python3 setup.py install
 
 # Install JTR
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update -qq && \
     apt-get install -qq -y --no-install-recommends \
     ca-certificates \
     zlib1g-dev \
     yasm \
     libgmp-dev \
+    liblzma-dev \
     libpcap-dev \
     libbz2-dev \
     libgomp1 && \
+    cpan -i Compress::Raw::Lzma
 # The maintainer isn't big on releases or tags so grab an arbitrary, but consistent, commit.
 # Additionally jump through some extra hoops to get the single commit to save some download time.
-    mkdir jtr && cd jtr && git init && git remote add origin https://github.com/openwall/john.git && git fetch --depth 1 origin b5c10480f56ff1b5d76c6cbdaf9c817582ee2228 && git reset --hard FETCH_HEAD \
-  && rm -rf /jtr/.git \
-  && cd /jtr/src \
-  && ./configure \
-  && make -s clean \
-  && make -sj4 \
-  && make -s install \
-  && cp -Tr /jtr/run/ /jtr && rm -rf /jtr/run \
-  && chmod -R 777 /jtr \
-  && chown -R 1001:1001 /jtr
+RUN mkdir jtr && cd jtr && git init && git remote add origin https://github.com/openwall/john.git && \
+    git fetch --depth 1 origin b5c10480f56ff1b5d76c6cbdaf9c817582ee2228 && \
+    git reset --hard FETCH_HEAD && \
+    rm -rf /jtr/.git && \
+    cd /jtr/src && \
+    ./configure && \
+    make -s clean && \
+    make -sj4 && \
+    make install && \
+    cp -Tr /jtr/run/ /jtr && rm -rf /jtr/run && \
+    chmod -R 777 /jtr && \
+    chown -R $USER_UID:$USER_UID /jtr
+
+# Poetry setup
+RUN curl -sSL https://install.python-poetry.org | python3 - && \
+    export PATH="/root/.local/bin:$PATH" && \
+    poetry config virtualenvs.create false
+
+# Project setup
+COPY ./pyproject.toml ./poetry.lock /strelka/
+WORKDIR /strelka/
+RUN /root/.local/bin/poetry install --no-dev
 
 # Copy Strelka files
 COPY ./src/python/ /strelka/
 COPY ./configs/python/backend/ /etc/strelka/
-
-# Install Python packages
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip3 -q --disable-pip-version-check install -r /strelka/requirements.txt
 
 # Install Strelka
 RUN cd /strelka/ && \

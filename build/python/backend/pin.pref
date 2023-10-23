@@ -1,7 +1,7 @@
 Package: 7zip
-Pin: release n=jammy
-Pin-Priority: 100
+Pin: version 23.01+dfsg-3
+Pin-Priority: 1001
 
 Package: *
-Pin: release n=lunar
-Pin-Priority: 200
+Pin: release n=mantic
+Pin-Priority: 100
