@@ -8,9 +8,9 @@ def iocs(excel_doc_decoded):
     extracted = set()
     for decoded in excel_doc_decoded:
         if url := re.findall(
-            "(https?://[A-Za-z0-9-._]+/[A-Za-z0-9-._~:/?#\[\]@!$&'\(\)*+,;%=]+[^,\s\)])",
-            decoded,
-            flags=re.IGNORECASE,
+                r"(https?://[A-Za-z0-9-._]+/[A-Za-z0-9-._~:/?#\[\]@!$&'()*+,;%=]+[^,\s\]])",
+                decoded,
+                flags=re.IGNORECASE,
         ):
             scheme, netloc, path, params, query, fragment = urlparse(url[0])
             if netloc.startswith("0x"):
