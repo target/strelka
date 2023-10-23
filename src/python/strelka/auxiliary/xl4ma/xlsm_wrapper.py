@@ -1,7 +1,4 @@
-# Authors: Ryan Borre
-
 import re
-
 from openpyxl import load_workbook
 
 
