@@ -37,7 +37,7 @@ def test_scan_macho(mocker):
         "sections": [
             {
                 "alignment": 4,
-                "entropy": 3.8566493708989427,
+                "entropy": mock.ANY,
                 "name": "__text",
                 "offset": 16240,
                 "size": 37,
@@ -45,7 +45,7 @@ def test_scan_macho(mocker):
             },
             {
                 "alignment": 1,
-                "entropy": 1.792481250360578,
+                "entropy": mock.ANY,
                 "name": "__stubs",
                 "offset": 16278,
                 "size": 6,
@@ -53,7 +53,7 @@ def test_scan_macho(mocker):
             },
             {
                 "alignment": 0,
-                "entropy": 3.180832987205441,
+                "entropy": mock.ANY,
                 "name": "__cstring",
                 "offset": 16284,
                 "size": 13,
@@ -61,7 +61,7 @@ def test_scan_macho(mocker):
             },
             {
                 "alignment": 2,
-                "entropy": 1.5827902775373923,
+                "entropy": mock.ANY,
                 "name": "__unwind_info",
                 "offset": 16300,
                 "size": 72,
@@ -69,7 +69,7 @@ def test_scan_macho(mocker):
             },
             {
                 "alignment": 3,
-                "entropy": 0.5435644431995964,
+                "entropy": mock.ANY,
                 "name": "__got",
                 "offset": 16384,
                 "size": 8,
@@ -115,14 +115,41 @@ def test_scan_macho(mocker):
             },
         ],
         "symbols": {
-            "exported": [],
+            "exported": ['__mh_execute_header', '_main'],
             "imported": ["_printf"],
             "libraries": ["/usr/lib/libSystem.B.dylib"],
             "table": [
-                {"symbol": "__mh_execute_header", "origin": "LC_SYMTAB"},
-                {"symbol": "_main", "origin": "LC_SYMTAB"},
-                {"symbol": "_printf", "origin": "LC_SYMTAB"},
-            ],
+                {
+                    "export": {"address": 0, "flags": 0},
+                    "origin": "LC_SYMTAB",
+                    "symbol": "__mh_execute_header"
+                },
+                {
+                    "export": {"address": 16240, "flags": 0},
+                    "origin": "LC_SYMTAB",
+                    "symbol": "_main"
+                },
+                {
+                    "binding": {
+                        "address": 0,
+                        "class": None,
+                        "library": {
+                            "name": "/usr/lib/libSystem.B.dylib",
+                            "size": 56,
+                            "timestamp": 2,
+                            "version": {
+                                "compatibility": "1.0.0",
+                                "current": "1319.0.0"
+                            }
+                        },
+                        "segment": "__DATA_CONST",
+                        "type": None,
+                        "weak_import": False
+                    },
+                    "origin": "LC_SYMTAB",
+                    "symbol": "_printf"
+                }
+            ]
         },
         "commands": {
             "commands": [

@@ -128,7 +128,7 @@ class ScanDmg(strelka.Scanner):
         try:
             output_lines = output_7zip.splitlines()
 
-            # 7-Zip (z) 21.07 (x64) : Copyright (c) 1999-2021 Igor Pavlov : 2021-12-26
+            # 7-Zip (z) 23.01 (x64) : Copyright (c) 1999-2021 Igor Pavlov : 2021-12-26
             regex_7zip_version = re.compile(r"^7-Zip[^\d]+(\d+\.\d+)")
 
             # --/----

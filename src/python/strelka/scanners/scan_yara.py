@@ -1,6 +1,5 @@
 import glob
 import os
-
 import yara
 
 from strelka import strelka
@@ -38,6 +37,7 @@ class ScanYara(strelka.Scanner):
         """
         self.compiled_yara = None
         self.loaded_configs = False
+        self.rules_loaded = 0
 
     def scan(self, data, file, options, expire_at):
         """Scans the provided data with YARA rules.
@@ -53,8 +53,14 @@ class ScanYara(strelka.Scanner):
         """
         # Load YARA rules if not already loaded.
         # This prevents loading YARA rules on every execution.
-        if self.compiled_yara is None:
+        if not self.compiled_yara:
             self.load_yara_rules(options)
+            if not self.compiled_yara:
+                self.flags.append(f"no_rules_loaded")
+                return
+
+        # Set the total rules loaded
+        self.event['rules_loaded'] = self.rules_loaded
 
         # Load YARA configuration options only once.
         # This prevents loading the configs on every execution.
@@ -67,7 +73,7 @@ class ScanYara(strelka.Scanner):
         # Initialize the event data structure.
         self.hex_dump_cache = {}
         self.event["matches"] = []
-        self.event["tags"] = set()
+        self.event["tags"] = []
         self.event["meta"] = []
         self.event["hex"] = []
 
@@ -76,7 +82,7 @@ class ScanYara(strelka.Scanner):
         for match in yara_matches:
             # Append rule matches and update tags.
             self.event["matches"].append(match.rule)
-            self.event["tags"].update(match.tags)
+            self.event["tags"].extend(match.tags)
 
             # Extract hex representation if configured to store offsets.
             if self.store_offset and self.offset_meta_key:
@@ -95,13 +101,12 @@ class ScanYara(strelka.Scanner):
 
             # Append meta information if configured to do so.
             for k, v in match.meta.items():
-                if not self.event["meta"] or k in self.event["meta"]:
-                    self.event["meta"].append(
-                        {"rule": match.rule, "identifier": k, "value": v}
-                    )
+                self.event["meta"].append(
+                    {"rule": match.rule, "identifier": k, "value": v}
+                )
 
-        # Convert tags set to a list.
-        self.event["tags"] = list(self.event["tags"])
+        # De-duplicate tags.
+        self.event["tags"] = list(set(self.event["tags"]))
 
     def load_yara_rules(self, options):
         """Loads YARA rules based on the provided path.
@@ -110,33 +115,46 @@ class ScanYara(strelka.Scanner):
             options (dict): Configuration options specifying the
             location of YARA rules.
 
-        Compiles YARA rules either from a specified file or from
-        a directory. If there's an issue with compilation, flags
-        are set to indicate any compilation / loading errors.
+        Loads a compiled YARA ruleset or compiles YARA rules either
+        from a specified file or from a directory. If there's an issue
+        with compilation, flags are set to indicate any
+        compilation / loading errors.
         """
         # Retrieve location of YARA rules.
         location = options.get("location", "/etc/strelka/yara/")
+        compiled = options.get("compiled")
+
+        try:
+            # Load compiled YARA rules from a file.
+            if compiled.get("enabled", False):
+                self.compiled_yara = yara.load(os.path.join(location, compiled.get("filename", "rules.compiled")))
+        except yara.Error as e:
+            self.flags.append(f"compiled_load_error_{e}")
 
         try:
             # Compile YARA rules from a directory.
-            if os.path.isdir(location):
-                globbed_yara_paths = glob.iglob(f"{location}/**/*.yar*", recursive=True)
-                if not globbed_yara_paths:
-                    self.flags.append("yara_rules_not_found")
-                yara_filepaths = {
-                    f"namespace_{i}": entry
-                    for (i, entry) in enumerate(globbed_yara_paths)
-                }
-                self.compiled_yara = yara.compile(filepaths=yara_filepaths)
-            # Compile YARA rules from a single file.
-            elif os.path.isfile(location):
-                self.compiled_yara = yara.compile(filepath=location)
-            else:
-                self.flags.append("yara_location_not_found")
+            if not self.compiled_yara:
+                if os.path.isdir(location):
+                    globbed_yara_paths = glob.iglob(f"{location}/**/*.yar*", recursive=True)
+                    if not globbed_yara_paths:
+                        self.flags.append("yara_rules_not_found")
+                    yara_filepaths = {
+                        f"namespace_{i}": entry
+                        for (i, entry) in enumerate(globbed_yara_paths)
+                    }
+                    self.compiled_yara = yara.compile(filepaths=yara_filepaths)
+                # Compile YARA rules from a single file.
+                elif os.path.isfile(location):
+                    self.compiled_yara = yara.compile(filepath=location)
+                else:
+                    self.flags.append("yara_location_not_found")
         except yara.Error as e:
             self.flags.append(f"compiling_error_general_{e}")
         except yara.SyntaxError as e:
             self.flags.append(f"compiling_error_syntax_{e}")
+
+        # Set the total rules loaded.
+        self.rules_loaded = len(list(self.compiled_yara))
 
     def extract_match_hex(self, rule, offset, matched_string, data, offset_padding=32):
         """
@@ -177,7 +195,7 @@ class ScanYara(strelka.Scanner):
         for i in range(start_offset, end_offset, 16):
             # If this chunk hasn't been processed before, generate its hex and ASCII representations
             if i not in self.hex_dump_cache:
-                chunk = data[i : i + 16]
+                chunk = data[i: i + 16]
 
                 # Convert each byte in the chunk to its hexadecimal representation and join them with spaces.
                 # E.g., a chunk [65, 66, 67] would become the string "41 42 43"

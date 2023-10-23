@@ -15,6 +15,7 @@ def test_scan_yara(mocker):
         "elapsed": mock.ANY,
         "flags": [],
         "matches": ["test", "hex_extraction_test"],
+        "rules_loaded": 2,
         "meta": mock.ANY,
         "tags": [],
         "hex": [],
@@ -24,7 +25,13 @@ def test_scan_yara(mocker):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.txt",
-        options={"location": str(Path(Path(__file__).parent / "fixtures/test.yara"))},
+        options={
+            "location": str(Path(Path(__file__).parent / "fixtures/test.yara")),
+            "compiled": {
+                "enabled": False,
+                "filename": "rules.compiled",
+            },
+        },
     )
 
     TestCase.maxDiff = None
@@ -51,6 +58,7 @@ def test_scan_yara_hex_extraction(mocker):
         "elapsed": mock.ANY,
         "flags": [],
         "matches": ["test", "hex_extraction_test"],
+        "rules_loaded": 2,
         "meta": [
             {
                 "identifier": "StrelkaHexDump",
@@ -71,6 +79,10 @@ def test_scan_yara_hex_extraction(mocker):
             "store_offset": True,
             "offset_meta_key": "StrelkaHexDump",
             "offset_padding": 32,
+            "compiled": {
+                "enabled": False,
+                "filename": "rules.compiled",
+            },
         },
     )
 

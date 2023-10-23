@@ -1,6 +1,4 @@
-# Authors: Ryan Borre
 from strelka.auxiliary.xl4ma import analyzer
-
 from strelka import strelka
 
 
