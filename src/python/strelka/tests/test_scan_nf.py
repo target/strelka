@@ -1,7 +1,6 @@
 from pathlib import Path
 from unittest import TestCase, mock
 
-import pytest
 from strelka.scanners.scan_nf import ScanNf as ScanUnderTest
 from strelka.tests import run_test_scan
 

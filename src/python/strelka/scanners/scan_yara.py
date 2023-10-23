@@ -1,5 +1,6 @@
 import glob
 import os
+
 import yara
 
 from strelka import strelka
@@ -56,7 +57,7 @@ class ScanYara(strelka.Scanner):
         if not self.compiled_yara:
             self.load_yara_rules(options)
             if not self.compiled_yara:
-                self.flags.append(f"no_rules_loaded")
+                self.flags.append("no_rules_loaded")
                 return
 
         # Set the total rules loaded
