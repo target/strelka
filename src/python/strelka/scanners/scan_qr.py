@@ -1,8 +1,7 @@
 import io
 import logging
-import re
 
-from PIL import Image
+from PIL import Image, ImageOps
 from pyzbar.pyzbar import decode
 
 from strelka import strelka
@@ -16,53 +15,31 @@ class ScanQr(strelka.Scanner):
     """
 
     def scan(self, data, file, options, expire_at):
+
+        self.event["data"] = []
+
+        barcode_data = []
+
         try:
-            URL_REGEX = (
-                r"^((https?|ftp|smtp)://)?(www\.)?[a-z0-9]+\.[a-z]+(/[a-zA-Z0-9#]+/?)*"
-            )
-            barcodes = decode(Image.open(io.BytesIO(data)))
+            img = Image.open(io.BytesIO(data))
+            barcodes = decode(img)
 
-            try:
-                if barcodes:
-                    self.event["data"] = barcodes[0].data.decode("utf-8")
-                else:
-                    return
-            except strelka.ScannerTimeout:
-                raise
-            except Exception:
-                self.flags.append("decode error")
-                return
+            if barcodes:
+                for barcode in barcodes:
+                    barcode_data.append(barcode.data.decode("utf-8"))
 
-            try:
-                # Type: Email
-                if any(qtype in self.event["data"] for qtype in ["MATMSG", "mailto"]):
-                    self.event["type"] = "email"
-                # Type: Mobile
-                elif any(qtype in self.event["data"] for qtype in ["tel:", "sms:"]):
-                    self.event["type"] = "mobile"
-                # Type: App
-                elif any(
-                    qtype in self.event["data"]
-                    for qtype in ["itunes.apple.com", "market://"]
-                ):
-                    self.event["type"] = "app"
-                # Type: Geo
-                elif "geo:" in self.event["data"]:
-                    self.event["type"] = "geo"
-                # Type: WIFI
-                elif "WIFI" in self.event["data"]:
-                    self.event["type"] = "wifi"
-                # Type: URL
-                elif re.match(URL_REGEX, self.event["data"]):
-                    self.event["type"] = "url"
-                # Type: No Defined Match
-                else:
-                    self.event["type"] = "undefined"
-            except strelka.ScannerTimeout:
-                raise
-            except Exception:
-                self.flags.append("parse error")
+            img_inverted = ImageOps.invert(img)
+            barcodes = decode(img_inverted)
+
+            if barcodes:
+                self.flags.append("inverted")
+                for barcode in barcodes:
+                    barcode_data.append(barcode.data.decode("utf-8"))
+
+            if barcode_data:
+                self.event["data"] = barcode_data
+
         except strelka.ScannerTimeout:
             raise
         except Exception:
-            self.flags.append("general error")
+            self.flags.append("decode_error")
