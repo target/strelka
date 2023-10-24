@@ -2,6 +2,7 @@ from pathlib import Path
 from unittest import TestCase, mock
 
 import pytest
+
 from strelka.scanners.scan_qr import ScanQr as ScanUnderTest
 from strelka.tests import run_test_scan
 
@@ -71,6 +72,48 @@ def test_scan_qr(mocker, fmt):
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / f"fixtures/{fmt}",
+    )
+
+    TestCase.maxDiff = None
+    TestCase().assertDictEqual(test_scan_event, scanner_event)
+
+
+def test_scan_qr_support_inverted_true(mocker):
+    """
+    Pass: Sample event matches output of scanner.
+    Failure: Unable to load file or sample event fails to match.
+    """
+
+    test_scan_event = {
+        "elapsed": mock.ANY,
+        "flags": ["inverted"],
+        "data": ["Plain Text Code"],
+    }
+
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_qr_inverted.png",
+        options={"support_inverted": True},
+    )
+
+    TestCase.maxDiff = None
+    TestCase().assertDictEqual(test_scan_event, scanner_event)
+
+
+def test_scan_qr_support_inverted_false(mocker):
+    """
+    Pass: Sample event matches output of scanner.
+    Failure: Unable to load file or sample event fails to match.
+    """
+
+    test_scan_event = {"elapsed": mock.ANY, "flags": [], "data": []}
+
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_qr_inverted.png",
+        options={"support_inverted": False},
     )
 
     TestCase.maxDiff = None

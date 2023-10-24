@@ -15,6 +15,7 @@ class ScanQr(strelka.Scanner):
     """
 
     def scan(self, data, file, options, expire_at):
+        support_inverted = options.get("support_inverted", True)
 
         self.event["data"] = []
 
@@ -28,13 +29,14 @@ class ScanQr(strelka.Scanner):
                 for barcode in barcodes:
                     barcode_data.append(barcode.data.decode("utf-8"))
 
-            img_inverted = ImageOps.invert(img)
-            barcodes = decode(img_inverted)
+            if support_inverted:
+                img_inverted = ImageOps.invert(img)
+                barcodes = decode(img_inverted)
 
-            if barcodes:
-                self.flags.append("inverted")
-                for barcode in barcodes:
-                    barcode_data.append(barcode.data.decode("utf-8"))
+                if barcodes:
+                    self.flags.append("inverted")
+                    for barcode in barcodes:
+                        barcode_data.append(barcode.data.decode("utf-8"))
 
             if barcode_data:
                 self.event["data"] = barcode_data
