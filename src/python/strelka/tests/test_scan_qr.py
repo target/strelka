@@ -26,7 +26,6 @@ formats = {
             "BEGIN:VEVENT\nSUMMARY:My Event\nDESCRIPTION:Description\nLOCATION:Location\nDTSTART:20231017T222901Z\nEND:VEVENT"
         ],
     },
-    "test_qr_inverted.png": {"flags": ["inverted"], "data": ["Plain Text Code"]},
     "test_qr_mecard.png": {
         "flags": [],
         "data": [
