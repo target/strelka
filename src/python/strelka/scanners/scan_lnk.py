@@ -1,6 +1,8 @@
 import uuid
 
 from construct import Bytes, IfThenElse, Int16ul, StringEncoded, Struct, this
+
+from strelka import strelka
 from strelka.cstructs.lnk import (
     CommonNetworkRelativeLink,
     ExtraData,
@@ -8,8 +10,6 @@ from strelka.cstructs.lnk import (
     LinkTargetIDList,
     ShellLinkHeader,
 )
-
-from strelka import strelka
 
 
 class ScanLNK(strelka.Scanner):

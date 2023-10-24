@@ -1,5 +1,3 @@
-# Authors: Ryan Borre
-
 from enum import Enum
 from os import devnull
 

@@ -1,5 +1,3 @@
-# Authors: Ryan Borre
-
 import xlrd
 from pyxlsb2 import open_workbook
 from pyxlsb2.formula import Formula
@@ -30,7 +28,7 @@ class XLSBWrapper:
             formulas = []
             values = []
             try:
-                for row in self.workbook[sheet.name]:
+                for row in self.workbook.get_sheet_by_name(sheet.name):
                     for cell in row:
                         if cell.formula:
                             formula_count += 1

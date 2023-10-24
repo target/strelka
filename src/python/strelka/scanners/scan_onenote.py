@@ -3,9 +3,8 @@
 import binascii
 import re
 
-from strelka.cstructs.onenote import FileDataStoreObject
-
 from strelka import strelka
+from strelka.cstructs.onenote import FileDataStoreObject
 
 # This is the binary string we're searching for in the data.
 ONE_NOTE_MAGIC = binascii.unhexlify(b"e716e3bd65261145a4c48d4d0b7a9eac")

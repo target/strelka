@@ -6,7 +6,6 @@ import time
 from importlib.resources import files
 
 import strelka.config
-
 import strelka.strelka
 
 

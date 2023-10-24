@@ -1,5 +1,3 @@
-# Authors: Ryan Borre
-
 import logging
 import os
 
