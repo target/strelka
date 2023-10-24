@@ -1,5 +1,3 @@
-# Authors: Ryan Borre
-
 import argparse
 import logging
 import os

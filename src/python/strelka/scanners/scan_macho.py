@@ -302,11 +302,23 @@ class ScanMacho(strelka.Scanner):
             }
 
             if sym.has_binding_info:
+                binding_address = getattr(sym.binding_info, "address", None)
+                binding_class = getattr(sym.binding_info, "binding_class", None)
+                binding_type = getattr(sym.binding_info, "binding_type", None)
+                weak_import = getattr(sym.binding_info, "weak_import", None)
+
+                # Convert binding_class and binding_type to string and extract the last part after "."
+                if binding_class and "." in str(binding_class):
+                    binding_class = str(binding_class).rsplit(".", 1)[1]
+
+                if binding_type and "." in str(binding_type):
+                    binding_type = str(binding_type).rsplit(".", 1)[1]
+
                 row["binding"] = {
-                    "address": sym.binding_info.address,
-                    "class": str(sym.binding_info.binding_class).rsplit(".")[1],
-                    "type": str(sym.binding_info.binding_type).rsplit(".")[1],
-                    "weak_import": sym.binding_info.weak_import,
+                    "address": binding_address,
+                    "class": binding_class,
+                    "type": binding_type,
+                    "weak_import": weak_import,
                 }
 
                 if sym.binding_info.has_library:

@@ -1005,4 +1005,9 @@ def format_event(metadata: dict) -> str:
         remap1,
         lambda p, k, v: v != "" and v != [] and v != {} and v is not None,
     )
-    return json.dumps(remap2)
+
+    try:
+        return json.dumps(remap2)
+    except Exception:
+        logging.exception(f"Failed to serialize event {remap2}")
+        return json.dumps({})

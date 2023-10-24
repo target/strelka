@@ -1,2 +1,0 @@
-deb [arch=amd64] http://archive.ubuntu.com/ubuntu lunar main restricted universe multiverse
-deb [arch=arm64] http://ports.ubuntu.com/ lunar main restricted universe multiverse

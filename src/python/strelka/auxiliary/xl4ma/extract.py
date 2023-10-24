@@ -1,5 +1,3 @@
-# Authors: Ryan Borre
-
 import re
 import socket
 import struct
@@ -10,7 +8,7 @@ def iocs(excel_doc_decoded):
     extracted = set()
     for decoded in excel_doc_decoded:
         if url := re.findall(
-            r"(https?://[A-Za-z0-9-._]+/[A-Za-z0-9-._~:/?#\[\]@!$&'\(\)*+,;%=]+[^,\s\)])",
+            r"(https?://[A-Za-z0-9-._]+/[A-Za-z0-9-._~:/?#\[\]@!$&'()*+,;%=]+[^,\s\]])",
             decoded,
             flags=re.IGNORECASE,
         ):

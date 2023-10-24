@@ -2,6 +2,7 @@ from pathlib import Path
 from unittest import TestCase, mock
 
 from pytest_unordered import unordered
+
 from strelka.scanners.scan_pdf import ScanPdf as ScanUnderTest
 from strelka.tests import run_test_scan
 

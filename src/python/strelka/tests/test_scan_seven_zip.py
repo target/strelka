@@ -38,7 +38,7 @@ def test_scan_sevenzip(mocker):
             },
         ],
         "hidden_dirs": ["hidden"],
-        "meta": {"7zip_version": "22.01"},
+        "meta": {"7zip_version": "23.01"},
     }
 
     scanner_event = run_test_scan(
@@ -84,7 +84,7 @@ def test_scan_sevenzip_wordlist(mocker):
             },
         ],
         "hidden_dirs": ["hidden"],
-        "meta": {"7zip_version": "22.01"},
+        "meta": {"7zip_version": "23.01"},
         "cracked_password": b"password",
     }
 
@@ -137,7 +137,7 @@ def test_scan_sevenzip_wordlist_filenames(mocker):
             },
         ],
         "hidden_dirs": ["hidden"],
-        "meta": {"7zip_version": "22.01"},
+        "meta": {"7zip_version": "23.01"},
         "cracked_password": b"password",
     }
 
@@ -169,7 +169,7 @@ def test_scan_sevenzip_nocrack_filenames(mocker):
         "total": {"files": 0, "extracted": 0},
         "files": [],
         "hidden_dirs": [],
-        "meta": {"7zip_version": "22.01"},
+        "meta": {"7zip_version": "23.01"},
     }
 
     scanner_event = run_test_scan(
@@ -211,7 +211,7 @@ def test_scan_sevenzip_msi_filenames(mocker):
             },
         ],
         "hidden_dirs": [],
-        "meta": {"7zip_version": "22.01"},
+        "meta": {"7zip_version": "23.01"},
     }
 
     scanner_event = run_test_scan(
@@ -258,7 +258,7 @@ def test_scan_sevenzip_brute(mocker):
             },
         ],
         "hidden_dirs": ["hidden"],
-        "meta": {"7zip_version": "22.01"},
+        "meta": {"7zip_version": "23.01"},
         "cracked_password": b"aaa",
         "performance": {
             "keyspace": {"min_length": 1, "max_length": 3},

@@ -1,8 +1,18 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
-## 2024-09-12
+## 2023-10-23
+- Adding the ability to use precompiled YARA rules: Speed up YARA initialization on Strelka boot by using precompiled rules
+- Configuration file updates: Adding compiled YARA location
+- Updates to multiple scanners: To accommodate new package versions
+- Updates to multiple scanner tests: To accommodate updated scanners
+- Minor XL4MA scanner updates: Removing references to author / comments
+- Dockerfile improvements and fixes: Removing references to venv as poetry is used. Other various additions to ensure package installs work.
+- Small error handling fixes
+
+## 2023-09-12
 - Updated Ubuntu base image from `22.10` to `23.04`. Updated documentation and references.
+
 ## 2023-08-03
 - Bug fix for IOC collection
 - Adding `ScanOnenote` extraction counter

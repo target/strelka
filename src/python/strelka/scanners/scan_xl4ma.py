@@ -1,7 +1,5 @@
-# Authors: Ryan Borre
-from strelka.auxiliary.xl4ma import analyzer
-
 from strelka import strelka
+from strelka.auxiliary.xl4ma import analyzer
 
 
 class ScanXl4ma(strelka.Scanner):

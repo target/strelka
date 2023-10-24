@@ -19,36 +19,36 @@ def test_scan_dmg_compressed(mocker):
             {
                 "filename": "Install/Install Flash Player/.background.png",
                 "size": "70758",
-                "datetime": "2022-12-28 16:28:45",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "Install/Install Flash Player/.DS_Store",
                 "size": "16388",
-                "datetime": "2022-12-28 16:28:49",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "Install/Install Flash Player/.VolumeIcon.icns",
                 "size": "312349",
-                "datetime": "2022-12-28 16:28:45",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "Install/Install Flash Player/Install Flash Player",
                 "size": "33016",
-                "datetime": "2022-12-28 20:31:11",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "Install/Install Flash Player/Install Flash Player_rsrc",
                 "size": "51737",
-                "datetime": "2022-12-28 16:28:45",
+                "datetime": mock.ANY,
             },
         ],
         "meta": {
-            "7zip_version": "22.01",
+            "7zip_version": "23.01",
             "partitions": [
                 {
                     "path": mock.ANY,
                     "type": "HFS",
-                    "created": "2022-12-28 20:18:31",
+                    "created": mock.ANY,
                 }
             ],
         },
@@ -78,38 +78,38 @@ def test_scan_dmg_readonly(mocker):
             {
                 "filename": "Install Flash Player/.DS_Store",
                 "size": "16388",
-                "datetime": "2022-12-28 16:28:49",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "Install Flash Player/Install Flash Player:rsrc",
                 "size": "51737",
-                "datetime": "2022-12-28 16:28:45",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "Install Flash Player/Install Flash Player",
                 "size": "33016",
-                "datetime": "2022-12-28 20:31:11",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "Install Flash Player/.VolumeIcon.icns",
                 "size": "312349",
-                "datetime": "2022-12-28 16:28:45",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "Install Flash Player/.background.png",
                 "size": "70758",
-                "datetime": "2022-12-28 16:28:45",
+                "datetime": mock.ANY,
             },
         ],
         "meta": {
-            "7zip_version": "22.01",
+            "7zip_version": "23.01",
             "partitions": [
                 {"path": mock.ANY, "type": "Dmg"},
                 {"path": "4.apfs"},
                 {
                     "path": "4.apfs",
                     "type": "APFS",
-                    "created": "2022-12-29 21:14:51.740808351",
+                    "created": mock.ANY,
                 },
             ],
         },
@@ -139,58 +139,58 @@ def test_scan_dmg_readwrite(mocker):
             {
                 "filename": ".DS_Store",
                 "size": "6148",
-                "datetime": "2022-12-29 21:02:01",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "Install Flash Player/.DS_Store",
                 "size": "16388",
-                "datetime": "2022-12-28 16:28:49",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "Install Flash Player/Install Flash Player:rsrc",
                 "size": "51737",
-                "datetime": "2022-12-28 16:28:45",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "Install Flash Player/Install Flash Player",
                 "size": "33016",
-                "datetime": "2022-12-28 20:31:11",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "Install Flash Player/.VolumeIcon.icns",
                 "size": "312349",
-                "datetime": "2022-12-28 16:28:45",
+                "datetime": mock.ANY,
             },
             {
                 "filename": "Install Flash Player/.background.png",
                 "size": "70758",
-                "datetime": "2022-12-28 16:28:45",
+                "datetime": mock.ANY,
             },
             {
                 "filename": ".fseventsd/fseventsd-uuid",
                 "size": "36",
-                "datetime": "2022-12-29 21:02:13",
+                "datetime": mock.ANY,
             },
             {
                 "filename": ".fseventsd/0000000014ccc548",
                 "size": "69",
-                "datetime": "2022-12-29 21:02:13",
+                "datetime": mock.ANY,
             },
             {
                 "filename": ".fseventsd/0000000014ccc549",
                 "size": "72",
-                "datetime": "2022-12-29 21:02:13",
+                "datetime": mock.ANY,
             },
         ],
         "meta": {
-            "7zip_version": "22.01",
+            "7zip_version": "23.01",
             "partitions": [
                 {"path": mock.ANY, "type": "GPT"},
                 {"path": "0.disk image.apfs", "file_system": "APFS"},
                 {
                     "path": "0.disk image.apfs",
                     "type": "APFS",
-                    "created": "2022-12-29 21:01:28.905724063",
+                    "created": mock.ANY,
                 },
             ],
         },

@@ -519,7 +519,13 @@ data:
               - '*'
           priority: 5
           options:
-            location: '/etc/yara/'
+            location: '/etc/strelka/yara/'
+            compiled:
+              enabled: False
+              filename: "rules.compiled"
+            store_offset: True
+            offset_meta_key: "StrelkaHexDump"
+            offset_padding: 32
       'ScanZip':
         - positive:
             flavors:

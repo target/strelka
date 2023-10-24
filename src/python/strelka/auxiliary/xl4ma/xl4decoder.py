@@ -1,5 +1,3 @@
-# Authors: Ryan Borre
-
 import tempfile
 from os import devnull
 
@@ -8,6 +6,7 @@ from openpyxl.workbook import Workbook
 from pyxlsb2 import open_workbook
 from pyxlsb2.formula import Formula
 from pyxlsb2.records import ErrorValue
+
 from strelka.auxiliary.xl4ma.xl4interpreter import Interpreter
 
 
@@ -64,7 +63,7 @@ def _decode_xlsb(file_path, defined_names):
     for sheet in wb.sheets:
         book_sheet = book.create_sheet(sheet.name)
         try:
-            for row in wb[sheet.name]:
+            for row in wb.get_sheet_by_name(sheet.name):
                 for cell in row:
                     if isinstance(cell.value, ErrorValue):
                         formula = Formula.parse(cell.formula).stringify(wb)
