@@ -7,7 +7,7 @@ jobs:
     name: "Build Strelka (Nightly)"
     env:
         DOCKER_BUILDKIT: 1
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@master
       - name: Builds Strelka
