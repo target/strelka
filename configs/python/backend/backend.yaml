@@ -562,6 +562,8 @@ scanners:
           - 'bmp_file'
           - 'image/webp'
       priority: 5
+      options:
+        support_inverted: True
   'ScanRar':
     - positive:
         flavors:

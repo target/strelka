@@ -1,6 +1,9 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-10-24
+- Improvements and tests for `ScanQR` scanner (@ryanohoro)
+
 ## 2023-10-23
 - Adding the ability to use precompiled YARA rules: Speed up YARA initialization on Strelka boot by using precompiled rules
 - Configuration file updates: Adding compiled YARA location
