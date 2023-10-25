@@ -4,6 +4,7 @@ import tempfile
 
 from strelka import strelka
 
+
 class ScanExiftool(strelka.Scanner):
     """Collects metadata parsed by Exiftool.
 
