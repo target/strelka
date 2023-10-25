@@ -3,6 +3,7 @@ Changes to the project will be tracked in this file via the date of change.
 
 ## 2023-10-25
 - Changes to `ScanExiftool` scanner and tests
+- Update `google.golang.org/grpc` dependency
 
 ## 2023-10-24
 - Improvements and tests for `ScanQR` scanner (@ryanohoro)
