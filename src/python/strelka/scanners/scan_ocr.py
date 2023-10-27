@@ -42,7 +42,6 @@ class ScanOcr(strelka.Scanner):
 
                         if ocr_file:
                             self.event['raw'] = ocr_file
-                            self.event['text'] = ocr_file.split()
 
                             if extract_text:
                                 extract_file = strelka.File(
