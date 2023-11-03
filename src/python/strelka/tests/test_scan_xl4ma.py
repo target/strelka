@@ -25,7 +25,20 @@ def test_scan_xl4ma(mocker):
                 "https://www.example.com/path/to/resource",
             ]
         ),
-        "iocs": ["https://www.example.com/path/to/resource"],
+        "iocs": [
+            {
+                "ioc": "example.com",
+                "ioc_type": "domain",
+                "scanner": "ScanXl4ma",
+                "description": "extracted from excel4 macro",
+            },
+            {
+                "ioc": "https://www.example.com/path/to/resource",
+                "ioc_type": "url",
+                "scanner": "ScanXl4ma",
+                "description": "extracted from excel4 macro",
+            },
+        ],
     }
 
     scanner_event = run_test_scan(
