@@ -47,6 +47,10 @@ def run_test_scan(
         expire_at=datetime.date.today(),
     )
 
+    # If a scanner outputs IOCs, append them to the event for test coverage
+    if scanner.iocs:
+        scanner.event.update({"iocs": scanner.iocs})
+
     return scanner.event
 
 
