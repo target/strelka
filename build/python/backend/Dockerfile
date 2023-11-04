@@ -154,14 +154,12 @@ RUN mkdir jtr && cd jtr && git init && git remote add origin https://github.com/
     chown -R $USER_UID:$USER_UID /jtr
 
 # Poetry setup
-RUN curl -sSL https://install.python-poetry.org | python3 - && \
-    export PATH="/root/.local/bin:$PATH" && \
-    poetry config virtualenvs.create false
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/etc/poetry python3 -
 
 # Project setup
 COPY ./pyproject.toml ./poetry.lock /strelka/
 WORKDIR /strelka/
-RUN /root/.local/bin/poetry install --no-dev
+RUN /etc/poetry/bin/poetry install --no-dev
 
 # Copy Strelka files
 COPY ./src/python/ /strelka/
