@@ -81,8 +81,8 @@ def test_scan_pcap(mocker):
                 "total_bytes": 620,
                 "ts": 1673576677.801391,
                 "uid": mock.ANY,
-            }
-        ]
+            },
+        ],
     }
 
     scanner_event = run_test_scan(
@@ -128,7 +128,7 @@ def test_scan_pcap_ng(mocker):
                 "timedout": False,
                 "total_bytes": 4096,
                 "ts": 1673576655.41892,
-                "uid": mock.ANY
+                "uid": mock.ANY,
             },
             {
                 "analyzers": unordered(["EXTRACT"]),
@@ -151,7 +151,7 @@ def test_scan_pcap_ng(mocker):
                 "timedout": False,
                 "total_bytes": 308566,
                 "ts": 1673576666.163778,
-                "uid": mock.ANY
+                "uid": mock.ANY,
             },
             {
                 "analyzers": unordered(["EXTRACT"]),
@@ -174,9 +174,9 @@ def test_scan_pcap_ng(mocker):
                 "timedout": False,
                 "total_bytes": 620,
                 "ts": 1673576677.801391,
-                "uid": mock.ANY
-            }
-        ]
+                "uid": mock.ANY,
+            },
+        ],
     }
 
     scanner_event = run_test_scan(
