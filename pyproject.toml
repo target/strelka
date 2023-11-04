@@ -2,7 +2,11 @@
 name = "strelka-worker"
 version = "0.23.10.19"
 description = "Strelka's backend Python worker"
-authors = ["Paul.Hutelmyer@Target.com", "Ryan.Ohoro@Target.com", "Sara.Kalupa@Target.com"]
+authors = [
+    "Paul Hutelmyer <Paul.Hutelmyer@Target.com>",
+    "Ryan Ohoro <Ryan.Ohoro@Target.com>",
+    "Sara Kalupa <Sara.Kalupa@Target.com>"
+]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<=3.12"

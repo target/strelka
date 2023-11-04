@@ -1,6 +1,12 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-11-04
+- Added `ScanIqy` to target and extract network addressed from IQY (Internet Query) files
+- Added tests for `ScanIqy`
+- Fix for a `poetry` build issue
+- Fix for `ScanPcap` tests
+
 ## 2023-10-25
 - Changes to `ScanExiftool` scanner and tests
 - Update `google.golang.org/grpc` dependency

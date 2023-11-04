@@ -153,15 +153,21 @@ RUN mkdir jtr && cd jtr && git init && git remote add origin https://github.com/
     chmod -R 777 /jtr && \
     chown -R $USER_UID:$USER_UID /jtr
 
-# Poetry setup
-RUN curl -sSL https://install.python-poetry.org | python3 - && \
-    export PATH="/root/.local/bin:$PATH" && \
-    poetry config virtualenvs.create false
+# Install Poetry globally and copy project files
+RUN python3 -m pip install -U pip setuptools && \
+    python3 -m pip install poetry && \
+    rm -rf /root/.cache/pip
 
-# Project setup
-COPY ./pyproject.toml ./poetry.lock /strelka/
+# Set the working directory and copy the project files
 WORKDIR /strelka/
-RUN /root/.local/bin/poetry install --no-dev
+COPY pyproject.toml poetry.lock ./
+
+# Use Poetry to install the project dependencies globally
+# This step is after the COPY step because it is more likely to change,
+# and therefore should not be included in earlier layers that can be cached.
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-dev && \
+    rm -rf /root/.cache/pypoetry
 
 # Copy Strelka files
 COPY ./src/python/ /strelka/

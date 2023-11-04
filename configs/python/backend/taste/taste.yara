@@ -335,6 +335,23 @@ rule excel4_file
         (uint32be(0) == 0x504b0304 and $rels and $sheet and $xlsstr)
 }
 
+rule iqy_file {
+   meta:
+      description = "Detects potential IQY (Excel Web Query) files with various protocols"
+      author = "Paul Hutelmyer"
+      date = "2023-11-02"
+   strings:
+      $iqy_header = /^WEB\n/ nocase
+      $http = /http:\/\// nocase
+      $https = /https:\/\// nocase
+      $ftp = /ftp:\/\// nocase
+      $ftps = /ftps:\/\// nocase
+      $file = /file:\/\// nocase
+      $smb = /smb:\/\// nocase
+condition:
+    $iqy_header at 0 and ($http or $https or $ftp or $ftps or $file or $smb)
+}
+
 rule onenote_file
 {
     meta:
