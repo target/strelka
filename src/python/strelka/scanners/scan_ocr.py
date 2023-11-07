@@ -41,6 +41,9 @@ class ScanOcr(strelka.Scanner):
                     with open(tess_txt_name, 'rb') as tess_txt:
                         ocr_file = tess_txt.read().rstrip()
 
+                        # Convert line endings and strip trailing whitespace per line
+                        ocr_file = b'\n'.join([line.rstrip() for line in ocr_file.splitlines()])
+
                         if ocr_file:
                             self.event['raw'] = ocr_file
 
