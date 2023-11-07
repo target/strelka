@@ -1,4 +1,7 @@
 import io
+import sys
+import traceback
+
 import fitz
 
 from strelka import strelka
@@ -28,17 +31,16 @@ class ScanPdf(strelka.Scanner):
             with io.BytesIO(data) as pdf_io:
 
                 # Open file as with PyMuPDF as file object
-                reader = fitz.open(stream=pdf_io, filetype="pdf")
+                pdf_reader = fitz.open(stream=pdf_io, filetype="pdf")
 
                 # Get length of xrefs to be used in xref / annotation iteration
-                xreflen = reader.xref_length()
+                xreflen = pdf_reader.xref_length()
 
                 # Iterate through xrefs and collect annotations
                 i = 0
                 for xref in range(1, xreflen):
-
                     # PDF Annotation Flags
-                    xref_object = reader.xref_object(i, compressed=False)
+                    xref_object = pdf_reader.xref_object(i, compressed=False)
                     if any(obj in xref_object for obj in ["/AA", "/OpenAction"]):
                         self.flags.append("auto_action")
                     if any(obj in xref_object for obj in ["/JS", "/JavaScript"]):
@@ -46,7 +48,7 @@ class ScanPdf(strelka.Scanner):
 
                     # PDF Object Resubmission
                     # If xref is a stream, add that object back into the analysis pipeline
-                    if reader.is_stream(xref):
+                    if pdf_reader.xref_is_stream(xref):
                         try:
                             if xref not in extracted_objects:
                                 extract_file = strelka.File(
@@ -54,7 +56,7 @@ class ScanPdf(strelka.Scanner):
                                     source=self.name,
                                 )
 
-                                for c in strelka.chunk_string(reader.xref_stream(xref)):
+                                for c in strelka.chunk_string(pdf_reader.xref_stream(xref)):
                                     self.upload_to_coordinator(
                                         extract_file.pointer,
                                         c,
@@ -66,10 +68,11 @@ class ScanPdf(strelka.Scanner):
                                 extracted_objects.add(xref)
 
                         except Exception:
+                            traceback.print_exc()
                             self.flags.append("stream_read_exception")
 
-                    as_image = reader.extract_image(xref)
-                    if as_image is not None:
+                    as_image = pdf_reader.extract_image(xref)
+                    if as_image is not None and as_image is not False:
                         extract_file = strelka.File(
                             name=f"object_{xref}",
                             source=self.name,
@@ -90,8 +93,7 @@ class ScanPdf(strelka.Scanner):
                     extracted_text = ""
 
                 try:
-                    for page in reader:
-
+                    for page in pdf_reader:
                         # PDF Link Extraction
                         self.event.setdefault("annotated_uris", [])
                         links = page.get_links()
@@ -117,7 +119,9 @@ class ScanPdf(strelka.Scanner):
                             )
                         self.files.append(extract_file)
                         self.flags.append("extracted_text")
-                except:
+                except Exception:
+                    traceback.print_exc()
                     self.flags.append("page_parsing_failure")
         except Exception:
+            traceback.print_exc()
             self.flags.append("pdf_load_error")
