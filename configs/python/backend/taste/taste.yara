@@ -335,13 +335,14 @@ rule excel4_file
         (uint32be(0) == 0x504b0304 and $rels and $sheet and $xlsstr)
 }
 
-rule iqy_file {
+rule iqy_file
+{
    meta:
       description = "Detects potential IQY (Excel Web Query) files with various protocols"
       author = "Paul Hutelmyer"
       date = "2023-11-02"
    strings:
-      $iqy_header = /^WEB\n/ nocase
+      $iqy_header = /^WEB(\r\n|\n)/ nocase
       $http = /http:\/\// nocase
       $https = /https:\/\// nocase
       $ftp = /ftp:\/\// nocase
