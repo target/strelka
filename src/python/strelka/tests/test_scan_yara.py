@@ -38,6 +38,46 @@ def test_scan_yara(mocker):
     TestCase().assertDictEqual(test_scan_event, scanner_event)
 
 
+def test_scan_bad_yara(mocker):
+    """
+    This test was implemented to test a more complex and unsupported rule. A bug was observed that was
+    not triggered by the basic YARA test.
+    Src: https://github.com/target/strelka/issues/410
+    Pass: Sample event matches output of scanner.
+    Failure: Unable to load file or sample event fails to match.
+    """
+
+    test_scan_event = {
+        "elapsed": mock.ANY,
+        "flags": [
+            'compiling_error_general_/strelka/strelka/tests/fixtures/test_elk_linux_torte.yara(31): undefined identifier "is__elf"',
+            "no_rules_loaded",
+        ],
+        "matches": [],
+        "rules_loaded": 0,
+        "meta": mock.ANY,
+        "tags": [],
+        "hex": [],
+    }
+
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test.txt",
+        options={
+            "location": str(Path(Path(__file__).parent / "fixtures/")),
+            "compiled": {
+                "enabled": False,
+                "filename": "rules.compiled",
+            },
+        },
+    )
+
+    print(scanner_event)  # Add this line to check the actual value of "rules_loaded"
+    TestCase.maxDiff = None
+    TestCase().assertDictEqual(test_scan_event, scanner_event)
+
+
 def test_scan_yara_hex_extraction(mocker):
     """
     Pass: Sample event matches output of scanner.

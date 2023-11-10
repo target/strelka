@@ -58,7 +58,6 @@ class ScanYara(strelka.Scanner):
             self.load_yara_rules(options)
             if not self.compiled_yara:
                 self.flags.append("no_rules_loaded")
-                return
 
         # Set the total rules loaded
         self.event["rules_loaded"] = self.rules_loaded
@@ -79,35 +78,36 @@ class ScanYara(strelka.Scanner):
         self.event["hex"] = []
 
         # Match the data against the YARA rules.
-        yara_matches = self.compiled_yara.match(data=data)
-        for match in yara_matches:
-            # Append rule matches and update tags.
-            self.event["matches"].append(match.rule)
-            self.event["tags"].extend(match.tags)
+        if self.compiled_yara:
+            yara_matches = self.compiled_yara.match(data=data)
+            for match in yara_matches:
+                # Append rule matches and update tags.
+                self.event["matches"].append(match.rule)
+                self.event["tags"].extend(match.tags)
 
-            # Extract hex representation if configured to store offsets.
-            if self.store_offset and self.offset_meta_key:
-                if match.meta.get(self.offset_meta_key):
-                    for string_data in match.strings:
-                        for instance in string_data.instances:
-                            offset = instance.offset
-                            matched_string = instance.matched_data
-                            self.extract_match_hex(
-                                match.rule,
-                                offset,
-                                matched_string,
-                                data,
-                                self.offset_padding,
-                            )
+                # Extract hex representation if configured to store offsets.
+                if self.store_offset and self.offset_meta_key:
+                    if match.meta.get(self.offset_meta_key):
+                        for string_data in match.strings:
+                            for instance in string_data.instances:
+                                offset = instance.offset
+                                matched_string = instance.matched_data
+                                self.extract_match_hex(
+                                    match.rule,
+                                    offset,
+                                    matched_string,
+                                    data,
+                                    self.offset_padding,
+                                )
 
-            # Append meta information if configured to do so.
-            for k, v in match.meta.items():
-                self.event["meta"].append(
-                    {"rule": match.rule, "identifier": k, "value": v}
-                )
+                # Append meta information if configured to do so.
+                for k, v in match.meta.items():
+                    self.event["meta"].append(
+                        {"rule": match.rule, "identifier": k, "value": v}
+                    )
 
-        # De-duplicate tags.
-        self.event["tags"] = list(set(self.event["tags"]))
+            # De-duplicate tags.
+            self.event["tags"] = list(set(self.event["tags"]))
 
     def load_yara_rules(self, options):
         """Loads YARA rules based on the provided path.
@@ -159,7 +159,8 @@ class ScanYara(strelka.Scanner):
             self.flags.append(f"compiling_error_syntax_{e}")
 
         # Set the total rules loaded.
-        self.rules_loaded = len(list(self.compiled_yara))
+        if self.compiled_yara:
+            self.rules_loaded = len(list(self.compiled_yara))
 
     def extract_match_hex(self, rule, offset, matched_string, data, offset_padding=32):
         """
