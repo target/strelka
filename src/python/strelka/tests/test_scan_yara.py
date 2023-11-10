@@ -73,7 +73,6 @@ def test_scan_bad_yara(mocker):
         },
     )
 
-    print(scanner_event)  # Add this line to check the actual value of "rules_loaded"
     TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_event, scanner_event)
 
