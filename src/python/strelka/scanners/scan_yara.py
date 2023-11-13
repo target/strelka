@@ -123,7 +123,7 @@ class ScanYara(strelka.Scanner):
         """
         # Retrieve location of YARA rules.
         location = options.get("location", "/etc/strelka/yara/")
-        compiled = options.get("compiled")
+        compiled = options.get("compiled", {"enabled": False})
 
         try:
             # Load compiled YARA rules from a file.
