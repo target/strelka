@@ -68,19 +68,6 @@ scanners:
           - 'application/x-bzip2'
           - 'bzip2_file'
       priority: 5
-#  'ScanCapa':
-#    - positive:
-#        flavors:
-#          - 'application/x-dosexec'
-#          - 'mz_file'
-#          - 'application/x-sharedlib'
-#          - 'elf_file'
-#      priority: 5
-#      options:
-#        tmp_directory: '/dev/shm/'
-#        location_rules: '/etc/capa/rules/'
-#        location_signatures: '/etc/capa/signatures/'
-#        scanner_timeout: 20
 #  'ScanCcn':
 #    - positive:
 #        flavors:
@@ -174,15 +161,6 @@ scanners:
           - 'image/heic'
           - 'image/heif'
       priority: 5
-#  'ScanFloss':
-#    - positive:
-#        flavors:
-#          - 'application/x-dosexec'
-#          - 'mz_file'
-#      priority: 5
-#      options:
-#        tmp_directory: '/dev/shm/'
-#        limit: 100
   'ScanFooter':
     - positive:
         flavors:
