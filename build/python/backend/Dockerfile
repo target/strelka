@@ -7,7 +7,6 @@ LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 ARG CONFIG_TESTS=false
 
 ARG YARA_VERSION=4.3.1
-ARG CAPA_VERSION=6.1.0
 ARG EXIFTOOL_VERSION=12.60
 
 # Environment variables
@@ -91,23 +90,6 @@ RUN apt-get -q update && \
     perl Makefile.PL && \
     make -s && \
     make -s install && \
-# Install FireEye CAPA rules and signatures
-    mkdir -p /etc/capa/rules/ && \
-    curl -OL https://github.com/mandiant/capa-rules/archive/refs/tags/v$CAPA_VERSION.zip && \
-    unzip v$CAPA_VERSION.zip -d /etc/capa/rules/ && \
-    rm -rf v$CAPA_VERSION.zip && \
-    mkdir -p /etc/capa/signatures/ && \
-    cd /etc/capa/signatures/ && \
-    curl -OL https://github.com/mandiant/capa/raw/master/sigs/1_flare_msvc_rtf_32_64.sig && \
-    curl -OL https://github.com/mandiant/capa/raw/master/sigs/2_flare_msvc_atlmfc_32_64.sig && \
-    curl -OL https://github.com/mandiant/capa/raw/master/sigs/3_flare_common_libs.sig && \
-# Install FireEye FLOSS
-#   - Binary installation, not supported as Python 3 plugin
-#   - Requires binary to be executable
-    cd /tmp/ && \
-    curl -OL https://s3.amazonaws.com/build-artifacts.floss.flare.fireeye.com/travis/linux/dist/floss && \
-    chmod +x /tmp/floss && \
-    mv /tmp/floss /bin/floss && \
 # Install YARA
     cd /tmp/ && \
     curl -OL https://github.com/VirusTotal/yara/archive/v$YARA_VERSION.tar.gz && \
@@ -204,9 +186,14 @@ RUN cd /strelka/ && \
 USER $USERNAME
 
 # Run build checks
+# Use --build-arg SCANNER_TEST=test_scan_<scannername>.py to ignore all but selected scanner
+# ex: docker-compose build --build-arg SCANNER_TEST=test_scan_yara.py
+ARG SCANNER_TEST=""
+
+# Run tests. Fail build if any tests fail.
 RUN echo '[+] Run build checks' && \
     cd /strelka/strelka/ && \
-    python3 -m pytest -p no:cacheprovider -s tests/ && \
+    if $SCANNER_TESTS; then python3 -m pytest -p no:cacheprovider -s tests/$SCANNER_TEST; fi && \
     if $CONFIG_TESTS; then python3 -m pytest -s tests_configuration/; fi && \
     echo '[+] Done'
 
