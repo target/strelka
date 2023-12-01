@@ -75,11 +75,11 @@ services:
     networks:
       - net
     ports:
-      - 16686:16686    # HTTP query     frontend UI
-      - 6831:6831/udp  # UDP  agent     accept jaeger.thrift over Thrift-compact protocol (used by most SDKs)
-      - 4317:4317      # HTTP collector accept OpenTelemetry Protocol (OTLP) over gRPC
-      - 4318:4318      # HTTP collector accept OpenTelemetry Protocol (OTLP) over HTTP
-      - 14268:14268    # HTTP collector accept jaeger.thrift
+      - "16686:16686"    # HTTP query     frontend UI
+      - "6831:6831/udp"  # UDP  agent     accept jaeger.thrift over Thrift-compact protocol (used by most SDKs)
+      - "4317:4317"      # HTTP collector accept OpenTelemetry Protocol (OTLP) over gRPC
+      - "4318:4318"      # HTTP collector accept OpenTelemetry Protocol (OTLP) over HTTP
+      - "14268:14268"    # HTTP collector accept jaeger.thrift
 
   ui:
     image: target/strelka-ui:latest
@@ -104,3 +104,5 @@ services:
       - POSTGRESQL_USERNAME=postgres
     networks:
       - net
+    ports:
+      - "5432:5432"
