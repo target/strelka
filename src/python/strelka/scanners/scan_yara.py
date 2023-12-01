@@ -1,4 +1,5 @@
 import glob
+import logging
 import os
 
 import yara
@@ -39,6 +40,10 @@ class ScanYara(strelka.Scanner):
         self.compiled_yara = None
         self.loaded_configs = False
         self.rules_loaded = 0
+
+        self.warn_user = False
+        self.warned_user = False
+        self.warn_message = ""
 
     def scan(self, data, file, options, expire_at):
         """Scans the provided data with YARA rules.
@@ -123,7 +128,7 @@ class ScanYara(strelka.Scanner):
         """
         # Retrieve location of YARA rules.
         location = options.get("location", "/etc/strelka/yara/")
-        compiled = options.get("compiled")
+        compiled = options.get("compiled", {"enabled": False})
 
         try:
             # Load compiled YARA rules from a file.
@@ -133,6 +138,7 @@ class ScanYara(strelka.Scanner):
                 )
         except yara.Error as e:
             self.flags.append(f"compiled_load_error_{e}")
+            self.warn_user = True
 
         try:
             # Compile YARA rules from a directory.
@@ -153,14 +159,39 @@ class ScanYara(strelka.Scanner):
                     self.compiled_yara = yara.compile(filepath=location)
                 else:
                     self.flags.append("yara_location_not_found")
-        except yara.Error as e:
-            self.flags.append(f"compiling_error_general_{e}")
+                    self.warn_user = True
+                    self.warn_message = "YARA Location Not Found"
+
         except yara.SyntaxError as e:
             self.flags.append(f"compiling_error_syntax_{e}")
+            self.warn_user = True
+            self.warn_message = str(e)
+
+        except yara.Error as e:
+            self.flags.append(f"compiling_error_general_{e}")
+            self.warn_user = True
+            self.warn_message = str(e)
 
         # Set the total rules loaded.
         if self.compiled_yara:
             self.rules_loaded = len(list(self.compiled_yara))
+
+        if not self.compiled_yara:
+            if not self.warned_user and self.warn_user:
+                logging.warning(
+                    "\n"
+                    "*************************************************\n"
+                    "* WARNING: YARA File Loading Issue Detected     *\n"
+                    "*************************************************\n"
+                    "There was an issue loading the compiled YARA file. Please check that all YARA rules can be\n"
+                    "successfully compiled. Additionally, verify the 'ScanYara' configuration in Backend.yaml to\n"
+                    "ensure the targeted path is correct. This issue needs to be resolved for proper scanning\n"
+                    "functionality.\n"
+                    "\n"
+                    f"Error: {self.warn_message}\n"
+                    "*************************************************\n"
+                )
+                self.warned_user = True
 
     def extract_match_hex(self, rule, offset, matched_string, data, offset_padding=32):
         """
