@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-12-01
+- Updated several dependencies
+- Added `ScanYara` warning upon YARA compilation failures
+
 ## 2023-11-15
 - Removed `ScanCapa` and `ScanFloss` from scanners, dependencies, and tests
 
