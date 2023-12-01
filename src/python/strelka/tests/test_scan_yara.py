@@ -50,7 +50,7 @@ def test_scan_bad_yara(mocker):
     test_scan_event = {
         "elapsed": mock.ANY,
         "flags": [
-            'compiling_error_general_/strelka/strelka/tests/fixtures/test_elk_linux_torte.yara(31): undefined identifier "is__elf"',
+            'compiling_error_syntax_/strelka/strelka/tests/fixtures/test_elk_linux_torte.yara(31): undefined identifier "is__elf"',
             "no_rules_loaded",
         ],
         "matches": [],
