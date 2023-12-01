@@ -224,7 +224,15 @@ Guidelines for contributing can be found [here](https://github.com/target/strelk
 
 ## Known Issues
 
-See [issues labeled `bug`](https://github.com/target/strelka/issues?q=is%3Aissue+is%3Aopen+label%3Abug) in the tracker for any potential known issues.
+
+### Issues with Loading YARA Rules
+Users are advised to precompile their YARA rules for optimal performance and to avoid potential issues during runtime. 
+Using precompiled YARA files helps in reducing load time and resource usage, especially in environments with a large 
+set of rules. Ensure to use the [compiled option in the Strelka configuration](https://github.com/target/strelka/blob/master/configs/python/backend/backend.yaml) 
+to point to the precompiled rules file. 
+
+### Other Issues
+See [issues labeled `bug`](https://github.com/target/strelka/issues?q=is%3Aissue+is%3Aopen+label%3Abug) in the tracker for any additional issues.
 
 ## Related Projects
 * [Laika BOSS](https://github.com/lmco/laikaboss)
