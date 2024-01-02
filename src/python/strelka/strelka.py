@@ -864,18 +864,18 @@ class Scanner(object):
     def process_ioc(self, ioc, scanner_name) -> None:
         """
         Processes an Indicator of Compromise (IOC) and appends it to the scanner's IOC list.
-        
+
         This method takes an IOC (such as a URL, domain, IP address, or email) and categorizes it
         into an appropriate type. It validates the IOC using various validators and regular expressions,
         then appends a dictionary containing the IOC, its type, and the scanner name to the scanner's IOC list.
         If the IOC does not match any valid type, a warning is logged, and the IOC is not added.
-        
+
         Args:
             ioc (str or bytes): The IOC to be processed. Can be a string or bytes.
                                 If bytes, it will be decoded to a string.
             scanner_name (str): The name of the scanner processing the IOC. This is used to tag the IOC
                                 in the appended dictionary.
-        
+
         Note:
             - The method internally handles different formats and types of IOCs (like URLs, domains, IPs, and emails).
             - If the IOC is invalid or does not match a known pattern, a warning is logged and the IOC is not added.
