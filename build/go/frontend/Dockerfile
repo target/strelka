@@ -1,8 +1,10 @@
 # Strelka Frontend
 # The frontend for a cluster in which clients can connect directly via Envoy.
 # For more information, please see: https://target.github.io/strelka/#/?id=strelka-frontend
-FROM golang:1.17.6 AS build
+FROM golang:1.17.6-alpine AS build
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
+
+RUN apk add openssl-dev bash build-base pkgconfig librdkafka librdkafka-dev
 
 # Copy source files and set the working directory
 COPY ./src/go/ /go/src/github.com/target/strelka/src/go/
@@ -11,23 +13,23 @@ COPY go.* /go/src/github.com/target/strelka/
 
 # Statically compile and output to tmp
 RUN go mod download && \
-    CGO_ENABLED=0 go build -o /tmp/strelka-frontend cmd/strelka-frontend/main.go
+    CGO_ENABLED=1 go build -tags musl -o /tmp/strelka-frontend cmd/strelka-frontend/main.go
 
 # Initialize runtime container
 FROM alpine
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
+RUN apk add librdkafka
+
 # Copy binary
 COPY --from=build /tmp/strelka-frontend /usr/local/bin/strelka-frontend
+COPY --from=build  /usr/local/lib/ /usr/local/lib/
 
 # Create logging directory
 RUN mkdir /var/log/strelka/ && \
     chgrp -R 0 /var/log/strelka/ && \
     chmod -R g=u /var/log/strelka/
 
-# Initialize with non-root user
-USER 1001
-
 # Set container entrypoint. This could be set/overridden elsewhere in deployment (e.g. k8s, docker-compose, etc.)
 # Currently overwritten in ./build/docker-compose.yml
-ENTRYPOINT ["strelka-frontend"]
+ENTRYPOINT ["strelka-frontend", "-locallog=true", "-kafkalog=false"]

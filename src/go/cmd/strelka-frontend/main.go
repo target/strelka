@@ -22,6 +22,8 @@ import (
 	"github.com/target/strelka/src/go/api/strelka"
 	"github.com/target/strelka/src/go/pkg/rpc"
 	"github.com/target/strelka/src/go/pkg/structs"
+
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
 type coord struct {
@@ -248,6 +250,17 @@ func main() {
 		"/etc/strelka/frontend.yaml",
 		"path to frontend config",
 	)
+	locallog := flag.Bool(
+		"locallog",
+		true,
+		"Boolean to use base local logging for Strelka, defaults to True",
+	)
+
+	kafkalog := flag.Bool(
+		"kafkalog",
+		false,
+		"Boolean use Kafka logging, locallog must be false for function to work. Defaults to False",
+	)
 	flag.Parse()
 
 	confData, err := ioutil.ReadFile(*confPath)
@@ -269,10 +282,70 @@ func main() {
 	responses := make(chan *strelka.ScanResponse, 100)
 	defer close(responses)
 	if conf.Response.Log != "" {
-		go func() {
-			rpc.LogResponses(responses, conf.Response.Log)
-		}()
-		log.Printf("responses will be logged to %v", conf.Response.Log)
+		if *locallog {
+			go func() {
+				rpc.LogResponses(responses, conf.Response.Log)
+			}()
+			log.Printf("responses will be logged to %v", conf.Response.Log)
+		}
+		if !*locallog && *kafkalog {
+			log.Printf("Creating new Kafka producer.")
+			p, err := kafka.NewProducer(&kafka.ConfigMap{
+				"bootstrap.servers":        conf.Broker.Bootstrap,
+				"security.protocol":        conf.Broker.Protocol,
+				"ssl.certificate.location": conf.Broker.Certlocation,
+				"ssl.key.location":         conf.Broker.Keylocation,
+				"ssl.ca.location":          conf.Broker.Calocation,
+			})
+			if err != nil {
+				log.Fatalf("FAILED TO CREATE KAFKA PRODUCER: ERROR %v", err)
+			}
+
+			log.Printf("Producer is created, waiting for logs.")
+
+			go func() {
+				for e := range p.Events() {
+					switch ev := e.(type) {
+					case *kafka.Message:
+						if ev.TopicPartition.Error != nil {
+							log.Printf("Delivery failed to Kafka topic: %v\n", ev.TopicPartition)
+							var rawEvent = ev.Value
+
+							//Fail safe for if Kafka delivery production fails, will prevent indefinite streaming to local log
+							rpc.LogIndividualResponse(string(rawEvent), conf.Response.Log)
+						} else {
+							log.Printf("Delivered message to %v\n", ev.TopicPartition)
+						}
+					}
+				}
+			}()
+
+			// Produce to Kafka from logs
+			go func() {
+				// Produce messages to topic (asynchronously)
+				topic := conf.Broker.Topic
+				for r := range responses {
+					rawIn := json.RawMessage(r.Event)
+					bytes, err := rawIn.MarshalJSON()
+
+					if err != nil {
+						log.Fatalf("Unable to marshal byte encoded event, check error message for more details: %v", err)
+					}
+
+					if err != nil {
+						log.Printf("ERROR %s", err.Error())
+						return
+					}
+					p.Produce(&kafka.Message{
+						TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: -1},
+						Value:          bytes,
+						Headers: []kafka.Header{
+							{Key: "@timestamp", Value: []byte(time.Now().Format("2006-01-02T15:04:05-0700"))},
+						},
+					}, nil)
+				}
+			}()
+		}
 	} else if conf.Response.Report != 0 {
 		go func() {
 			rpc.ReportResponses(responses, conf.Response.Report)
