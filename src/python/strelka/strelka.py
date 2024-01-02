@@ -739,7 +739,7 @@ class Scanner(object):
 
     def scan_wrapper(
         self, data: bytes, file: File, options: dict, expire_at: int
-    ) -> Tuple[list[File], dict]:
+    ) -> Tuple[list[File], dict, list]:
         """Sets up scan attributes and calls scan method.
 
         Scanning code is wrapped in try/except for error handling.
@@ -801,6 +801,11 @@ class Scanner(object):
                 **{"flags": self.flags},
                 **self.event,
             }
+
+            # Removes duplicate entries from IOC list
+            seen = set()
+            self.iocs = [x for x in self.iocs if x not in seen and not seen.add(x)]
+
             return self.files, {self.key: self.event}, self.iocs
 
     def emit_file(
