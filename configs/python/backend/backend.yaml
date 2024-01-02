@@ -1,4 +1,4 @@
-version: 2023-07-07-update
+version: 2024.02.01.01
 logging_cfg: '/etc/strelka/logging.yaml'
 limits:
   max_files: 5000
@@ -380,9 +380,11 @@ scanners:
       priority: 5
       options:
         extract_text: False
-        split_words: True
-        tmp_directory: '/dev/shm/'
+        tmp_directory: "/dev/shm/"
         pdf_to_png: True
+        remove_formatting: True
+        create_thumbnail: True
+        thumbnail_size: [250, 250]
   'ScanOle':
     - positive:
         flavors:
