@@ -23,7 +23,7 @@ import (
 	"github.com/target/strelka/src/go/pkg/rpc"
 	"github.com/target/strelka/src/go/pkg/structs"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 type coord struct {
