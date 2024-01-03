@@ -904,7 +904,7 @@ class Scanner(object):
                 )
         elif validators.domain(ioc):
             ioc_type = "domain"
-        elif re.match("^[\w\.\-]{2,62}\.[a-zA-Z]{2,5}:\d{1,5}$", ioc):
+        elif re.match(r"^[\w\.\-]{2,62}\.[a-zA-Z]{2,5}:\d{1,5}$", ioc):
             ioc_type = "domain"
             ioc = ioc.split(":")[0]
         elif validators.ipv4(ioc):
@@ -913,7 +913,7 @@ class Scanner(object):
             ioc_type = "ip"
         elif validators.email(ioc):
             ioc_type = "email"
-        elif re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}$", ioc):
+        elif re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}$", ioc):
             ioc_type = "ip"
             ioc = ioc.split(":")[0]
         else:
