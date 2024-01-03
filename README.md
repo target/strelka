@@ -204,7 +204,7 @@ scan.yara.tags:("Technique_AntiDebugging" && "SubTechnique_SEH")
 
 Navigate to http://localhost:9980/ and use the login strelka/strelka.
 
-![Strelka UI](docs/images/strelka-ui-014.jpg)
+![Strelka UI](docs/images/strelka-ui-018.gif)
 
 ## Potential Uses
 With over 50 file scanners for the most common file types (e.g., exe, docx, js, zip), Strelka provides users with the ability to gain new insights into files on their host, network, or enterprise. While Strelka *is not* a detection engine itself (although it does utilize [YARA](https://virustotal.github.io/yara/), it can provide enough metadata to identify suspicious or malicious files. Some potential uses for Strelka include:
