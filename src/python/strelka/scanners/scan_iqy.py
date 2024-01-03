@@ -1,9 +1,3 @@
-#### Description ####
-# This scanner is looking for iqy files used with excel.
-#
-# author: Tasha Taylor
-# date: 10/30/2023
-
 import re
 
 from strelka import strelka
