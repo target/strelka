@@ -473,6 +473,12 @@ For the options below, only one response setting may be configured.
 * "gatekeeper.ttl": time-to-live for events added to the gatekeeper (defaults to 1 hour)
 * "response.log": location where worker scan results are logged to (defaults to /var/log/strelka/strelka.log)
 * "response.report": frequency at which the frontend reports the number of files processed (no default)
+* "broker.bootstrap": Full name of kafka topic to produce to (Optional)
+* "broker.protocol": Authentication protocol that Kafka will attempt to use to connect to Kafka Topic e.g SSL (Optional)
+* "broker.certlocation": File Path to certificate file to be used to authenticate to Kafka Topic (Optional)
+* "broker.keylocation": File Path to key file to be used to authenticate to Kafka Topic (Optional)
+* "broker.calocation": File Path to CA Certificate bundle to be used to authenticate to Kafka Topic (Optional)
+* "broker.topic": Full topic name of the Kafka Topic to connect to (Optional)
 
 #### manager
 * "coordinator.addr": network address of the coordinator (defaults to strelka_coordinator_1:6379)
@@ -731,6 +737,18 @@ Navigate to the Jaeger UI at http://localhost:16686/ to view traces.
 ![jaeger search interface](images/strelka-traces-006.jpg?raw=true)
 
 ![jaeger trace view](images/strelka-traces-008.jpg?raw=true)
+
+## Logging
+
+### Local
+The historical, and default, means of logging in Strelka is via a local log file that is instatiated upon the creation of the Strelka Frontend container. While other logging methodologies have recently been added (see Kafka section), in cases where other optional logging methodologies have been enable but fail some time after the instance has started running, the instance will always default to the local log such that no data is lost in the event of the alternative logging methodology failing. 
+
+### Kafka
+The Frontend allows for the creation of a Kafka producer at runtime for an alternative means of logging Strelka output such that logs can be streamed to a Kafka Topic of the user's choice. This logging option is useful when there is a high volume of data being processed by Strelka and the production of that data to a down stream analysis tool (such as a SIEM system) must be highly availible for data enrichment purposes. 
+
+Currently this is toggled on and off in the Frontend Dockerfile, which is overwritten in the build/docker-compose.yaml file. Specifically, to toggle the Kafka Producer log option on, the locallog command line option must be set to false, and the kafkalog function must be set to true. If both command line options are set to true, then the Frontend will default to the local logging option, which is how the logging has functioned historically. 
+
+The Kafka Producer that is created with the abbove command line options is fully configurable, and placeholder fields have already been added to the frontend.yaml configuration file. This file will need to be updated in order to point to an existing Kafka Topic, as desired. In cases where some fields are not used (e.g when security has not been enable on the desired Kafka Topic, etc) then unused fields in the broker configuration section of the frontend.yaml file may simply be replaced with an empty string. 
 
 ## Scanners
 Each scanner parses files of a specific flavor and performs data collection and/or file extraction on them. Scanners are typically named after the type of file they are intended to scan (e.g. "ScanHtml", "ScanPe", "ScanRar") but may also be named after the type of function or tool they use to perform their tasks (e.g. "ScanExiftool", "ScanHeader", "ScanOcr").

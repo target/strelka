@@ -11,7 +11,7 @@ services:
     build:
       context: ..
       dockerfile: build/go/frontend/Dockerfile
-    command: strelka-frontend
+    command: strelka-frontend -locallog=true -kafkalog=false
     ports:
       - 57314:57314  # must match the port in frontend.yaml
     networks:

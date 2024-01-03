@@ -13,3 +13,10 @@ gatekeeper:
   ttl: 1h
 response:
   log: "/var/log/strelka/strelka.log"
+broker:
+  bootstrap: "full broker here"
+  protocol: "protocol here"
+  certlocation: "path to cert location"
+  keylocation: "path to key location"
+  calocation: "path to target ca bundle"
+  topic: "topic name here"

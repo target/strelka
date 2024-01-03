@@ -47,6 +47,15 @@ type ConfCoordinator struct {
 	BlockingPopTime time.Duration // optional, defaults to 0/non-blocking (polling).
 }
 
+type ConfKafka struct {
+	Bootstrap    string //required
+	Protocol     string //required
+	Certlocation string //required
+	Keylocation  string //required
+	Calocation   string //required
+	Topic        string //required
+}
+
 type ConfGatekeeper struct {
 	Addr string        // required
 	DB   int           // required
@@ -86,6 +95,7 @@ type Frontend struct {
 	Coordinator ConfCoordinator // required
 	Gatekeeper  ConfGatekeeper  // required
 	Response    ConfResponse    // optional
+	Broker      ConfKafka       //required
 }
 
 type Manager struct {
