@@ -1,9 +1,10 @@
+import base64
+import io
 import os
 import subprocess
 import tempfile
-import io
+
 import fitz
-import base64
 from PIL import Image
 
 from strelka import strelka

@@ -13,6 +13,7 @@ import traceback
 import uuid
 from types import FrameType
 from typing import Generator, Optional, Tuple
+from urllib.parse import urlparse
 
 import inflection
 import magic
@@ -22,7 +23,6 @@ import yara
 from boltons import iterutils
 from opentelemetry import context, trace
 from tldextract import TLDExtract
-from urllib.parse import urlparse
 
 from . import __namespace__
 from .telemetry.traces import get_tracer
