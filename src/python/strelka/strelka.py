@@ -803,8 +803,18 @@ class Scanner(object):
             }
 
             # Removes duplicate entries from IOC list
+            unique_iocs = []
             seen = set()
-            self.iocs = [x for x in self.iocs if x not in seen and not seen.add(x)]
+            for ioc in self.iocs:
+                identifier = (
+                    ioc["ioc"],
+                    ioc["ioc_type"],
+                )  # Unique identifier based on 'ioc' and 'ioc_type'
+                if identifier not in seen:
+                    seen.add(identifier)
+                    unique_iocs.append(ioc)
+
+            self.iocs = unique_iocs
 
             return self.files, {self.key: self.event}, self.iocs
 
