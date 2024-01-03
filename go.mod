@@ -1,6 +1,6 @@
 module github.com/target/strelka
 
-go 1.19
+go 1.21
 
 require (
 	github.com/gabriel-vasile/mimetype v1.4.1
@@ -10,8 +10,6 @@ require (
 	google.golang.org/grpc v1.56.3
 	gopkg.in/yaml.v2 v2.4.0
 )
-
-require gopkg.in/confluentinc/confluent-kafka-go.v1 v1.8.2 // indirect
 
 require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
