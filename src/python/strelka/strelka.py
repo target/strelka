@@ -1,6 +1,5 @@
 import glob
 import importlib
-import ipaddress
 import itertools
 import json
 import logging
@@ -14,15 +13,16 @@ import traceback
 import uuid
 from types import FrameType
 from typing import Generator, Optional, Tuple
+from urllib.parse import urlparse
 
 import inflection
-import magic  # type: ignore
+import magic
 import redis
-import validators  # type: ignore
-import yara  # type: ignore
-from boltons import iterutils  # type: ignore
+import validators
+import yara
+from boltons import iterutils
 from opentelemetry import context, trace
-from tldextract import TLDExtract  # type: ignore
+from tldextract import TLDExtract
 
 from . import __namespace__
 from .telemetry.traces import get_tracer
@@ -739,7 +739,7 @@ class Scanner(object):
 
     def scan_wrapper(
         self, data: bytes, file: File, options: dict, expire_at: int
-    ) -> Tuple[list[File], dict]:
+    ) -> Tuple[list[File], dict, list]:
         """Sets up scan attributes and calls scan method.
 
         Scanning code is wrapped in try/except for error handling.
@@ -801,6 +801,21 @@ class Scanner(object):
                 **{"flags": self.flags},
                 **self.event,
             }
+
+            # Removes duplicate entries from IOC list
+            unique_iocs = []
+            seen = set()
+            for ioc in self.iocs:
+                identifier = (
+                    ioc["ioc"],
+                    ioc["ioc_type"],
+                )  # Unique identifier based on 'ioc' and 'ioc_type'
+                if identifier not in seen:
+                    seen.add(identifier)
+                    unique_iocs.append(ioc)
+
+            self.iocs = unique_iocs
+
             return self.files, {self.key: self.event}, self.iocs
 
     def emit_file(
@@ -856,107 +871,104 @@ class Scanner(object):
             p.expireat(f"data:{pointer}", expire_at)
             p.execute()
 
-    def process_ioc(
-        self, ioc, ioc_type, scanner_name, description="", malicious=False
-    ) -> None:
+    def process_ioc(self, ioc, scanner_name) -> None:
+        """
+        Processes an Indicator of Compromise (IOC) and appends it to the scanner's IOC list.
+
+        This method takes an IOC (such as a URL, domain, IP address, or email) and categorizes it
+        into an appropriate type. It validates the IOC using various validators and regular expressions,
+        then appends a dictionary containing the IOC, its type, and the scanner name to the scanner's IOC list.
+        If the IOC does not match any valid type, a warning is logged, and the IOC is not added.
+
+        Args:
+            ioc (str or bytes): The IOC to be processed. Can be a string or bytes.
+                                If bytes, it will be decoded to a string.
+            scanner_name (str): The name of the scanner processing the IOC. This is used to tag the IOC
+                                in the appended dictionary.
+
+        Note:
+            - The method internally handles different formats and types of IOCs (like URLs, domains, IPs, and emails).
+            - If the IOC is invalid or does not match a known pattern, a warning is logged and the IOC is not added.
+        """
         if not ioc:
             return
-        if ioc_type == "url":
-            if validators.ipv4(self.extract(ioc).domain):
+
+        if validators.url(ioc):
+            ioc_type = "url"
+            netloc = urlparse(ioc).netloc
+
+            if validators.ipv4(netloc):
                 self.process_ioc(
-                    self.extract(ioc).domain, "ip", scanner_name, description, malicious
-                )
-            else:
-                self.process_ioc(
-                    self.extract(ioc).registered_domain,
-                    "domain",
+                    netloc,
                     scanner_name,
-                    description,
-                    malicious,
                 )
-            if not validators.url(ioc):
-                logging.warning(f"{ioc} is not a valid url")
-                return
-        elif ioc_type == "ip":
-            try:
-                ipaddress.ip_address(ioc)
-            except ValueError:
-                logging.warning(f"{ioc} is not a valid IP")
-                return
-        elif ioc_type == "domain":
-            if not validators.domain(ioc):
-                logging.warning(f"{ioc} is not a valid domain")
-                return
-        elif ioc_type == "email":
-            if not validators.email(ioc):
-                logging.warning(f"{ioc} is not a valid email")
-                return
-
-        if malicious:
-            self.iocs.append(
-                {
-                    "ioc": ioc,
-                    "ioc_type": ioc_type,
-                    "scanner": scanner_name,
-                    "description": description,
-                    "malicious": True,
-                }
-            )
+            elif validators.ipv6(netloc):
+                self.process_ioc(
+                    netloc,
+                    scanner_name,
+                )
+            elif validators.domain(netloc):
+                self.process_ioc(
+                    netloc,
+                    scanner_name,
+                )
+        elif validators.domain(ioc):
+            ioc_type = "domain"
+        elif re.match(r"^[\w\.\-]{2,62}\.[a-zA-Z]{2,5}:\d{1,5}$", ioc):
+            ioc_type = "domain"
+            ioc = ioc.split(":")[0]
+        elif validators.ipv4(ioc):
+            ioc_type = "ip"
+        elif validators.ipv6(ioc):
+            ioc_type = "ip"
+        elif validators.email(ioc):
+            ioc_type = "email"
+        elif re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}$", ioc):
+            ioc_type = "ip"
+            ioc = ioc.split(":")[0]
         else:
-            self.iocs.append(
-                {
-                    "ioc": ioc,
-                    "ioc_type": ioc_type,
-                    "scanner": scanner_name,
-                    "description": description,
-                }
-            )
+            logging.warning(f"{ioc} does not match a valid IOC type")
+            return
 
-    def add_iocs(self, ioc, ioc_type, description="", malicious=False) -> None:
+        self.iocs.append(
+            {
+                "ioc": ioc,
+                "ioc_type": ioc_type,
+                "scanner": scanner_name,
+            }
+        )
+
+    def add_iocs(self, ioc) -> None:
         """Adds ioc to the iocs.
         :param ioc: The IOC or list of IOCs to be added. All iocs must be of the same type. Must be type String or Bytes.
-        :param ioc_type: Must be one of md5, sha1, sha256, domain, url, email, ip, either as string or type object (e.g. self.type.domain).
-        :param description (Optional): Description of the IOCs.
-        :param malicious (Optional): Reasonable determination whether the indicator is or would be used maliciously. Example:
-          Malware Command and Control. Should not be used solely for determining maliciousness since testing values may be present.
         """
         try:
-            accepted_iocs = ["md5", "sha1", "sha256", "domain", "url", "email", "ip"]
-            if ioc_type not in accepted_iocs:
-                logging.warning(
-                    f"{ioc_type} not in accepted range. Acceptable ioc types are: {accepted_iocs}"
-                )
-                return
             if isinstance(ioc, list):
                 for i in ioc:
                     if isinstance(i, bytes):
                         i = i.decode()
                     if not isinstance(i, str):
                         logging.warning(
-                            f"Could not process {i} from {self.name}: Type {type(i)} is not type Bytes or String"
+                            f"Could not process {i} from {self.name}: Type {type(i)} is"
+                            " not type Bytes or String"
                         )
                         continue
                     self.process_ioc(
                         i,
-                        ioc_type,
                         self.name,
-                        description=description,
-                        malicious=malicious,
                     )
             else:
                 if isinstance(ioc, bytes):
                     ioc = ioc.decode()
                 if not isinstance(ioc, str):
                     logging.warning(
-                        f"Could not process {ioc} from {self.name}: Type {type(ioc)} is not type Bytes or String"
+                        f"Could not process {ioc} from {self.name}: Type {type(ioc)} is"
+                        " not type Bytes or String"
                     )
                     return
                 self.process_ioc(
                     ioc,
-                    ioc_type,
                     self.name,
-                    description=description,
-                    malicious=malicious,
                 )
         except Exception as e:
             logging.error(f"Failed to add {ioc} from {self.name}: {e}")

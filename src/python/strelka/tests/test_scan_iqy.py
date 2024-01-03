@@ -17,13 +17,11 @@ def test_scan_iqy(mocker):
         "address_found": True,
         "iocs": [
             {
-                "description": "",
                 "ioc": "github.com",
                 "ioc_type": "domain",
                 "scanner": "ScanIqy",
             },
             {
-                "description": "",
                 "ioc": "https://github.com/target/strelka/blob/master/docs/index.html",
                 "ioc_type": "url",
                 "scanner": "ScanIqy",

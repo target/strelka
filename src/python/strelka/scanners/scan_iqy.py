@@ -1,9 +1,3 @@
-# Description #
-# This scanner is looking for iqy files used with excel.
-#
-# author: Tasha Taylor
-# date: 10/30/2023
-
 import re
 
 from strelka import strelka
@@ -11,52 +5,60 @@ from strelka import strelka
 
 class ScanIqy(strelka.Scanner):
     """
-    Extract URLs from IQY files.
+    Strelka scanner for extracting URLs from IQY (Excel Web Query Internet Inquire) files.
 
-    IQY files, or Excel Web Query Internet Inquire files, are typically created from a VBA Web Query output.
-    The following is a typical format:
-        WEB
-        1
-        [URL]
-        [optional parameters]
-    Additional properties can be found at: https://learn.microsoft.com/en-us/office/vba/api/excel.querytable
+    IQY files are typically used to import data into Excel from the web. They often contain URLs
+    that specify the data source. This scanner aims to extract these URLs and process them for IOCs.
+
+    The following is a typical format of an IQY file:
+    WEB
+    1
+    [URL]
+    [optional parameters]
+
+    Reference for IQY file format: https://learn.microsoft.com/en-us/office/vba/api/excel.querytable
     """
 
     def scan(self, data, file, options, expire_at):
+        """
+        Processes the provided IQY data to extract URLs.
+
+        Attempts to decode the data and applies a regex pattern to identify and extract URLs.
+        Extracted URLs are added to the scanner's IOC list.
+
+        Args:
+            data (bytes): Data associated with the IQY file to be scanned.
+            file (strelka.File): File object associated with the data.
+            options (dict): Options to be applied during the scan.
+            expire_at (int): Expiration timestamp for extracted files.
+        """
         try:
-            # Regular expression for detecting a URL-like pattern
+            # Compile regex pattern for URL detection
             address_pattern = re.compile(
                 r"\b(?:http|https|ftp|ftps|file|smb)://\S+|"
                 r"\\{2}\w+\\(?:[\w$]+\\)*[\w$]+",
                 re.IGNORECASE,
             )
 
-            # Attempt UTF-8 decoding first, fall back to latin-1 if necessary
+            # Attempt to decode the data
             try:
-                data = data.decode("utf-8")
+                decoded_data = data.decode("utf-8")
             except UnicodeDecodeError:
-                data = data.decode("latin-1")
+                decoded_data = data.decode("latin-1")
 
-            # Split lines to review each record separately
-            data_lines = data.splitlines()
+            # Extract addresses from the data
+            addresses = set(
+                match.group().strip()
+                for line in decoded_data.splitlines()
+                if (match := address_pattern.search(line))
+            )
 
-            addresses = set()
-            # For each line, check if the line matches the address pattern.
-            # In a typical IQY file, the "WEB" keyword is at the beginning of the file,
-            # and what follows is usually just one URL with optional additional parameters.
-            # However, because we are iterating lines anyway, lets check for additional addresses anyway.
-            for entry in data_lines[1:]:
-                match = address_pattern.search(entry)
-                if match:
-                    address = match.group().strip()
-                    if address:
-                        addresses.add(address)
-
-            # Evaluate if any addresses were found and assign the boolean result.
-            self.event["address_found"] = bool(addresses)
-
-            # Send all addresses to the IOC parser.
-            self.add_iocs(list(addresses), self.type.url)
+            # Add extracted URLs to the scanner's IOC list
+            if addresses:
+                self.event["address_found"] = True
+                self.add_iocs(list(addresses))
+            else:
+                self.event["address_found"] = False
 
         except UnicodeDecodeError as e:
             self.flags.append(f"Unicode decoding error: {e}")
