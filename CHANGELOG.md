@@ -1,6 +1,9 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-01-03
+- Added Kafka logging integration with command-line toggle between Kafka and local logging (@[skalupa](https://github.com/skalupa))
+
 ## 2023-12-01
 - Updated several dependencies
 - Added `ScanYara` warning upon YARA compilation failures
