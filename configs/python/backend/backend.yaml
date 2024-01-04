@@ -383,6 +383,7 @@ scanners:
         tmp_directory: "/dev/shm/"
         pdf_to_png: True
         remove_formatting: True
+        split_words: True
         create_thumbnail: True
         thumbnail_size: [250, 250]
   'ScanOle':
