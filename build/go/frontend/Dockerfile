@@ -1,7 +1,7 @@
 # Strelka Frontend
 # The frontend for a cluster in which clients can connect directly via Envoy.
 # For more information, please see: https://target.github.io/strelka/#/?id=strelka-frontend
-FROM golang:1.17.6-alpine AS build
+FROM golang:1.21.5-alpine AS build
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
 RUN apk add openssl-dev bash build-base pkgconfig librdkafka librdkafka-dev
