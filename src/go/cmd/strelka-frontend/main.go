@@ -291,11 +291,12 @@ func main() {
 		if !*locallog && *kafkalog {
 			log.Printf("Creating new Kafka producer.")
 			p, err := kafka.NewProducer(&kafka.ConfigMap{
-				"bootstrap.servers":        conf.Broker.Bootstrap,
-				"security.protocol":        conf.Broker.Protocol,
-				"ssl.certificate.location": conf.Broker.Certlocation,
-				"ssl.key.location":         conf.Broker.Keylocation,
-				"ssl.ca.location":          conf.Broker.Calocation,
+				"bootstrap.servers":                     conf.Broker.Bootstrap,
+				"security.protocol":                     conf.Broker.Protocol,
+				"ssl.certificate.location":              conf.Broker.Certlocation,
+				"ssl.key.location":                      conf.Broker.Keylocation,
+				"ssl.ca.location":                       conf.Broker.Calocation,
+				"ssl.endpoint.identification.algorithm": "none",
 			})
 			if err != nil {
 				log.Fatalf("FAILED TO CREATE KAFKA PRODUCER: ERROR %v", err)
