@@ -1,8 +1,12 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-01-04
+-  Updated `golang` versions for relevant Dockerfiles (@[skalupa](https://github.com/skalupa))
+-  Error handling / readability update for `ScanPdf`
+
 ## 2023-01-03
-- Added Kafka logging integration with command-line toggle between Kafka and local logging (@[skalupa](https://github.com/skalupa))
+-  Added Kafka logging integration with command-line toggle between Kafka and local logging (@[skalupa](https://github.com/skalupa))
 -  Implemented duplicate removal in IOC list processing across scanners
 -  Implemented thumbnail generation and formatting options for `ScanOcr`
 
