@@ -1,6 +1,8 @@
+import re
+
 import olefile
 import oletools
-import re
+
 from strelka import strelka
 
 

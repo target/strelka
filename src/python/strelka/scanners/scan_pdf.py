@@ -1,8 +1,10 @@
-import fitz
 import io
 import re
 from collections import Counter
 from datetime import datetime, timezone
+
+import fitz
+
 from strelka import strelka
 
 # Suppress PyMuPDF warnings

@@ -1,6 +1,8 @@
 from pathlib import Path
 from unittest import TestCase, mock
 
+from pytest_unordered import unordered
+
 from strelka.scanners.scan_url import ScanUrl as ScanUnderTest
 from strelka.tests import run_test_scan
 
@@ -14,12 +16,14 @@ def test_scan_url_text(mocker):
     test_scan_event = {
         "elapsed": mock.ANY,
         "flags": [],
-        "urls": [
-            b"http://foobar.example.com",
-            b"ftp://barfoo.example.com",
-            b"example.com",
-            b"https://barfoo.example.com",
-        ],
+        "urls": unordered(
+            [
+                "example.com",
+                "http://foobar.example.com",
+                "https://barfoo.example.com",
+                "ftp://barfoo.example.com",
+            ]
+        ),
     }
 
     scanner_event = run_test_scan(
@@ -41,7 +45,7 @@ def test_scan_url_html(mocker):
     test_scan_event = {
         "elapsed": mock.ANY,
         "flags": [],
-        "urls": [b"https://example.com/example.js"],
+        "urls": ["https://example.com/example.js"],
     }
 
     scanner_event = run_test_scan(
