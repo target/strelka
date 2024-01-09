@@ -20,20 +20,21 @@ class ScanPlist(strelka.Scanner):
             plist = plistlib.loads(data)
 
             self.event["keys"] = []
-            for k, v in plist.items():
-                if keys and k not in keys:
-                    continue
+            if isinstance(plist, dict):
+                for k, v in plist.items():
+                    if keys and k not in keys:
+                        continue
 
-                try:
-                    v = ast.literal_eval(v)
-                except (ValueError, SyntaxError):
-                    pass
+                    try:
+                        v = ast.literal_eval(v)
+                    except (ValueError, SyntaxError):
+                        pass
 
-                self.event["keys"].append(
-                    {
-                        "key": k,
-                        "value": v,
-                    }
-                )
+                    self.event["keys"].append(
+                        {
+                            "key": k,
+                            "value": v,
+                        }
+                    )
         except xml.parsers.expat.ExpatError:
             self.flags.append("invalid_format")
