@@ -481,7 +481,9 @@ class ScanPe(strelka.Scanner):
                                 (lang, char) = translation.split()
                                 self.event["file_info"]["var"] = {
                                     "language": VAR_FILE_INFO_LANGS.get(int(lang, 16)),
-                                    "character_set": VAR_FILE_INFO_CHARS.get(int(char, 16)),
+                                    "character_set": VAR_FILE_INFO_CHARS.get(
+                                        int(char, 16)
+                                    ),
                                 }
 
         if hasattr(pe, "VS_FIXEDFILEINFO"):
@@ -513,13 +515,17 @@ class ScanPe(strelka.Scanner):
         self.event["header"] = {
             "machine": {
                 "id": pe.FILE_HEADER.Machine,
-                "type": pefile.MACHINE_TYPE.get(pe.FILE_HEADER.Machine, "").replace("IMAGE_FILE_MACHINE_", ""),
+                "type": pefile.MACHINE_TYPE.get(pe.FILE_HEADER.Machine, "").replace(
+                    "IMAGE_FILE_MACHINE_", ""
+                ),
             },
             "magic": {
                 "dos": MAGIC_DOS.get(pe.DOS_HEADER.e_magic, ""),
                 "image": MAGIC_IMAGE.get(pe.OPTIONAL_HEADER.Magic, ""),
             },
-            "subsystem": pefile.SUBSYSTEM_TYPE.get(pe.OPTIONAL_HEADER.Subsystem, "").replace("IMAGE_SUBSYSTEM_", ""),
+            "subsystem": pefile.SUBSYSTEM_TYPE.get(
+                pe.OPTIONAL_HEADER.Subsystem, ""
+            ).replace("IMAGE_SUBSYSTEM_", ""),
         }
 
         self.event["base_of_code"] = pe.OPTIONAL_HEADER.BaseOfCode
@@ -600,16 +606,17 @@ class ScanPe(strelka.Scanner):
             resource_sha256_set = set()
 
             for res0 in pe.DIRECTORY_ENTRY_RESOURCE.entries:
-                if hasattr(res0, 'directory'):
+                if hasattr(res0, "directory"):
                     for res1 in res0.directory.entries:
-                        if hasattr(res1, 'directory'):
+                        if hasattr(res1, "directory"):
                             for res2 in res1.directory.entries:
                                 lang = res2.data.lang
                                 sub = res2.data.sublang
                                 sub = pefile.get_sublang_name_for_lang(lang, sub)
                                 try:
                                     data = pe.get_data(
-                                        res2.data.struct.OffsetToData, res2.data.struct.Size
+                                        res2.data.struct.OffsetToData,
+                                        res2.data.struct.Size,
                                     )
                                 except pefile.PEFormatError:
                                     continue
@@ -624,9 +631,9 @@ class ScanPe(strelka.Scanner):
                                 resource_dict = {
                                     "id": res1.id,
                                     "language": {"sub": sub.replace("SUBLANG_", "")},
-                                    "type": pefile.RESOURCE_TYPE.get(res0.id, "").replace(
-                                        "RT_", ""
-                                    ),
+                                    "type": pefile.RESOURCE_TYPE.get(
+                                        res0.id, ""
+                                    ).replace("RT_", ""),
                                     "md5": resource_md5,
                                     "sha1": resource_sha1,
                                     "sha256": resource_sha256,
