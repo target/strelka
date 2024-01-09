@@ -39,8 +39,10 @@ class ScanOcr(strelka.Scanner):
         # Convert PDF to PNG if required.
         if pdf_to_png and "application/pdf" in file.flavors.get("mime", []):
             try:
-                doc = fitz.open(stream=data, filetype="pdf")
-                data = doc.get_page_pixmap(0).tobytes("png")
+                reader = fitz.open(stream=data, filetype="pdf")
+                if reader.is_encrypted:
+                    return
+                data = reader.get_page_pixmap(0).tobytes("png")
             except Exception as e:
                 self.flags.append(
                     f"{self.__class__.__name__}: image_pdf_error: {str(e)[:50]}"
