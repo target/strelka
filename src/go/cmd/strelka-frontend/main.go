@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/json"
@@ -10,8 +11,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"os"
+	"strconv"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
@@ -22,6 +26,7 @@ import (
 	"github.com/target/strelka/src/go/api/strelka"
 	"github.com/target/strelka/src/go/pkg/rpc"
 	"github.com/target/strelka/src/go/pkg/structs"
+	tosss3 "github.com/target/strelka/src/go/pkg/tossS3"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
@@ -279,6 +284,13 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	//Check to see if redundancy toggled for Kafka Producer, defaults to false
+	var boolS3 = false
+	boolS3, err = strconv.ParseBool(conf.Broker.S3redundancy)
+	if err != nil {
+		log.Printf("failed to parse boolean for S3 Redundancy, setting to default (False). %v", err)
+	}
+
 	responses := make(chan *strelka.ScanResponse, 100)
 	defer close(responses)
 	if conf.Response.Log != "" {
@@ -290,6 +302,9 @@ func main() {
 		}
 		if !*locallog && *kafkalog {
 			log.Printf("Creating new Kafka producer.")
+
+			// Full kafka configuration documentation:
+			// https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
 			p, err := kafka.NewProducer(&kafka.ConfigMap{
 				"bootstrap.servers":                     conf.Broker.Bootstrap,
 				"security.protocol":                     conf.Broker.Protocol,
@@ -321,9 +336,8 @@ func main() {
 				}
 			}()
 
-			// Produce to Kafka from logs
+			//  Produce messages to topic (asynchronously)
 			go func() {
-				// Produce messages to topic (asynchronously)
 				topic := conf.Broker.Topic
 				for r := range responses {
 					rawIn := json.RawMessage(r.Event)
@@ -346,6 +360,92 @@ func main() {
 					}, nil)
 				}
 			}()
+
+			//Optional function to pipe to S3 if change detected in local log file
+			if *&boolS3 {
+				//Make watcher for seeing if strelka.log file has been changed
+				watcher, err := fsnotify.NewWatcher()
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				defer watcher.Close()
+
+				//Watcher for making sure that logs go to S3 if Kafka fails
+				err = watcher.Add("/var/log/strelka/strelka.log")
+				if err != nil {
+					log.Printf("An error occured adding watcher")
+					log.Fatal(err)
+				}
+
+				// Additional go function added to upload to S3 whenever change has been detected in strelka.log file.
+				go func() {
+					for {
+						select {
+						case event, ok := <-watcher.Events:
+							if !ok {
+								return
+							}
+							if event.Op&fsnotify.Write == fsnotify.Write {
+								localLog, err := os.Open("/var/log/strelka/strelka.log") // For read access.
+								if err != nil {
+									log.Println("ERROR failed to open strelka.log for size verification:", err)
+								}
+
+								logMetadata, err := localLog.Stat()
+								if err != nil {
+									log.Println("ERROR failed to retrieve strelka.log metadata:", err)
+								}
+
+								//Make sure that the strelka.log file hasn't just been truncated before uploading
+								if logMetadata.Size() != 0 {
+									tosss3.UploadToS3(conf.S3.AccessKey, conf.S3.SecretKey, conf.S3.BucketName, conf.S3.Region, conf.S3.Endpoint)
+									log.Println("Change to strelka.log file detected, upload to S3 in progress.")
+								}
+							}
+						case err, ok := <-watcher.Errors:
+							if !ok {
+								return
+							}
+							log.Println("ERROR:", err)
+						}
+					}
+				}()
+
+				// Produce messages to topic from logs
+				go func() {
+					topic := conf.Broker.Topic
+					s3logs := tosss3.ListS3BucketContents(conf.S3.AccessKey, conf.S3.SecretKey, conf.S3.BucketName, conf.S3.Region, conf.S3.Endpoint)
+					for _, item := range s3logs.Contents {
+						// marshall the json message
+						log.Println("item key is: " + *item.Key)
+						var rawCurrData = tosss3.DownloadFromS3(conf.S3.AccessKey, conf.S3.SecretKey, conf.S3.BucketName, *item.Key, conf.S3.Region, conf.S3.Endpoint)
+						for _, splitLog := range bytes.Split(rawCurrData, []byte("\n")) {
+							rawIn := json.RawMessage(string(splitLog))
+							bytesMess, err := rawIn.MarshalJSON()
+							if err != nil {
+								log.Printf("Unable to marshal byte encoded event for S3 log, check error message for more details: %v", err)
+							}
+
+							p.Produce(&kafka.Message{
+								TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: -1},
+								Value:          bytesMess,
+								Headers: []kafka.Header{
+									{Key: "@timestamp", Value: []byte(time.Now().Format("2006-01-02T15:04:05-0700"))},
+								},
+							}, nil)
+						}
+
+					}
+
+					//truncate strelka log file at the end of sending to Kafka
+					log.Printf("Beginning to truncate local strelka log.")
+					err := os.Truncate("/var/log/strelka/strelka.log", 0)
+					if err != nil {
+						log.Printf("Failed to truncate strelka.log file after sending messages to Kafka: %v", err)
+					}
+				}()
+			}
 		}
 	} else if conf.Response.Report != 0 {
 		go func() {

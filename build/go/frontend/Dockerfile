@@ -30,6 +30,10 @@ RUN mkdir /var/log/strelka/ && \
     chgrp -R 0 /var/log/strelka/ && \
     chmod -R g=u /var/log/strelka/
 
+#Create blank strelka.log file to make sure watcher has something to start with
+RUN touch /var/log/strelka/strelka.log
+RUN chmod -R 777 /var/log/strelka/strelka.log
+
 # Set container entrypoint. This could be set/overridden elsewhere in deployment (e.g. k8s, docker-compose, etc.)
 # Currently overwritten in ./build/docker-compose.yml
 ENTRYPOINT ["strelka-frontend", "-locallog=true", "-kafkalog=false"]
