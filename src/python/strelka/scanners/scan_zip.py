@@ -110,7 +110,7 @@ class ScanZip(strelka.Scanner):
                                     except RuntimeError:
                                         self.flags.append("runtime_error")
                                     except pyzipper.BadZipFile:
-                                        self.flags.append("bad_zip")
+                                        self.flags.append("bad_zip_file")
                                     except zlib.error:
                                         self.flags.append("zlib_error")
 
@@ -131,10 +131,15 @@ class ScanZip(strelka.Scanner):
                                 self.flags.append("zlib_error")
 
                     # Top level compression metric
-                    size_difference_total = file_size_total - compress_size_total
-                    self.event["compression_rate"] = round(
-                        (size_difference_total * 100.0) / file_size_total, 2
-                    )
+                    try:
+                        size_difference_total = file_size_total - compress_size_total
+                        self.event["compression_rate"] = round(
+                            (size_difference_total * 100.0) / file_size_total, 2
+                        )
+                    except ZeroDivisionError:
+                        self.flags.append("file_size_zero")
 
             except pyzipper.BadZipFile:
-                self.flags.append("bad_zip")
+                self.flags.append("bad_zip_file")
+            except ValueError:
+                self.flags.append("value_error")

@@ -16,8 +16,8 @@ class ScanVba(strelka.Scanner):
     """
 
     def scan(self, data, file, options, expire_at):
+        vba = None
         analyze_macros = options.get("analyze_macros", True)
-
         self.event["total"] = {"files": 0, "extracted": 0}
 
         try:
@@ -58,8 +58,13 @@ class ScanVba(strelka.Scanner):
                         elif macro_type == "Suspicious":
                             self.event["suspicious"].append(keyword)
 
+                    if self.event["ioc"]:
+                        self.add_iocs(list(set(self.event["ioc"])))
+
         except olevba.FileOpenError:
             self.flags.append("file_open_error")
+        except AttributeError:
+            self.flags.append("attribute_error")
         finally:
-            # TODO referenced before potential assignment as vba is opened in a try / catch block
-            vba.close()
+            if vba:
+                vba.close()

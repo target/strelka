@@ -10,6 +10,7 @@ class ScanOle(strelka.Scanner):
     """Extracts files from OLECF files."""
 
     def scan(self, data, file, options, expire_at):
+        ole = None
         self.event["total"] = {"streams": 0, "extracted": 0}
 
         try:
@@ -47,5 +48,5 @@ class ScanOle(strelka.Scanner):
         except OSError:
             self.flags.append("os_error")
         finally:
-            # TODO this should be wrapped with another try / catch as the variable assignment is not guaranteed
-            ole.close()
+            if ole:
+                ole.close()

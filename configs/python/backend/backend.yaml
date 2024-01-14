@@ -211,7 +211,6 @@ scanners:
           - 'html_file'
       priority: 5
       options:
-        parser: "html5lib"
         max_hyperlinks: 50
 #  'ScanIni':
 #    - positive:
@@ -613,6 +612,7 @@ scanners:
         flavors:
           - 'vb_file'
           - 'vbscript'
+          - 'hta_file'
       priority: 5
   'ScanVba':
     - positive:
