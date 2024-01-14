@@ -28,12 +28,12 @@ type ConfThroughput struct {
 
 type ConfFiles struct {
 	Patterns     []string // required
-	Mimetypes    []string //optional
-	Minsize      int      //optional
-	Maxsize      int      //optional
-	LimitPattern int      //optional
-	LimitTotal   int      //optional
-	Modified     int      //optional
+	Mimetypes    []string // optional
+	Minsize      int      // optional
+	Maxsize      int      // optional
+	LimitPattern int      // optional
+	LimitTotal   int      // optional
+	Modified     int      // optional
 	Delete       bool     // optional
 	Gatekeeper   bool     // required
 	Processed    string   // optional
@@ -48,12 +48,21 @@ type ConfCoordinator struct {
 }
 
 type ConfKafka struct {
-	Bootstrap    string //required
-	Protocol     string //required
-	Certlocation string //required
-	Keylocation  string //required
-	Calocation   string //required
-	Topic        string //required
+	Bootstrap    string // required
+	Protocol     string // required
+	Certlocation string // required
+	Keylocation  string // required
+	Calocation   string // required
+	Topic        string // required
+	S3redundancy string // optional, defaults to false
+}
+
+type ConfS3 struct {
+	AccessKey  string // optional, can be left blank if S3redundancy set to false in ConfKafka
+	SecretKey  string // optional, can be left blank if S3redundancy set to false in ConfKafka
+	BucketName string // optional, can be left blank if S3redundancy set to false in ConfKafka
+	Region     string // optional, can be left blank if S3redundancy set to false in ConfKafka
+	Endpoint   string // optional, can be left blank if S3redundancy set to false in ConfKafka
 }
 
 type ConfGatekeeper struct {
@@ -61,7 +70,7 @@ type ConfGatekeeper struct {
 	DB   int           // required
 	Pool int           // required
 	Read time.Duration // required
-	TTL  time.Duration //required
+	TTL  time.Duration // required
 }
 
 // determines what action the client takes with responses, defaults to discarding messages
@@ -95,7 +104,8 @@ type Frontend struct {
 	Coordinator ConfCoordinator // required
 	Gatekeeper  ConfGatekeeper  // required
 	Response    ConfResponse    // optional
-	Broker      ConfKafka       //required
+	Broker      ConfKafka       // required
+	S3          ConfS3          // optional
 }
 
 type Manager struct {

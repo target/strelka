@@ -479,6 +479,11 @@ For the options below, only one response setting may be configured.
 * "broker.keylocation": File Path to key file to be used to authenticate to Kafka Topic (Optional)
 * "broker.calocation": File Path to CA Certificate bundle to be used to authenticate to Kafka Topic (Optional)
 * "broker.topic": Full topic name of the Kafka Topic to connect to (Optional)
+* "s3.accesskey": Access Key of the bucket to send redundancy files to (Optional)
+* "s3.secretkey": Secret Key of the bucket that you want send redundancy files to (Optional)
+* "s3.bucketName": Name of the bucket to send redundancy files to (Optional)
+* "s3.region": Region that the bucket to send redundancy files resides in (Optional)
+* "s3.endpoint": Endpoint of the bucket to send redundancy files to (Optional)
 
 #### manager
 * "coordinator.addr": network address of the coordinator (defaults to strelka_coordinator_1:6379)
@@ -749,6 +754,15 @@ The Frontend allows for the creation of a Kafka producer at runtime for an alter
 Currently this is toggled on and off in the Frontend Dockerfile, which is overwritten in the build/docker-compose.yaml file. Specifically, to toggle the Kafka Producer log option on, the locallog command line option must be set to false, and the kafkalog function must be set to true. If both command line options are set to true, then the Frontend will default to the local logging option, which is how the logging has functioned historically. 
 
 The Kafka Producer that is created with the abbove command line options is fully configurable, and placeholder fields have already been added to the frontend.yaml configuration file. This file will need to be updated in order to point to an existing Kafka Topic, as desired. In cases where some fields are not used (e.g when security has not been enable on the desired Kafka Topic, etc) then unused fields in the broker configuration section of the frontend.yaml file may simply be replaced with an empty string. 
+
+#### Optional: S3 Redundancy
+Dependant on a Kafka producer being created and a boolean in the Kafka config set to true, S3 redundancy can be toggled on in order to account for any issues with a Kafka connection. S3, in this case, is referring to either a AWS S3 bucket, or a Ceph Opensource Object Storage bucket.
+
+Currently, if the option for S3 redundancy is toggled on, if the Kafka connection as desribed in the Kafka logging section of this document is interrupted, then, after the local log file is updated, the contents of that log file will be uploaded to the configureable S3 location. By default logs are kept for three hours after the start of the interuption of the Kafka connection, and, will rotate logs in S3 on the hour to maintain relevancy in the remote bucket location. 
+
+Once connection is re-established to the original Kafka broker, then the stored logs are sent in parallel to new logs to the Kafka broker. If a restart of the Frontend is required to reset the connection, then the logs will be sent to the Kafka Broker (if they are not stale) at the next start up. 
+
+This option is set to false by default.
 
 ## Scanners
 Each scanner parses files of a specific flavor and performs data collection and/or file extraction on them. Scanners are typically named after the type of file they are intended to scan (e.g. "ScanHtml", "ScanPe", "ScanRar") but may also be named after the type of function or tool they use to perform their tasks (e.g. "ScanExiftool", "ScanHeader", "ScanOcr").
