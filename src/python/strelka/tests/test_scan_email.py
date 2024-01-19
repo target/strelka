@@ -44,7 +44,7 @@ def test_scan_email(mocker):
         "to": unordered(["baz.quk@example.com"]),
         "from": "foo.bar@example.com",
         "date_utc": "2022-12-21T02:29:49.000Z",
-        "message_id": "S7PR03MB5640AD212589DFB7CE58D90CFBEB9@DS7PR03MB5640.namprd03.prod.outlook.co",
+        "message_id": "DS7PR03MB5640AD212589DFB7CE58D90CFBEB9@DS7PR03MB5640.namprd03.prod.outlook.com",
         "received_domain": unordered(
             [
                 "ch2pr03mb5366.namprd03.prod.outlook.com",

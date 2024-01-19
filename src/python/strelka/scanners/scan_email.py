@@ -125,7 +125,9 @@ class ScanEmail(strelka.Scanner):
                     + ".000Z"
                 )
                 self.event["message_id"] = str(
-                    parsed_eml["header"]["header"]["message-id"][0][1:-1]
+                    parsed_eml["header"]["header"]["message-id"][0]
+                    .lstrip("<")
+                    .rstrip(">")
                 )
                 if "received_domain" in parsed_eml["header"]:
                     self.event["received_domain"] = parsed_eml["header"][
