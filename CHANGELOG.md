@@ -1,6 +1,9 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-01-19
+- Fix for Invalid Stripping for Email Message ID Parsing
+  
 ## 2023-01-14
 -  Error Handling + Readibility Updates for `ScanPdf`, `ScanPe`, and more.
 -  Added optional redundancy logging to remote S3 location functinonality (@[skalupa](https://github.com/skalupa))
