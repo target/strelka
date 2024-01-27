@@ -694,6 +694,8 @@ scanners:
       priority: 5
       options:
         limit: 1000
+        size_limit: 250000000
+        limit_metadata: False
         password_file: '/etc/strelka/passwords.dat'
   'ScanZlib':
     - positive:

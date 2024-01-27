@@ -22,7 +22,10 @@ class ScanZip(strelka.Scanner):
 
     def scan(self, data, file, options, expire_at):
         file_limit = options.get("limit", 100)
+        size_limit = options.get("size_limit", 250000000)
+        limit_metadata = options.get("limit_metadata", False)
         password_file = options.get("password_file", "/etc/strelka/passwords.dat")
+
         passwords = []
 
         # Gather count and list of files to be extracted
@@ -54,90 +57,115 @@ class ScanZip(strelka.Scanner):
                     zip_io
                 ) as zip_obj:
                     filelist = zip_obj.filelist
+
+                    # Count the file entries, in case the function encounters an unhandled exception
                     for file in filelist:
-                        if not file.is_dir():
-                            self.event["total"]["files"] += 1
+                        if file.is_dir():
+                            continue
+                        self.event["total"]["files"] += 1
 
-                    # For each file in zip, gather metadata metrics and pass back to Strelka for recursive extraction.
-                    for i, name in enumerate(filelist):
-                        if name.file_size > 0 and name.compress_size > 0:
-                            compress_size_total += name.compress_size
-                            file_size_total += name.file_size
+                    # For each file in zip, gather metadata and pass extracted file back to Strelka
+                    for file in filelist:
+                        if file.is_dir():
+                            continue
 
-                            size_difference = name.file_size - name.compress_size
+                        extract = True
+                        extracted = False
+                        compression_rate = 0
+
+                        if file.file_size > 0 and file.compress_size > 0:
+                            compress_size_total += file.compress_size
+                            file_size_total += file.file_size
+
+                            size_difference = file.file_size - file.compress_size
                             compression_rate = (
                                 size_difference * 100.0
-                            ) / name.file_size
-                            self.event["files"].append(
-                                {
-                                    "file_name": name.filename,
-                                    "file_size": name.file_size,
-                                    "compression_size": name.compress_size,
-                                    "compression_rate": round(compression_rate, 2),
-                                }
-                            )
+                            ) / file.file_size
+
+                        try:
+                            extract_data = b""
+                            zinfo = zip_obj.getinfo(file.filename)
+
+                            if zinfo.flag_bits & 0x1:
+                                #  If it's encrypted, don't extract file to coordinator, let ScanEncryptedZip do it instead
+                                extract = False
+                                if "encrypted" not in self.flags:
+                                    self.flags.append("encrypted")
+
+                                if passwords:
+                                    for pw in passwords:
+                                        try:
+                                            extract_data = zip_obj.read(
+                                                file.filename, pw
+                                            )
+                                            self.event["password"] = pw.decode("utf-8")
+
+                                        except (
+                                            RuntimeError,
+                                            pyzipper.BadZipFile,
+                                            zlib.error,
+                                        ):
+                                            pass
+                            else:
+                                try:
+                                    extract_data = zip_obj.read(file.filename)
+                                except RuntimeError:
+                                    self.flags.append("runtime_error")
+                                except pyzipper.BadZipFile:
+                                    self.flags.append("bad_zip_file")
+                                except zlib.error:
+                                    self.flags.append("zlib_error")
+
+                            if file.file_size > size_limit:
+                                extract = False
+                                if "file_size_limit" not in self.flags:
+                                    self.flags.append("file_size_limit")
 
                             if self.event["total"]["extracted"] >= file_limit:
-                                break
+                                extract = False
+                                if "file_count_limit" not in self.flags:
+                                    self.flags.append("file_count_limit")
 
-                            try:
-                                extract_data = b""
-                                zinfo = zip_obj.getinfo(name.filename)
+                            # If there's data in it, and no limits have been met, emit the file
+                            if extract_data and extract:
+                                # Send extracted file back to Strelka
+                                self.emit_file(extract_data, name=file.filename)
+                                extracted = True
 
-                                if zinfo.flag_bits & 0x1:
-                                    if "encrypted" not in self.flags:
-                                        self.flags.append("encrypted")
+                            if not (
+                                limit_metadata
+                                and self.event["total"]["extracted"] >= file_limit
+                            ):
+                                self.event["files"].append(
+                                    {
+                                        "file_name": file.filename,
+                                        "file_size": file.file_size,
+                                        "compression_size": file.compress_size,
+                                        "compression_rate": round(compression_rate, 2),
+                                        "extracted": extracted,
+                                    }
+                                )
 
-                                    if passwords:
-                                        for pw in passwords:
-                                            try:
-                                                extract_data = zip_obj.read(
-                                                    name.filename, pw
-                                                )
-                                                self.event["password"] = pw.decode(
-                                                    "utf-8"
-                                                )
+                            if extracted:
+                                self.event["total"]["extracted"] += 1
 
-                                            except (
-                                                RuntimeError,
-                                                pyzipper.BadZipFile,
-                                                zlib.error,
-                                            ):
-                                                pass
-                                else:
-                                    try:
-                                        extract_data = zip_obj.read(name.filename)
-                                    except RuntimeError:
-                                        self.flags.append("runtime_error")
-                                    except pyzipper.BadZipFile:
-                                        self.flags.append("bad_zip_file")
-                                    except zlib.error:
-                                        self.flags.append("zlib_error")
-
-                                # Suppress sending to coordinator in favor of ScanEncryptedZip
-                                if extract_data and "encrypted" not in self.flags:
-                                    # Send extracted file back to Strelka
-                                    self.emit_file(extract_data, name=name.filename)
-
-                                    self.event["total"]["extracted"] += 1
-
-                            except NotImplementedError:
-                                self.flags.append("unsupported_compression")
-                            except RuntimeError:
-                                self.flags.append("runtime_error")
-                            except ValueError:
-                                self.flags.append("value_error")
-                            except zlib.error:
-                                self.flags.append("zlib_error")
+                        except NotImplementedError:
+                            self.flags.append("unsupported_compression")
+                        except RuntimeError:
+                            self.flags.append("runtime_error")
+                        except ValueError:
+                            self.flags.append("value_error")
+                        except zlib.error:
+                            self.flags.append("zlib_error")
 
                     # Top level compression metric
-                    try:
+                    if file_size_total > 0 and compress_size_total > 0:
                         size_difference_total = file_size_total - compress_size_total
                         self.event["compression_rate"] = round(
                             (size_difference_total * 100.0) / file_size_total, 2
                         )
-                    except ZeroDivisionError:
-                        self.flags.append("file_size_zero")
+                    else:
+                        self.event["compression_rate"] = 0.00
 
             except pyzipper.BadZipFile:
                 self.flags.append("bad_zip_file")
