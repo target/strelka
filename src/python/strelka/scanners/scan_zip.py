@@ -97,19 +97,18 @@ class ScanZip(strelka.Scanner):
                                     self.flags.append("encrypted")
 
                             for password in passwords:
-                                print("Trying ", password)
                                 try:
                                     if extract:
-                                        print(
-                                            compressed_file.filename,
-                                            compressed_file.compress_type,
-                                            password,
-                                        )
                                         extract_data = zip_obj.read(
                                             compressed_file.filename, password
                                         )
                                         if extract_data:
-                                            print(extract_data[:25])
+                                            passwords.insert(
+                                                0,
+                                                passwords.pop(
+                                                    passwords.index(password)
+                                                ),
+                                            )
                                             if password and crack_pws and log_pws:
                                                 if "password" not in self.event.keys():
                                                     self.event["password"] = []
@@ -120,10 +119,8 @@ class ScanZip(strelka.Scanner):
                                                         password.decode("utf-8")
                                                     )
                                             break
-                                        else:
-                                            print("no data")
-                                except RuntimeError as e:
-                                    print("Error:", e)
+                                except RuntimeError:
+                                    pass
 
                             # If there's data in it, and no limits have been met, emit the file
                             if extract_data and extract:
