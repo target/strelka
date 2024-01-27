@@ -83,20 +83,6 @@ def test_scan_zip_count_limit(mocker):
                 "compression_rate": 64.51,
                 "extracted": True,
             },
-            {
-                "file_name": "hidden/lorem.txt",
-                "file_size": 4015,
-                "compression_size": 1425,
-                "compression_rate": 64.51,
-                "extracted": False,
-            },
-            {
-                "file_name": "lorem.txt",
-                "file_size": 4015,
-                "compression_size": 1425,
-                "compression_rate": 64.51,
-                "extracted": False,
-            },
         ],
         "compression_rate": 64.51,
     }
@@ -137,6 +123,20 @@ def test_scan_zip_metadata_limit(mocker):
                 "compression_rate": 64.51,
                 "extracted": True,
             },
+            {
+                "file_name": "hidden/lorem.txt",
+                "file_size": 4015,
+                "compression_size": 1425,
+                "compression_rate": 64.51,
+                "extracted": False,
+            },
+            {
+                "file_name": "lorem.txt",
+                "file_size": 4015,
+                "compression_size": 1425,
+                "compression_rate": 64.51,
+                "extracted": False,
+            },
         ],
         "compression_rate": 64.51,
     }
@@ -147,7 +147,7 @@ def test_scan_zip_metadata_limit(mocker):
         fixture_path=Path(__file__).parent / "fixtures/test.zip",
         options={
             "limit": 2,
-            "limit_metadata": True,
+            "limit_metadata": False,
         },
     )
 

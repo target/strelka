@@ -23,7 +23,7 @@ class ScanZip(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         file_limit = options.get("limit", 100)
         size_limit = options.get("size_limit", 250000000)
-        limit_metadata = options.get("limit_metadata", False)
+        limit_metadata = options.get("limit_metadata", True)
         password_file = options.get("password_file", "/etc/strelka/passwords.dat")
 
         passwords = []
