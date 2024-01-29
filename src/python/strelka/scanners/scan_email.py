@@ -273,12 +273,6 @@ class ScanEmail(strelka.Scanner):
             "image/web",
         ]
 
-        # Options for imgkit to handle errors during image generation
-        imgkit_options = {
-            "load-error-handling": "skip",
-            "quiet": "",
-        }
-
         # Dictionary to map content IDs to images
         images_dict = {}
 
@@ -378,8 +372,7 @@ class ScanEmail(strelka.Scanner):
                     return image_path
                 else:
                     return None
-        except Exception as e:
-            # Log or handle the exception as needed
+        except Exception:
             return None
 
     @staticmethod
