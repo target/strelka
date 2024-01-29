@@ -133,8 +133,8 @@ class ScanEncryptedZip(strelka.Scanner):
                                 is_aes = True
                                 break
 
-                with pyzipper.AESZipFile(zip_io) if is_aes else pyzipper.ZipFile(
-                    zip_io
+                with (
+                    pyzipper.AESZipFile(zip_io) if is_aes else pyzipper.ZipFile(zip_io)
                 ) as zip_obj:
                     file_list = zip_obj.filelist  # .filelist
                     for file_list_item in file_list:

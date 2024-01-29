@@ -141,9 +141,11 @@ class ScanZip(strelka.Scanner):
                                         "compression_size": compressed_file.compress_size,
                                         "compression_rate": round(compression_rate, 2),
                                         "extracted": extracted,
-                                        "encrypted": True
-                                        if zinfo.flag_bits & 0x1 == 1
-                                        else False,
+                                        "encrypted": (
+                                            True
+                                            if zinfo.flag_bits & 0x1 == 1
+                                            else False
+                                        ),
                                     }
                                 )
 
