@@ -21,6 +21,20 @@ def test_scan_pdf(mocker):
         "links": unordered(
             ["http://bing.com", "https://duckduckgo.com", "https://google.com"]
         ),
+        "iocs": unordered(
+            [
+                {"ioc": "bing.com", "ioc_type": "domain", "scanner": "ScanPdf"},
+                {"ioc": "http://bing.com", "ioc_type": "url", "scanner": "ScanPdf"},
+                {"ioc": "duckduckgo.com", "ioc_type": "domain", "scanner": "ScanPdf"},
+                {
+                    "ioc": "https://duckduckgo.com",
+                    "ioc_type": "url",
+                    "scanner": "ScanPdf",
+                },
+                {"ioc": "google.com", "ioc_type": "domain", "scanner": "ScanPdf"},
+                {"ioc": "https://google.com", "ioc_type": "url", "scanner": "ScanPdf"},
+            ]
+        ),
         "words": 421,
         "xref_object": unordered(
             [

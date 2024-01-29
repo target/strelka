@@ -1,10 +1,8 @@
+import fitz
 import io
 import re
 from collections import Counter
 from datetime import datetime, timezone
-
-import fitz
-
 from strelka import strelka
 
 # Suppress PyMuPDF warnings
@@ -188,10 +186,13 @@ class ScanPdf(strelka.Scanner):
                     # Extract urls from text
                     self.event["links"].extend(re.findall(r"https?://[^\s)>]+", text))
 
-                # If links found, remove all duplicates.
+                # If links found, remove all duplicates and submit as IOCs.
                 # Deduplicate the links
                 if self.event["links"]:
                     self.event["links"] = list(set(filter(None, self.event["links"])))
+
+                    # Submit all links to the IOCs pipeline.
+                    self.add_iocs(self.event["links"])
 
                 # Send extracted file back to Strelka
                 self.emit_file(text.encode("utf-8"), name="text")
