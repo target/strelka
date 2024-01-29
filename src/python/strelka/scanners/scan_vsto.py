@@ -7,7 +7,6 @@ It defines the following class:
 
 """
 
-
 import base64
 import hashlib
 
