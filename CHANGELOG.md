@@ -1,6 +1,12 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2023-01-29
+- Adding YARA for `ScanJnlp`
+- Adding image preview for `ScanEmail`
+- Adding IOC support for `ScanJavascript`
+- `ScanZip` improvements (@ryanohoro)
+  
 ## 2023-01-19
 - Fix for Invalid Stripping for Email Message ID Parsing
   
