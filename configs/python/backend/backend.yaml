@@ -108,6 +108,10 @@ scanners:
           - 'message/rfc822'
           - 'email_file'
       priority: 5
+      options:
+        create_thumbnail: True
+        thumbnail_header: False
+        thumbnail_size: [ 500, 500 ]
   'ScanEncryptedDoc':
     - positive:
         flavors:
