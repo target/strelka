@@ -308,8 +308,8 @@ def test_scan_zip_mixed_zipcrypto(mocker):
     test_scan_event = {
         "elapsed": mock.ANY,
         "flags": ["encrypted"],
-        "total": {"files": 4, "extracted": 3},
-        "password": ["password"],
+        "total": {"files": 4, "extracted": 4},
+        "password": ["password", "1234567890"],
         "files": [
             {
                 "file_name": "test.txt",
@@ -340,7 +340,7 @@ def test_scan_zip_mixed_zipcrypto(mocker):
                 "file_size": 4007,
                 "compression_size": 1433,
                 "compression_rate": 64.24,
-                "extracted": False,
+                "extracted": True,
                 "encrypted": True,
             },
         ],
