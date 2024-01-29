@@ -113,7 +113,7 @@ class ScanEmail(strelka.Scanner):
                         and parsed_eml["header"]["header"]
                     ):
                         self.flags.append(
-                            f"{self.__class__.__name__}: email_parse_error: {str(e)[:50]}"
+                            f"{self.__class__.__name__}: email_parse_error"
                         )
                         return
             except strelka.ScannerTimeout:
