@@ -402,13 +402,13 @@ class ScanPe(strelka.Scanner):
             return
 
         if rich_dict := parse_rich(pe):
-            if type(rich_dict) is str:
+            if type(rich_dict) is not str:
                 self.event["rich"] = rich_dict
             else:
                 self.flags.append(rich_dict)
 
         if cert_dict := parse_certificates(data):
-            if type(cert_dict) is str:
+            if type(cert_dict) is not str:
                 self.event["security"] = cert_dict
             else:
                 self.flags.append(cert_dict)
