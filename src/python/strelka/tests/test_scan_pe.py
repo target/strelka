@@ -15,8 +15,7 @@ def test_scan_pe(mocker):
 
     test_scan_event = {
         "elapsed": mock.ANY,
-        "flags": [],
-        "security": "no_certs_found",
+        "flags": ["no_certs_found"],
         "total": {"libraries": 0, "resources": 2, "sections": 2, "symbols": 0},
         "summary": {
             "resource_md5": unordered(
