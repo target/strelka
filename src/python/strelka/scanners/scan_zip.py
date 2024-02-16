@@ -50,8 +50,8 @@ class ScanZip(strelka.Scanner):
                                 is_aes = True
                                 break
 
-                with pyzipper.ZipFile(zip_io) if is_aes else pyzipper.ZipFile(
-                    zip_io
+                with (
+                    pyzipper.ZipFile(zip_io) if is_aes else pyzipper.ZipFile(zip_io) 
                 ) as zip_obj:
                     filelist = zip_obj.filelist
                     for file in filelist:
