@@ -22,6 +22,8 @@ import validators
 import yara
 from boltons import iterutils
 from opentelemetry import context, trace
+from magika import Magika
+
 from tldextract import TLDExtract
 
 from . import __namespace__
@@ -172,6 +174,9 @@ class Backend(object):
         else:
             self.compiled_taste_yara = yara.compile(filepath=yara_rules)
 
+        # Instantiate Magicka
+        self.magika = Magika()
+
         # If a coordinator is supplied, use it unless explicitly disabled
         if coordinator and disable_coordinator is False:
             self.coordinator = coordinator
@@ -206,6 +211,10 @@ class Backend(object):
         if not self.coordinator:
             logging.info("backend started without coordinator")
 
+    def taste_magika(self, data: bytes) -> list:
+        """Tastes file data with magika."""
+        return [self.magika.identify_bytes(data).output.ct_label]
+
     def taste_mime(self, data: bytes) -> list:
         """Tastes file data with libmagic."""
         return [self.compiled_magic.from_buffer(data)]
@@ -224,9 +233,11 @@ class Backend(object):
     def match_flavors(self, data: bytes) -> dict:
         mimes = []
         yaras = []
+        magika = []
 
         mimes.extend(self.taste_mime(data))
         yaras.extend(self.taste_yara(data))
+        magika.extend(self.taste_magika(data))
 
         # Taste transformations (yara only)
         if data:
@@ -240,7 +251,11 @@ class Backend(object):
             except Exception:
                 logging.exception("file transformation failed")
 
-        return {"mime": list(set(mimes)), "yara": list(set(yaras))}
+        return {
+            "mime": list(set(mimes)),
+            "yara": list(set(yaras)),
+            "magika": list(set(magika)),
+        }
 
     def check_scanners(self):
         """attempt to import all scanners referenced in the backend configuration"""

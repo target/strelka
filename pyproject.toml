@@ -29,6 +29,7 @@ jsbeautifier = "1.14.9"
 libarchive-c = "5.0"
 lief = "0.13.2"
 lxml = "4.9.3"
+magika = {version = "0.5.0", python = "<3.12"}
 m2crypto = "0.39.0"
 nested-lookup = "0.2.25"
 numpy = "1.26.0"
