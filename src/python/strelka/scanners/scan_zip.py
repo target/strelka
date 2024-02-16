@@ -45,19 +45,7 @@ class ScanZip(strelka.Scanner):
 
         with io.BytesIO(data) as zip_io:
             try:
-                is_aes = False
-                with pyzipper.ZipFile(zip_io) as zip_obj:
-                    filelist = zip_obj.filelist
-                    for file in filelist:
-                        if not file.is_dir():
-                            # Check for the AES compression type
-                            if file.compress_type == 99:
-                                is_aes = True
-                                break
-
-                with (
-                    pyzipper.ZipFile(zip_io) if is_aes else pyzipper.ZipFile(zip_io)
-                ) as zip_obj:
+                with pyzipper.AESZipFile(zip_io) as zip_obj:
                     filelist = zip_obj.filelist
 
                     # Count the file entries, in case the function encounters an unhandled exception
