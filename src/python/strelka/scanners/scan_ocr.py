@@ -29,7 +29,6 @@ class ScanOcr(strelka.Scanner):
 
     def scan(self, data, file, options, expire_at):
         extract_text = options.get("extract_text", False)
-        split_words = options.get("split_words", True)
         remove_formatting = options.get("remove_formatting", True)
         tmp_directory = options.get("tmp_directory", "/tmp/")
         pdf_to_png = options.get("pdf_to_png", False)
