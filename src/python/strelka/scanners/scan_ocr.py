@@ -77,20 +77,18 @@ class ScanOcr(strelka.Scanner):
                     with open(tess_txt_name, "rb") as tess_txt:
                         ocr_file = tess_txt.read()
                         if ocr_file:
-                            if split_words:
-                                self.event["text"] = ocr_file.split()
+                            self.event["text"] = ocr_file.split()
+                            if remove_formatting:
+                                self.event["string_text"] = (
+                                    ocr_file.replace(b"\r", b"")
+                                    .replace(b"\n", b"")
+                                    .replace(b"\f", b"")
+                                )
                             else:
-                                if remove_formatting:
-                                    self.event["text"] = (
-                                        ocr_file.replace(b"\r", b"")
-                                        .replace(b"\n", b"")
-                                        .replace(b"\f", b"")
-                                    )
-                                else:
-                                    self.event["text"] = ocr_file
-                            if extract_text:
-                                # Send extracted file back to Strelka
-                                self.emit_file(ocr_file, name="text")
+                                self.event["string_text"] = ocr_file
+                        if extract_text:
+                            # Send extracted file back to Strelka
+                            self.emit_file(ocr_file, name="text")
 
                     os.remove(tess_txt_name)
 
