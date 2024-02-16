@@ -397,15 +397,18 @@ class ScanPe(strelka.Scanner):
         except pefile.PEFormatError:
             self.flags.append("pe_format_error")
             return
+        except AttributeError:
+            self.flags.append("pe_attribute_error")
+            return
 
         if rich_dict := parse_rich(pe):
-            if not isinstance(rich_dict, str):
+            if type(rich_dict) is not str:
                 self.event["rich"] = rich_dict
             else:
                 self.flags.append(rich_dict)
 
         if cert_dict := parse_certificates(data):
-            if not isinstance(cert_dict, str):
+            if type(cert_dict) is not str:
                 self.event["security"] = cert_dict
             else:
                 self.flags.append(cert_dict)
@@ -455,30 +458,33 @@ class ScanPe(strelka.Scanner):
 
         # https://github.com/erocarrera/pefile/blob/master/pefile.py#L3553
         if hasattr(pe, "FileInfo"):
-            fi = pe.FileInfo[0]  # contains a single element
-            for i in fi:
-                if i.Key == b"StringFileInfo":
-                    for st in i.StringTable:
-                        for k, v in st.entries.items():
-                            if k.decode() in COMMON_FILE_INFO_NAMES:
-                                self.event["file_info"][
-                                    COMMON_FILE_INFO_NAMES[k.decode()]
-                                ] = v.decode()
-                            else:
-                                self.event["file_info"]["string"].append(
-                                    {
-                                        "name": k.decode(),
-                                        "value": v.decode(),
-                                    }
-                                )
-                elif i.Key == b"VarFileInfo":
-                    for v in i.Var:
-                        if translation := v.entry.get(b"Translation"):
-                            (lang, char) = translation.split()
-                            self.event["file_info"]["var"] = {
-                                "language": VAR_FILE_INFO_LANGS.get(int(lang, 16)),
-                                "character_set": VAR_FILE_INFO_CHARS.get(int(char, 16)),
-                            }
+            if pe.FileInfo:
+                fi = pe.FileInfo[0]  # contains a single element
+                for i in fi:
+                    if i.Key == b"StringFileInfo":
+                        for st in i.StringTable:
+                            for k, v in st.entries.items():
+                                if k.decode() in COMMON_FILE_INFO_NAMES:
+                                    self.event["file_info"][
+                                        COMMON_FILE_INFO_NAMES[k.decode()]
+                                    ] = v.decode()
+                                else:
+                                    self.event["file_info"]["string"].append(
+                                        {
+                                            "name": k.decode(),
+                                            "value": v.decode(),
+                                        }
+                                    )
+                    elif i.Key == b"VarFileInfo":
+                        for v in i.Var:
+                            if translation := v.entry.get(b"Translation"):
+                                (lang, char) = translation.split()
+                                self.event["file_info"]["var"] = {
+                                    "language": VAR_FILE_INFO_LANGS.get(int(lang, 16)),
+                                    "character_set": VAR_FILE_INFO_CHARS.get(
+                                        int(char, 16)
+                                    ),
+                                }
 
         if hasattr(pe, "VS_FIXEDFILEINFO"):
             vs_ffi = pe.VS_FIXEDFILEINFO[0]  # contains a single element
@@ -509,7 +515,7 @@ class ScanPe(strelka.Scanner):
         self.event["header"] = {
             "machine": {
                 "id": pe.FILE_HEADER.Machine,
-                "type": pefile.MACHINE_TYPE.get(pe.FILE_HEADER.Machine).replace(
+                "type": pefile.MACHINE_TYPE.get(pe.FILE_HEADER.Machine, "").replace(
                     "IMAGE_FILE_MACHINE_", ""
                 ),
             },
@@ -518,7 +524,7 @@ class ScanPe(strelka.Scanner):
                 "image": MAGIC_IMAGE.get(pe.OPTIONAL_HEADER.Magic, ""),
             },
             "subsystem": pefile.SUBSYSTEM_TYPE.get(
-                pe.OPTIONAL_HEADER.Subsystem
+                pe.OPTIONAL_HEADER.Subsystem, ""
             ).replace("IMAGE_SUBSYSTEM_", ""),
         }
 
@@ -600,43 +606,48 @@ class ScanPe(strelka.Scanner):
             resource_sha256_set = set()
 
             for res0 in pe.DIRECTORY_ENTRY_RESOURCE.entries:
-                for res1 in res0.directory.entries:
-                    for res2 in res1.directory.entries:
-                        lang = res2.data.lang
-                        sub = res2.data.sublang
-                        sub = pefile.get_sublang_name_for_lang(lang, sub)
-                        data = pe.get_data(
-                            res2.data.struct.OffsetToData, res2.data.struct.Size
-                        )
+                if hasattr(res0, "directory"):
+                    for res1 in res0.directory.entries:
+                        if hasattr(res1, "directory"):
+                            for res2 in res1.directory.entries:
+                                lang = res2.data.lang
+                                sub = res2.data.sublang
+                                sub = pefile.get_sublang_name_for_lang(lang, sub)
+                                try:
+                                    data = pe.get_data(
+                                        res2.data.struct.OffsetToData,
+                                        res2.data.struct.Size,
+                                    )
+                                except pefile.PEFormatError:
+                                    continue
+                                resource_md5 = hashlib.md5(data).hexdigest()
+                                resource_sha1 = hashlib.sha1(data).hexdigest()
+                                resource_sha256 = hashlib.sha256(data).hexdigest()
 
-                        resource_md5 = hashlib.md5(data).hexdigest()
-                        resource_sha1 = hashlib.sha1(data).hexdigest()
-                        resource_sha256 = hashlib.sha256(data).hexdigest()
+                                resource_md5_set.add(resource_md5)
+                                resource_sha1_set.add(resource_sha1)
+                                resource_sha256_set.add(resource_sha256)
 
-                        resource_md5_set.add(resource_md5)
-                        resource_sha1_set.add(resource_sha1)
-                        resource_sha256_set.add(resource_sha256)
+                                resource_dict = {
+                                    "id": res1.id,
+                                    "language": {"sub": sub.replace("SUBLANG_", "")},
+                                    "type": pefile.RESOURCE_TYPE.get(
+                                        res0.id, ""
+                                    ).replace("RT_", ""),
+                                    "md5": resource_md5,
+                                    "sha1": resource_sha1,
+                                    "sha256": resource_sha256,
+                                }
 
-                        resource_dict = {
-                            "id": res1.id,
-                            "language": {"sub": sub.replace("SUBLANG_", "")},
-                            "type": pefile.RESOURCE_TYPE.get(res0.id, "").replace(
-                                "RT_", ""
-                            ),
-                            "md5": resource_md5,
-                            "sha1": resource_sha1,
-                            "sha256": resource_sha256,
-                        }
+                                if lang in pefile.LANG:
+                                    resource_dict["language"]["primary"] = pefile.LANG[
+                                        lang
+                                    ].replace("LANG_", "")
 
-                        if lang in pefile.LANG:
-                            resource_dict["language"]["primary"] = pefile.LANG[
-                                lang
-                            ].replace("LANG_", "")
+                                if res1.name:
+                                    resource_dict["name"] = str(res1.name)
 
-                        if res1.name:
-                            resource_dict["name"] = str(res1.name)
-
-                        self.event["resources"].append(resource_dict)
+                                self.event["resources"].append(resource_dict)
 
                         # TODO: Add optional resource extraction
 

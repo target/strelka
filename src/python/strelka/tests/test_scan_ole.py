@@ -57,8 +57,8 @@ def test_scan_ole_doc_pe(mocker):
 
     test_scan_event = {
         "elapsed": mock.ANY,
-        "flags": ["attribute_error_in_stream"],
-        "total": {"streams": 10, "extracted": 9},
+        "flags": [],
+        "total": {"streams": 10, "extracted": 10},
     }
 
     scanner_event = run_test_scan(
@@ -79,8 +79,8 @@ def test_scan_ole_doc_pe_classic(mocker):
 
     test_scan_event = {
         "elapsed": mock.ANY,
-        "flags": ["attribute_error_in_stream"],
-        "total": {"streams": 13, "extracted": 12},
+        "flags": [],
+        "total": {"streams": 13, "extracted": 13},
     }
 
     scanner_event = run_test_scan(

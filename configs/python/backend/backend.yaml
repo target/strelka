@@ -108,6 +108,10 @@ scanners:
           - 'message/rfc822'
           - 'email_file'
       priority: 5
+      options:
+        create_thumbnail: True
+        thumbnail_header: False
+        thumbnail_size: [ 500, 500 ]
   'ScanEncryptedDoc':
     - positive:
         flavors:
@@ -211,7 +215,6 @@ scanners:
           - 'html_file'
       priority: 5
       options:
-        parser: "html5lib"
         max_hyperlinks: 50
 #  'ScanIni':
 #    - positive:
@@ -613,6 +616,7 @@ scanners:
         flavors:
           - 'vb_file'
           - 'vbscript'
+          - 'hta_file'
       priority: 5
   'ScanVba':
     - positive:
@@ -694,6 +698,10 @@ scanners:
       priority: 5
       options:
         limit: 1000
+        limit_metadata: True
+        size_limit: 250000000
+        crack_pws: False
+        log_pws: True
         password_file: '/etc/strelka/passwords.dat'
   'ScanZlib':
     - positive:

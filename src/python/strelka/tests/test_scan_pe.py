@@ -114,53 +114,59 @@ def test_scan_pe(mocker):
         "operating_system_version": 4.0,
         "subsystem_version": 4.0,
         "compile_time": "2104-07-18T17:22:04",
-        "dll_characteristics": [
-            "DYNAMIC_BASE",
-            "NX_COMPAT",
-            "NO_SEH",
-            "TERMINAL_SERVER_AWARE",
-        ],
-        "image_characteristics": ["EXECUTABLE_IMAGE", "LARGE_ADDRESS_AWARE"],
-        "resources": [
-            {
-                "id": 1,
-                "language": {"sub": "NEUTRAL", "primary": "NEUTRAL"},
-                "type": "VERSION",
-                "md5": "f4741884351459aa7733725b88e693af",
-                "sha1": "5371904ee7671fb0b066d9323eda553269f344f9",
-                "sha256": "d8df3d0358a91b3ef97c4d472b34a60f7cf9ee7f1a6f37058fc3d1af3a156a36",
-            },
-            {
-                "id": 1,
-                "language": {"sub": "NEUTRAL", "primary": "NEUTRAL"},
-                "type": "MANIFEST",
-                "md5": "b7db84991f23a680df8e95af8946f9c9",
-                "sha1": "cac699787884fb993ced8d7dc47b7c522c7bc734",
-                "sha256": "539dc26a14b6277e87348594ab7d6e932d16aabb18612d77f29fe421a9f1d46a",
-            },
-        ],
-        "sections": [
-            {
-                "address": {"physical": 1743, "virtual": 8192},
-                "characteristics": ["CNT_CODE", "MEM_EXECUTE", "MEM_READ"],
-                "entropy": 4.621214196319175,
-                "name": ".text",
-                "size": 2048,
-                "md5": "cc14da7fb94ef9b27a926fe95b86b44f",
-                "sha1": "3d584b265a558dc22fa6dfa9991ae7eafee5c1a4",
-                "sha256": "bb31a5224e9f78905909655d9c80ba7d63f03910e4f22b296d6b7865e2a477c3",
-            },
-            {
-                "address": {"physical": 1472, "virtual": 16384},
-                "characteristics": ["CNT_INITIALIZED_DATA", "MEM_READ"],
-                "entropy": 4.09070377434219,
-                "name": ".rsrc",
-                "size": 1536,
-                "md5": "c3eafa2cd34f98a226e31b8ea3fea400",
-                "sha1": "00104b432a8e7246695843e4f2d7cf2582efa3e6",
-                "sha256": "86d9755b2ba9d8ffd765621f09844dd62d0b082fdc4aafa63b3b3f3ae25d9c77",
-            },
-        ],
+        "dll_characteristics": unordered(
+            [
+                "DYNAMIC_BASE",
+                "NX_COMPAT",
+                "NO_SEH",
+                "TERMINAL_SERVER_AWARE",
+            ]
+        ),
+        "image_characteristics": unordered(["EXECUTABLE_IMAGE", "LARGE_ADDRESS_AWARE"]),
+        "resources": unordered(
+            [
+                {
+                    "id": 1,
+                    "language": {"sub": "NEUTRAL", "primary": "NEUTRAL"},
+                    "type": "VERSION",
+                    "md5": "f4741884351459aa7733725b88e693af",
+                    "sha1": "5371904ee7671fb0b066d9323eda553269f344f9",
+                    "sha256": "d8df3d0358a91b3ef97c4d472b34a60f7cf9ee7f1a6f37058fc3d1af3a156a36",
+                },
+                {
+                    "id": 1,
+                    "language": {"sub": "NEUTRAL", "primary": "NEUTRAL"},
+                    "type": "MANIFEST",
+                    "md5": "b7db84991f23a680df8e95af8946f9c9",
+                    "sha1": "cac699787884fb993ced8d7dc47b7c522c7bc734",
+                    "sha256": "539dc26a14b6277e87348594ab7d6e932d16aabb18612d77f29fe421a9f1d46a",
+                },
+            ]
+        ),
+        "sections": unordered(
+            [
+                {
+                    "address": {"physical": 1743, "virtual": 8192},
+                    "characteristics": ["CNT_CODE", "MEM_EXECUTE", "MEM_READ"],
+                    "entropy": 4.621214196319175,
+                    "name": ".text",
+                    "size": 2048,
+                    "md5": "cc14da7fb94ef9b27a926fe95b86b44f",
+                    "sha1": "3d584b265a558dc22fa6dfa9991ae7eafee5c1a4",
+                    "sha256": "bb31a5224e9f78905909655d9c80ba7d63f03910e4f22b296d6b7865e2a477c3",
+                },
+                {
+                    "address": {"physical": 1472, "virtual": 16384},
+                    "characteristics": ["CNT_INITIALIZED_DATA", "MEM_READ"],
+                    "entropy": 4.09070377434219,
+                    "name": ".rsrc",
+                    "size": 1536,
+                    "md5": "c3eafa2cd34f98a226e31b8ea3fea400",
+                    "sha1": "00104b432a8e7246695843e4f2d7cf2582efa3e6",
+                    "sha256": "86d9755b2ba9d8ffd765621f09844dd62d0b082fdc4aafa63b3b3f3ae25d9c77",
+                },
+            ]
+        ),
         "symbols": {"exported": [], "imported": [], "libraries": [], "table": []},
     }
 

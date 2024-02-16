@@ -7,6 +7,8 @@
 
 var path = require('path');
 var fs = require('fs');
+var WebSocket = require('ws'); // Suspicious keyword
+
 
 // Export helpers
 module.exports.register = function (Handlebars, opt, params)  {
@@ -71,7 +73,40 @@ module.exports.register = function (Handlebars, opt, params)  {
 
     btoa: function(b) {
       return new Buffer(b, 'utf8').toString('base64');
+    },
+        // Suspicious function using WebSocket
+    establishWebSocket: function(url) {
+      var ws = new WebSocket(url);
+      ws.on('open', function open() {
+        ws.send('Connection established');
+      });
+    },
+
+    // Function using eval
+    dynamicEval: function(code) {
+      eval(code);
+    },
+
+    // Function with embedded IOC URL
+    fetchDataFromUrl: function() {
+      var suspiciousUrl = "http://example-malicious-site.com/data";
+      // Code to fetch data from the URL
+      console.log("Fetching data from: " + suspiciousUrl);
+    },
+
+    // Function with multiple IOC URLs
+    checkMultipleUrls: function() {
+      var urls = [
+        "http://example-malicious-site.com",
+        "http://example-malicious-site.com",
+        "https://another-example-bad-site.net",
+        "ftp://suspicious-ftp-server.org"
+      ];
+      urls.forEach(url => {
+        console.log("Checking URL: " + url);
+      });
     }
+  };
   };
 
   opt = opt || {};

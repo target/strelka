@@ -773,6 +773,19 @@ rule batch_file {
         $a at 0
 }
 
+rule jnlp_file {
+    meta:
+        description = "Detect JNLP (Java Network Launch Protocol) files"
+        author = "Paul Hutelmyer"
+        reference = "https://docs.oracle.com/javase/tutorial/deployment/webstart/deploying.html"
+        type = "script"
+    strings:
+        $jnlp_header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" nocase
+        $jnlp_tag = "<jnlp" nocase
+    condition:
+        $jnlp_header at 0 and $jnlp_tag
+}
+
 rule javascript_file {
     meta:
         type = "script"

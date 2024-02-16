@@ -65,44 +65,48 @@ class ScanPdf(strelka.Scanner):
         # Set maximum XREF objects to be collected (default: 250)
         max_objects = options.get("max_objects", 250)
 
-        # Set Default Variables
-        self.event["images"] = 0
-        self.event["lines"] = 0
-        self.event["links"] = []
-        self.event["words"] = 0
-        self.event.setdefault("xref_object", list())
-        keys = list()
-
         try:
             with io.BytesIO(data) as pdf_io:
                 reader = fitz.open(stream=pdf_io, filetype="pdf")
 
             # Collect Metadata
+            self.event["dirty"] = reader.is_dirty
+            self.event["encrypted"] = reader.is_encrypted
+            self.event["language"] = reader.language
+            self.event["needs_pass"] = reader.needs_pass
+            self.event["old_xrefs"] = reader.has_old_style_xrefs
+            self.event["pages"] = reader.page_count
+            self.event["repaired"] = reader.is_repaired
+            self.event["xrefs"] = reader.xref_length() - 1
+
+            if reader.is_encrypted:
+                return
+
+            # Set Default Variables
+            self.event["images"] = 0
+            self.event["lines"] = 0
+            self.event["links"] = []
+            self.event["words"] = 0
+            self.event.setdefault("xref_object", list())
+            keys = list()
+
             self.event["author"] = reader.metadata["author"]
             self.event["creator"] = reader.metadata["creator"]
             self.event["creation_date"] = self._convert_timestamp(
                 reader.metadata["creationDate"]
             )
-            self.event["dirty"] = reader.is_dirty
             self.event["embedded_files"] = {
                 "count": reader.embfile_count(),
                 "names": reader.embfile_names(),
             }
-            self.event["encrypted"] = reader.is_encrypted
-            self.event["needs_pass"] = reader.needs_pass
             self.event["format"] = reader.metadata["format"]
             self.event["keywords"] = reader.metadata["keywords"]
-            self.event["language"] = reader.language
             self.event["modify_date"] = self._convert_timestamp(
                 reader.metadata["modDate"]
             )
-            self.event["old_xrefs"] = reader.has_old_style_xrefs
-            self.event["pages"] = reader.page_count
             self.event["producer"] = reader.metadata["producer"]
-            self.event["repaired"] = reader.is_repaired
             self.event["subject"] = reader.metadata["subject"]
             self.event["title"] = reader.metadata["title"]
-            self.event["xrefs"] = reader.xref_length() - 1
 
             # Collect Phones Numbers
             phones = []
@@ -129,7 +133,9 @@ class ScanPdf(strelka.Scanner):
                     if pattern in xref_object:
                         keys.append(obj.lower())
                 # Extract urls from xref
-                self.event["links"].extend(re.findall('"(https?://.*?)"', xref_object))
+                self.event["links"].extend(
+                    re.findall(r"https?://[^\s)>]+", xref_object)
+                )
             self.event["objects"] = dict(Counter(keys))
 
             # Convert unique xref_object set back to list
@@ -173,11 +179,22 @@ class ScanPdf(strelka.Scanner):
                     self.event["words"] += len(
                         list(filter(None, page.get_text().split(" ")))
                     )
-                    # extract links
+                    # Extract links
                     for link in page.get_links():
                         self.event["links"].append(link.get("uri"))
 
                     text += page.get_text()
+
+                    # Extract urls from text
+                    self.event["links"].extend(re.findall(r"https?://[^\s)>]+", text))
+
+                # If links found, remove all duplicates and submit as IOCs.
+                # Deduplicate the links
+                if self.event["links"]:
+                    self.event["links"] = list(set(filter(None, self.event["links"])))
+
+                    # Submit all links to the IOCs pipeline.
+                    self.add_iocs(self.event["links"])
 
                 # Send extracted file back to Strelka
                 self.emit_file(text.encode("utf-8"), name="text")

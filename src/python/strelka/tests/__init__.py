@@ -95,7 +95,11 @@ def get_remote_fixture_archive(
                                 fileentry.filename: io.BytesIO(
                                     archive.read(
                                         fileentry.filename,
-                                        password.encode("utf-8") if password else None,
+                                        pwd=(
+                                            password.encode("utf-8")
+                                            if password
+                                            else None
+                                        ),
                                     )
                                 )
                             }

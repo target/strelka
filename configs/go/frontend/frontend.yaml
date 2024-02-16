@@ -20,3 +20,10 @@ broker:
   keylocation: "path to key location"
   calocation: "path to target ca bundle"
   topic: "topic name here"
+  s3redundancy: "Boolean to pipe logs to S3 if kafka connection interrupted"
+s3:
+  accesskey: "S3 Access Key"
+  secretkey: "S3 Secret Key"
+  bucketName: "S3 bucket name"
+  region: "Region that the S3 Bucket resides in"
+  endpoint: "Endpoint that the S3 bucket refers to"
