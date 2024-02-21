@@ -202,7 +202,7 @@ func main() {
 					continue
 				}
 
-				// Ignore older files
+				// Temporarily ignore newly written files
 				if t.Sub(fi.ModTime()) < conf.Delta {
 					continue
 				}
