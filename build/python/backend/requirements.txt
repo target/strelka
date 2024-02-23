@@ -19,7 +19,7 @@ libarchive-c==2.9
 
 # lief doesn't have prebuilt binaries for ARM64 in PyPi, use our own prebuilt binary
 https://sublime-python-deps.s3.amazonaws.com/lief-0.12.3-cp310-cp310-linux_aarch64.whl; sys_platform == 'linux' and (platform_machine == 'arm64' or platform_machine == 'aarch64')
-lief==0.12.3; sys_platform != 'linux' or (platform_machine != 'arm64' and platform_machine != 'aarch64')
+lief==0.13.2; sys_platform != 'linux' or (platform_machine != 'arm64' and platform_machine != 'aarch64')
 
 lxml==4.9.1
 M2Crypto==0.38.0
