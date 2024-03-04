@@ -3,6 +3,7 @@ import logging
 import os
 
 import yara
+
 from strelka import strelka
 
 
