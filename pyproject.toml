@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "strelka-worker"
-version = "0.24.01.19"
+version = "0.24.03.04"
 description = "Strelka's backend Python worker"
 authors = [
     "Paul Hutelmyer <Paul.Hutelmyer@Target.com>",
@@ -15,7 +15,7 @@ beautifulsoup4 = "4.12.2"
 boltons = "23.0.0"
 boto3 = "1.28.60"
 construct = "2.10.68"
-cryptography = "42.0.2"
+cryptography = "42.0.5"
 dncil = "1.0.2"
 dnfile = "0.14.1"
 docker = "6.1.3"
@@ -89,4 +89,3 @@ speakeasy-emulator = { git = "https://github.com/mandiant/speakeasy.git", rev = 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-

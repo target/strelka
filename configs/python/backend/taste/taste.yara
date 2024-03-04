@@ -982,7 +982,8 @@ rule wmv_file {
 
 // PII
 
-rule credit_cards {
+rule credit_cards
+{
     meta:
         // https://github.com/sbousseaden/YaraHunts/blob/master/hunt_creditcard_memscrap.yara
         // https://stackoverflow.com/questions/9315647/regex-credit-card-number-tests
@@ -991,12 +992,12 @@ rule credit_cards {
         // https://baymard.com/checkout-usability/credit-card-patterns
         description = "Identify popular credit card numbers"
         author = "ryan.ohoro"
-        date = "12/29/2022"
+        date = "01/26/2023"
     strings:
-        // $amex = /[^0-9]3[47][0-9]{13}[^0-9]/      // Amex Card
-        // $disc = /[^0-9]6[0-9]{15}[^0-9]/          // Discover Card
-        // $mast = /[^0-9]5[1-5]{1}[0-9]{14}[^0-9]/  // Mastercard
-        $visa = /[^0-9]4[0-9]{15}[^0-9]/          // Visa Card
+        // $amex = /[^0-9]3[0-9]{14}[^0-9]/
+        $visa = /[^0-9]4[0-9]{15}[^0-9]/
+        // $mast = /[^0-9]5[0-9]{15}[^0-9]/
+        // $disc = /[^0-9]6[0-9]{15}[^0-9]/
     condition:
         any of them
 }

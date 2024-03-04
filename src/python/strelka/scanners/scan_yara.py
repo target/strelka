@@ -70,6 +70,10 @@ class ScanYara(strelka.Scanner):
         # Load YARA configuration options only once.
         # This prevents loading the configs on every execution.
         if not self.loaded_configs:
+            self.categories = options.get("categories", {})
+            self.category_key = options.get("category_key", "")
+            self.meta_fields = options.get("meta_fields", [])
+            self.show_all_meta = options.get("show_all_meta", False)
             self.store_offset = options.get("store_offset", False)
             self.offset_meta_key = options.get("offset_meta_key", "")
             self.offset_padding = options.get("offset_padding", 32)
@@ -86,6 +90,29 @@ class ScanYara(strelka.Scanner):
         if self.compiled_yara:
             yara_matches = self.compiled_yara.match(data=data)
             for match in yara_matches:
+                # add the rule and ruleset name to the category meta
+                rule = {
+                    "name": match.rule,
+                    "ruleset": match.namespace,
+                }
+                # include meta if its in the meta_fields list
+                for k, v in match.meta.items():
+                    if k.lower() in self.meta_fields:
+                        rule.update({k.lower(): v})
+                for category, params in self.categories.items():
+                    if not self.event.get(category):
+                        self.event[category] = []
+                    # check if the category matches the category_key
+                    if category in match.meta.get(self.category_key, "").lower():
+                        # show meta for specific category if enabled
+                        if params.get("show_meta", False):
+                            self.event[category].append(rule)
+                        else:
+                            self.event[category].append(match.rule)
+                    # show meta for specific tag if present
+                    # if category in list(map(str.lower, match.tags)):
+                    #     self.event[category].append(rule)
+
                 # Append rule matches and update tags.
                 self.event["matches"].append(match.rule)
                 self.event["tags"].extend(match.tags)
@@ -105,11 +132,12 @@ class ScanYara(strelka.Scanner):
                                     self.offset_padding,
                                 )
 
-                # Append meta information if configured to do so.
-                for k, v in match.meta.items():
-                    self.event["meta"].append(
-                        {"rule": match.rule, "identifier": k, "value": v}
-                    )
+                # Append meta information if configured to do so
+                if self.show_all_meta:
+                    for k, v in match.meta.items():
+                        self.event["meta"].append(
+                            {"rule": match.rule, "identifier": k, "value": v}
+                        )
 
             # De-duplicate tags.
             self.event["tags"] = list(set(self.event["tags"]))
