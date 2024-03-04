@@ -385,7 +385,7 @@ scanners:
         extract_text: False
         tmp_directory: "/dev/shm/"
         pdf_to_png: True
-        remove_formatting: True
+        remove_formatting: False
         split_words: True
         create_thumbnail: True
         thumbnail_size: [250, 250]
@@ -674,13 +674,27 @@ scanners:
   'ScanYara':
     - positive:
         flavors:
-          - '*'
+          - "*"
       priority: 5
       options:
-        location: '/etc/strelka/yara/'
+        location: "/etc/strelka/yara/"
         compiled:
-          enabled: False
+          enabled: True
           filename: "rules.compiled"
+        category_key: "scope"
+        categories:
+          collection:
+            show_meta: False
+          detection:
+            show_meta: True
+          information:
+            show_meta: False
+        meta_fields:
+          - "author"
+          - "description"
+          - "hash"
+          - "intel"
+        show_all_meta: False
         store_offset: True
         offset_meta_key: "StrelkaHexDump"
         offset_padding: 32
