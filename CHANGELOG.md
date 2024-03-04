@@ -1,24 +1,33 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
-## 2023-01-29
+## 2024-03-04
+- Updating `ScanYara` with additional grouping / metadata functionality.
+
+## 2024-02-16
+- Adding `ScanOcr` functionality to allow for full string output. (@skalupa)
+
+## 2024-02-12
+- Fix for logic pertaining to the `ScanPe.flags` field.
+   
+## 2024-01-29
 - Adding YARA for `ScanJnlp`
 - Adding image preview for `ScanEmail`
 - Adding IOC support for `ScanJavascript`
 - `ScanZip` improvements (@ryanohoro)
   
-## 2023-01-19
+## 2024-01-19
 - Fix for Invalid Stripping for Email Message ID Parsing
   
-## 2023-01-14
+## 2024-01-14
 -  Error Handling + Readibility Updates for `ScanPdf`, `ScanPe`, and more.
 -  Added optional redundancy logging to remote S3 location functinonality (@[skalupa](https://github.com/skalupa))
 
-## 2023-01-04
+## 2024-01-04
 -  Updated `golang` versions for relevant Dockerfiles (@[skalupa](https://github.com/skalupa))
 -  Error handling / readability update for `ScanPdf`
 
-## 2023-01-03
+## 2024-01-03
 -  Added Kafka logging integration with command-line toggle between Kafka and local logging (@[skalupa](https://github.com/skalupa))
 -  Implemented duplicate removal in IOC list processing across scanners
 -  Implemented thumbnail generation and formatting options for `ScanOcr`
