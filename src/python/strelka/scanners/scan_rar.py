@@ -131,9 +131,11 @@ class ScanRar(strelka.Scanner):
                                             data = rar_obj.open(
                                                 name,
                                                 mode="r",
-                                                pwd=password.decode("utf-8")
-                                                if password
-                                                else None,
+                                                pwd=(
+                                                    password.decode("utf-8")
+                                                    if password
+                                                    else None
+                                                ),
                                             )
                                             if data.readable():
                                                 extract_data = data.readall()
@@ -144,9 +146,9 @@ class ScanRar(strelka.Scanner):
                                                     ),
                                                 )
                                                 if password and log_pws:
-                                                    self.event[
-                                                        "password"
-                                                    ] = password.decode("utf-8")
+                                                    self.event["password"] = (
+                                                        password.decode("utf-8")
+                                                    )
                                                 break
                                         except (
                                             RuntimeError,
