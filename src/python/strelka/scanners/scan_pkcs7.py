@@ -8,6 +8,9 @@ from strelka import strelka
 class ScanPkcs7(strelka.Scanner):
     """Extracts files from PKCS7 certificate files."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         # Set the temporary directory for storing data. The default is "/tmp/".
         tmp_directory = options.get("tmp_directory", "/tmp/")

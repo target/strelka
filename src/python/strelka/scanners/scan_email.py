@@ -32,6 +32,9 @@ class ScanEmail(strelka.Scanner):
     including inline images.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         """
         Processes the email, extracts metadata and attachments, and optionally generates a thumbnail.

@@ -20,6 +20,9 @@ class ScanZip(strelka.Scanner):
             Defaults to /etc/strelka/passwords.dat.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         file_limit = options.get("limit", 100)
         size_limit = options.get("size_limit", 250000000)

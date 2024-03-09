@@ -7,6 +7,9 @@ from strelka import strelka
 class ScanBzip2(strelka.Scanner):
     """Decompresses bzip2 files."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         with io.BytesIO(data) as bzip2_io:
             with bz2.BZ2File(filename=bzip2_io) as bzip2_obj:

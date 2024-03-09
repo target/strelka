@@ -19,6 +19,9 @@ class ScanSevenZip(strelka.Scanner):
 
     EXCLUDED_ROOT_DIRS: list[str] = []
 
+    def init(self, options):
+        pass
+
     def scan(self, data: bytes, file: strelka.File, options: dict, expire_at) -> None:
         file_limit = options.get("limit", 100)
         tmp_directory = options.get("tmp_file_directory", "/tmp/")

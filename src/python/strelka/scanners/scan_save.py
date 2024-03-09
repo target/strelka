@@ -11,7 +11,7 @@ from strelka import strelka
 class ScanSave(strelka.Scanner):
     """Compress and encode raw file data"""
 
-    def init(self):
+    def init(self, options):
         # Compression algorithm choices
         self.compress_data = {
             "gzip": gzip.compress,

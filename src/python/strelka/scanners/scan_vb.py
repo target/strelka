@@ -19,7 +19,7 @@ class ScanVb(strelka.Scanner):
         url_regex: A compiled regex pattern for extracting URLs from the script.
     """
 
-    def init(self):
+    def init(self, options):
         # Initialize the lexer for VB.NET language using Pygments
         self.lexer = lexers.get_lexer_by_name("vbnet")
 

@@ -17,6 +17,9 @@ from strelka import strelka
 class ScanPgp(strelka.Scanner):
     """Collects metadata from PGP files."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         self.event["total"] = {
             "public_keys": 0,
@@ -74,9 +77,9 @@ class ScanPgp(strelka.Scanner):
                         secret_key_entry["creation_time"] = creation_time.isoformat()
                     expiration_time = getattr(packet, "expiration_time", None)
                     if expiration_time is not None:
-                        secret_key_entry["expiration_time"] = (
-                            expiration_time.isoformat()
-                        )
+                        secret_key_entry[
+                            "expiration_time"
+                        ] = expiration_time.isoformat()
 
                     if secret_key_entry not in self.event["secret_keys"]:
                         self.event["secret_keys"].append(secret_key_entry)
@@ -98,9 +101,9 @@ class ScanPgp(strelka.Scanner):
                         public_key_entry["creation_time"] = creation_time.isoformat()
                     expiration_time = getattr(packet, "expiration_time", None)
                     if expiration_time is not None:
-                        public_key_entry["expiration_time"] = (
-                            expiration_time.isoformat()
-                        )
+                        public_key_entry[
+                            "expiration_time"
+                        ] = expiration_time.isoformat()
 
                     if public_key_entry not in self.event["public_keys"]:
                         self.event["public_keys"].append(public_key_entry)
@@ -135,14 +138,14 @@ class ScanPgp(strelka.Scanner):
                     }
                     creation_time = getattr(packet, "creation_time", None)
                     if creation_time is not None:
-                        signature_packet_entry["creation_time"] = (
-                            creation_time.isoformat()
-                        )
+                        signature_packet_entry[
+                            "creation_time"
+                        ] = creation_time.isoformat()
                     expiration_time = getattr(packet, "expiration_time", None)
                     if expiration_time is not None:
-                        signature_packet_entry["expiration_time"] = (
-                            expiration_time.isoformat()
-                        )
+                        signature_packet_entry[
+                            "expiration_time"
+                        ] = expiration_time.isoformat()
 
                     if signature_packet_entry not in self.event["signatures"]:
                         self.event["signatures"].append(signature_packet_entry)

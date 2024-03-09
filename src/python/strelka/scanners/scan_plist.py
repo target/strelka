@@ -13,6 +13,9 @@ class ScanPlist(strelka.Scanner):
             Defaults to all.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         keys = options.get("keys", [])
 

@@ -7,6 +7,9 @@ from strelka import strelka
 class ScanLsb(strelka.Scanner):
     """This scanner checks if there is any hidden strings at the end of each RGB value"""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         try:
             image = np.frombuffer(data, np.uint8)

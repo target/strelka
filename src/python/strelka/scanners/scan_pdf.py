@@ -49,6 +49,9 @@ class ScanPdf(strelka.Scanner):
         except Exception:
             return None
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         """
         Performs the scanning process on the provided data.

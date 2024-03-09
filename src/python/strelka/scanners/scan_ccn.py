@@ -22,6 +22,9 @@ class ScanCcn(strelka.Scanner):
     def is_luhn_valid(self, card_number):
         return self.luhn_checksum(card_number) == 0
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         # re_amex = re.compile(rb"[^0-9](3[47][0-9]{13})[^0-9]")
         # re_disc = re.compile(rb"[^0-9](6[0-9]{15})[^0-9]")

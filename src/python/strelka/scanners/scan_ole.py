@@ -9,6 +9,9 @@ from strelka import strelka
 class ScanOle(strelka.Scanner):
     """Extracts files from OLECF files."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         ole = None
         self.event["total"] = {"streams": 0, "extracted": 0}

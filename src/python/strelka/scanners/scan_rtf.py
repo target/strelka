@@ -11,6 +11,9 @@ class ScanRtf(strelka.Scanner):
             Defaults to 1000.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         file_limit = options.get("limit", 1000)
 

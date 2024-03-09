@@ -11,6 +11,9 @@ from strelka import strelka
 class ScanIso(strelka.Scanner):
     """Extracts files from ISO files."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         file_limit = options.get("limit", 1000)
 
@@ -27,19 +30,19 @@ class ScanIso(strelka.Scanner):
 
                 # Attempt to get Meta
                 try:
-                    self.event["meta"]["date_created"] = (
-                        self._datetime_from_volume_date(iso.pvd.volume_creation_date)
-                    )
-                    self.event["meta"]["date_effective"] = (
-                        self._datetime_from_volume_date(iso.pvd.volume_effective_date)
-                    )
-                    self.event["meta"]["date_expiration"] = (
-                        self._datetime_from_volume_date(iso.pvd.volume_expiration_date)
-                    )
-                    self.event["meta"]["date_modification"] = (
-                        self._datetime_from_volume_date(
-                            iso.pvd.volume_modification_date
-                        )
+                    self.event["meta"][
+                        "date_created"
+                    ] = self._datetime_from_volume_date(iso.pvd.volume_creation_date)
+                    self.event["meta"][
+                        "date_effective"
+                    ] = self._datetime_from_volume_date(iso.pvd.volume_effective_date)
+                    self.event["meta"][
+                        "date_expiration"
+                    ] = self._datetime_from_volume_date(iso.pvd.volume_expiration_date)
+                    self.event["meta"][
+                        "date_modification"
+                    ] = self._datetime_from_volume_date(
+                        iso.pvd.volume_modification_date
                     )
                     self.event["meta"][
                         "volume_identifier"

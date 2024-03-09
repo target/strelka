@@ -17,6 +17,9 @@ def flatten(input: list) -> list:
 class ScanManifest(strelka.Scanner):
     """Parses browser extension's  manifest.json."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         try:
             jsondata = json.loads(data)

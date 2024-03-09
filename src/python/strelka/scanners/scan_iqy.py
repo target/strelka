@@ -19,6 +19,9 @@ class ScanIqy(strelka.Scanner):
     Reference for IQY file format: https://learn.microsoft.com/en-us/office/vba/api/excel.querytable
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         """
         Processes the provided IQY data to extract URLs.

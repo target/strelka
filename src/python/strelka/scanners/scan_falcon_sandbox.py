@@ -38,7 +38,7 @@ class ScanFalconSandbox(strelka.Scanner):
             Defaults to [100]
     """
 
-    def init(self):
+    def init(self, options):
         self.api_key = None
         self.api_secret = None
         self.server = ""

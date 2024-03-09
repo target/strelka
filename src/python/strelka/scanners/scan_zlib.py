@@ -6,6 +6,9 @@ from strelka import strelka
 class ScanZlib(strelka.Scanner):
     """Decompresses zlib files."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         try:
             # Decompress file and collect metadata

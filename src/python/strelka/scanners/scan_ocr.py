@@ -27,6 +27,9 @@ class ScanOcr(strelka.Scanner):
         thumbnail_size: Size of the thumbnail to create. (default: (250, 250))
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         extract_text = options.get("extract_text", False)
         remove_formatting = options.get("remove_formatting", True)

@@ -31,7 +31,7 @@ class ScanRar(strelka.Scanner):
             Defaults to /etc/strelka/passwords.dat
     """
 
-    def init(self):
+    def init(self, options):
         self.passwords = []
 
     def scan(self, data, file, options, expire_at):
@@ -79,7 +79,7 @@ class ScanRar(strelka.Scanner):
                                                 data = rar_obj.open(
                                                     name,
                                                     mode="r",
-                                                    psw=pw.decode("utf-8"),
+                                                    pwd=pw.decode("utf-8"),
                                                 )
                                                 if data.readable():
                                                     extract_data = data.readall()
@@ -100,7 +100,7 @@ class ScanRar(strelka.Scanner):
                                     else:
                                         try:
                                             data = rar_obj.open(
-                                                name, mode="r", psw=password
+                                                name, mode="r", pwd=password
                                             )
                                             if data.readable():
                                                 extract_data = data.readall()

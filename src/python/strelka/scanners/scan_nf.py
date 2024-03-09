@@ -19,6 +19,9 @@ class ScanNf(strelka.Scanner):
     The higher the value for both variables, the more strict the algorithm is.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         try:
             # Convert image to HSV color space

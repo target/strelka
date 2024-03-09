@@ -15,6 +15,9 @@ class ScanPcap(strelka.Scanner):
             Defaults to 1000.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         file_limit = options.get("limit", 1000)
         tmp_directory = options.get("tmp_file_directory", "/tmp/")

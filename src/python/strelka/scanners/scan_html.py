@@ -15,6 +15,9 @@ class ScanHtml(strelka.Scanner):
             Defaults to 'html.parser'.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         parser = options.get("parser", "html.parser")
         max_hyperlinks = options.get("max_hyperlinks", 50)

@@ -9,6 +9,9 @@ class ScanJpeg(strelka.Scanner):
     This scanner extracts data that is inserted past the JFIF EOI marker.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         try:
             offset = 0

@@ -14,7 +14,7 @@ class ScanException(strelka.Scanner):
             Defaults to 0 (unlimited).
     """
 
-    def init(self):
+    def init(self, options):
         pass
 
     def scan(self, data, file, options, expire_at):

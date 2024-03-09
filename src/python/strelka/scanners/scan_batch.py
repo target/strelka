@@ -13,7 +13,7 @@ class ScanBatch(strelka.Scanner):
         lexer: Pygments lexer ('batch') used to parse the file.
     """
 
-    def init(self):
+    def init(self, options):
         self.lexer = lexers.get_lexer_by_name("batch")
 
     def scan(self, data, file, options, expire_at):

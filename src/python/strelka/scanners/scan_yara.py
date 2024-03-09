@@ -31,7 +31,7 @@ class ScanYara(strelka.Scanner):
             offset match for context
     """
 
-    def init(self):
+    def init(self, options):
         """Initializes the ScanYara class.
 
         Sets up the initial state for the scanner by ensuring that

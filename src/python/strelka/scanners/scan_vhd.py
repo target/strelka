@@ -13,6 +13,9 @@ class ScanVhd(strelka.Scanner):
 
     EXCLUDED_ROOT_DIRS = ["[SYSTEM]"]
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         file_limit = options.get("limit", 100)
         tmp_directory = options.get("tmp_file_directory", "/tmp/")
