@@ -201,9 +201,11 @@ class ScanRar(strelka.Scanner):
                                                 rar_data_io = rar_obj.open(
                                                     compressed_file,
                                                     mode="r",
-                                                    pwd=password.decode("utf-8")
-                                                    if password
-                                                    else None,
+                                                    pwd=(
+                                                        password.decode("utf-8")
+                                                        if password
+                                                        else None
+                                                    ),
                                                 )
                                                 if rar_data_io.readable():
                                                     extract_data = rar_data_io.readall()
@@ -271,21 +273,30 @@ class ScanRar(strelka.Scanner):
                                         {
                                             "file_name": compressed_file.filename,
                                             "datetime": compressed_file.mtime.isoformat(),
-                                            "ctime": compressed_file.ctime.isoformat()
-                                            if isinstance(
-                                                compressed_file.ctime, datetime.datetime
-                                            )
-                                            else None,
-                                            "mtime": compressed_file.mtime.isoformat()
-                                            if isinstance(
-                                                compressed_file.mtime, datetime.datetime
-                                            )
-                                            else None,
-                                            "atime": compressed_file.atime.isoformat()
-                                            if isinstance(
-                                                compressed_file.atime, datetime.datetime
-                                            )
-                                            else None,
+                                            "ctime": (
+                                                compressed_file.ctime.isoformat()
+                                                if isinstance(
+                                                    compressed_file.ctime,
+                                                    datetime.datetime,
+                                                )
+                                                else None
+                                            ),
+                                            "mtime": (
+                                                compressed_file.mtime.isoformat()
+                                                if isinstance(
+                                                    compressed_file.mtime,
+                                                    datetime.datetime,
+                                                )
+                                                else None
+                                            ),
+                                            "atime": (
+                                                compressed_file.atime.isoformat()
+                                                if isinstance(
+                                                    compressed_file.atime,
+                                                    datetime.datetime,
+                                                )
+                                                else None
+                                            ),
                                             "file_size": compressed_file.file_size,
                                             "compression_size": compressed_file.compress_size,
                                             "compression_rate": round(
