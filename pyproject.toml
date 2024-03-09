@@ -79,6 +79,7 @@ weasyprint = "60.2"
 xlrd2 = "1.3.4"
 xlrd = "2.0.1"
 xmltodict = "0.13.0"
+yara-python = "4.3.1"
 
 # Git dependencies
 chaskey = { git = "https://github.com/volexity/chaskey-lts", rev = "2fd80f732dd9422a9e92556758180ceee3b5b4ec" }  # For donut-decryptor
