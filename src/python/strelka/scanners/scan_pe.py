@@ -283,9 +283,9 @@ def parse_certificates(data):
     buffer.seek(0)
 
     try:
-        pefile = SignedPEFile(buffer)
+        pe = SignedPEFile(buffer)
         try:
-            signed_datas = list(pefile.signed_datas)
+            signed_datas = list(pe.signed_datas)
         except strelka.ScannerTimeout:
             raise
         except Exception:
@@ -377,7 +377,7 @@ def parse_certificates(data):
     }
 
     try:
-        pefile.verify()
+        pe.verify()
         security_dict["verification"] = True
     except strelka.ScannerTimeout:
         raise
@@ -548,18 +548,18 @@ class ScanPe(strelka.Scanner):
         self.event["address_of_entry_point"] = pe.OPTIONAL_HEADER.AddressOfEntryPoint
         self.event["image_base"] = pe.OPTIONAL_HEADER.ImageBase
         self.event["size_of_code"] = pe.OPTIONAL_HEADER.SizeOfCode
-        self.event[
-            "size_of_initialized_data"
-        ] = pe.OPTIONAL_HEADER.SizeOfInitializedData
+        self.event["size_of_initialized_data"] = (
+            pe.OPTIONAL_HEADER.SizeOfInitializedData
+        )
         self.event["size_of_headers"] = pe.OPTIONAL_HEADER.SizeOfHeaders
         self.event["size_of_heap_reserve"] = pe.OPTIONAL_HEADER.SizeOfHeapReserve
         self.event["size_of_image"] = pe.OPTIONAL_HEADER.SizeOfImage
         self.event["size_of_stack_commit"] = pe.OPTIONAL_HEADER.SizeOfStackCommit
         self.event["size_of_stack_reserve"] = pe.OPTIONAL_HEADER.SizeOfStackReserve
         self.event["size_of_heap_commit"] = pe.OPTIONAL_HEADER.SizeOfHeapCommit
-        self.event[
-            "size_of_uninitialized_data"
-        ] = pe.OPTIONAL_HEADER.SizeOfUninitializedData
+        self.event["size_of_uninitialized_data"] = (
+            pe.OPTIONAL_HEADER.SizeOfUninitializedData
+        )
         self.event["file_alignment"] = pe.OPTIONAL_HEADER.FileAlignment
         self.event["section_alignment"] = pe.OPTIONAL_HEADER.SectionAlignment
         self.event["checksum"] = pe.OPTIONAL_HEADER.CheckSum
@@ -568,12 +568,12 @@ class ScanPe(strelka.Scanner):
         self.event["minor_image_version"] = pe.OPTIONAL_HEADER.MinorImageVersion
         self.event["major_linker_version"] = pe.OPTIONAL_HEADER.MajorLinkerVersion
         self.event["minor_linker_version"] = pe.OPTIONAL_HEADER.MinorLinkerVersion
-        self.event[
-            "major_operating_system_version"
-        ] = pe.OPTIONAL_HEADER.MajorOperatingSystemVersion
-        self.event[
-            "minor_operating_system_version"
-        ] = pe.OPTIONAL_HEADER.MinorOperatingSystemVersion
+        self.event["major_operating_system_version"] = (
+            pe.OPTIONAL_HEADER.MajorOperatingSystemVersion
+        )
+        self.event["minor_operating_system_version"] = (
+            pe.OPTIONAL_HEADER.MinorOperatingSystemVersion
+        )
         self.event["major_subsystem_version"] = pe.OPTIONAL_HEADER.MajorSubsystemVersion
         self.event["minor_subsystem_version"] = pe.OPTIONAL_HEADER.MinorSubsystemVersion
         self.event["image_version"] = float(
