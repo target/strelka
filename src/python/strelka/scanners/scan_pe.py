@@ -392,8 +392,13 @@ class ScanPe(strelka.Scanner):
     """Collects metadata from PE files."""
 
     def scan(self, data, file, options, expire_at):
+        extract_overlay = options.get("extract_overlay", False)
+
         try:
             pe = pefile.PE(data=data)
+            if not pe:
+                self.flags.append("pe_load_error")
+                return
         except pefile.PEFormatError:
             self.flags.append("pe_format_error")
             return
@@ -420,6 +425,17 @@ class ScanPe(strelka.Scanner):
             "symbols": 0,
         }
         self.event["summary"] = {}
+
+        offset = pe.get_overlay_data_start_offset()
+
+        if offset and len(data[offset:]) > 0:
+            self.event["overlay"] = {"size": len(data[offset:]), "extracted": False}
+            self.flags.append("overlay")
+
+            if extract_overlay:
+                # Send extracted file back to Strelka
+                self.emit_file(data[offset:], name="pe_overlay")
+                self.event["overlay"].update({"extracted": True})
 
         if hasattr(pe, "DIRECTORY_ENTRY_DEBUG"):
             for d in pe.DIRECTORY_ENTRY_DEBUG:
@@ -532,18 +548,18 @@ class ScanPe(strelka.Scanner):
         self.event["address_of_entry_point"] = pe.OPTIONAL_HEADER.AddressOfEntryPoint
         self.event["image_base"] = pe.OPTIONAL_HEADER.ImageBase
         self.event["size_of_code"] = pe.OPTIONAL_HEADER.SizeOfCode
-        self.event["size_of_initialized_data"] = (
-            pe.OPTIONAL_HEADER.SizeOfInitializedData
-        )
+        self.event[
+            "size_of_initialized_data"
+        ] = pe.OPTIONAL_HEADER.SizeOfInitializedData
         self.event["size_of_headers"] = pe.OPTIONAL_HEADER.SizeOfHeaders
         self.event["size_of_heap_reserve"] = pe.OPTIONAL_HEADER.SizeOfHeapReserve
         self.event["size_of_image"] = pe.OPTIONAL_HEADER.SizeOfImage
         self.event["size_of_stack_commit"] = pe.OPTIONAL_HEADER.SizeOfStackCommit
         self.event["size_of_stack_reserve"] = pe.OPTIONAL_HEADER.SizeOfStackReserve
         self.event["size_of_heap_commit"] = pe.OPTIONAL_HEADER.SizeOfHeapCommit
-        self.event["size_of_uninitialized_data"] = (
-            pe.OPTIONAL_HEADER.SizeOfUninitializedData
-        )
+        self.event[
+            "size_of_uninitialized_data"
+        ] = pe.OPTIONAL_HEADER.SizeOfUninitializedData
         self.event["file_alignment"] = pe.OPTIONAL_HEADER.FileAlignment
         self.event["section_alignment"] = pe.OPTIONAL_HEADER.SectionAlignment
         self.event["checksum"] = pe.OPTIONAL_HEADER.CheckSum
@@ -552,12 +568,12 @@ class ScanPe(strelka.Scanner):
         self.event["minor_image_version"] = pe.OPTIONAL_HEADER.MinorImageVersion
         self.event["major_linker_version"] = pe.OPTIONAL_HEADER.MajorLinkerVersion
         self.event["minor_linker_version"] = pe.OPTIONAL_HEADER.MinorLinkerVersion
-        self.event["major_operating_system_version"] = (
-            pe.OPTIONAL_HEADER.MajorOperatingSystemVersion
-        )
-        self.event["minor_operating_system_version"] = (
-            pe.OPTIONAL_HEADER.MinorOperatingSystemVersion
-        )
+        self.event[
+            "major_operating_system_version"
+        ] = pe.OPTIONAL_HEADER.MajorOperatingSystemVersion
+        self.event[
+            "minor_operating_system_version"
+        ] = pe.OPTIONAL_HEADER.MinorOperatingSystemVersion
         self.event["major_subsystem_version"] = pe.OPTIONAL_HEADER.MajorSubsystemVersion
         self.event["minor_subsystem_version"] = pe.OPTIONAL_HEADER.MinorSubsystemVersion
         self.event["image_version"] = float(
