@@ -33,17 +33,17 @@ class ScanDocx(strelka.Scanner):
                 self.event["identifier"] = docx_doc.core_properties.identifier
                 self.event["keywords"] = docx_doc.core_properties.keywords
                 self.event["language"] = docx_doc.core_properties.language
-                self.event[
-                    "last_modified_by"
-                ] = docx_doc.core_properties.last_modified_by
+                self.event["last_modified_by"] = (
+                    docx_doc.core_properties.last_modified_by
+                )
                 if docx_doc.core_properties.last_printed is not None:
-                    self.event[
-                        "last_printed"
-                    ] = docx_doc.core_properties.last_printed.isoformat()
+                    self.event["last_printed"] = (
+                        docx_doc.core_properties.last_printed.isoformat()
+                    )
                 if docx_doc.core_properties.modified is not None:
-                    self.event[
-                        "modified"
-                    ] = docx_doc.core_properties.modified.isoformat()
+                    self.event["modified"] = (
+                        docx_doc.core_properties.modified.isoformat()
+                    )
                 self.event["revision"] = docx_doc.core_properties.revision
                 self.event["subject"] = docx_doc.core_properties.subject
                 self.event["title"] = docx_doc.core_properties.title
