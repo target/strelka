@@ -140,18 +140,18 @@ class ScanLNK(strelka.Scanner):
 
                 try:
                     if extradata.IconEnvironmentDataBlock:
-                        self.event["icon_target"] = (
-                            extradata.IconEnvironmentDataBlock.TargetAnsi
-                        )
+                        self.event[
+                            "icon_target"
+                        ] = extradata.IconEnvironmentDataBlock.TargetAnsi
                 except strelka.ScannerTimeout:
                     raise
                 except Exception:
                     self.flags.append("Unable to parse IconEnvironmentDataBlock")
 
                 if extradata.TrackerDataBlock:
-                    self.event["machine_id"] = (
-                        extradata.TrackerDataBlock.MachineID.strip(b"\x00")
-                    )
+                    self.event[
+                        "machine_id"
+                    ] = extradata.TrackerDataBlock.MachineID.strip(b"\x00")
                     self.event["mac"] = str(
                         uuid.UUID(bytes_le=extradata.TrackerDataBlock.Droid[16:])
                     ).split("-")[-1]
