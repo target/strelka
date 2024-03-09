@@ -15,6 +15,9 @@ class ScanXml(strelka.Scanner):
             Defaults to empty list.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         xml_args = {
             "extract_tags": options.get("extract_tags", []),

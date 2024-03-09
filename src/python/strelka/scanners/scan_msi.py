@@ -15,6 +15,9 @@ class ScanMsi(strelka.Scanner):
             Defaults to '/tmp/'.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         # Get a list of keys to collect from the MSI file
         keys = options.get("keys", [])

@@ -23,6 +23,9 @@ class ScanTranscode(strelka.Scanner):
     gif webp jpeg bmp png tiff
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         output_format = options.get("output_format", "jpeg")
 

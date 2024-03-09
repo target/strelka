@@ -8,6 +8,9 @@ from strelka import strelka
 class ScanGzip(strelka.Scanner):
     """Decompresses gzip files."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         try:
             with io.BytesIO(data) as gzip_io:

@@ -9,6 +9,9 @@ lief.logging.disable()
 class ScanElf(strelka.Scanner):
     """Collects metadata from ELF files."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         elf = ELF.parse(raw=list(data))
 

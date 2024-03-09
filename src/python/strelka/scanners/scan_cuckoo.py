@@ -33,7 +33,7 @@ class ScanCuckoo(strelka.Scanner):
         password: See description above.
     """
 
-    def init(self):
+    def init(self, options):
         self.username = None
         self.password = None
         self.auth_check = False

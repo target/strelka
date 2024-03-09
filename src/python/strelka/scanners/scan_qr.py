@@ -14,6 +14,9 @@ class ScanQr(strelka.Scanner):
     Collects QR code metadata from image files.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         support_inverted = options.get("support_inverted", True)
 

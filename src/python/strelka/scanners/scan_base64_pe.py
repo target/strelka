@@ -8,6 +8,9 @@ from strelka import strelka
 class ScanBase64PE(strelka.Scanner):
     """Decodes base64-encoded file."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         with io.BytesIO(data) as encoded_file:
             extract_data = b""

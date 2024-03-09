@@ -13,6 +13,9 @@ class ScanRpm(strelka.Scanner):
             Defaults to '/tmp/'.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         tmp_directory = options.get("tmp_directory", "/tmp/")
 

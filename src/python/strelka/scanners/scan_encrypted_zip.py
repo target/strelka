@@ -109,6 +109,9 @@ class ScanEncryptedZip(strelka.Scanner):
                                     Defaults to /etc/strelka/passwords.dat.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         jtr_path = options.get("jtr_path", "/jtr/")
         tmp_directory = options.get("tmp_file_directory", "/tmp/")

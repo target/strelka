@@ -15,6 +15,9 @@ from strelka.cstructs.lnk import (
 class ScanLNK(strelka.Scanner):
     """Collects metadata from LNK files."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         header = ShellLinkHeader.parse(data)
         offset = header.HeaderSize

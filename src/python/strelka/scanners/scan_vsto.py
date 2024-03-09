@@ -24,6 +24,9 @@ class ScanVsto(strelka.Scanner):
 
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         """
         Extracts information from the VSTO file.

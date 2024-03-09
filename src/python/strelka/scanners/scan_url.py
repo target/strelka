@@ -23,7 +23,7 @@ class ScanUrl(strelka.Scanner):
             Defaults to False (uses default regex).
     """
 
-    def init(self):
+    def init(self, options):
         # Default compiled regex pattern for URL extraction.
         # This default pattern aims to match a wide range of URLs including those with TLDs.
         self.regexes = {

@@ -13,6 +13,9 @@ ONE_NOTE_MAGIC = binascii.unhexlify(b"e716e3bd65261145a4c48d4d0b7a9eac")
 class ScanOnenote(strelka.Scanner):
     """Extracts embedded files in OneNote files."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         self.event["total"] = {"files": 0, "extracted": 0}
 

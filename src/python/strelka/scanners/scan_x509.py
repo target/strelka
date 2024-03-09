@@ -16,6 +16,9 @@ class ScanX509(strelka.Scanner):
             Defaults to empty string.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         file_type = options.get("type", "")
 

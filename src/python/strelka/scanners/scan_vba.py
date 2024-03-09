@@ -15,6 +15,9 @@ class ScanVba(strelka.Scanner):
             Defaults to True.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         vba = None
         analyze_macros = options.get("analyze_macros", True)

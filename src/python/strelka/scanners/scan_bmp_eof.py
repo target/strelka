@@ -7,6 +7,9 @@ class ScanBmpEof(strelka.Scanner):
     the expected marker.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         expectedSize = int.from_bytes(data[2:6], "little")
         actualSize = len(data)

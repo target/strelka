@@ -391,6 +391,9 @@ def parse_certificates(data):
 class ScanPe(strelka.Scanner):
     """Collects metadata from PE files."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         try:
             pe = pefile.PE(data=data)

@@ -4,6 +4,9 @@ from strelka import strelka
 class ScanIni(strelka.Scanner):
     """Parses keys from INI files."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         self.event["comments"] = []
         self.event["keys"] = []

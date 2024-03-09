@@ -26,7 +26,7 @@ class ScanTlsh(strelka.Scanner):
             Defaults to 30.
     """
 
-    def init(self):
+    def init(self, options):
         self.tlsh_rules = None
 
     def scan(self, data, file, options, expire_at):

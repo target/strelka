@@ -19,6 +19,9 @@ class ScanXl4ma(strelka.Scanner):
         - iocs (list): List of IOCs extracted during scanning.
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         """
         Overrideable scan method from strelka.Scanner.

@@ -714,12 +714,15 @@ class Scanner(object):
         if not self.tracer:
             self.tracer = trace.get_tracer(__name__)
 
-        self.init()
+        mapping = backend_cfg.get("scanners", {}).get(self.name, [{}]).pop()
+        options = mapping.get("options", {})
 
-    def init(self) -> None:
+        self.init(options=options)
+
+    def init(self, options: dict = None) -> None:
         """Overrideable init.
 
-        This method can be used to setup one-time variables required
+        This method can be used to set up one-time variables required
         during scanning."""
 
     def timeout_handler(self, signal_number: int, frame: Optional[FrameType]) -> None:

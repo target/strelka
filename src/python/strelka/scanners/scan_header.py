@@ -12,6 +12,9 @@ class ScanHeader(strelka.Scanner):
         encodings: List of which fields/encodings should be emitted, one of classic, raw, hex, backslash
     """
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         length = options.get("length", 50)
         encodings = options.get("encodings", ["classic"])

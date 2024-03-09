@@ -10,6 +10,9 @@ from strelka import strelka
 class ScanSwf(strelka.Scanner):
     """Decompresses SWF files."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         with io.BytesIO(data) as swf_io:
             swf_io.seek(4)

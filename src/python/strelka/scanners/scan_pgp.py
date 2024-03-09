@@ -17,6 +17,9 @@ from strelka import strelka
 class ScanPgp(strelka.Scanner):
     """Collects metadata from PGP files."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         self.event["total"] = {
             "public_keys": 0,

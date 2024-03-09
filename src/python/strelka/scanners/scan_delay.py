@@ -6,6 +6,9 @@ from strelka import strelka
 class ScanDelay(strelka.Scanner):
     """Delays scanner execution."""
 
+    def init(self, options):
+        pass
+
     def scan(self, data, file, options, expire_at):
         delay = options.get("delay", 5.0)
 
