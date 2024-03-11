@@ -283,9 +283,9 @@ def parse_certificates(data):
     buffer.seek(0)
 
     try:
-        pefile = SignedPEFile(buffer)
+        pe = SignedPEFile(buffer)
         try:
-            signed_datas = list(pefile.signed_datas)
+            signed_datas = list(pe.signed_datas)
         except strelka.ScannerTimeout:
             raise
         except Exception:
@@ -377,7 +377,7 @@ def parse_certificates(data):
     }
 
     try:
-        pefile.verify()
+        pe.verify()
         security_dict["verification"] = True
     except strelka.ScannerTimeout:
         raise
@@ -392,8 +392,13 @@ class ScanPe(strelka.Scanner):
     """Collects metadata from PE files."""
 
     def scan(self, data, file, options, expire_at):
+        extract_overlay = options.get("extract_overlay", False)
+
         try:
             pe = pefile.PE(data=data)
+            if not pe:
+                self.flags.append("pe_load_error")
+                return
         except pefile.PEFormatError:
             self.flags.append("pe_format_error")
             return
@@ -420,6 +425,17 @@ class ScanPe(strelka.Scanner):
             "symbols": 0,
         }
         self.event["summary"] = {}
+
+        offset = pe.get_overlay_data_start_offset()
+
+        if offset and len(data[offset:]) > 0:
+            self.event["overlay"] = {"size": len(data[offset:]), "extracted": False}
+            self.flags.append("overlay")
+
+            if extract_overlay:
+                # Send extracted file back to Strelka
+                self.emit_file(data[offset:], name="pe_overlay")
+                self.event["overlay"].update({"extracted": True})
 
         if hasattr(pe, "DIRECTORY_ENTRY_DEBUG"):
             for d in pe.DIRECTORY_ENTRY_DEBUG:

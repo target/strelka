@@ -436,6 +436,8 @@ scanners:
           - 'application/x-dosexec'
           - 'mz_file'
       priority: 5
+      options:
+        extract_overlay: False
   'ScanPgp':
     - positive:
         flavors:
