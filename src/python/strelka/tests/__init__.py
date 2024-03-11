@@ -42,7 +42,7 @@ def run_test_scan(
 
     scanner.scan_wrapper(
         data=data,
-        file=File(name="test"),
+        file=File(name=fixture_path if fixture_path else "test"),
         options=options,
         expire_at=datetime.date.today(),
     )

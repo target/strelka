@@ -20,6 +20,9 @@ class ScanZip(strelka.Scanner):
             Defaults to /etc/strelka/passwords.dat.
     """
 
+    def init(self):
+        self.passwords = []
+
     def scan(self, data, file, options, expire_at):
         file_limit = options.get("limit", 100)
         size_limit = options.get("size_limit", 250000000)
@@ -27,8 +30,6 @@ class ScanZip(strelka.Scanner):
         crack_pws = options.get("crack_pws", False)
         log_pws = options.get("log_pws", True)
         password_file = options.get("password_file", "/etc/strelka/passwords.dat")
-
-        passwords = [None]
 
         # Gather count and list of files to be extracted
         self.event["total"] = {"files": 0, "extracted": 0}
@@ -38,10 +39,23 @@ class ScanZip(strelka.Scanner):
         compress_size_total = 0
         file_size_total = 0
 
-        if crack_pws and os.path.isfile(password_file):
-            with open(password_file, "rb") as f:
-                for line in f:
-                    passwords.append(line.strip())
+        if crack_pws:
+            if not self.passwords:
+                if os.path.isfile(password_file):
+                    with open(password_file, "rb") as f:
+                        for line in f:
+                            self.passwords.append(line.strip())
+
+                    if (
+                        len(self.passwords) == 0
+                        and "no_passwords_loaded" not in self.flags
+                    ):
+                        self.flags.append("no_passwords_loaded")
+                else:
+                    if "password_file_missing" not in self.flags:
+                        self.flags.append("password_file_missing")
+
+        self.passwords.insert(0, None)
 
         with io.BytesIO(data) as zip_io:
             try:
@@ -96,17 +110,17 @@ class ScanZip(strelka.Scanner):
                                 if "encrypted" not in self.flags:
                                     self.flags.append("encrypted")
 
-                            for password in passwords:
+                            for password in self.passwords:
                                 try:
                                     if extract:
                                         extract_data = zip_obj.read(
                                             compressed_file.filename, password
                                         )
                                         if extract_data:
-                                            passwords.insert(
+                                            self.passwords.insert(
                                                 0,
-                                                passwords.pop(
-                                                    passwords.index(password)
+                                                self.passwords.pop(
+                                                    self.passwords.index(password)
                                                 ),
                                             )
                                             if password and crack_pws and log_pws:
