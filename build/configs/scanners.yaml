@@ -513,6 +513,7 @@ scanners:
           - 'text/html'
           - 'text/rtf'
           - 'rtf_file'
+          - 'text/calendar'
       priority: 5
 #  'ScanVb': revisit
 #    - positive:
