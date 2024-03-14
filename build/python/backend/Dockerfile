@@ -148,7 +148,7 @@ COPY pyproject.toml poetry.lock ./
 # This step is after the COPY step because it is more likely to change,
 # and therefore should not be included in earlier layers that can be cached.
 RUN poetry config virtualenvs.create false && \
-    poetry install --no-dev && \
+    poetry install --only main && \
     rm -rf /root/.cache/pypoetry
 
 # Copy Strelka files
