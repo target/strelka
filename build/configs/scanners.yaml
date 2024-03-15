@@ -469,6 +469,7 @@ scanners:
           - 'rtf_file'
           - 'soap_file'
           - 'text/calendar'
+          - 'application/ics'
           - 'text/html'
           - 'text/plain'
           - 'text/rtf'
@@ -514,6 +515,7 @@ scanners:
           - 'text/rtf'
           - 'rtf_file'
           - 'text/calendar'
+          - 'application/ics'
       priority: 5
 #  'ScanVb': revisit
 #    - positive:
