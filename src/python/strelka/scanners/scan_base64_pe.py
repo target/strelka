@@ -5,7 +5,7 @@ import io
 from strelka import strelka
 
 
-class ScanBase64PE(strelka.Scanner):
+class ScanBase64Pe(strelka.Scanner):
     """Decodes base64-encoded file."""
 
     def scan(self, data, file, options, expire_at):
