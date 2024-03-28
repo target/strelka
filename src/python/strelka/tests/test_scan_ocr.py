@@ -465,6 +465,159 @@ def test_scan_ocr_webp(mocker):
     TestCase().assertDictEqual(test_scan_event, scanner_event)
 
 
+def test_scan_ocr_gif(mocker):
+    """
+    Pass: Sample event matches output of scanner.
+    Failure: Unable to load file or sample event fails to match.
+    """
+
+    test_scan_event = {
+        "elapsed": mock.ANY,
+        "flags": [],
+        "string_text": b"Lorem Ipsum Lorem ipsum dolor sit amet, consectetur adipisci"
+        b"ng elit. Cras lobortis sem dui. Morbi at magna quis ligula f"
+        b"aucibusconsectetur feugiat at purus. Sed nec lorem nibh. Nam"
+        b" vel libero odio. Vivamus tempus non enim egestas pretium.Ve"
+        b"stibulum turpis arcu, maximus nec libero quis, imperdiet sus"
+        b"cipit purus. Vestibulum blandit quis lacus nonsollicitudin. "
+        b"Nullam non convallis dui, et aliquet risus. Sed accumsan ull"
+        b"amcorper vehicula. Proin non urna facilisis,condimentum eros"
+        b" quis, suscipit purus. Morbi euismod imperdiet neque ferment"
+        b"um dictum. Integer aliquam, erat sitamet fringilla tempus, m"
+        b"auris ligula blandit sapien, et varius sem mauris eu diam. S"
+        b"ed fringilla neque est, in laoreetfelis tristique in. Donec "
+        b"luctus velit a posuere posuere. Suspendisse sodales pellente"
+        b"sque quam.",
+        "text": [
+            b"Lorem",
+            b"Ipsum",
+            b"Lorem",
+            b"ipsum",
+            b"dolor",
+            b"sit",
+            b"amet,",
+            b"consectetur",
+            b"adipiscing",
+            b"elit.",
+            b"Cras",
+            b"lobortis",
+            b"sem",
+            b"dui.",
+            b"Morbi",
+            b"at",
+            b"magna",
+            b"quis",
+            b"ligula",
+            b"faucibus",
+            b"consectetur",
+            b"feugiat",
+            b"at",
+            b"purus.",
+            b"Sed",
+            b"nec",
+            b"lorem",
+            b"nibh.",
+            b"Nam",
+            b"vel",
+            b"libero",
+            b"odio.",
+            b"Vivamus",
+            b"tempus",
+            b"non",
+            b"enim",
+            b"egestas",
+            b"pretium.",
+            b"Vestibulum",
+            b"turpis",
+            b"arcu,",
+            b"maximus",
+            b"nec",
+            b"libero",
+            b"quis,",
+            b"imperdiet",
+            b"suscipit",
+            b"purus.",
+            b"Vestibulum",
+            b"blandit",
+            b"quis",
+            b"lacus",
+            b"non",
+            b"sollicitudin.",
+            b"Nullam",
+            b"non",
+            b"convallis",
+            b"dui,",
+            b"et",
+            b"aliquet",
+            b"risus.",
+            b"Sed",
+            b"accumsan",
+            b"ullamcorper",
+            b"vehicula.",
+            b"Proin",
+            b"non",
+            b"urna",
+            b"facilisis,",
+            b"condimentum",
+            b"eros",
+            b"quis,",
+            b"suscipit",
+            b"purus.",
+            b"Morbi",
+            b"euismod",
+            b"imperdiet",
+            b"neque",
+            b"fermentum",
+            b"dictum.",
+            b"Integer",
+            b"aliquam,",
+            b"erat",
+            b"sit",
+            b"amet",
+            b"fringilla",
+            b"tempus,",
+            b"mauris",
+            b"ligula",
+            b"blandit",
+            b"sapien,",
+            b"et",
+            b"varius",
+            b"sem",
+            b"mauris",
+            b"eu",
+            b"diam.",
+            b"Sed",
+            b"fringilla",
+            b"neque",
+            b"est,",
+            b"in",
+            b"laoreet",
+            b"felis",
+            b"tristique",
+            b"in.",
+            b"Donec",
+            b"luctus",
+            b"velit",
+            b"a",
+            b"posuere",
+            b"posuere.",
+            b"Suspendisse",
+            b"sodales",
+            b"pellentesque",
+            b"quam.",
+        ],
+    }
+
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_text.gif",
+    )
+
+    TestCase.maxDiff = None
+    TestCase().assertDictEqual(test_scan_event, scanner_event)
+
+
 def test_scan_ocr_keep_formatting(mocker):
     """
     Pass: Sample event matches output of scanner.
