@@ -1,7 +1,7 @@
 from pathlib import Path
 from unittest import TestCase, mock
 
-from strelka.scanners.scan_base64_pe import ScanBase64PE as ScanUnderTest
+from strelka.scanners.scan_base64_pe import ScanBase64Pe as ScanUnderTest
 from strelka.tests import run_test_scan
 
 
