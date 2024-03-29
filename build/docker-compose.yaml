@@ -89,6 +89,11 @@ services:
       - DATABASE_PASSWORD=postgres
       - DATABASE_USERNAME=postgres
       - STRELKA_HOST=frontend
+      #- VIRUSTOTAL_API_KEY=<VirusTotal_API_Key>                              # Required if using VirusTotal Key
+      #- VIRUSTOTAL_API_LIMIT=50                                              # Required if using VirusTotal Key
+      #- REQUESTS_CA_BUNDLE=/etc/ssl/certs/cacerts.pem                        # Required if using VirusTotal Key
+    #volumes:
+      #- /path/to/my/custom/cacerts.pem:/etc/ssl/certs/custom_cacerts.pem:ro  # Required if using VirusTotal Key
     networks:
       - net
     ports:
