@@ -93,7 +93,7 @@ services:
       #- VIRUSTOTAL_API_LIMIT=50                                              # Required if using VirusTotal Key
       #- REQUESTS_CA_BUNDLE=/etc/ssl/certs/cacerts.pem                        # Required if using VirusTotal Key
     #volumes:
-      #- /path/to/my/custom/cacerts.pem:/etc/ssl/certs/custom_cacerts.pem:ro  # Required if using VirusTotal Key
+      #- /path/to/my/custom/cacerts.pem:/etc/ssl/certs/cacerts.pem:ro  # Required if using VirusTotal Key
     networks:
       - net
     ports:
