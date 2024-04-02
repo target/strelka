@@ -464,6 +464,23 @@ rule email_file {
         $e in (0..2048)
 }
 
+rule email_file_broad
+{
+    meta:
+        type = "email"
+    strings:
+        $ = "Received: "
+        $ = "Origin-messageId: "
+        $ = "Return-Path: "
+        $ = "From: "
+        $ = "To: "
+        $ = "Subject: "
+        $ = "Date: "
+    condition:
+        magic.mime_type() == "message/rfc822" or
+        all of them
+}
+
 rule tnef_file {
     meta:
         description = "Transport Neutral Encapsulation Format"
