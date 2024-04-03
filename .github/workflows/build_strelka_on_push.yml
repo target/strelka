@@ -14,4 +14,4 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Builds Strelka
-        run: docker-compose -f build/docker-compose.yaml build
+        run: docker compose -f build/docker-compose.yaml build
