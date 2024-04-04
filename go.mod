@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	github.com/confluentinc/confluent-kafka-go/v2 v2.2.0
+	github.com/fsnotify/fsnotify v1.5.4
 	github.com/gabriel-vasile/mimetype v1.4.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang/protobuf v1.5.3
@@ -12,10 +13,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-require (
-	github.com/fsnotify/fsnotify v1.5.4 // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
-)
+require github.com/jmespath/go-jmespath v0.4.0 // indirect
 
 require (
 	github.com/aws/aws-sdk-go v1.44.55
@@ -25,5 +23,5 @@ require (
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
-	google.golang.org/protobuf v1.30.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 )
