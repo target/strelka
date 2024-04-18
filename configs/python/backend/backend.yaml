@@ -272,6 +272,11 @@ scanners:
           - 'application/json'
           - 'json_file'
       priority: 5
+  'ScanJnlp':
+    - positive:
+        flavors:
+          - "jnlp_file"
+      priority: 5
   'ScanLibarchive':
     - positive:
         flavors:
