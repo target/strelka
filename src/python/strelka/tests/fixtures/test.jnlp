@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<jnlp spec="1.0+" codebase="https://example.com/" href="file-1.jnlp">
+   <information>
+      <title>SECURE DOCUMENT VIEWER</title>
+      <vendor>Microsoft</vendor>
+      <homepage href="https://microsoft.com"/>
+      <description>Secure document viewer app</description>
+	  </information>
+   <security>
+      <all-permissions/>
+   </security>
+   <resources>
+      <j2se version="1.6+" />
+      <jar href="uplib.jar" />
+   </resources>
+     <application-desc main-class="Viewer">
+   </application-desc>
+
+1234abcdeF56789
+</jnlp>
