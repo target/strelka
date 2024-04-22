@@ -51,11 +51,7 @@ class ScanEmail(strelka.Scanner):
         thumbnail_header = options.get("thumbnail_header", False)
         thumbnail_size = options.get("thumbnail_size", (500, 500))
 
-        # ----------------
-        # Thumbnail
-        # ----------------
-        # Create a thumbnail from the image.
-        # Stores as a base64 value in the key: base64_thumbnail
+        # Attempt to create a thumbnail from the email
         if create_thumbnail:
             try:
                 image = self.create_email_thumbnail(data, thumbnail_header)
@@ -67,184 +63,124 @@ class ScanEmail(strelka.Scanner):
                     self.event["base64_thumbnail"] = base64_image
                 else:
                     self.flags.append(
-                        f"{self.__class__.__name__}: image_thumbnail_error: Could not generate thumbnail."
+                        f"{self.__class__.__name__}: image_thumbnail_error: Could not generate thumbnail. No HTML found."
                     )
             except Exception as e:
                 self.flags.append(
                     f"{self.__class__.__name__}: image_thumbnail_error: {str(e)[:50]}"
                 )
 
-        # ----------------
-        # Parse Email Contents
-        # -------------------
+        # Parse email contents
         try:
             # Open and parse email byte string
-            # If fail to open, return.
-            try:
-                ep = eml_parser.EmlParser(
-                    include_attachment_data=True, include_raw_body=True
-                )
-                parsed_eml = ep.decode_email_bytes(data)
-            except strelka.ScannerTimeout:
-                raise
-            except Exception as e:
-                self.flags.append(
-                    f"{self.__class__.__name__}: email_parse_error: {str(e)[:50]}"
-                )
+            ep = eml_parser.EmlParser(
+                include_attachment_data=True, include_raw_body=True
+            )
+            parsed_eml = ep.decode_email_bytes(data)
 
             # Check if email was parsed properly and attempt to deconflict and reload.
-            # If fail to reparse, return.
-            try:
-                if not (
-                    parsed_eml["header"]["subject"] and parsed_eml["header"]["header"]
-                ):
-                    if b"\nReceived: from " in data:
-                        data = (
-                            data.rpartition(b"\nReceived: from ")[1]
-                            + data.rpartition(b"\nReceived: from ")[2]
-                        )[1:]
-                    elif b"Start mail input; end with <CRLF>.<CRLF>\n" in data:
-                        data = data.rpartition(
-                            b"Start mail input; end with <CRLF>.<CRLF>\n"
-                        )[2]
-                    parsed_eml = ep.decode_email_bytes(data)
-                    if not (
-                        parsed_eml["header"]["subject"]
-                        and parsed_eml["header"]["header"]
-                    ):
-                        self.flags.append(
-                            f"{self.__class__.__name__}: email_parse_error"
-                        )
-                        return
-            except strelka.ScannerTimeout:
-                raise
-            except Exception as e:
-                self.flags.append(
-                    f"{self.__class__.__name__}: email_parse_error: {str(e)[:50]}"
-                )
+            if not (parsed_eml["header"]["subject"] and parsed_eml["header"]["header"]):
+                if b"\nReceived: from " in data:
+                    data = (
+                        data.rpartition(b"\nReceived: from ")[1]
+                        + data.rpartition(b"\nReceived: from ")[2]
+                    )[1:]
+                elif b"Start mail input; end with <CRLF>.<CRLF>\n" in data:
+                    data = data.rpartition(
+                        b"Start mail input; end with <CRLF>.<CRLF>\n"
+                    )[2]
+                parsed_eml = ep.decode_email_bytes(data)
 
-            # Body
-            # If body exists in email, collect partial message contents and domains
-            try:
-                if "body" in parsed_eml:
-                    for body in parsed_eml["body"]:
-                        if "content_type" in body:
-                            if body["content_type"] == "text/plain":
-                                if len(body["content"]) <= 200:
-                                    self.event["body"] = body["content"]
-                                else:
-                                    self.event["body"] = (
-                                        body["content"][:100]
-                                        + "..."
-                                        + body["content"][-100:]
-                                    )
-                        else:
-                            self.event["body"] = (
-                                body["content"][:100] + "..." + body["content"][-100:]
-                            )
-                        if "domain" in body:
-                            if "domain" in self.event:
-                                self.event["domains"] += body["domain"]
+            # Extract body content and domains
+            if "body" in parsed_eml:
+                for body in parsed_eml["body"]:
+                    if "content_type" in body:
+                        if body["content_type"] == "text/plain":
+                            if len(body["content"]) <= 200:
+                                self.event["body"] = body["content"]
                             else:
-                                self.event["domains"] = body["domain"]
-            except strelka.ScannerTimeout:
-                raise
-            except Exception as e:
-                self.flags.append(
-                    f"{self.__class__.__name__}: email_parse_body_error: {str(e)[:50]}"
-                )
+                                self.event["body"] = (
+                                    body["content"][:100]
+                                    + "..."
+                                    + body["content"][-100:]
+                                )
+                    else:
+                        self.event["body"] = (
+                            body["content"][:100] + "..." + body["content"][-100:]
+                        )
+                    if "domain" in body:
+                        if "domain" in self.event:
+                            self.event["domains"] += body["domain"]
+                        else:
+                            self.event["domains"] = body["domain"]
 
-            # Attachments
-            # If attachments exist in email, collect attachment details and raw data to be resubmitted to pipeline.
-            try:
-                if "attachment" in parsed_eml:
-                    self.event["attachments"] = {}
-                    self.event["attachments"]["filenames"] = []
-                    self.event["attachments"]["hashes"] = []
-                    self.event["attachments"]["totalsize"] = 0
-                    for attachment in parsed_eml["attachment"]:
-                        self.event["attachments"]["filenames"].append(
-                            attachment["filename"]
-                        )
-                        self.event["attachments"]["hashes"].append(
-                            attachment["hash"]["md5"]
-                        )
-                        self.event["attachments"]["totalsize"] += attachment["size"]
-                        attachments.append(
-                            {
-                                "name": attachment["filename"],
-                                "content-type": attachment["content_header"][
-                                    "content-type"
-                                ][0],
-                                "raw": base64.b64decode(attachment["raw"]),
-                            }
-                        )
-            except strelka.ScannerTimeout:
-                raise
-            except Exception as e:
-                self.flags.append(
-                    f"{self.__class__.__name__}: email_parse_attachment_error: {str(e)[:50]}"
-                )
+            # Extract attachment details and raw data
+            if "attachment" in parsed_eml:
+                self.event["attachments"] = {
+                    "filenames": [],
+                    "hashes": [],
+                    "totalsize": 0,
+                }
+                for attachment in parsed_eml["attachment"]:
+                    self.event["attachments"]["filenames"].append(
+                        attachment["filename"]
+                    )
+                    self.event["attachments"]["hashes"].append(
+                        attachment["hash"]["md5"]
+                    )
+                    self.event["attachments"]["totalsize"] += attachment["size"]
+                    attachments.append(
+                        {
+                            "name": attachment["filename"],
+                            "content-type": attachment["content_header"][
+                                "content-type"
+                            ][0],
+                            "raw": base64.b64decode(attachment["raw"]),
+                        }
+                    )
 
-            # Header
-            # Collect email header information
-            try:
-                self.event["subject"] = parsed_eml["header"]["subject"]
-                self.event["to"] = parsed_eml["header"]["to"]
-                self.event["from"] = parsed_eml["header"]["from"]
+            # Extract email header information
+            self.event["subject"] = parsed_eml["header"].get("subject", "")
+            self.event["to"] = parsed_eml["header"].get("to", "")
+            self.event["from"] = parsed_eml["header"].get("from", "")
+            date_header = parsed_eml["header"].get("date")
+            if date_header:
                 self.event["date_utc"] = (
-                    parsed_eml["header"]["date"].astimezone(pytz.utc).isoformat()[:-6]
-                    + ".000Z"
+                    date_header.astimezone(pytz.utc).isoformat()[:-6] + ".000Z"
                 )
-                self.event["message_id"] = str(
-                    parsed_eml["header"]["header"]["message-id"][0]
-                    .lstrip("<")
-                    .rstrip(">")
-                )
-                if "received_domain" in parsed_eml["header"]:
-                    self.event["received_domain"] = parsed_eml["header"][
-                        "received_domain"
-                    ]
-                if "received_ip" in parsed_eml["header"]:
-                    self.event["received_ip"] = parsed_eml["header"]["received_ip"]
-            except strelka.ScannerTimeout:
-                raise
-            except Exception as e:
-                self.flags.append(
-                    f"{self.__class__.__name__}: email_parse_header_error: {str(e)[:50]}"
-                )
+            header = parsed_eml.get("header", {}).get("header", {})
+            message_id = header.get("message-id", [])[0] if header else None
+            self.event["message_id"] = (
+                str(message_id.lstrip("<").rstrip(">")) if message_id else ""
+            )
+            self.event["received_domain"] = parsed_eml["header"].get(
+                "received_domain", []
+            )
+            self.event["received_ip"] = parsed_eml["header"].get("received_ip", [])
 
-            # If attachments were found, submit back into pipeline
-            try:
-                if attachments:
-                    for attachment in attachments:
-                        self.event["total"]["attachments"] += 1
+            # Process attachments
+            if attachments:
+                for attachment in attachments:
+                    self.event["total"]["attachments"] += 1
+                    name = attachment["name"]
+                    try:
+                        flavors = [
+                            attachment["content-type"]
+                            .encode("utf-8")
+                            .partition(b";")[0]
+                        ]
+                    except Exception as e:
+                        self.flags.append(
+                            f"{self.__class__.__name__}: email_extract_attachment_error: {str(e)[:50]}"
+                        )
+                    # Send extracted file back to Strelka
+                    self.emit_file(attachment["raw"], name=name, flavors=flavors)
+                    self.event["total"]["extracted"] += 1
 
-                        name = attachment["name"]
-                        try:
-                            flavors = [
-                                attachment["content-type"]
-                                .encode("utf-8")
-                                .partition(b";")[0]
-                            ]
-                        except Exception as e:
-                            self.flags.append(
-                                f"{self.__class__.__name__}: email_extract_attachment_error: {str(e)[:50]}"
-                            )
-
-                        # Send extracted file back to Strelka
-                        self.emit_file(attachment["raw"], name=name, flavors=flavors)
-
-                        self.event["total"]["extracted"] += 1
-            except strelka.ScannerTimeout:
-                raise
-            except Exception as e:
-                self.flags.append(
-                    f"{self.__class__.__name__}: email_extract_attachment_error: {str(e)[:50]}"
-                )
-
-        except AssertionError:
-            self.flags.append(f"{self.__class__.__name__}: email_assertion_error")
+        except Exception as e:
+            self.flags.append(
+                f"{self.__class__.__name__}: email_parse_error: {str(e)[:50]}"
+            )
 
     def create_email_thumbnail(self, data, show_header):
         """

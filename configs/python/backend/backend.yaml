@@ -1,3 +1,4 @@
+
 version: 2024.04.22.01
 logging_cfg: '/etc/strelka/logging.yaml'
 limits:
@@ -107,6 +108,7 @@ scanners:
           - 'application/vnd.ms-outlook'
           - 'message/rfc822'
           - 'email_file'
+          - 'email_file_broad'
       priority: 5
       options:
         create_thumbnail: True
@@ -271,6 +273,11 @@ scanners:
         flavors:
           - 'application/json'
           - 'json_file'
+      priority: 5
+  'ScanJnlp':
+    - positive:
+        flavors:
+          - "jnlp_file"
       priority: 5
   'ScanLibarchive':
     - positive:
