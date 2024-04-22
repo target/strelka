@@ -1,23 +1,27 @@
-<?xml version="1.0"?>
-<package format="2">
-  <name>flea3</name>
-  <version>0.1.0</version>
-  <description>The flea3 package</description>
-
-  <maintainer email="quchao@seas.upenn.edu">Chao Qu</maintainer>
-
-  <license>WTFPL</license>
-  <buildtool_depend>catkin</buildtool_depend>
-
-  <depend>roscpp</depend>
-  <depend>nodelet</depend>
-  <depend>camera_base</depend>
-  <!--<depend>std_msgs</depend>-->
-  <depend>dynamic_reconfigure</depend>
-  <build_depend>message_generation</build_depend>
-  <exec_depend>message_runtime</exec_depend>
-
-  <export>
-    <nodelet plugin="${prefix}/nodelet_plugins.xml"/>
-  </export>
-</package>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE bookstore SYSTEM "bookstore.dtd">
+<bookstore xmlns:bk="http://example.com/books" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://example.com/books bookstore.xsd">
+  <metadata>
+    <description>This is a sample bookstore XML file containing nonfiction science books.</description>
+  </metadata>
+  <bk:book category="science">
+    <bk:title lang="en">A Brief History of Time</bk:title>
+    <bk:author>Stephen Hawking</bk:author>
+    <bk:year>1988</bk:year>
+    <bk:price>25.00</bk:price>
+    <signedinfo>
+      <signature>XYZ123456789</signature>
+      <timestamp>2024-04-05T14:00:00</timestamp>
+    </signedinfo>
+  </bk:book>
+  <bk:book category="science">
+    <bk:title lang="en">Cosmos</bk:title>
+    <bk:author>Carl Sagan</bk:author>
+    <bk:year>1980</bk:year>
+    <bk:price>20.00</bk:price>
+    <signedinfo>
+      <signature>987ABCDEF321</signature>
+      <timestamp>2024-04-05T15:00:00</timestamp>
+    </signedinfo>
+  </bk:book>
+</bookstore>

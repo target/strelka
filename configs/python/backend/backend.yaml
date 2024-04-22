@@ -1,4 +1,4 @@
-version: 2024.02.01.01
+version: 2024.04.22.01
 logging_cfg: '/etc/strelka/logging.yaml'
 limits:
   max_files: 5000
@@ -680,6 +680,19 @@ scanners:
           - 'mso_file'
           - 'soap_file'
       priority: 5
+      options:
+        extract_tags:
+          - "target"
+          - "script"
+          - "embeddedfile"
+          - "cipherdata"
+          - "data"
+          - "signedinfo"
+          - "encrypteddata"
+        metadata_tags:
+          - "type"
+          - "description"
+          - "maintainer"
   'ScanYara':
     - positive:
         flavors:
