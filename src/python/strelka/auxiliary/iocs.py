@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 
 import tldextract
 
+
 def extract_iocs_from_string(input_string):
     """
     Extracts various types of Indicators of Compromise (IOCs) from a string.
@@ -16,6 +17,7 @@ def extract_iocs_from_string(input_string):
     iocs.update(extract_domains_from_string(input_string))
     iocs.update(extract_ip_addresses(input_string))
     return list(iocs)
+
 
 def extract_domains_from_string(input_string):
     """
