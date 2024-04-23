@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE Relationships SYSTEM "relationships.dtd">
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+    <!-- Image relationships pointing to local file paths -->
+    <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image1.png"/>
+    <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image2.png"/>
+    <!-- Hyperlink relationship pointing to an external executable -->
+    <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="file:///\\\\127.0.0.1\\share\\EXCEL_OPEN_DOCUMENT.vbs" TargetMode="External"/>
+    <!-- Embedded PNG file encoded in Base64 -->
+    <EmbeddedFile Id="file1" Type="image/png">
+        <Data>
+            iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==
+        </Data>
+    </EmbeddedFile>
+    <!-- Embedded JavaScript script within the XML -->
+    <Script Id="sId1" Language="JavaScript">
+        <![CDATA[
+        function showAlert() {
+            alert('This is an embedded script within XML!');
+        }
+        ]]>
+    </Script>
+    <!-- Digital signature for verifying the integrity and authenticity of the embedded file -->
+    <SignedInfo Id="signId1">
+        <CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
+        <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/>
+        <Reference URI="#file1">
+            <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/>
+            <DigestValue>djIANGx3Z5m5/IvVbAAAAA==</DigestValue>
+        </Reference>
+    </SignedInfo>
+    <!-- Example of encrypted data within XML -->
+    <EncryptedData Id="encData1" Type="http://www.w3.org/2001/04/xmlenc#Element">
+        <EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes256-cbc"/>
+        <CipherData>
+            <CipherValue>A23B45C56D...</CipherValue>
+        </CipherData>
+    </EncryptedData>
+    <!-- Additional examples of various URL targets -->
+    <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="https://www.example.com" TargetMode="External"/>
+    <Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="mailto:user@example.com" TargetMode="External"/>
+    <Relationship Id="rId6" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="ftp://ftp.example.com/resource" TargetMode="External"/>
+</Relationships>
