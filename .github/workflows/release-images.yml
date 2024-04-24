@@ -32,16 +32,18 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2.2.0
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        id: login-aws
         continue-on-error: true
         with:
+          output-credentials: true
           role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
           role-duration-seconds: 7200 # 2 hours
           aws-region: us-east-1
 
       - name: 2nd Attempt Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2.2.0
-        if: ${{ env.AWS_ACCESS_KEY_ID == '' }}
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        if: ${{ steps.login-aws.outputs.aws-access-key-id == '' }}
         with:
           role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
           role-duration-seconds: 7200 # 2 hours
@@ -50,6 +52,38 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Configure AWS credentials (Gov Cloud)
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        continue-on-error: true
+        id: login-aws-gov-cloud
+        with:
+          output-credentials: true
+          unset-current-credentials: true
+          role-to-assume: ${{ secrets.ECR_GOV_CLOUD_REPO_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
+          aws-region: us-gov-east-1
+
+      - name: 2nd Attempt Configure AWS credentials (Gov Cloud)
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        if: ${{ steps.login-aws-gov-cloud.outputs.aws-access-key-id == '' }}
+        with:
+          unset-current-credentials: true
+          role-to-assume: ${{ secrets.ECR_GOV_CLOUD_REPO_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
+          aws-region: us-gov-east-1
+
+      - name: Login to Amazon ECR (GovCloud)
+        id: login-ecr-gov-cloud
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Validate ECR Repos
+        run: |
+          # If something is wrong with the GovCloud login the GovCloud ECR login will succeed using the standard creds
+          # Make sure we have two different ECR repos to make this clear.
+          if [[  ${{ steps.login-ecr.outputs.registry }} = ${{ steps.login-ecr-gov-cloud.outputs.registry }} ]]; then
+            exit 1
+          fi
 
       - name: Determine the version from the tag
         id: get_ver
@@ -80,6 +114,7 @@ jobs:
           tags: |
             sublimesec/strelka-frontend:${{ matrix.arch }}-${{ steps.get_ver.outputs.SEM_VER }}
             ${{ steps.login-ecr.outputs.registry }}/strelka-frontend:${{ matrix.arch }}-${{ steps.get_ver.outputs.SEM_VER }}
+            ${{ steps.login-ecr-gov-cloud.outputs.registry }}/strelka-frontend:${{ matrix.arch }}-${{ steps.get_ver.outputs.SEM_VER }}
 
       - name: Build BackEnd
         uses: docker/build-push-action@v2
@@ -91,6 +126,7 @@ jobs:
           tags: |
             sublimesec/strelka-backend:${{ matrix.arch }}-${{ steps.get_ver.outputs.SEM_VER }}
             ${{ steps.login-ecr.outputs.registry }}/strelka-backend:${{ matrix.arch }}-${{ steps.get_ver.outputs.SEM_VER }}
+            ${{ steps.login-ecr-gov-cloud.outputs.registry }}/strelka-backend:${{ matrix.arch }}-${{ steps.get_ver.outputs.SEM_VER }}
 
       - name: Build Manager
         uses: docker/build-push-action@v2
@@ -102,26 +138,33 @@ jobs:
           tags: |
             sublimesec/strelka-manager:${{ matrix.arch }}-${{ steps.get_ver.outputs.SEM_VER }}
             ${{ steps.login-ecr.outputs.registry }}/strelka-manager:${{ matrix.arch }}-${{ steps.get_ver.outputs.SEM_VER }}
+            ${{ steps.login-ecr-gov-cloud.outputs.registry }}/strelka-manager:${{ matrix.arch }}-${{ steps.get_ver.outputs.SEM_VER }}
 
       - name: Push FrontEnd
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_GC_REGISTRY: ${{ steps.login-ecr-gov-cloud.outputs.registry }}
         run: |
           docker push --all-tags $ECR_REGISTRY/strelka-frontend
+          docker push --all-tags $ECR_GC_REGISTRY/strelka-backend
           docker push --all-tags sublimesec/strelka-frontend
 
       - name: Push BackEnd
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_GC_REGISTRY: ${{ steps.login-ecr-gov-cloud.outputs.registry }}
         run: |
           docker push --all-tags $ECR_REGISTRY/strelka-backend
+          docker push --all-tags $ECR_GC_REGISTRY/strelka-backend
           docker push --all-tags sublimesec/strelka-backend
 
       - name: Push Manager
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_GC_REGISTRY: ${{ steps.login-ecr-gov-cloud.outputs.registry }}
         run: |
           docker push --all-tags $ECR_REGISTRY/strelka-manager
+          docker push --all-tags $ECR_GC_REGISTRY/strelka-manager
           docker push --all-tags sublimesec/strelka-manager
 
   manifest_image:
@@ -135,16 +178,18 @@ jobs:
 
     steps:
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2.2.0
+        uses: aws-actions/configure-aws-credentials@v4.0.2
         continue-on-error: true
+        id: login-aws
         with:
+          output-credentials: true
           role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
           role-duration-seconds: 7200 # 2 hours
           aws-region: us-east-1
 
       - name: 2nd Attempt Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2.2.0
-        if: ${{ env.AWS_ACCESS_KEY_ID == '' }}
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        if: ${{ steps.login-aws.outputs.aws-access-key-id == '' }}
         with:
           role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
           role-duration-seconds: 7200 # 2 hours
@@ -153,6 +198,38 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Configure AWS credentials (Gov Cloud)
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        continue-on-error: true
+        id: login-aws-gov-cloud
+        with:
+          output-credentials: true
+          unset-current-credentials: true
+          role-to-assume: ${{ secrets.ECR_GOV_CLOUD_REPO_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
+          aws-region: us-gov-east-1
+
+      - name: 2nd Attempt Configure AWS credentials (Gov Cloud)
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        if: ${{ steps.login-aws-gov-cloud.outputs.aws-access-key-id == '' }}
+        with:
+          unset-current-credentials: true
+          role-to-assume: ${{ secrets.ECR_GOV_CLOUD_REPO_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
+          aws-region: us-gov-east-1
+
+      - name: Login to Amazon ECR (GovCloud)
+        id: login-ecr-gov-cloud
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Validate ECR Repos
+        run: |
+          # If something is wrong with the GovCloud login the GovCloud ECR login will succeed using the standard creds
+          # Make sure we have two different ECR repos to make this clear.
+          if [[  ${{ steps.login-ecr.outputs.registry }} = ${{ steps.login-ecr-gov-cloud.outputs.registry }} ]]; then
+            exit 1
+          fi
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -172,6 +249,7 @@ jobs:
           SEM_VER: ${{ steps.get_ver.outputs.SEM_VER }}
           MINOR_VERSION:  ${{ steps.get_ver.outputs.MINOR_VERSION }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_GC_REGISTRY: ${{ steps.login-ecr-gov-cloud.outputs.registry }}
         run: |
           amd_tag=amd64-$SEM_VER
           arm_tag=arm64-$SEM_VER
@@ -179,41 +257,56 @@ jobs:
           # Backend
           docker_hub=sublimesec/strelka-backend
           ecr=$ECR_REGISTRY/strelka-backend
+          ecr_gc=$ECR_GC_REGISTRY/strelka-backend
           docker manifest create $docker_hub:$SEM_VER \
               $docker_hub:$amd_tag \
               $docker_hub:$arm_tag
           docker manifest create $ecr:$SEM_VER \
               $ecr:$amd_tag \
               $ecr:$arm_tag
+          docker manifest create $ecr_gc:$SEM_VER \
+              $ecr_gc:$amd_tag \
+              $ecr_gc:$arm_tag
 
           docker manifest push $docker_hub:$SEM_VER
           docker manifest push $ecr:$SEM_VER
+          docker manifest push $ecr_gc:$SEM_VER
 
           # Frontend
           docker_hub=sublimesec/strelka-frontend
           ecr=$ECR_REGISTRY/strelka-frontend
+          ecr_gc=$ECR_GC_REGISTRY/strelka-frontend
           docker manifest create $docker_hub:$SEM_VER \
               $docker_hub:$amd_tag \
               $docker_hub:$arm_tag
           docker manifest create $ecr:$SEM_VER \
               $ecr:$amd_tag \
               $ecr:$arm_tag
+          docker manifest create $ecr_gc:$SEM_VER \
+              $ecr_gc:$amd_tag \
+              $ecr_gc:$arm_tag
 
           docker manifest push $docker_hub:$SEM_VER
           docker manifest push $ecr:$SEM_VER
+          docker manifest push $ecr_gc:$SEM_VER
 
           # Manager
           docker_hub=sublimesec/strelka-manager
           ecr=$ECR_REGISTRY/strelka-manager
+          ecr_gc=$ECR_GC_REGISTRY/strelka-manager
           docker manifest create $docker_hub:$SEM_VER \
               $docker_hub:$amd_tag \
               $docker_hub:$arm_tag
           docker manifest create $ecr:$SEM_VER \
               $ecr:$amd_tag \
               $ecr:$arm_tag
+          docker manifest create $ecr_gc:$SEM_VER \
+              $ecr_gc:$amd_tag \
+              $ecr_gc:$arm_tag
 
           docker manifest push $docker_hub:$SEM_VER
           docker manifest push $ecr:$SEM_VER
+          docker manifest push $ecr_gc:$SEM_VER
 
   validate_x_region_replication:
     name: Validate that ECR Images Have Propagated to All Regions
@@ -229,16 +322,18 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2.2.0
+        uses: aws-actions/configure-aws-credentials@v4.0.2
         continue-on-error: true
+        id: login-aws
         with:
+          output-credentials: true
           role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
           role-duration-seconds: 7200 # 2 hours
           aws-region: us-east-1
 
       - name: 2nd Attempt Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2.2.0
-        if: ${{ env.AWS_ACCESS_KEY_ID == '' }}
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        if: ${{ steps.login-aws.outputs.aws-access-key-id == '' }}
         with:
           role-to-assume: ${{ secrets.ECR_REPO_ROLE }}
           role-duration-seconds: 7200 # 2 hours
