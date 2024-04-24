@@ -146,7 +146,7 @@ jobs:
           ECR_GC_REGISTRY: ${{ steps.login-ecr-gov-cloud.outputs.registry }}
         run: |
           docker push --all-tags $ECR_REGISTRY/strelka-frontend
-          docker push --all-tags $ECR_GC_REGISTRY/strelka-backend
+          docker push --all-tags $ECR_GC_REGISTRY/strelka-frontend
           docker push --all-tags sublimesec/strelka-frontend
 
       - name: Push BackEnd
