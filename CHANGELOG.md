@@ -1,6 +1,12 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2024-04-17
+- Adding `ScanJnlp` scanner.
+- Refactored `ScanXml` scanner to include more extraction potential / IoCs.
+- Refacted `ScanEmail` scanner to include safer collection of fields.
+- Bumping several dependencies.
+
 ## 2024-03-04
 - Updating `ScanYara` with additional grouping / metadata functionality.
 
