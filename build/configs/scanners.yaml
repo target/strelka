@@ -409,6 +409,7 @@ scanners:
           - 'image/tiff'
           - 'type_is_tiff'
           - 'image/x-ms-bmp'
+          - 'image/bmp'
           - 'bmp_file'
           - 'image/webp'
       priority: 5
