@@ -50,7 +50,7 @@ jobs:
           unset-current-credentials: true
           role-to-assume: ${{ secrets.ECR_GOV_CLOUD_REPO_ROLE }}
           role-duration-seconds: 7200 # 2 hours
-          aws-region: us-gov-east-1
+          aws-region: us-gov-west-1
 
       - name: 2nd Attempt Configure AWS credentials (Gov Cloud)
         uses: aws-actions/configure-aws-credentials@v4.0.2
@@ -59,7 +59,7 @@ jobs:
           unset-current-credentials: true
           role-to-assume: ${{ secrets.ECR_GOV_CLOUD_REPO_ROLE }}
           role-duration-seconds: 7200 # 2 hours
-          aws-region: us-gov-east-1
+          aws-region: us-gov-west-1
 
       - name: Login to Amazon ECR (GovCloud)
         id: login-ecr-gov-cloud
