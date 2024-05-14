@@ -12,7 +12,7 @@ from strelka.cstructs.lnk import (
 )
 
 
-class ScanLNK(strelka.Scanner):
+class ScanLnk(strelka.Scanner):
     """Collects metadata from LNK files."""
 
     def scan(self, data, file, options, expire_at):
