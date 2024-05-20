@@ -332,7 +332,7 @@ scanners:
       priority: 5
       options:
         limit: 1000
-  'ScanLNK':
+  'ScanLnk':
     - positive:
         flavors:
           - 'lnk_file'

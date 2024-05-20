@@ -38,7 +38,7 @@ test_assignments_expected: dict = {
     ],
     "test.js": ["ScanJavascript"],
     "test.json": ["ScanJson"],
-    "test.lnk": ["ScanExiftool", "ScanLNK"],
+    "test.lnk": ["ScanExiftool", "ScanLnk"],
     "test.macho": ["ScanMacho"],
     "test.msi": [
         "ScanExiftool",
