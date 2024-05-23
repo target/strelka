@@ -6,18 +6,20 @@ import io
 import logging
 import os
 import tempfile
+from typing import List
+from urllib.parse import urlparse
 
 import eml_parser
 import fitz  # PyMuPDF
 import pytz
 from PIL import Image
-from weasyprint import HTML
+from weasyprint import HTML, default_url_fetcher
 
 from strelka import strelka
 
 # Configure logging to suppress warnings for WeasyPrint and informational messages for fontTools
 weasyprint_logger = logging.getLogger("weasyprint")
-weasyprint_logger.setLevel(logging.ERROR)
+weasyprint_logger.setLevel(logging.CRITICAL)
 
 fonttools_logger = logging.getLogger("fontTools.subset")
 fonttools_logger.setLevel(logging.WARNING)
@@ -25,23 +27,86 @@ fonttools_logger.setLevel(logging.WARNING)
 
 class ScanEmail(strelka.Scanner):
     """
-    Scanner that collects metadata, extracts files from email messages, and generates thumbnails.
+    Extracts and analyzes metadata, attachments, and optionally generates thumbnails from email messages.
 
-    This scanner processes email files to extract metadata, attachments, and generates
-    thumbnail images of the email content for a visual overview. It handles both plain text and HTML emails,
+    This scanner processes email files to extract and analyze metadata, attachments, and optionally generates
+    thumbnail images of the email content for a visual overview. It supports both plain text and HTML emails,
     including inline images.
+
+    Scanner Type: Collection
+
+    Attributes:
+        None
+
+    Other Parameters:
+        create_thumbnail (bool): Indicates whether a thumbnail should be generated for the email content.
+        thumbnail_header (bool): Indicates whether email header information should be included in the thumbnail.
+        thumbnail_size (int): Specifies the dimensions for the generated thumbnail images.
+
+    ## Detection Use Cases
+    !!! info "Detection Use Cases"
+        - **Document Extraction**
+            - Extracts and analyzes documents, including attachments, from email messages for content review.
+        - **Thumbnail Generation**
+            - Optionally generates thumbnail images of email content for visual analysis, which can be useful for
+            quickly identifying the content of emails.
+        - **Email Header Analysis**
+            - Analyzes email headers for potential indicators of malicious activity, such as suspicious sender addresses
+            or subject lines.
+
+    ## Known Limitations
+    !!! warning "Known Limitations"
+        - **Email Encoding and Complex Structures**
+            - Limited support for certain email encodings or complex email structures.
+        - **Thumbnail Accuracy**
+            - Thumbnail generation may not accurately represent the email content in all cases,
+            especially for emails with complex layouts or embedded content.
+        - **Limited Output**
+            - Content is limited to a set amount of characters to prevent excessive output.
+
+    ## To Do
+    !!! question "To Do"
+        - **Improve Error Handling**:
+            - Enhance error handling for edge cases and complex email structures.
+        - **Enhance Support for Additional Email Encodings and Content Types**:
+            - Expand support for various email encodings and content types to improve scanning accuracy.
+
+    ## References
+    !!! quote "References"
+        - [Python Email Parsing Documentation](https://docs.python.org/3/library/email.html)
+        - [WeasyPrint Documentation](https://doc.courtbouillon.org/weasyprint/stable/)
+        - [PyMuPDF (fitz) Documentation](https://pymupdf.readthedocs.io/en/latest/)
+
+    ## Contributors
+    !!! example "Contributors"
+        - [Josh Liburdi](https://github.com/jshlbrd)
+        - [Paul Hutelmyer](https://github.com/phutelmyer)
+        - [Ryan O'Horo](https://github.com/ryanohoro)
+
     """
 
-    def scan(self, data, file, options, expire_at):
+    def scan(
+        self,
+        data: bytes,
+        file: strelka.File,
+        options: dict,
+        expire_at: int,
+    ) -> None:
         """
-        Processes the email, extracts metadata and attachments, and optionally generates a thumbnail.
+        Processes the email, extracts metadata, attachments, and optionally generates a thumbnail.
 
         Args:
-            data: The raw email data.
-            file: File details.
-            options: Scanner options including thumbnail creation and size.
-            expire_at: Expiry time of the scan.
+            data (bytes): The raw email data.
+            file (strelka.File): File details.
+            options (dict): Scanner options including thumbnail creation and size.
+            expire_at (int): Expiry time of the scan.
+
+        Processes the email to extract metadata, attachments, and optionally generates a thumbnail image
+        of the email content. The thumbnail generation is based on user options and can include the email
+        header for context.
+
         """
+
         # Initialize data structures for storing scan results
         attachments = []
         self.event["total"] = {"attachments": 0, "extracted": 0}
@@ -182,20 +247,22 @@ class ScanEmail(strelka.Scanner):
                 f"{self.__class__.__name__}: email_parse_error: {str(e)[:50]}"
             )
 
-    def create_email_thumbnail(self, data, show_header):
+    def create_email_thumbnail(self, data: bytes, show_header: bool) -> Image:
         """
         Generates a thumbnail image from the content of an email message.
 
         This function processes the email to extract images and text, combines them into
-        a single image, and returns that image.
+        a single image, and returns that image. The thumbnail can optionally include the email header
+        details for context.
 
         Args:
-            show_header: Whether to show the header details in the output.
-            data: Raw email data.
+            data (bytes): Raw email data.
+            show_header (bool): Whether to show the header details in the output.
 
         Returns:
             A PIL Image object representing the combined thumbnail image of the email.
             None if no images could be created.
+
         """
         # Supported image types for extraction from the email
         image_types = [
@@ -274,7 +341,7 @@ class ScanEmail(strelka.Scanner):
             return None
 
     @staticmethod
-    def html_to_image(html_content, temp_dir):
+    def html_to_image(html_content: str, temp_dir: str) -> str:
         """
         Converts HTML content to an image.
 
@@ -282,11 +349,12 @@ class ScanEmail(strelka.Scanner):
         uses PyMuPDF (fitz) to render the PDF as an image. The rendered image is saved as a PNG file.
 
         Args:
-            html_content: HTML content to be converted into an image.
-            temp_dir: Temporary directory to store intermediate files.
+            html_content (str): HTML content to be converted into an image.
+            temp_dir (str): Temporary directory to store intermediate files.
 
         Returns:
             The file path to the generated image, or None if the process fails.
+
         """
         # Generate a unique filename for the PDF
         pdf_filename = hashlib.md5(html_content.encode()).hexdigest() + ".pdf"
@@ -294,7 +362,7 @@ class ScanEmail(strelka.Scanner):
 
         # Convert HTML to a PDF using WeasyPrint
         try:
-            HTML(string=html_content).write_pdf(pdf_path)
+            HTML(string=html_content, url_fetcher=local_fetch_only).write_pdf(pdf_path)
 
             # Open the PDF with fitz and render the first page as an image
             with fitz.open(pdf_path) as doc:
@@ -312,7 +380,7 @@ class ScanEmail(strelka.Scanner):
             return None
 
     @staticmethod
-    def append_images(images):
+    def append_images(images: List[Image.Image]) -> Image.Image:
         """
         Combines multiple image objects into a single image.
 
@@ -320,10 +388,11 @@ class ScanEmail(strelka.Scanner):
         It's particularly useful for creating a visual summary of an email's content.
 
         Args:
-            images: A list of PIL Image objects to be combined.
+            images (list): A list of PIL Image objects to be combined.
 
         Returns:
             A single PIL Image object that combines all the input images.
+
         """
         # Define the background color for the combined image
         bg_color = (255, 255, 255)
@@ -345,7 +414,7 @@ class ScanEmail(strelka.Scanner):
         return combined_image
 
     @staticmethod
-    def decode_and_format_header(msg, header_name):
+    def decode_and_format_header(msg: email.message.Message, header_name: str) -> str:
         """
         Decodes and safely formats a specific header field from an email message.
 
@@ -353,12 +422,13 @@ class ScanEmail(strelka.Scanner):
         into a human-readable format, and also ensures that the text is safe for HTML display.
 
         Args:
-            msg: Parsed email message object.
-            header_name: The name of the header field to decode.
+            msg (email.message.Message): Parsed email message object.
+            header_name (str): The name of the header field to decode.
 
         Returns:
-            A string representing the decoded and header field values.
+            A string representing the decoded and formatted header field values.
             Returns a placeholder string if the header field is missing or cannot be decoded.
+
         """
         try:
             # Decode the specified header field
@@ -372,3 +442,33 @@ class ScanEmail(strelka.Scanner):
 
         # Replace angle brackets for HTML safety
         return field_value.replace("<", "&lt;").replace(">", "&gt;")
+
+
+def local_fetch_only(url, *args, **kwargs):
+    """
+    Custom URL fetcher for WeasyPrint that prevents any external network access.
+
+    This function allows only local file paths and base64 encoded data. It blocks all other URLs, including
+    HTTP, HTTPS, FTP, and IP addresses, ensuring that no external network access occurs during the fetching
+    process.
+
+    Args:
+        url (str): The URL to fetch.
+        *args: Additional positional arguments.
+        **kwargs: Additional keyword arguments.
+
+    Returns:
+        dict: A dictionary containing an empty string for 'string', 'text/plain' for 'mime_type', and 'utf8' for 'encoding'
+              if the URL is blocked. Otherwise, it uses the default fetcher for local resources.
+    """
+    try:
+        parsed_url = urlparse(url)
+
+        # Allow base64 encoded data or local file paths
+        if parsed_url.scheme in ("data", "file", ""):
+            return default_url_fetcher(url, *args, **kwargs)
+    except:
+        pass
+
+    # Block all other URLs (http, https, ftp, IP addresses, etc.)
+    return {"string": "", "mime_type": "text/plain", "encoding": "utf8"}
