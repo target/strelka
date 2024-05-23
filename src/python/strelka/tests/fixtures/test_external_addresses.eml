@@ -1,0 +1,40 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: Test Email with HTML Content and External Resources
+Date: Tue, 1 Jun 2021 12:34:56 -0700
+Message-ID: <test@example.com>
+Content-Type: multipart/related; boundary="000000000000b3d4e605c8491234"
+
+--000000000000b3d4e605c8491234
+Content-Type: multipart/alternative; boundary="000000000000b3d4e605c8495678"
+
+--000000000000b3d4e605c8495678
+Content-Type: text/plain; charset="UTF-8"
+
+This is a test email with plain text content.
+
+--000000000000b3d4e605c8495678
+Content-Type: text/html; charset="UTF-8"
+
+<html>
+  <body>
+    <p>This is a <b>test email</b> with HTML content.</p>
+    <p>Here are some external resources:</p>
+    <img src="http://example.com/testimage.png">
+    <img src="ftp://example.com/testimage.png">
+    <img src="http://192.168.1.2/testimage.png">
+    <img src="cid:testimage">
+  </body>
+</html>
+
+--000000000000b3d4e605c8495678--
+
+--000000000000b3d4e605c8491234
+Content-Type: image/png; name="testimage.png"
+Content-Disposition: inline; filename="testimage.png"
+Content-ID: <testimage>
+Content-Transfer-Encoding: base64
+
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/gtLZ4cAAAAASUVORK5CYII=
+
+--000000000000b3d4e605c8491234--

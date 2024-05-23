@@ -1,3 +1,4 @@
+import base64
 from pathlib import Path
 from unittest import TestCase, mock
 
@@ -199,3 +200,59 @@ def test_scan_email_incomplete(mocker):
 
     TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_event, scanner_event)
+
+
+def test_scan_email_external_connections(mocker):
+    """
+    Pass: Sample event matches output of scanner.
+    Failure: Unable to load file or sample event fails to match.
+    """
+
+    test_scan_event = {
+        "elapsed": mock.ANY,
+        "flags": [],
+        "total": {"attachments": 1, "extracted": 1},
+        "base64_thumbnail": "UklGRggDAABXRUJQVlA4IPwCAABQMgCdASpiAfQBPxGIvlmsKaYjoNz4AYAiCWlu6dB19Ru0PhPU8YbAZdBQDvu8O4WRlAPdTfRtQ5xlAPdTfRtQ5xlAPdMQpQJk8zx+uQDXfdEXeGsM80vZfgTLE2W+9qAe6m+jaWA1n0CvNF5rAA8HX0wEnDYR1awfk2woGUA91N9G1MZgd7upvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvo2oc4ygHupvoxAA/v+1iWiJB5pCNSiuEZLQ/hQ0tSwhIH8V8VOuLZZ6JU4RMO+GIxmkgPwphRCJWEGl9jO+Ypqj582f0PNYl2z8SF2yIYHVllhV7fpViEadVTEGpILt7b3EVTPkjYifOeyMMbqVcjy8CE1m5zYaLBRj9ez6fb8Wk+k+mqZGIdNG0pG54bqtVVyxOSW2y4AqrP+DVGf6EtkKpKHdThD0fDlOjdci8mq352cJHEZPrhuNmER2PZeLTkrX7XzGeQxyn7faldzML5PaqYeZdDpcagv9HIupyM/LQH47ERSIK3+WZNPGNaB0Fe7OQ3bP02hi3VTysG5vPQOB+pn+o45szcH4gT6wLq6HPbCNXU4vmSuE8kPSMubEynkUMfJD2W3gW0l+BS3u4VCQ5rYRVDHHceVYANOi6P8YMEInuKzOHHlTnNKipHt7ZT6tT2Rk00AAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+        "body": "This is a test email with plain text content.\n",
+        "domains": ["example.com"],
+        "attachments": {
+            "filenames": ["testimage.png"],
+            "hashes": ["d002d8a11baef4f66f6120b21fa2d4e3"],
+            "totalsize": 68,
+        },
+        "subject": "Test Email with HTML Content and External Resources",
+        "to": ["recipient@example.com"],
+        "from": "sender@example.com",
+        "date_utc": "2021-06-01T19:34:56.000Z",
+        "message_id": "test@example.com",
+        "received_domain": [],
+        "received_ip": [],
+    }
+
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_external_addresses.eml",
+        options={
+            "create_thumbnail": True,
+        },
+    )
+
+    # Thumbnail generation differs between host OS for this use case.
+    # Set a threshold for the acceptable length difference in base64 thumbnail generation
+    length_threshold_percentage = 0.2  # Allow up to 20% difference in length
+
+    test_length = len(test_scan_event["base64_thumbnail"])
+    scanner_length = len(scanner_event["base64_thumbnail"])
+
+    length_difference = abs(test_length - scanner_length)
+    length_threshold = test_length * length_threshold_percentage
+
+    assert (
+        length_difference <= length_threshold
+    ), f"Length difference {length_difference} exceeds threshold {length_threshold}"
+
+    # Compare other event fields
+    for key in test_scan_event:
+        if key != "base64_thumbnail":
+            TestCase().assertEqual(test_scan_event[key], scanner_event[key])
