@@ -467,7 +467,7 @@ def local_fetch_only(url, *args, **kwargs):
         # Allow base64 encoded data or local file paths
         if parsed_url.scheme in ("data", "file", ""):
             return default_url_fetcher(url, *args, **kwargs)
-    except Exception as e:
+    except Exception:
         pass
 
     # Block all other URLs (http, https, ftp, IP addresses, etc.)
