@@ -1,4 +1,4 @@
-from typing import Any, Dict, Set
+from typing import Any, Dict
 
 from lxml import etree
 
