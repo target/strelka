@@ -1,6 +1,12 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2024-05-28
+- Adding mimetype check for XML files for `ScanXml`
+
+## 2024-04-23
+- Refactor of `ScanXml`
+
 ## 2024-04-17
 - Adding `ScanJnlp` scanner.
 - Refactored `ScanXml` scanner to include more extraction potential / IoCs.
