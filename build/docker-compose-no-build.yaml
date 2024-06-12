@@ -1,4 +1,4 @@
-version: '2'
+version: '3.7'
 
 networks:
   net:
@@ -10,6 +10,7 @@ services:
   frontend:
     image: target/strelka-frontend:latest
     command: strelka-frontend
+    pull_policy: always
     ports:
       - 57314:57314  # must match the port in frontend.yaml
     networks:
@@ -25,6 +26,7 @@ services:
   backend:
     image: target/strelka-backend:latest
     command: strelka-backend
+    pull_policy: always
     shm_size: 512mb  # increase as necessary, required for some scanners
     networks:
       - net
@@ -77,6 +79,7 @@ services:
 
   ui:
     image: target/strelka-ui:latest
+    pull_policy: always
     environment:
       - DATABASE_HOST=postgresdb
       - DATABASE_NAME=strelka_ui
