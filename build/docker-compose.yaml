@@ -1,4 +1,4 @@
-version: '2'
+version: '3.7'
 
 networks:
   net:
@@ -83,6 +83,7 @@ services:
 
   ui:
     image: target/strelka-ui:latest
+    pull_policy: always
     environment:
       - DATABASE_HOST=postgresdb
       - DATABASE_NAME=strelka_ui
