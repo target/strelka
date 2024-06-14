@@ -10,15 +10,12 @@ jobs:
     name: Build & Push to Registries
     strategy:
       matrix:
-        # GitHub doesn't have ARM runners so we must use BuildJet. QEMU emulation is too slow and will fail on the base
-        # build at least. We'll use BuildJet for AMD too because we can use a slightly faster runner for cheap, but
-        # this could be switched to ubuntu-latest if needed.
         arch: [arm64, amd64]
         include:
           - arch: arm64
-            runner: buildjet-4vcpu-ubuntu-2204-arm
+            runner: arm-8vcpu-ubuntu-22
           - arch: amd64
-            runner: buildjet-4vcpu-ubuntu-2204
+            runner: ubuntu-latest-4-cores
 
     runs-on: ${{ matrix.runner }}
     environment: production
