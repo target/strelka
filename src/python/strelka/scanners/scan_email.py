@@ -1,17 +1,10 @@
 import base64
 import email
 import email.header
-import hashlib
-import io
 import logging
-import os
-import tempfile
-from typing import List
 
 import eml_parser
-import fitz  # PyMuPDF
 import pytz
-from PIL import Image
 
 from strelka import strelka
 
