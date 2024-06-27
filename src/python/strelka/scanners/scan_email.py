@@ -6,69 +6,89 @@ import io
 import logging
 import os
 import tempfile
+from typing import List
 
 import eml_parser
 import fitz  # PyMuPDF
 import pytz
 from PIL import Image
-from weasyprint import HTML
 
 from strelka import strelka
 
-# Configure logging to suppress warnings for WeasyPrint and informational messages for fontTools
-weasyprint_logger = logging.getLogger("weasyprint")
-weasyprint_logger.setLevel(logging.ERROR)
-
+# Configure logging to suppress warnings for fontTools
 fonttools_logger = logging.getLogger("fontTools.subset")
 fonttools_logger.setLevel(logging.WARNING)
 
 
 class ScanEmail(strelka.Scanner):
     """
-    Scanner that collects metadata, extracts files from email messages, and generates thumbnails.
+    Extracts and analyzes metadata, attachments, and generates thumbnails from email messages.
 
-    This scanner processes email files to extract metadata, attachments, and generates
-    thumbnail images of the email content for a visual overview. It handles both plain text and HTML emails,
-    including inline images.
+    This scanner processes email files to extract and analyze metadata and attachments.
+    It supports both plain text and HTML emails, including inline images.
+
+    Scanner Type: Collection
+
+    Attributes:
+        None
+
+    ## Detection Use Cases
+    !!! info "Detection Use Cases"
+        - **Document Extraction**
+            - Extracts and analyzes documents, including attachments, from email messages for content review.
+        - **Email Header Analysis**
+            - Analyzes email headers for potential indicators of malicious activity, such as suspicious sender addresses
+            or subject lines.
+
+    ## Known Limitations
+    !!! warning "Known Limitations"
+        - **Email Encoding and Complex Structures**
+            - Limited support for certain email encodings or complex email structures.
+        - **Limited Output**
+            - Content is limited to a set amount of characters to prevent excessive output.
+
+    ## To Do
+    !!! question "To Do"
+        - **Improve Error Handling**:
+            - Enhance error handling for edge cases and complex email structures.
+        - **Enhance Support for Additional Email Encodings and Content Types**:
+            - Expand support for various email encodings and content types to improve scanning accuracy.
+
+    ## References
+    !!! quote "References"
+        - [Python Email Parsing Documentation](https://docs.python.org/3/library/email.html)
+        - [PyMuPDF (fitz) Documentation](https://pymupdf.readthedocs.io/en/latest/)
+
+    ## Contributors
+    !!! example "Contributors"
+        - [Josh Liburdi](https://github.com/jshlbrd)
+        - [Paul Hutelmyer](https://github.com/phutelmyer)
+        - [Ryan O'Horo](https://github.com/ryanohoro)
+
     """
 
-    def scan(self, data, file, options, expire_at):
+    def scan(
+        self,
+        data: bytes,
+        file: strelka.File,
+        options: dict,
+        expire_at: int,
+    ) -> None:
         """
-        Processes the email, extracts metadata and attachments, and optionally generates a thumbnail.
+        Processes the email, extracts metadata, and attachments.
 
         Args:
-            data: The raw email data.
-            file: File details.
-            options: Scanner options including thumbnail creation and size.
-            expire_at: Expiry time of the scan.
+            data (bytes): The raw email data.
+            file (strelka.File): File details.
+            options (dict): Scanner options.
+            expire_at (int): Expiry time of the scan.
+
+        Processes the email to extract metadata and attachments.
         """
+
         # Initialize data structures for storing scan results
         attachments = []
         self.event["total"] = {"attachments": 0, "extracted": 0}
-
-        # Thumbnail creation based on user option
-        create_thumbnail = options.get("create_thumbnail", False)
-        thumbnail_header = options.get("thumbnail_header", False)
-        thumbnail_size = options.get("thumbnail_size", (500, 500))
-
-        # Attempt to create a thumbnail from the email
-        if create_thumbnail:
-            try:
-                image = self.create_email_thumbnail(data, thumbnail_header)
-                if image:
-                    image.thumbnail(thumbnail_size, Image.Resampling.BILINEAR)
-                    buffered = io.BytesIO()
-                    image.save(buffered, format="WEBP", quality=30, optimize=True)
-                    base64_image = base64.b64encode(buffered.getvalue()).decode("utf-8")
-                    self.event["base64_thumbnail"] = base64_image
-                else:
-                    self.flags.append(
-                        f"{self.__class__.__name__}: image_thumbnail_error: Could not generate thumbnail. No HTML found."
-                    )
-            except Exception as e:
-                self.flags.append(
-                    f"{self.__class__.__name__}: image_thumbnail_error: {str(e)[:50]}"
-                )
 
         # Parse email contents
         try:
@@ -182,170 +202,8 @@ class ScanEmail(strelka.Scanner):
                 f"{self.__class__.__name__}: email_parse_error: {str(e)[:50]}"
             )
 
-    def create_email_thumbnail(self, data, show_header):
-        """
-        Generates a thumbnail image from the content of an email message.
-
-        This function processes the email to extract images and text, combines them into
-        a single image, and returns that image.
-
-        Args:
-            show_header: Whether to show the header details in the output.
-            data: Raw email data.
-
-        Returns:
-            A PIL Image object representing the combined thumbnail image of the email.
-            None if no images could be created.
-        """
-        # Supported image types for extraction from the email
-        image_types = [
-            "image/gif",
-            "image/jpeg",
-            "image/png",
-            "image/jpg",
-            "image/bmp",
-            "image/ico",
-            "image/svg",
-            "image/web",
-        ]
-
-        # Dictionary to map content IDs to images
-        images_dict = {}
-
-        # Create a temporary directory to store generated images
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Parse the email data
-            msg = email.message_from_bytes(data)
-
-            # List to store paths of generated images
-            images_list = []
-
-            # Extract and format header details from the email
-            if show_header:
-                header_fields = ["Date", "From", "To", "Subject", "Message-Id"]
-                header_values = {
-                    field: self.decode_and_format_header(msg, field)
-                    for field in header_fields
-                }
-
-                # Generate an HTML table from the header values
-                headers_html = '<table width="100%">\n'
-                for field, value in header_values.items():
-                    headers_html += f'  <tr><td align="right"><b>{field}:</b></td><td>{value}</td></tr>\n'
-                headers_html += "</table>\n<hr></p>\n"
-
-                # Convert HTML header details to an image
-                header_image_path = self.html_to_image(headers_html, temp_dir)
-                if header_image_path:
-                    images_list.append(header_image_path)
-
-            # Process the MIME parts to extract images
-            for part in msg.walk():
-                if part.is_multipart():
-                    continue
-
-                mime_type = part.get_content_type()
-                if mime_type in image_types:
-                    # Extract image data and create a base64 encoded version
-                    content_id = part.get("Content-ID", "").strip("<>")
-                    image_data = part.get_payload(decode=True)
-                    img_data_base64 = base64.b64encode(image_data).decode("utf-8")
-                    images_dict[content_id] = img_data_base64
-
-            # Process HTML body parts and replace CID references with base64 data
-            for part in msg.walk():
-                if part.get_content_type() == "text/html":
-                    payload = part.get_payload(decode=True).decode("utf-8")
-                    for cid, img_data in images_dict.items():
-                        payload = payload.replace(
-                            f"cid:{cid}", f"data:image/jpeg;base64,{img_data}"
-                        )
-
-                    # Convert the modified HTML body to an image
-                    body_image_path = self.html_to_image(payload, temp_dir)
-                    if body_image_path:
-                        images_list.append(body_image_path)
-
-            # Combine all extracted images into a single image
-            if images_list:
-                images = [Image.open(path) for path in images_list]
-                return self.append_images(images)
-
-            return None
-
     @staticmethod
-    def html_to_image(html_content, temp_dir):
-        """
-        Converts HTML content to an image.
-
-        This method uses WeasyPrint to convert the HTML content to a PDF and then
-        uses PyMuPDF (fitz) to render the PDF as an image. The rendered image is saved as a PNG file.
-
-        Args:
-            html_content: HTML content to be converted into an image.
-            temp_dir: Temporary directory to store intermediate files.
-
-        Returns:
-            The file path to the generated image, or None if the process fails.
-        """
-        # Generate a unique filename for the PDF
-        pdf_filename = hashlib.md5(html_content.encode()).hexdigest() + ".pdf"
-        pdf_path = os.path.join(temp_dir, pdf_filename)
-
-        # Convert HTML to a PDF using WeasyPrint
-        try:
-            HTML(string=html_content).write_pdf(pdf_path)
-
-            # Open the PDF with fitz and render the first page as an image
-            with fitz.open(pdf_path) as doc:
-                if doc.page_count > 0:
-                    page = doc.load_page(0)  # first page
-                    pix = page.get_pixmap()
-                    image_path = os.path.join(
-                        temp_dir, pdf_filename.replace(".pdf", ".png")
-                    )
-                    pix.save(image_path)
-                    return image_path
-                else:
-                    return None
-        except Exception:
-            return None
-
-    @staticmethod
-    def append_images(images):
-        """
-        Combines multiple image objects into a single image.
-
-        This function stacks the provided images vertically to create one continuous image.
-        It's particularly useful for creating a visual summary of an email's content.
-
-        Args:
-            images: A list of PIL Image objects to be combined.
-
-        Returns:
-            A single PIL Image object that combines all the input images.
-        """
-        # Define the background color for the combined image
-        bg_color = (255, 255, 255)
-
-        # Calculate the total width (max width among images) and total height (sum of heights of all images)
-        widths, heights = zip(*(img.size for img in images))
-        total_width = max(widths)
-        total_height = sum(heights)
-
-        # Create a new image with the calculated dimensions
-        combined_image = Image.new("RGB", (total_width, total_height), color=bg_color)
-
-        # Paste each image onto the combined image, one below the other
-        y_offset = 0
-        for img in images:
-            combined_image.paste(img, (0, y_offset))
-            y_offset += img.height
-
-        return combined_image
-
-    @staticmethod
-    def decode_and_format_header(msg, header_name):
+    def decode_and_format_header(msg: email.message.Message, header_name: str) -> str:
         """
         Decodes and safely formats a specific header field from an email message.
 
@@ -353,12 +211,13 @@ class ScanEmail(strelka.Scanner):
         into a human-readable format, and also ensures that the text is safe for HTML display.
 
         Args:
-            msg: Parsed email message object.
-            header_name: The name of the header field to decode.
+            msg (email.message.Message): Parsed email message object.
+            header_name (str): The name of the header field to decode.
 
         Returns:
-            A string representing the decoded and header field values.
+            A string representing the decoded and formatted header field values.
             Returns a placeholder string if the header field is missing or cannot be decoded.
+
         """
         try:
             # Decode the specified header field
