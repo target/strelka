@@ -506,10 +506,7 @@ scanners:
       options:
         tmp_directory: '/dev/shm/'
   'ScanUrl':
-    - negative:
-        flavors:
-          - 'javascript_file'
-      positive:
+    - positive:
         flavors:
           - 'text/plain'
           - 'text/html'
