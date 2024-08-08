@@ -1,6 +1,12 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2024-08-08
+- Update nightly build to reflect changed from docker v1 to v2
+
+## 2024-06-27
+- Remove WeasyPrint package dependency from Strelka
+
 ## 2024-05-28
 - Adding mimetype check for XML files for `ScanXml`
 
