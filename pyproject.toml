@@ -85,7 +85,7 @@ chaskey = { git = "https://github.com/volexity/chaskey-lts", rev = "2fd80f732dd9
 donut-decryptor = { git = "https://github.com/volexity/donut-decryptor", rev = "5a0f9f87094efe6e8d131d3fa4abf23f31123784" } # For donut-decryptor
 entropy = { git = "https://github.com/jshlbrd/python-entropy.git", rev = "a49f1addccb88d54115832a6d1982b957a56f329" }
 speakeasy-emulator = { git = "https://github.com/mandiant/speakeasy.git", rev = "1cb52a92ab4bae3659b0f8db4ed29f591d932c88" }
-setuptools = "^72.1.0"
+setuptools = "69.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
