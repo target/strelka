@@ -57,7 +57,7 @@ echo 'include "./rules/index.yar"' > configs/python/backend/yara/rules.yara
 **Note**: You can skip the `go build` process and use the `Strelka UI` at `http://0.0.0.0:9980` to analyze files.
 
 ```bash
-docker-compose -f build/docker-compose-no-build.yaml up -d && \
+docker compose -f build/docker-compose-no-build.yaml up -d && \
 go build github.com/target/strelka/src/go/cmd/strelka-oneshot
 ```
 
@@ -65,8 +65,8 @@ go build github.com/target/strelka/src/go/cmd/strelka-oneshot
 **Note**: You can skip the `go build` process and use the `Strelka UI` at `http://0.0.0.0:9980` to analyze files.
 
 ```bash
-docker-compose -f build/docker-compose.yaml build && \
-docker-compose -f build/docker-compose.yaml up -d && \
+docker compose -f build/docker-compose.yaml build && \
+docker compose -f build/docker-compose.yaml up -d && \
 go build github.com/target/strelka/src/go/cmd/strelka-oneshot
 ```
 
