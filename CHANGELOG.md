@@ -1,6 +1,10 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2024-09-05
+- Updated readme to reflect the changes from docker v1 to v2 upgrade
+- Updated all dependent packages, including certifi, requests, zipp, and setuptools dependencies which had open issues created by dependabot
+- Added in "package-mode = false" reference in pyproject.toml file in order to address inconsistency in nightly build.
 ## 2024-08-08
 - Update nightly build to reflect changed from docker v1 to v2
 
