@@ -13,9 +13,9 @@ jobs:
         arch: [arm64, amd64]
         include:
           - arch: arm64
-            runner: arm-8vcpu-ubuntu-22
+            runner: arm-8vcpu-ubuntu-22-public
           - arch: amd64
-            runner: ubuntu-latest-4-cores
+            runner: ubuntu-latest-4-cores-public
 
     runs-on: ${{ matrix.runner }}
     environment: production
