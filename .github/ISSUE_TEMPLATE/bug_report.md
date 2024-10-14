@@ -3,7 +3,7 @@ name: Bug Report
 about: Create a report to help us improve the project
 title: "[BUG]"
 labels: bug
-assignees: phutelmyer
+assignees: skalupa
 
 ---
 
