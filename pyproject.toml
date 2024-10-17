@@ -7,6 +7,7 @@ authors = [
     "Ryan Ohoro <Ryan.Ohoro@Target.com>",
     "Sara Kalupa <Sara.Kalupa@Target.com>"
 ]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.10,<=3.12"
@@ -68,7 +69,7 @@ pyzbar = "0.1.9"
 pyzipper = "0.3.6"
 rarfile = "4.1"
 redis = "4.5.4"
-requests = "2.31.0"
+requests = "^2.32.3"
 rpmfile = "1.1.1"
 signify = "0.5.1"
 ssdeep = "3.4"
@@ -85,7 +86,9 @@ chaskey = { git = "https://github.com/volexity/chaskey-lts", rev = "2fd80f732dd9
 donut-decryptor = { git = "https://github.com/volexity/donut-decryptor", rev = "5a0f9f87094efe6e8d131d3fa4abf23f31123784" } # For donut-decryptor
 entropy = { git = "https://github.com/jshlbrd/python-entropy.git", rev = "a49f1addccb88d54115832a6d1982b957a56f329" }
 speakeasy-emulator = { git = "https://github.com/mandiant/speakeasy.git", rev = "1cb52a92ab4bae3659b0f8db4ed29f591d932c88" }
-setuptools = "69.1"
+setuptools = "^74.1.2"
+zipp = "^3.20.1"
+certifi = "^2024.8.30"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
