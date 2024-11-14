@@ -13,18 +13,24 @@ RUN apt-get -qq update && \
     apt-get install --no-install-recommends -qq \
     automake \
     build-essential \
+    ca-certificates \
     cmake \
     curl \
     gcc \
     git \
+    g++ \
     libglu1-mesa \
+    libleptonica-dev \
+    libpango1.0-dev \
     libtool \
     make \
     swig \
+    tesseract-ocr-eng \
     python3-dev \
     python3-pip \
     python3-wheel \
     pkg-config \
+    wget \
 # Install runtime packages
     antiword \
     libarchive-dev \
@@ -35,7 +41,6 @@ RUN apt-get -qq update && \
     libgl1 \
     python3-setuptools \
     redis-server \
-    tesseract-ocr \
     unrar \
     upx \
     jq && \
@@ -110,6 +115,14 @@ RUN mkdir jtr && cd jtr && git init && git remote add origin https://github.com/
   && cp -Tr /jtr/run/ /jtr && rm -rf /jtr/run \
   && chmod -R 777 /jtr
 
+
+# Install Tesseract from source
+# 64eab6c457b2337dd690746a5fde5c222b40d5f8 is version 5.5.0
+RUN mkdir tesseract && cd tesseract && git init && git remote add origin https://github.com/tesseract-ocr/tesseract.git && git fetch --depth 1 origin 64eab6c457b2337dd690746a5fde5c222b40d5f8 && git reset --hard FETCH_HEAD && ./autogen.sh && ./configure && make && make install && ldconfig && make training && make training-install
+
+# Install English support for Tesseract
+RUN wget https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata && mv eng.traineddata /usr/local/share/tessdata/
+
 # Install Python packages
 COPY ./build/python/backend/requirements.txt /strelka/requirements.txt
 RUN pip3 install --no-cache-dir -r /strelka/requirements.txt
@@ -134,6 +147,8 @@ RUN cd /strelka/ && \
     git \
     libtool \
     make \
+    wget \
+    g++ \
     python3-dev \
     python3-pip \
     python3-wheel && \
