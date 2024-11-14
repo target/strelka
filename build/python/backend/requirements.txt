@@ -27,8 +27,8 @@ nested-lookup==0.2.22
 numpy==1.22.1
 olefile==0.46
 oletools==0.60.1
-opencv-python==4.6.0.66
-opencv-contrib-python==4.6.0.66
+opencv-python==4.8.1.78
+opencv-contrib-python==4.8.1.78
 PyMuPDF==1.23.5
 pefile==2019.4.18
 pgpdump3==1.5.2

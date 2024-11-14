@@ -1,7 +1,7 @@
 # Strelka Fileshot
 # Client is designed to one-shot upload files and retrieve their results
 # For more information, please see: https://target.github.io/strelka/#/?id=strelka-fileshot
-FROM golang:1.21.5 AS build
+FROM golang:1.22.9 AS build
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
 # Copy source files and set the working directory
