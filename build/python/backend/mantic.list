@@ -1,2 +1,2 @@
-deb [arch=amd64] http://archive.ubuntu.com/ubuntu mantic main restricted universe multiverse
-deb [arch=arm64] http://ports.ubuntu.com/ mantic main restricted universe multiverse
+deb [arch=amd64] http://old-releases.ubuntu.com/ubuntu mantic main restricted universe multiverse
+deb [arch=arm64] http://old-releases.ubuntu.com/ubuntu mantic-backports main restricted universe multiverse
