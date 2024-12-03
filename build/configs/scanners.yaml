@@ -477,6 +477,7 @@ scanners:
           - 'text/plain'
           - 'text/rtf'
           - 'xml_file'
+          - 'svg_file'
       priority: 5
 #  'ScanSwf':
 #    - positive:
@@ -516,6 +517,7 @@ scanners:
           - 'rtf_file'
           - 'text/xml'
           - 'xml_file'
+          - 'svg_file'
           - 'text/calendar'
           - 'application/ics'
       priority: 5
@@ -561,6 +563,7 @@ scanners:
           - 'application/xml'
           - 'text/xml'
           - 'xml_file'
+          - 'svg_file'
           - 'mso_file'
           - 'soap_file'
           - 'html_file' # Simple XML, such as a POM file, is recognized as HTML
