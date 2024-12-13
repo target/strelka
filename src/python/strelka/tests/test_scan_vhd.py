@@ -38,7 +38,7 @@ def test_scan_vhd(mocker):
             "$RECYCLE.BIN/S-1-5-21-3712961497-200595429-3248382696-1000",
         ],
         "meta": {
-            "7zip_version": "23.01",
+            "7zip_version": "24.09",
             "partitions": [
                 {"path": mock.ANY, "type": "GPT"},
                 {"path": "0.Basic data partition.ntfs", "file_system": "Windows BDP"},
@@ -96,7 +96,7 @@ def test_scan_vhdx(mocker):
             "$RECYCLE.BIN/S-1-5-21-3712961497-200595429-3248382696-1000",
         ],
         "meta": {
-            "7zip_version": "23.01",
+            "7zip_version": "24.09",
             "partitions": [
                 {
                     "path": mock.ANY,
