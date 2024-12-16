@@ -43,7 +43,7 @@ def test_scan_dmg_compressed(mocker):
             },
         ],
         "meta": {
-            "7zip_version": "23.01",
+            "7zip_version": "24.09",
             "partitions": [
                 {
                     "path": mock.ANY,
@@ -102,7 +102,7 @@ def test_scan_dmg_readonly(mocker):
             },
         ],
         "meta": {
-            "7zip_version": "23.01",
+            "7zip_version": "24.09",
             "partitions": [
                 {"path": mock.ANY, "type": "Dmg"},
                 {"path": "4.apfs"},
@@ -183,7 +183,7 @@ def test_scan_dmg_readwrite(mocker):
             },
         ],
         "meta": {
-            "7zip_version": "23.01",
+            "7zip_version": "24.09",
             "partitions": [
                 {"path": mock.ANY, "type": "GPT"},
                 {"path": "0.disk image.apfs", "file_system": "APFS"},

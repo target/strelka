@@ -21,10 +21,6 @@ ARG USER_GID=$USER_UID
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID --create-home --shell /bin/bash $USERNAME
 
-# Set up package pinning for release (mantic 23.10, 7zip 23.01+dfsg-2)
-COPY ./build/python/backend/pin.pref /etc/apt/preferences.d/pin.pref
-COPY ./build/python/backend/mantic.list /etc/apt/sources.list.d/mantic.list
-
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
 # Install build packages
@@ -61,7 +57,6 @@ ENV PATH=$PATH:/opt/zeek/bin
 # Install runtime packages
 RUN apt-get -q update && \
     apt-get install -q -y --no-install-recommends \
-    7zip \
     antiword \
     binwalk \
     libarchive-dev \
@@ -90,6 +85,11 @@ RUN apt-get -q update && \
     perl Makefile.PL && \
     make -s && \
     make -s install && \
+# Download and move binary for 7z 24.09
+    cd /tmp/ && \
+    curl -OL https://7-zip.org/a/7z2409-linux-x64.tar.xz &&\
+    tar -xf 7z2409-linux-x64.tar.xz &&\
+    cp 7zz /usr/local/bin && \
 # Install YARA
     cd /tmp/ && \
     curl -OL https://github.com/VirusTotal/yara/archive/v$YARA_VERSION.tar.gz && \

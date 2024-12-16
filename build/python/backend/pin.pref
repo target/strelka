@@ -1,7 +1,0 @@
-Package: 7zip
-Pin: version 23.01+dfsg-3
-Pin-Priority: 1001
-
-Package: *
-Pin: release n=mantic
-Pin-Priority: 100
