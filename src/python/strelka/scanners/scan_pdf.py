@@ -101,8 +101,10 @@ class ScanPdf(strelka.Scanner):
                             for link in links:
                                 if "uri" in link:
                                     self.event["annotated_uris"].append(link["uri"])
-                        if extract_text:
+                        if extract_text and hasattr(page, "getText"):
                             extracted_text += page.getText()
+                        if extract_text and hasattr(page, "get_text"):
+                            extracted_text += page.get_text()
 
                     # PDF Text Extraction
                     # Caution: Will increase time and object storage size

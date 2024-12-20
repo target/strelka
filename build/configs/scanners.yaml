@@ -408,13 +408,16 @@ scanners:
           - 'jpeg_file'
           - 'image/png'
           - 'png_file'
-          - 'image/tiff'
+          - 'image/tif'
           - 'type_is_tiff'
           - 'image/x-ms-bmp'
           - 'image/bmp'
           - 'bmp_file'
           - 'image/webp'
+          - 'pdf_file'
       priority: 5
+      options:
+        pdf_to_png: True
   'ScanRar':
     - positive:
         flavors:

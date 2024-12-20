@@ -1,8 +1,8 @@
-import fitz
 import os
 import subprocess
 import tempfile
 
+import fitz
 from strelka import strelka
 
 
@@ -16,6 +16,7 @@ class ScanOcr(strelka.Scanner):
         tmp_directory: Location where tempfile writes temporary files.
             Defaults to '/tmp/'.
     """
+
     def scan(self, data, file, options, expire_at):
         extract_text = options.get('extract_text', False)
         tmp_directory = options.get('tmp_directory', '/tmp/')
@@ -34,7 +35,7 @@ class ScanOcr(strelka.Scanner):
                 tess_return = subprocess.call(
                     ['tesseract', tmp_data.name, tmp_tess.name],
                     stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
+                    stderr=subprocess.DEVNULL,
                 )
                 tess_txt_name = f'{tmp_tess.name}.txt'
                 if tess_return == 0:

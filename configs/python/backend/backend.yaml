@@ -416,7 +416,10 @@ scanners:
           - 'type_is_tiff'
           - 'image/x-ms-bmp'
           - 'bmp_file'
+          - 'pdf_file'
       priority: 5
+      options:
+        pdf_to_png: True
   'ScanRar':
     - positive:
         flavors:

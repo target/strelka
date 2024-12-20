@@ -1,8 +1,9 @@
-from pyzbar.pyzbar import decode
-from PIL import Image
 import io
 import re
 
+import fitz
+from PIL import Image
+from pyzbar.pyzbar import decode, ZBarSymbol
 from strelka import strelka
 
 # Regex to match URL
@@ -14,9 +15,18 @@ class ScanQr(strelka.Scanner):
     """
     Collects QR code metadata from image files.
     """
+
     def scan(self, data, file, options, expire_at):
+        pdf_to_png = options.get('pdf_to_png', False)
+
         try:
-            barcodes = decode(Image.open(io.BytesIO(data)))
+            if pdf_to_png and 'application/pdf' in file.flavors.get('mime', []):
+                # TODO: Use fitz builtin OCR support which also wraps tesseract
+                doc = fitz.open(stream=data, filetype='pdf')
+                data = doc.get_page_pixmap(0, dpi=150).tobytes()
+
+            img = Image.open(io.BytesIO(data))
+            barcodes = decode(img, symbols=[ZBarSymbol.QRCODE])
 
             try:
                 self.event['data'] = barcodes[0].data.decode('utf-8')
