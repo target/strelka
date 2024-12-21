@@ -408,7 +408,7 @@ scanners:
           - 'jpeg_file'
           - 'image/png'
           - 'png_file'
-          - 'image/tif'
+          - 'image/tiff'
           - 'type_is_tiff'
           - 'image/x-ms-bmp'
           - 'image/bmp'
