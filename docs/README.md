@@ -93,7 +93,7 @@ No! Strelka clusters run CPU-intensive processes that will negatively impact sys
 Please file an issue or contact the project team at [TTS-CFC-OpenSource@target.com](mailto:TTS-CFC-OpenSource@target.com).
 
 ## Installation
-Strelka can be installed on any system that can run [containers](https://www.docker.com/resources/what-container). For convenience, the project ships with [docker-compse](https://docs.docker.com/compose/) configuration files for standing up a "quickstart" cluster (found under the `build/` directory). We do not recommend using and do not plan to support OS-native installations.
+Strelka can be installed on any system that can run [containers](https://www.docker.com/resources/what-container). For convenience, the project ships with [docker-compose](https://docs.docker.com/compose/) configuration files for standing up a "quickstart" cluster (found under the `build/` directory). We do not recommend using and do not plan to support OS-native installations.
 
 ### Client Install
 Strelka's core client apps are written in Go and can be run natively on a host or inside of a container. The following are multiple ways to install each of the apps.
