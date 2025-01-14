@@ -29,13 +29,6 @@ func errToMsg(err error) string {
 	)
 }
 
-func min(a, b int) int {
-	if a <= b {
-		return a
-	}
-	return b
-}
-
 // Identifies operating system and returns the appropriate
 // newline character(s) for the operating system
 func osNewline() string {
