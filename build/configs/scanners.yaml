@@ -330,7 +330,7 @@ scanners:
       options:
         extract_text: True
         tmp_directory: '/dev/shm/'
-        pdf_to_png: True
+        pdf_to_png: False
   'ScanOle':
     - positive:
         flavors:
@@ -354,6 +354,8 @@ scanners:
       options:
         extract_text: True
         limit: 2000
+        pdf_to_png: True
+        no_object_extraction: True
   'ScanOnenote':
     - positive:
         flavors:
@@ -417,7 +419,7 @@ scanners:
           - 'pdf_file'
       priority: 5
       options:
-        pdf_to_png: True
+        pdf_to_png: False
   'ScanRar':
     - positive:
         flavors:

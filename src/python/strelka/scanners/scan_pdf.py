@@ -27,14 +27,43 @@ class ScanPdf(strelka.Scanner):
         self.event["total"] = {"objects": 0, "extracted": 0}
         extracted_objects = set()
 
+        pdf_to_png = options.get('pdf_to_png', False)
+
+        try:
+            if pdf_to_png:
+                doc = fitz.open(stream=data, filetype='pdf')
+
+                for i in range(0, min(3, doc.page_count)):
+                    png_data = doc.get_page_pixmap(i, dpi=150).tobytes('png')
+
+                    extract_file = strelka.File(
+                        name=f"pdf_2_png_{i}",
+                        source=self.name,
+                    )
+                    for c in strelka.chunk_string(png_data):
+                        self.upload_to_coordinator(
+                            extract_file.pointer,
+                            c,
+                            expire_at,
+                        )
+
+                    self.files.append(extract_file)
+                    self.event['total']['extracted'] += 1
+        except:
+            self.flags.append('pdf_2_png_error')
+
         try:
             with io.BytesIO(data) as pdf_io:
 
                 # Open file as with PyMuPDF as file object
                 pdf_reader = fitz.open(stream=pdf_io, filetype="pdf")
 
+                xreflen = 0
+                no_object_extraction = options.get('no_object_extraction', False)
+
                 # Get length of xrefs to be used in xref / annotation iteration
-                xreflen = pdf_reader.xref_length()
+                if not no_object_extraction:
+                    xreflen = pdf_reader.xref_length()
 
                 # Iterate through xrefs and collect annotations
                 i = 0
