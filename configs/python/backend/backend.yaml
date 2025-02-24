@@ -491,6 +491,11 @@ scanners:
         source:
           - 'ScanTranscode'
       priority: 5
+  'ScanPyinstaller':
+    - positive:
+        flavors:
+          - "pyinstaller_file"
+      priority: 5
   'ScanQr':
     - positive:
         flavors:
