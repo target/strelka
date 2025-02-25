@@ -865,6 +865,19 @@ rule vb_file {
 
 // Text Files
 
+rule docx_file
+{
+	meta:
+	    author = "Niels Warnars"
+	    type = "document"
+		description = "Word 2007 file format detection"
+	strings:
+		$header = { 50 4B 03 04 }
+		$str = "document.xml"
+	condition:
+	   $header at 0 and $str
+}
+
 rule hta_file {
     meta:
         type = "text"

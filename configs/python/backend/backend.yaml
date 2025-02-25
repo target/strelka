@@ -90,6 +90,7 @@ scanners:
     - positive:
         flavors:
           - 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          - "docx_file"
       priority: 5
       options:
         extract_text: False
@@ -166,6 +167,7 @@ scanners:
           - 'image/avif'
           - 'image/heic'
           - 'image/heif'
+          - "docx_file"
       priority: 5
   'ScanFooter':
     - positive:
