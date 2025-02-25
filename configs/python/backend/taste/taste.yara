@@ -779,6 +779,23 @@ rule upx_file {
         $c in (0..1024)
 }
 
+// Installer Files
+rule pyinstaller_file
+{
+    meta:
+        type = "archive"
+    strings:
+        $ = { 4D 45 49 0C 0B 0A 0B 0E }
+    condition:
+        (
+            uint16be(0) == 0x4d5a or
+            uint32be(0) == 0x7f454c46 or
+            uint32be(0) == 0xcefaedfe or
+            uint32be(0) == 0xcffaedfe
+        ) and
+        all of them
+}
+
 // Script Files
 
 rule batch_file {
