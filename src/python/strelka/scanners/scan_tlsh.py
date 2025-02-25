@@ -74,7 +74,7 @@ class ScanTlsh(strelka.Scanner):
             for tlsh_hash in tlsh_hashes:
                 try:
                     # Calculate the difference score between the file hash and the rule hash
-                    score = tlsh.diff(tlsh_file, tlsh_hash)
+                    score = tlsh.diffxlen(tlsh_file, tlsh_hash)
                 except ValueError:
                     self.flags.append(f"bad_tlsh: {tlsh_hash}")
                     continue
