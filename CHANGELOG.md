@@ -1,10 +1,32 @@
 # Changelog
 Changes to the project will be tracked in this file via the date of change.
 
+## 2025-02-25
+- Updated ScanTLSH to reference `diffxlen` function call instead of `diff` function to ignore padding when creating TLSH hashes to better attribute samples to known malware families (@ronbarrey)
+- Added in `ScanPyInstaller` scanner which extracts metadata from python installer binaries. (@ronbarrey)
+- Updated taste.yara file to add simple yara rule "docx_file" to help classifying docx files which are currently coming through as octet-stream. Updated backend.yaml file to add this taste to ScanDocx and ScanExiftool for better processing
+- Updated dependencies in order to remediate non-breaking known vulnerabilities
+
+## 2025-02-24
+- Added the unless-stopped Restart Policy to the coordinator, gatekeep, ui, and postgresdb docker containers in both the docker-compose.yaml and docker-compose-no-build.yaml files (@m3636)
+- Updated README to remove typo (@martinspielmann)
+
+## 2024-12-16
+- In response to CVE-2024-11477 published on 11/22, updated the version of 7zip from 23.01 to 24.09 in order to patch this vulnerability.
+- 7zip update to 24.09 means that we are no longer dependent on the archived Ubuntu Mantic version, so the mantic.list and pin.fref files and references were removed. Applicable tests were updated to reflect this change. 
+
+## 2024-11-26
+- Updated mantic.list file to point to the ubuntu archive after the mantic depreciation on 11/14.
+
+## 2024-10-17
+- Updated package dependencies in order to remediate any vulnerable dependant packages
+- Added in "package-mode = false" to pyproject.toml file to correct inconsistency nightly build
+
 ## 2024-09-05
 - Updated readme to reflect the changes from docker v1 to v2 upgrade
 - Updated all dependent packages, including certifi, requests, zipp, and setuptools dependencies which had open issues created by dependabot
 - Added in "package-mode = false" reference in pyproject.toml file in order to address inconsistency in nightly build.
+
 ## 2024-08-08
 - Update nightly build to reflect changed from docker v1 to v2
 
