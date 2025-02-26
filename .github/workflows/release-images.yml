@@ -167,7 +167,7 @@ jobs:
   manifest_image:
     name: Build Manifest Image and Push
     needs: push_to_registry
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     environment: production
     permissions:
       id-token: write
