@@ -4,7 +4,8 @@ import re
 import shutil
 import subprocess
 import tempfile
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from collections import defaultdict
+from typing import Any, Dict, List, Optional, Set
 
 from strelka import strelka
 
@@ -17,7 +18,9 @@ class ScanPcap(strelka.Scanner):
             Defaults to 1000.
     """
 
-    def scan(self, data: bytes, file: Dict[str, Any], options: Dict[str, Any], expire_at: int) -> None:
+    def scan(
+        self, data: bytes, file: Dict[str, Any], options: Dict[str, Any], expire_at: int
+    ) -> None:
         """Process pcap/pcapng data and extract files using Zeek and optionally run Suricata.
 
         Args:
@@ -29,6 +32,9 @@ class ScanPcap(strelka.Scanner):
         self.expire_at = expire_at
         self.file_limit: int = options.get("limit", 1000)
         self.tmp_directory: str = options.get("tmp_file_directory", "/tmp/")
+        self.zeek_conn: Optional[bool] = options.get("zeek_conn", True)
+        self.zeek_conn_limit: Optional[int] = options.get("zeek_conn_limit", 100)
+        self.zeek_proto: Optional[bool] = options.get("zeek_proto", True)
         self.suricata_config: Optional[str] = options.get("suricata_config", None)
         self.suricata_rules: Optional[str] = options.get("suricata_rules", None)
         self.suricata_alert_dedupe: bool = options.get("suricata_alert_dedupe", False)
@@ -70,32 +76,170 @@ class ScanPcap(strelka.Scanner):
         Args:
             pcap_path: Path to the pcap file.
         """
-        with tempfile.TemporaryDirectory() as tmp_extract:
+        with tempfile.TemporaryDirectory() as tmp_zeek:
             try:
+
+                # Zeek outputs to the current working directory by default
+                os.chdir(tmp_zeek)
+
                 stdout, stderr = subprocess.Popen(
                     [
                         "zeek",
                         "-r",
                         pcap_path,
                         "/opt/zeek/share/zeek/policy/frameworks/files/extract-all-files.zeek",
-                        f"FileExtract::prefix={tmp_extract}",
+                        f"FileExtract::prefix={os.path.join(tmp_zeek, 'files')}",
                         "LogAscii::use_json=T",
                     ],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    cwd=tmp_extract,
                 ).communicate(timeout=self.scanner_timeout)
 
-                files_log_path = os.path.join(tmp_extract, "files.log")
+                files_log_path = os.path.join(tmp_zeek, "files.log")
+
                 if os.path.exists(files_log_path):
-                    self._process_files_log(files_log_path, tmp_extract)
+                    self._process_files_log(
+                        files_log_path, os.path.join(tmp_zeek, "files")
+                    )
                 else:
                     self.flags.append("zeek_no_file_log")
+
+                if self.zeek_conn:
+                    # Parse the conn.log file to get basic connection information
+                    connections = []
+                    total_connections = 0
+                    conn_log = os.path.join(tmp_zeek, "conn.log")
+
+                    if os.path.exists(conn_log):
+                        with open(conn_log, "r") as f:
+                            for line in f:
+                                if line.startswith("#"):
+                                    continue
+
+                                total_connections += 1
+
+                                if (
+                                    self.zeek_conn_limit > 0
+                                    and len(connections) >= self.zeek_conn_limit
+                                ):
+                                    if "zeek_conn_limit_reached" not in self.flags:
+                                        self.flags.append("zeek_conn_limit_reached")
+                                    continue
+
+                                try:
+                                    conn_data = json.loads(line)
+                                    connection = {
+                                        "uid": conn_data.get("uid"),
+                                        "source_ip": conn_data.get("id.orig_h"),
+                                        "source_port": conn_data.get("id.orig_p"),
+                                        "dest_ip": conn_data.get("id.resp_h"),
+                                        "dest_port": conn_data.get("id.resp_p"),
+                                        "protocol": conn_data.get("proto"),
+                                        "service": conn_data.get("service"),
+                                        "duration": conn_data.get("duration"),
+                                        "bytes_orig": conn_data.get("orig_bytes"),
+                                        "bytes_resp": conn_data.get("resp_bytes"),
+                                        "conn_state": conn_data.get("conn_state"),
+                                    }
+
+                                    connections.append(connection)
+                                except json.JSONDecodeError:
+                                    continue
+
+                    if self.zeek_proto:
+                        # Check for protocol-specific logs to enhance connection details
+                        protocol_logs = [
+                            "http.log",
+                            "dns.log",
+                            "ssl.log",
+                            "ssh.log",
+                            "smtp.log",
+                            "ftp.log",
+                            "rdp.log",
+                            "sip.log",
+                            "smb_mapping.log",
+                        ]
+
+                        # Map to store protocol details by connection UID
+                        protocol_details = defaultdict(dict)
+
+                        for log_name in protocol_logs:
+                            log_path = os.path.join(tmp_zeek, log_name)
+                            if os.path.exists(log_path):
+                                protocol = log_name.split(".")[0]
+
+                                with open(log_path, "r") as f:
+                                    for line in f:
+                                        if line.startswith("#"):
+                                            continue
+                                        try:
+                                            log_data = json.loads(line)
+                                            uid = log_data.get("uid")
+                                            if uid:
+                                                # Extract relevant details based on protocol
+                                                if protocol == "http":
+                                                    protocol_details[uid][protocol] = {
+                                                        "method": log_data.get(
+                                                            "method"
+                                                        ),
+                                                        "host": log_data.get("host"),
+                                                        "uri": log_data.get("uri"),
+                                                        "user_agent": log_data.get(
+                                                            "user_agent"
+                                                        ),
+                                                        "status_code": log_data.get(
+                                                            "status_code"
+                                                        ),
+                                                    }
+                                                elif protocol == "dns":
+                                                    protocol_details[uid][protocol] = {
+                                                        "query": log_data.get("query"),
+                                                        "qtype": log_data.get(
+                                                            "qtype_name"
+                                                        ),
+                                                        "answers": log_data.get(
+                                                            "answers"
+                                                        ),
+                                                    }
+                                                elif protocol == "ssl":
+                                                    protocol_details[uid][protocol] = {
+                                                        "server_name": log_data.get(
+                                                            "server_name"
+                                                        ),
+                                                        "subject": log_data.get(
+                                                            "subject"
+                                                        ),
+                                                        "issuer": log_data.get(
+                                                            "issuer"
+                                                        ),
+                                                        "version": log_data.get(
+                                                            "version"
+                                                        ),
+                                                    }
+                                                else:
+                                                    # Generic extraction for other protocols
+                                                    protocol_details[uid][protocol] = {
+                                                        k: v
+                                                        for k, v in log_data.items()
+                                                        if k != "uid" and v is not None
+                                                    }
+                                        except json.JSONDecodeError:
+                                            continue
+
+                        # Merge protocol details with the basic connection information
+                        for connection in connections:
+                            uid = connection.get("uid")
+                            if uid in protocol_details:
+                                connection["protocol_details"] = protocol_details[uid]
+
+                    self.event["total"]["connections"] = total_connections
+                    self.event["connections"] = connections
 
             except strelka.ScannerTimeout:
                 raise
             except Exception:
                 self.flags.append("zeek_extract_process_error")
+                raise
 
     def _process_files_log(self, log_path: str, extract_dir: str) -> None:
         """Process Zeek's files.log and upload extracted files.
@@ -170,7 +314,7 @@ class ScanPcap(strelka.Scanner):
 
             except strelka.ScannerTimeout:
                 raise
-            except Exception as e:
+            except Exception:
                 self.flags.append("suricata_error")
                 raise
 
@@ -183,7 +327,7 @@ class ScanPcap(strelka.Scanner):
             log_file: Path to the Suricata log file.
         """
         try:
-            with open(log_file, 'r') as file:
+            with open(log_file, "r") as file:
                 log_content = file.read()
 
                 # Extract rule loading statistics
@@ -193,7 +337,7 @@ class ScanPcap(strelka.Scanner):
                 if rule_match:
                     self.event["suricata"]["rules_stats"] = {
                         "rules_loaded": int(rule_match.group(2)),
-                        "rules_failed": int(rule_match.group(3))
+                        "rules_failed": int(rule_match.group(3)),
                     }
 
                 # Extract pcap processing statistics
@@ -203,10 +347,10 @@ class ScanPcap(strelka.Scanner):
                 if pcap_match:
                     self.event["suricata"]["pcap_stats"] = {
                         "packets_read": int(pcap_match.group(2)),
-                        "bytes_read": int(pcap_match.group(3))
+                        "bytes_read": int(pcap_match.group(3)),
                     }
 
-        except Exception as e:
+        except Exception:
             self.flags.append("suricata_log_parse_error")
             raise
 
@@ -225,11 +369,16 @@ class ScanPcap(strelka.Scanner):
             cmd.extend(["-c", self.suricata_config])
         else:
             # Default Suricata config options
-            cmd.extend([
-                "--set", "outputs.1.eve-log.types.1.alert.flow=false",
-                "--set", "port-groups.HTTP_PORTS=[80,8080]",
-                "--set", "unix-command.enabled=false"
-            ])
+            cmd.extend(
+                [
+                    "--set",
+                    "outputs.1.eve-log.types.1.alert.flow=false",
+                    "--set",
+                    "port-groups.HTTP_PORTS=[80,8080]",
+                    "--set",
+                    "unix-command.enabled=false",
+                ]
+            )
 
         # Add custom rules if provided
         if self.suricata_rules:
@@ -251,7 +400,7 @@ class ScanPcap(strelka.Scanner):
             List of alert dictionaries.
         """
         matching_alerts: List[Dict[str, Any]] = []
-        with open(log_file, 'r') as file:
+        with open(log_file, "r") as file:
             for line in file:
                 log_entry = json.loads(line)
                 if log_entry.get("event_type") == "alert":
