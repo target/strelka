@@ -18,7 +18,7 @@ logging:
   outputs:
     - file:
         enabled: yes
-        filename: suricata.log# Configure outputs
+        filename: suricata.log
 
 outputs:
   - eve-log:
