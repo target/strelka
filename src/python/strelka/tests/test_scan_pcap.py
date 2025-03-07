@@ -83,13 +83,153 @@ def test_scan_pcap(mocker):
                 "uid": mock.ANY,
             },
         ],
+        "suricata": {
+            "pcap_stats": {
+                "bytes_read": 334443,
+                "packets_read": 352
+            },
+            "rules_stats": {
+                "rules_failed": 0,
+                "rules_loaded": 1
+            },
+            "alerts": unordered([
+                {
+                    "alert": {
+                        "action": "allowed",
+                        "category": "",
+                        "gid": 1,
+                        "rev": 1,
+                        "severity": 3,
+                        "signature": "HTTP Request Detected",
+                        "signature_id": 1000001
+                    },
+                    "dest_ip": "192.168.174.131",
+                    "dest_port": 8080,
+                    "event_type": "alert",
+                    "flow_id": mock.ANY,
+                    "pcap_cnt": 4,
+                    "proto": "6",
+                    "src_ip": "192.168.174.1",
+                    "src_port": 13147,
+                    "timestamp": "2023-01-13T02:24:15.414361+0000"
+                },
+                {
+                    "alert": {
+                        "action": "allowed",
+                        "category": "",
+                        "gid": 1,
+                        "rev": 1,
+                        "severity": 3,
+                        "signature": "HTTP Request Detected",
+                        "signature_id": 1000001
+                    },
+                    "dest_ip": "192.168.174.131",
+                    "dest_port": 8080,
+                    "event_type": "alert",
+                    "flow_id": mock.ANY,
+                    "pcap_cnt": 19,
+                    "proto": "6",
+                    "src_ip": "192.168.174.1",
+                    "src_port": 13162,
+                    "timestamp": "2023-01-13T02:24:26.158751+0000"
+                },
+                {
+                    "alert": {
+                        "action": "allowed",
+                        "category": "",
+                        "gid": 1,
+                        "rev": 1,
+                        "severity": 3,
+                        "signature": "HTTP Request Detected",
+                        "signature_id": 1000001
+                    },
+                    "app_proto": "http",
+                    "dest_ip": "192.168.174.131",
+                    "dest_port": 8080,
+                    "event_type": "alert",
+                    "flow_id": mock.ANY,
+                    "pcap_cnt": 8,
+                    "proto": "6",
+                    "src_ip": "192.168.174.1",
+                    "src_port": 13147,
+                    "timestamp": "2023-01-13T02:24:15.418972+0000"
+                },
+                {
+                    "alert": {
+                        "action": "allowed",
+                        "category": "",
+                        "gid": 1,
+                        "rev": 1,
+                        "severity": 3,
+                        "signature": "HTTP Request Detected",
+                        "signature_id": 1000001
+                    },
+                    "app_proto": "http",
+                    "dest_ip": "192.168.174.131",
+                    "dest_port": 8080,
+                    "event_type": "alert",
+                    "flow_id": mock.ANY,
+                    "pcap_cnt": 23,
+                    "proto": "6",
+                    "src_ip": "192.168.174.1",
+                    "src_port": 13162,
+                    "timestamp": "2023-01-13T02:24:26.163830+0000"
+                },
+                {
+                    "alert": {
+                        "action": "allowed",
+                        "category": "",
+                        "gid": 1,
+                        "rev": 1,
+                        "severity": 3,
+                        "signature": "HTTP Request Detected",
+                        "signature_id": 1000001
+                    },
+                    "dest_ip": "192.168.174.131",
+                    "dest_port": 8080,
+                    "event_type": "alert",
+                    "flow_id": mock.ANY,
+                    "pcap_cnt": 346,
+                    "proto": "6",
+                    "src_ip": "192.168.174.1",
+                    "src_port": 13176,
+                    "timestamp": "2023-01-13T02:24:37.797451+0000"
+                },
+                {
+                    "alert": {
+                        "action": "allowed",
+                        "category": "",
+                        "gid": 1,
+                        "rev": 1,
+                        "severity": 3,
+                        "signature": "HTTP Request Detected",
+                        "signature_id": 1000001
+                    },
+                    "app_proto": "http",
+                    "dest_ip": "192.168.174.131",
+                    "dest_port": 8080,
+                    "event_type": "alert",
+                    "flow_id": mock.ANY,
+                    "pcap_cnt": 350,
+                    "proto": "6",
+                    "src_ip": "192.168.174.1",
+                    "src_port": 13176,
+                    "timestamp": "2023-01-13T02:24:37.801425+0000"
+                }
+            ])
+        }
     }
 
     scanner_event = run_test_scan(
         mocker=mocker,
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.pcap",
-        options={"scanner_timeout": 20},
+        options={
+            "scanner_timeout": 20,
+            "suricata_rules": Path(Path(__file__).parent / "helpers/suricata.rules"),
+            "suricata_config": Path(Path(__file__).parent / "helpers/suricata.yaml"),
+            "suricata_dedupe": False,
+        },
     )
 
     TestCase.maxDiff = None

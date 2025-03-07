@@ -421,7 +421,10 @@ scanners:
           - 'pcapng_file'
       priority: 5
       options:
-        scanner_timeout: 20
+        scanner_timeout: 120
+        suricata_config: "/etc/strelka/suricata/suricata.yaml"
+        suricata_rules: "/etc/strelka/suricata/suricata.rules"
+        suricata_alert_dedupe: True
   'ScanPdf':
     - positive:
         flavors:

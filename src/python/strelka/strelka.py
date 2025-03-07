@@ -31,19 +31,22 @@ from .telemetry.traces import get_tracer
 class RequestTimeout(Exception):
     """Raised when request times out."""
 
-    pass
+    def __str__(self):
+        return "Exception: Request timeout"
 
 
 class DistributionTimeout(Exception):
     """Raised when file distribution times out."""
 
-    pass
+    def __str__(self):
+        return "Exception: Distribution timeout"
 
 
 class ScannerTimeout(Exception):
     """Raised when scanner times out."""
 
-    pass
+    def __str__(self):
+        return "Exception: Scanner timeout"
 
 
 class ScannerException(Exception):
@@ -704,7 +707,7 @@ class Scanner(object):
         self.coordinator = coordinator
         self.event: dict = dict()
         self.files: list = []
-        self.flags: list = []
+        self.flags: list[str] = []
         self.iocs: list = []
         self.tracer = tracer
         self.type = IocOptions
