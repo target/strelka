@@ -1,7 +1,7 @@
 # Strelka Frontend
 # The frontend for a cluster in which clients can connect directly via Envoy.
 # For more information, please see: https://target.github.io/strelka/#/?id=strelka-frontend
-FROM golang:1.22.9 AS build
+FROM golang:1.24 AS build
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
 # Copy source files and set the working directory

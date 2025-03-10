@@ -1,7 +1,7 @@
 # Strelka Oneshot
 # Client is designed to be used to submit a single file from command line and receive the result for it immediately.
 # For more information, please see: https://target.github.io/strelka/#/?id=strelka-oneshot
-FROM golang:1.22.9 AS build
+FROM golang:1.24 AS build
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
 # Copy source files and set the working directory

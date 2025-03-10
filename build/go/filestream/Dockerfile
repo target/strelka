@@ -1,7 +1,7 @@
 # Strelka Filestream
 # Client is designed to continuously stream files and retrieves their results.
 # For more information, please see: https://target.github.io/strelka/#/?id=strelka-filestream
-FROM golang:1.22.9 AS build
+FROM golang:1.24 AS build
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
 # Copy source files and set the working directory
