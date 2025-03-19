@@ -1,0 +1,56 @@
+# Basic Suricata Configuration for PCAP Analysis
+
+%YAML 1.1
+---
+
+# Suricata version 6.x configuration file
+
+vars:
+  address-groups:
+    HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
+    EXTERNAL_NET: "!$HOME_NET"
+
+  port-groups:
+    HTTP_PORTS: "[80,8080]"
+
+logging:
+  default-log-level: info
+  outputs:
+    - file:
+        enabled: yes
+        filename: suricata.log
+
+# Configure outputs
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: eve.json
+      types:
+        - alert:
+            metadata:
+              app-layer: false
+              flow: false
+              rule:
+                metadata: false
+            tagged-packets: yes
+        - anomaly:
+            enabled: no
+        - dhcp:
+            enabled: no
+            extended: no
+        - dns:
+            enabled: no
+        - frame:
+            enabled: no
+        - http:
+            extended: no
+        - pgsql:
+            enabled: no
+        - stats:
+            totals: no
+        - tls:
+            extended: no
+
+unix-command:
+  enabled: false

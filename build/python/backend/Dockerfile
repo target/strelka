@@ -68,6 +68,7 @@ RUN apt-get -q update && \
     libgl1 \
     python3-setuptools \
     redis-server \
+    suricata \
     tesseract-ocr \
     unrar \
     unzip \
