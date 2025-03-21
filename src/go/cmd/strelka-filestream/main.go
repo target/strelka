@@ -106,7 +106,7 @@ func main() {
 		log.Println("responses will be discarded")
 	}
 
-	client := "go-filestream"
+	client := conf.Conn.Client
 	if conf.Client != "" {
 		client = conf.Client
 	}

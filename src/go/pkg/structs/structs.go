@@ -10,6 +10,7 @@ import (
 
 // defines structures used in configuration files
 type ConfConn struct {
+	Client  string      //required
 	Server  string      // required
 	Cert    string      // required
 	Timeout ConfTimeout // required

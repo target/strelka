@@ -1,4 +1,5 @@
 conn:
+  client: 'name of your custom client, historically go-filestream'
   server: '127.0.0.1:57314'
   cert: ''
   timeout:
