@@ -40,6 +40,16 @@ scanners:
       priority: 5
       options:
         extract_text: True
+  'ScanDocExtractImages':
+    - positive:
+        flavors:
+          - 'application/msword'
+          - 'application/msword2'
+          - 'olecf_file'
+          - 'doc_file'
+      priority: 5
+      options:
+        tmp_directory: '/dev/shm/'
 #  'ScanElf': Revisit for Pe and other executables
 #    - positive:
 #        flavors:
