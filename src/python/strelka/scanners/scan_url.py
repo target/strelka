@@ -1,5 +1,7 @@
 import re
 
+import validators
+
 from strelka import strelka
 
 
@@ -52,9 +54,19 @@ class ScanUrl(strelka.Scanner):
             urls = set(url_regex.findall(normalized_data))
             for url in urls:
                 # Strip leading and trailing punctuation characters from the URL.
-                clean_url = url.strip(b"!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~").decode()
-                if clean_url not in self.event["urls"]:
-                    self.event["urls"].append(clean_url)
+                strip_trailing_url = url.strip(
+                    b"!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+                ).decode()
+
+                # Check to see if there are nonURL chars stil in URL:
+                nonURL_regex_pattern = '[\^&\(\)+\[\]{}\|"]'
+                split_uls = re.split(nonURL_regex_pattern, strip_trailing_url)
+                for split_result in split_uls:
+                    if (
+                        validators.url(split_result)
+                        and split_result not in self.event["urls"]
+                    ):
+                        self.event["urls"].append(split_result)
 
         except Exception as e:
             self.flags.append(f"scanner_error: {e}")
