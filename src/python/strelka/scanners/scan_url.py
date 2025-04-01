@@ -59,8 +59,8 @@ class ScanUrl(strelka.Scanner):
                 ).decode()
 
                 # Check to see if there are nonURL chars stil in URL:
-                nonURL_regex_pattern = '[\^&\(\)+\[\]{}\|"]'
-                split_uls = re.split(nonURL_regex_pattern, strip_trailing_url)
+                nonurl_regex_pattern = r'[\^&\(\)+\[\]{}\|"]'
+                split_uls = re.split(nonurl_regex_pattern, strip_trailing_url)
                 for split_result in split_uls:
                     if (
                         validators.url(split_result)
