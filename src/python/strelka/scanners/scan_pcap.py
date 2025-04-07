@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Set
 
 from strelka import strelka
 
+
 class ScanPcap(strelka.Scanner):
     """Extract files from pcap/pcapng files, use Suricata to match alert signatures.
 
@@ -353,30 +354,35 @@ class ScanPcap(strelka.Scanner):
         except Exception:
             self.flags.append("suricata_log_parse_error")
             raise
-    
+
     def _reload_rules(self, suricata_socket):
         """
-        Runs the suricata process to refresh rules, as needed. 
+        Runs the suricata process to refresh rules, as needed.
 
         Args:
             suricata_socket: location of the cutom suricata socket, as set in the suricata.yaml file
         """
         subprocess.run(
-        f"suricata -c /etc/suricata/suricata.yaml --unix-socket -D -S {self.suricata_rules}",
-        shell=True,
+            f"suricata -c /etc/suricata/suricata.yaml --unix-socket -D -S {self.suricata_rules}",
+            shell=True,
         )
-        subprocess.Popen(["suricatasc", "-c", "ruleset-reload-nonblocking", suricata_socket], stdout=subprocess.PIPE).communicate()[0]
-
+        subprocess.Popen(
+            ["suricatasc", "-c", "ruleset-reload-nonblocking", suricata_socket],
+            stdout=subprocess.PIPE,
+        ).communicate()[0]
 
     def _get_remaining_suricata(self, suricata_socket):
         """
         Retrieves the remaining information from the suricatasc process call
-        
+
         Args:
             suricata_socket: location of the cutom suricata socket, as set in the suricata.yaml file
         """
-        r = subprocess.Popen(["suricatasc", "-c", "pcap-file-number", suricata_socket], stdout=subprocess.PIPE).communicate()[0]
-        return int(json.loads(r.decode())['message'])
+        r = subprocess.Popen(
+            ["suricatasc", "-c", "pcap-file-number", suricata_socket],
+            stdout=subprocess.PIPE,
+        ).communicate()[0]
+        return int(json.loads(r.decode())["message"])
 
     def _scan_with_suricata(self, file_path: str, log_dir: str) -> None:
         """Run Suricata on the pcap file.
@@ -388,9 +394,9 @@ class ScanPcap(strelka.Scanner):
         suricata_socket = "/tmp/suricata-command.socket"
 
         result = subprocess.run(
-        f"suricata -c /etc/suricata/suricata.yaml --unix-socket -D",
-        shell=True,
-    )
+            f"suricata -c /etc/suricata/suricata.yaml --unix-socket -D",
+            shell=True,
+        )
 
         # Add custom rules if provided
         if self.suricata_rules:
@@ -398,12 +404,12 @@ class ScanPcap(strelka.Scanner):
 
         # Run Suricata
         result = subprocess.run(
-        f"suricatasc -c 'pcap-file {file_path} {log_dir} 0 true' {suricata_socket} ",
-        shell=True,
-    )
+            f"suricatasc -c 'pcap-file {file_path} {log_dir} 0 true' {suricata_socket} ",
+            shell=True,
+        )
         print(result)
-        while self._get_remaining_suricata(suricata_socket): # wait for pcap to process
-            time.sleep(.05)
+        while self._get_remaining_suricata(suricata_socket):  # wait for pcap to process
+            time.sleep(0.05)
 
         if result.returncode != 0:
             self.flags.append("suricata_process_error")
