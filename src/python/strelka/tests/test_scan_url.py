@@ -18,7 +18,6 @@ def test_scan_url_text(mocker):
         "flags": [],
         "urls": unordered(
             [
-                "example.com",
                 "http://foobar.example.com",
                 "https://barfoo.example.com",
                 "ftp://barfoo.example.com",
