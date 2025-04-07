@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -41,10 +44,20 @@ func main() {
 		log.Fatalf("failed to connect to coordinator: %v", err)
 	}
 
+	var shutdownWorkersSig = make(chan os.Signal, 1)
+	signal.Notify(shutdownWorkersSig, syscall.SIGINT)
+
 	// TODO: this should be a goroutine
 	for {
+		select {
+		case <-shutdownWorkersSig:
+			log.Printf("Received shutdown signal, exiting.")
+			return
+		default:
+		}
+
 		zrem, err := cd.ZRemRangeByScore(
-		    cd.Context(),
+			cd.Context(),
 			"tasks",
 			"-inf",
 			fmt.Sprintf("(%v", time.Now().Unix()),

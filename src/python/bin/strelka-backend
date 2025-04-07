@@ -17,6 +17,8 @@ import re
 import string
 import sys
 import time
+import signal
+import threading
 
 import inflection
 import interruptingcow
@@ -27,8 +29,10 @@ import yara
 
 from strelka import strelka, yara_extern
 
+shutdown_event = threading.Event()
 
 class Backend(object):
+
     def __init__(self, backend_cfg, coordinator):
         self.scanner_cache = {}
         self.backend_cfg = backend_cfg
@@ -70,7 +74,7 @@ class Backend(object):
         work_start = time.time()
         work_expire = work_start + self.limits.get('time_to_live')
 
-        while 1:
+        while not shutdown_event.is_set():
             if self.limits.get('max_files') != 0:
                 if count >= self.limits.get('max_files'):
                     break
@@ -89,6 +93,12 @@ class Backend(object):
 
             if timeout <= 0:
                 continue
+
+            if shutdown_event.is_set():
+                logging.info(f'Received task after shutdown signal, re-queuing {task}.')
+                # We picked up a task after shutdown_event was set. We'll put it back on the queue for another worker
+                self.coordinator.zadd(queue_name, {root_id: expire_at})
+                break
 
             if queue_name == b'tasks':
                 file = strelka.File(pointer=root_id)
@@ -151,7 +161,8 @@ class Backend(object):
 
         logging.info(f'shutdown after scanning {count} file(s),'
                      f' syncing {synced} yara files, and'
-                     f' {time.time() - work_start} second(s)')
+                     f' {time.time() - work_start} second(s)'
+                     f' should shutdown trigger: {shutdown_event.is_set()}')
 
     def compile_yara(self, root_id):
         data = b''
@@ -439,8 +450,14 @@ class Backend(object):
                     return assigned
         return None
 
+def handle_sigint(signum, frame):
+    logging.info('Received SIGINT. Will attempt to finish any current tasks before shutting down.')
+    shutdown_event.set()
+
 
 def main():
+    signal.signal(signal.SIGINT, handle_sigint)
+
     parser = argparse.ArgumentParser(prog='strelka-worker',
                                      description='runs Strelka workers',
                                      usage='%(prog)s [options]')

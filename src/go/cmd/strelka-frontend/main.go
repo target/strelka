@@ -10,8 +10,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -728,6 +731,8 @@ func (s *server) GetYaraHash(stream strelka.Frontend_GetYaraHashServer) error {
 	return nil
 }
 
+var shutdownWorkersSig = make(chan os.Signal, 1)
+
 func main() {
 	confPath := flag.String(
 		"c",
@@ -735,6 +740,8 @@ func main() {
 		"path to frontend config",
 	)
 	flag.Parse()
+
+	signal.Notify(shutdownWorkersSig, syscall.SIGINT)
 
 	confData, err := ioutil.ReadFile(*confPath)
 	if err != nil {
@@ -808,7 +815,17 @@ func main() {
 		responses:  responses,
 	}
 
+	go func() {
+		log.Printf("Waiting for shutdown\n")
+		<-shutdownWorkersSig
+		st := time.Now()
+		log.Printf("Received shutdown signal, attempting graceful shutdown\n")
+		s.GracefulStop()
+		log.Printf("Graceful shutdown completed in %v\n", time.Since(st))
+	}()
+
 	strelka.RegisterFrontendServer(s, opts)
 	grpc_health_v1.RegisterHealthServer(s, opts)
-	s.Serve(listen)
+	err = s.Serve(listen)
+	log.Printf("Shutting down. Serve err: %v\n", err)
 }
