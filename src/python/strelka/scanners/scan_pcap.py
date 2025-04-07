@@ -394,7 +394,7 @@ class ScanPcap(strelka.Scanner):
         suricata_socket = "/tmp/suricata-command.socket"
 
         result = subprocess.run(
-            f"suricata -c /etc/suricata/suricata.yaml --unix-socket -D",
+            "suricata -c /etc/suricata/suricata.yaml --unix-socket -D",
             shell=True,
         )
 
