@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import time
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Set
 
@@ -354,6 +355,35 @@ class ScanPcap(strelka.Scanner):
             self.flags.append("suricata_log_parse_error")
             raise
 
+    def _reload_rules(self, suricata_socket):
+        """
+        Runs the suricata process to refresh rules, as needed.
+
+        Args:
+            suricata_socket: location of the cutom suricata socket, as set in the suricata.yaml file
+        """
+        subprocess.run(
+            f"suricata -c /etc/suricata/suricata.yaml --unix-socket -D -S {self.suricata_rules}",
+            shell=True,
+        )
+        subprocess.Popen(
+            ["suricatasc", "-c", "ruleset-reload-nonblocking", suricata_socket],
+            stdout=subprocess.PIPE,
+        ).communicate()[0]
+
+    def _get_remaining_suricata(self, suricata_socket):
+        """
+        Retrieves the remaining information from the suricatasc process call
+
+        Args:
+            suricata_socket: location of the cutom suricata socket, as set in the suricata.yaml file
+        """
+        r = subprocess.Popen(
+            ["suricatasc", "-c", "pcap-file-number", suricata_socket],
+            stdout=subprocess.PIPE,
+        ).communicate()[0]
+        return int(json.loads(r.decode())["message"])
+
     def _scan_with_suricata(self, file_path: str, log_dir: str) -> None:
         """Run Suricata on the pcap file.
 
@@ -361,31 +391,25 @@ class ScanPcap(strelka.Scanner):
             file_path: Path to the pcap file.
             log_dir: Directory to store Suricata logs.
         """
-        # Build the command
-        cmd: List[str] = ["suricata", "-r", file_path, "-l", log_dir]
+        suricata_socket = "/tmp/suricata-command.socket"
 
-        # Add custom config if provided
-        if self.suricata_config:
-            cmd.extend(["-c", self.suricata_config])
-        else:
-            # Default Suricata config options
-            cmd.extend(
-                [
-                    "--set",
-                    "outputs.1.eve-log.types.1.alert.flow=false",
-                    "--set",
-                    "port-groups.HTTP_PORTS=[80,8080]",
-                    "--set",
-                    "unix-command.enabled=false",
-                ]
-            )
+        result = subprocess.run(
+            "suricata -c /etc/suricata/suricata.yaml --unix-socket -D",
+            shell=True,
+        )
 
         # Add custom rules if provided
         if self.suricata_rules:
-            cmd.extend(["-S", self.suricata_rules])
+            self._reload_rules(suricata_socket)
 
         # Run Suricata
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(
+            f"suricatasc -c 'pcap-file {file_path} {log_dir} 0 true' {suricata_socket} ",
+            shell=True,
+        )
+        print(result)
+        while self._get_remaining_suricata(suricata_socket):  # wait for pcap to process
+            time.sleep(0.05)
 
         if result.returncode != 0:
             self.flags.append("suricata_process_error")

@@ -107,6 +107,9 @@ RUN apt-get -q update && \
     python3 setup.py build --dynamic-linking && \
     python3 setup.py install
 
+#Copy Suricata config to default location
+COPY configs/python/backend/suricata/suricata.yaml /etc/suricata/suricata.yaml
+
 # Install JTR
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
