@@ -69,6 +69,11 @@ scanners:
           - 'application/x-bzip2'
           - 'bzip2_file'
       priority: 5
+  'ScanClamav':
+    - positive:
+        flavors:
+          - '*'
+      priority: 5
 #  'ScanCcn':
 #    - positive:
 #        flavors:
