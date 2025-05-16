@@ -139,6 +139,20 @@ RUN mkdir jtr && cd jtr && git init && git remote add origin https://github.com/
     chmod -R 777 /jtr && \
     chown -R $USER_UID:$USER_UID /jtr
 
+# Install ClamAV
+RUN apt-get update -qq && \
+    apt-get install -qq -y --no-install-recommends \
+    clamav \
+    clamav-base \
+    clamav-daemon \
+    clamav-freshclam 
+
+# Update permissions for relevant fresclam log files
+RUN touch /var/log/clamav/freshclam.log
+RUN chmod 777 /var/log/clamav/freshclam.log
+RUN chown clamav /var/log/clamav/freshclam.log
+RUN chown 1001:1001 /var/lib/clamav
+
 # Install Poetry globally and copy project files
 RUN python3 -m pip install -U pip setuptools && \
     python3 -m pip install poetry && \
