@@ -88,7 +88,7 @@ entropy = { git = "https://github.com/jshlbrd/python-entropy.git", rev = "a49f1a
 speakeasy-emulator = { git = "https://github.com/mandiant/speakeasy.git", rev = "1cb52a92ab4bae3659b0f8db4ed29f591d932c88" }
 zipp = "^3.20.1"
 certifi = "^2025.1.31"
-setuptools = "^75.8.1"
+setuptools = "^78.1.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
