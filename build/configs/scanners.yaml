@@ -308,6 +308,11 @@ scanners:
         flavors:
           - 'browser_manifest'
       priority: 5
+  'ScanMht':
+    - positive:
+        flavors:
+          - 'mhtml_file'
+      priority: 5
 #  'ScanMmbot':
 #    - positive:
 #        flavors:

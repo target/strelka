@@ -81,10 +81,13 @@ rule mhtml_file {
     meta:
         type = "archive"
     strings:
-        $a = "MIME-Version: 1.0"
-        $b = "This document is a Single File Web Page, also known as a Web Archive file"
+        $mime_version = "MIME-Version: 1.0"
+        $boundary_def = "boundary="
+        $content_type = "Content-Type:"
+        $archive_text = "This document is a Single File Web Page, also known as a Web Archive file"
     condition:
-        $a at 0 and $b
+        $mime_version at 0 and 
+        ($archive_text or ($boundary_def in (0..500) and #content_type >= 2))
 }
 
 rule rar_file {
