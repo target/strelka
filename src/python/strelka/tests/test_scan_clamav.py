@@ -16,7 +16,7 @@ def test_scan_clamav(mocker):
         "End Date": mock.ANY,
         "Engine version": "0.103.12",
         "Infected files": "0",
-        "Known viruses": "8706344",
+        "Known viruses": mock.ANY,
         "Scanned directories": "0",
         "Scanned files": "1",
         "Start Date": mock.ANY,
