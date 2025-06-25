@@ -1,4 +1,5 @@
 import io
+import re
 import sys
 import traceback
 
@@ -58,12 +59,13 @@ class ScanPdf(strelka.Scanner):
                 # Open file as with PyMuPDF as file object
                 pdf_reader = fitz.open(stream=pdf_io, filetype="pdf")
 
-                xreflen = 0
                 no_object_extraction = options.get('no_object_extraction', False)
 
                 # Get length of xrefs to be used in xref / annotation iteration
-                if not no_object_extraction:
-                    xreflen = pdf_reader.xref_length()
+                xreflen = pdf_reader.xref_length()
+
+                # Initialize annotated_uris array for URL collection
+                self.event.setdefault("annotated_uris", [])
 
                 # Iterate through xrefs and collect annotations
                 i = 0
@@ -74,6 +76,19 @@ class ScanPdf(strelka.Scanner):
                         self.flags.append("auto_action")
                     if any(obj in xref_object for obj in ["/JS", "/JavaScript"]):
                         self.flags.append("javascript_embedded")
+
+                    # Extract URLs from xref object content using regex
+                    urls_in_xref = re.findall(r"https?://[^\s)>]+", xref_object)
+                    if urls_in_xref:
+                        # TODO: return these into it's own array
+                        #    these urls aren't technically "annotated", but we're using this annotated_uris
+                        #    because it enables a quick for these URL be output
+                        self.event["annotated_uris"].extend(urls_in_xref)
+
+                    # Skip object extraction if disabled
+                    if no_object_extraction:
+                        i += 1
+                        continue
 
                     # PDF Object Resubmission
                     # If xref is a stream, add that object back into the analysis pipeline
@@ -124,7 +139,6 @@ class ScanPdf(strelka.Scanner):
                 try:
                     for page in pdf_reader:
                         # PDF Link Extraction
-                        self.event.setdefault("annotated_uris", [])
                         links = page.get_links()
                         if links:
                             for link in links:
@@ -153,6 +167,10 @@ class ScanPdf(strelka.Scanner):
                 except Exception:
                     traceback.print_exc()
                     self.flags.append("page_parsing_failure")
+
+                # Deduplicate and clean annotated URIs array
+                if "annotated_uris" in self.event:
+                    self.event["annotated_uris"] = list(set(filter(None, self.event["annotated_uris"])))
         except Exception:
             traceback.print_exc()
             self.flags.append("pdf_load_error")
