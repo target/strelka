@@ -37,13 +37,14 @@ RUN apt-get -qq update && \
     libfuzzy-dev \
     libmagic-dev \
     libssl-dev \
-    libzbar0 \
     libgl1 \
     python3-setuptools \
     redis-server \
     unrar \
     upx \
     jq && \
+# Upgrade packages
+    apt-get -y upgrade && \
 # Download and compile Archive library, needed for exiftool to work best
     cd /tmp/ && \
     curl -OL https://cpan.metacpan.org/authors/id/P/PH/PHRED/Archive-Zip-1.68.tar.gz && \
@@ -122,6 +123,11 @@ RUN mkdir tesseract && cd tesseract && git init && git remote add origin https:/
 
 # Install English support for Tesseract
 RUN wget https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata && mv eng.traineddata /usr/local/share/tessdata/
+
+# Install Zbar from binary; 0.23.92 has a critical vulnerability, 0.23.93 must be installed from source or binary
+# The fixed version is available in the Ubuntu 22.04 main apt repos only with an Ubuntu pro subscription, which we don't have.
+# Once we upgrade to Ubuntu 24.04, we can drop this and go back to `apt install libzbar-dev`.
+RUN wget https://github.com/mchehab/zbar/archive/refs/tags/0.23.93.tar.gz && tar -zxvf 0.23.93.tar.gz && mv zbar-0.23.93 /usr/local
 
 # Install Python packages
 COPY ./build/python/backend/requirements.txt /strelka/requirements.txt
