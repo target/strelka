@@ -12,11 +12,13 @@ RUN apt-get -qq update && \
 # Install build packages
     apt-get install --no-install-recommends -qq \
     automake \
+    autopoint \
     build-essential \
     ca-certificates \
     cmake \
     curl \
     gcc \
+    gettext \
     git \
     g++ \
     libglu1-mesa \
@@ -127,7 +129,14 @@ RUN wget https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata && m
 # Install Zbar from binary; 0.23.92 has a critical vulnerability, 0.23.93 must be installed from source or binary
 # The fixed version is available in the Ubuntu 22.04 main apt repos only with an Ubuntu pro subscription, which we don't have.
 # Once we upgrade to Ubuntu 24.04, we can drop this and go back to `apt install libzbar-dev`.
-RUN wget https://github.com/mchehab/zbar/archive/refs/tags/0.23.93.tar.gz && tar -zxvf 0.23.93.tar.gz && mv zbar-0.23.93 /usr/local
+RUN wget https://github.com/mchehab/zbar/archive/refs/tags/0.23.93.tar.gz && \
+    tar -zxvf 0.23.93.tar.gz && \
+    cd zbar-0.23.93 && \
+    autoreconf -vfi && \
+    ./configure && \
+    make && \
+    make install && \
+    cd ..
 
 # Install Python packages
 COPY ./build/python/backend/requirements.txt /strelka/requirements.txt
