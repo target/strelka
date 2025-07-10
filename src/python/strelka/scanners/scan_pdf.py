@@ -3,12 +3,13 @@ import re
 from collections import Counter
 from datetime import datetime, timezone
 
-import fitz
+import pymupdf
 
 from strelka import strelka
+from strelka.auxiliary.iocs import extract_domains_from_string
 
 # Suppress PyMuPDF warnings
-fitz.TOOLS.mupdf_display_errors(False)
+pymupdf.TOOLS.mupdf_display_errors(False)
 
 # Regular expression for extracting phone numbers from PDFs
 PHONE_NUMBERS_REGEX = re.compile(
@@ -67,14 +68,14 @@ class ScanPdf(strelka.Scanner):
 
         try:
             with io.BytesIO(data) as pdf_io:
-                reader = fitz.open(stream=pdf_io, filetype="pdf")
+                reader = pymupdf.open(stream=pdf_io, filetype="pdf")
 
             # Collect Metadata
             self.event["dirty"] = reader.is_dirty
             self.event["encrypted"] = reader.is_encrypted
             self.event["language"] = reader.language
             self.event["needs_pass"] = reader.needs_pass
-            self.event["old_xrefs"] = reader.has_old_style_xrefs
+            # self.event["old_xrefs"] = reader.has_old_style_xrefs
             self.event["pages"] = reader.page_count
             self.event["repaired"] = reader.is_repaired
             self.event["xrefs"] = reader.xref_length() - 1
@@ -161,7 +162,7 @@ class ScanPdf(strelka.Scanner):
                 for i in range(len(reader)):
                     for img in reader.get_page_images(i):
                         self.event["images"] += 1
-                        pix = fitz.Pixmap(reader, img[0])
+                        pix = pymupdf.Pixmap(reader, img[0])
 
                         # Send extracted file back to Strelka
                         self.emit_file(pix.tobytes(), name="image")
@@ -186,7 +187,7 @@ class ScanPdf(strelka.Scanner):
                     text += page.get_text()
 
                     # Extract urls from text
-                    self.event["links"].extend(re.findall(r"https?://[^\s)>]+", text))
+                    self.event["links"].extend(extract_domains_from_string(text))
 
                 # If links found, remove all duplicates and submit as IOCs.
                 # Deduplicate the links

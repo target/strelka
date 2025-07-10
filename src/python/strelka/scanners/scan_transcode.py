@@ -21,6 +21,18 @@ class ScanTranscode(strelka.Scanner):
 
     Typical supported output options:
     gif webp jpeg bmp png tiff
+
+    Scanner Type: Collection
+
+    ## Detection Use Cases
+    !!! info "Detection Use Cases"
+        - **Image Extraction**
+            - This scanner converts image types into a version that is able to be processed by tesseract in ScanOCR.
+
+    ## Contributors
+    !!! example "Contributors"
+        - [Paul Hutelmyer](https://github.com/phutelmyer)
+        - [Sara Kalupa](https://github.com/skalupa)
     """
 
     def scan(self, data, file, options, expire_at):
@@ -28,8 +40,15 @@ class ScanTranscode(strelka.Scanner):
 
         def convert(im):
             with io.BytesIO() as f:
-                im.save(f, format=f"{output_format}", quality=90)
-                return f.getvalue()
+                if "image/x-icon" in file.flavors.get(
+                    "mime", []
+                ) or "image/vnd.microsoft.icon" in file.flavors.get("mime", []):
+                    rgba_im = im.convert("RGBA")
+                    rgba_im.save(f, format=f"{output_format}", quality=90)
+                    return f.getvalue()
+                else:
+                    im.save(f, format=f"{output_format}", quality=90)
+                    return f.getvalue()
 
         try:
             converted_image = convert(Image.open(io.BytesIO(data)))

@@ -1,48 +1,107 @@
 import base64
 import io
+import logging
 import os
 import subprocess
 import tempfile
 
-import fitz
+import pymupdf
 from PIL import Image
 
 from strelka import strelka
 
 
 class ScanOcr(strelka.Scanner):
-    """Extracts optical text from image files and creates a thumbnail.
+    """
+    Extracts optical text from image files and (optionally) generates a thumbnail using OCR
+    (Optical Character Recognition).
 
-    This scanner extracts text from image files using OCR (Optical Character Recognition) and
-    generates a base64-encoded thumbnail. It supports direct image files and converting PDFs
-    to images for OCR.
+    This scanner processes image files and PDFs (if enabled), extracting text content via OCR. It can also generate a
+    thumbnail for the image. This is useful for analyzing document images and scanned PDFs to extract textual data for
+    further analysis.
+
+    Scanner Type: Collection
+
+    Attributes:
+        event (dict): Stores extracted text and thumbnail data during the scan.
 
     Options:
-        extract_text: If True, extracted text is emitted as a child file. (default: False)
-        split_words: If True, splits the OCR text into words and stores an array. (default: True)
-        remove_formatting: If True, removes formatting characters (e.g., \r). Overridden by split_words. (default: True)
-        tmp_directory: Directory for temporary files. (default: '/tmp/')
-        pdf_to_png: If True, converts PDFs to PNG for OCR. (default: False)
-        create_thumbnail: If True, creates a thumbnail for the image. (default: False)
-        thumbnail_size: Size of the thumbnail to create. (default: (250, 250))
+        - extract_text (bool): If True, extracted text is emitted as a child file.
+        - split_words (bool): If True, splits the OCR text into words and stores an array.
+        - remove_formatting (bool): If True, removes formatting characters (e.g., \r). Overridden by split_words.
+        - tmp_directory (str): Directory for temporary files.
+        - render_dpi (int): Resolution of the output image in dots per inch (DPI) when converting PDFs to images.
+        - render_format (str): Format of the output image when converting PDFs to images for OCR.
+        - create_thumbnail (bool): If True, creates a thumbnail for the image.
+        - thumbnail_size (tuple): Size of the thumbnail to create.
+
+    ## Detection Use Cases
+    !!! info "Detection Use Cases"
+        - **Text Extraction**
+            - Extract text from images and scanned documents for content analysis and pattern matching.
+        - **Thumbnail Generation**
+            - Generate a visual summary of the document for quick reference.
+
+    ## Known Limitations
+    !!! warning "Known Limitations"
+        - **Image Quality Dependence**
+            - OCR accuracy heavily depends on the quality and clarity of the input image.
+        - **Issues Observed From Image Corruption**
+            - Images observed to be corrupt from the source or processing will throw errors and fail to scan.
+
+    ## To Do
+    !!! question "To Do"
+        - Enhance PDF handling to support OCR on all pages.
+
+    ## Contributors
+    !!! example "Contributors"
+        - [Josh Liburdi](https://github.com/jshlbrd)
+        - [Ryan O'Horo](https://github.com/ryanohoro)
+        - [Paul Hutelmyer](https://github.com/phutelmyer)
+        - [Sara Kalupa](https://github.com/skalupa)
     """
 
     def scan(self, data, file, options, expire_at):
+        """
+        Scans the given data for text using OCR and optionally generates a thumbnail.
+
+        The function handles image files directly and can convert PDFs to images if enabled. Extracted text and
+        generated thumbnails are stored in the event dictionary.
+
+        Args:
+            data (bytes): Data of the file being scanned.
+            file (strelka.File): File object being scanned.
+            options (dict): Options for the scanner.
+            expire_at (datetime): Expiration time of the scan result.
+        """
         extract_text = options.get("extract_text", False)
         remove_formatting = options.get("remove_formatting", True)
         tmp_directory = options.get("tmp_directory", "/tmp/")
-        pdf_to_png = options.get("pdf_to_png", False)
+        render_dpi = options.get("render_dpi", 300)
+        render_format = options.get("render_format", "png")
         create_thumbnail = options.get("create_thumbnail", False)
         thumbnail_size = options.get("thumbnail_size", (250, 250))
 
-        # Convert PDF to PNG if required.
-        if pdf_to_png and "application/pdf" in file.flavors.get("mime", []):
-            try:
-                reader = fitz.open(stream=data, filetype="pdf")
-                if reader.is_encrypted:
-                    return
-                data = reader.get_page_pixmap(0).tobytes("png")
-            except Exception as e:
+        # Opportunistically convert PDF to image
+        try:
+            reader = pymupdf.open(stream=data)
+            if reader.is_encrypted:
+                return
+
+            pixmap = reader.get_page_pixmap(0, dpi=render_dpi)
+
+            self.event["render"] = {}
+            self.event["render"]["source"] = "pdf"
+            self.event["render"]["width"] = pixmap.width
+            self.event["render"]["height"] = pixmap.height
+            self.event["render"]["dpi"] = pixmap.xres
+            self.event["render"]["format"] = render_format
+
+            data = pixmap.tobytes(render_format)
+
+        except Exception as e:
+            # If the file was likely a PDF, but failed to convert, append flag
+            if "application/pdf" in file.flavors.get("mime", []):
                 self.flags.append(
                     f"{self.__class__.__name__}: image_pdf_error: {str(e)[:50]}"
                 )
@@ -61,6 +120,9 @@ class ScanOcr(strelka.Scanner):
                 self.flags.append(
                     f"{self.__class__.__name__}: image_thumbnail_error: {str(e)[:50]}"
                 )
+            finally:
+                image.close()
+
         # Perform OCR on the image data.
         with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
             tmp_data.write(data)
@@ -79,14 +141,6 @@ class ScanOcr(strelka.Scanner):
                         ocr_file = tess_txt.read()
                         if ocr_file:
                             self.event["text"] = ocr_file.split()
-                            if remove_formatting:
-                                self.event["string_text"] = (
-                                    ocr_file.replace(b"\r", b"")
-                                    .replace(b"\n", b"")
-                                    .replace(b"\f", b"")
-                                )
-                            else:
-                                self.event["string_text"] = ocr_file
                         if extract_text:
                             # Send extracted file back to Strelka
                             self.emit_file(ocr_file, name="text")
@@ -95,6 +149,9 @@ class ScanOcr(strelka.Scanner):
 
                 except subprocess.CalledProcessError as e:
                     self.flags.append(
-                        f"{self.__class__.__name__}: tesseract_process_error: {str(e)[:50]}"
+                        f"{self.__class__.__name__}: tesseract_process_error: {str(e)}"
                     )
-                    raise strelka.ScannerException(e.stderr)
+                finally:
+                    # Ensure tempfile is closed even after error is thrown
+                    tmp_data.close()
+                    tmp_tess.close()

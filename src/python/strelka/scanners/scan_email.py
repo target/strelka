@@ -2,9 +2,11 @@ import base64
 import email
 import email.header
 import logging
+from typing import List
 
 import eml_parser
 import pytz
+from PIL import Image
 
 from strelka import strelka
 
@@ -50,7 +52,6 @@ class ScanEmail(strelka.Scanner):
     ## References
     !!! quote "References"
         - [Python Email Parsing Documentation](https://docs.python.org/3/library/email.html)
-        - [PyMuPDF (fitz) Documentation](https://pymupdf.readthedocs.io/en/latest/)
 
     ## Contributors
     !!! example "Contributors"
