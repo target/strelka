@@ -74,7 +74,7 @@ class ScanOcr(strelka.Scanner):
             expire_at (datetime): Expiration time of the scan result.
         """
         extract_text = options.get("extract_text", False)
-        #remove_formatting = options.get("remove_formatting", True)
+        # remove_formatting = options.get("remove_formatting", True)
         tmp_directory = options.get("tmp_directory", "/tmp/")
         render_dpi = options.get("render_dpi", 300)
         render_format = options.get("render_format", "png")
