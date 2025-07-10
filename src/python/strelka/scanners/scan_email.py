@@ -2,11 +2,9 @@ import base64
 import email
 import email.header
 import logging
-from typing import List
 
 import eml_parser
 import pytz
-from PIL import Image
 
 from strelka import strelka
 
