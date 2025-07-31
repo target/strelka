@@ -85,3 +85,23 @@ def test_scan_transcode_broken_heic(mocker) -> None:
 
     TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_event, scanner_event)
+
+
+@pytest.mark.parametrize("output_format", output_formats)
+def test_scan_transcode_rgba(mocker, output_format) -> None:
+    """
+    Pass: Sample event matches output of scanner.
+    Failure: Unable to load file or sample event fails to match.
+    """
+
+    test_scan_event = {"elapsed": mock.ANY, "flags": ["transcoded"]}
+
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_transcode_ico.ico",
+        options={"output_format": output_format},
+    )
+
+    TestCase.maxDiff = None
+    TestCase().assertDictEqual(test_scan_event, scanner_event)

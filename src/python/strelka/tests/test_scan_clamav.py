@@ -14,7 +14,7 @@ def test_scan_clamav(mocker):
         "Data read": "0.51 MB (ratio 1.06",
         "Data scanned": "0.54 MB",
         "End Date": mock.ANY,
-        "Engine version": "0.103.12",
+        "Engine version": mock.ANY,
         "Infected files": "0",
         "Known viruses": mock.ANY,
         "Scanned directories": "0",

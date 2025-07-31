@@ -50,7 +50,6 @@ class ScanEmail(strelka.Scanner):
     ## References
     !!! quote "References"
         - [Python Email Parsing Documentation](https://docs.python.org/3/library/email.html)
-        - [PyMuPDF (fitz) Documentation](https://pymupdf.readthedocs.io/en/latest/)
 
     ## Contributors
     !!! example "Contributors"

@@ -621,6 +621,8 @@ scanners:
           - 'image/avif'
           - 'image/heic'
           - 'image/heif'
+          - 'image/x-icon'
+          - 'image/vnd.microsoft.icon'
       options:
         output_format: jpeg  # "gif", "webp", "jpeg", "bmp", "png", "tiff"
   'ScanUdf':
