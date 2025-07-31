@@ -26,8 +26,7 @@ class ScanOcr(strelka.Scanner):
 
     Options:
         - extract_text (bool): If True, extracted text is emitted as a child file.
-        - split_words (bool): If True, splits the OCR text into words and stores an array.
-        - remove_formatting (bool): If True, removes formatting characters (e.g., \r). Overridden by split_words.
+        - remove_formatting (bool): If True, removes formatting characters (e.g., \r). Currently commeted out as this is no longer relevant.
         - tmp_directory (str): Directory for temporary files.
         - render_dpi (int): Resolution of the output image in dots per inch (DPI) when converting PDFs to images.
         - render_format (str): Format of the output image when converting PDFs to images for OCR.
