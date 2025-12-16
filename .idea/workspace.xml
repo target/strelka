@@ -5,8 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="061afd74-03fa-413a-ab4f-abc05f92929f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/build/docker-compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/build/docker-compose.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/go/cmd/strelka-frontend/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/go/cmd/strelka-frontend/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/python/backend/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/build/python/backend/Dockerfile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/python/strelka/strelka.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/python/strelka/strelka.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -61,6 +61,11 @@
       <updated>1765456178847</updated>
       <workItem from="1765456180217" duration="5140000" />
       <workItem from="1765473973307" duration="2031000" />
+      <workItem from="1765614254978" duration="789000" />
+      <workItem from="1765650995298" duration="904000" />
+      <workItem from="1765690878493" duration="1985000" />
+      <workItem from="1765729932735" duration="630000" />
+      <workItem from="1765868752141" duration="728000" />
     </task>
     <servers />
   </component>

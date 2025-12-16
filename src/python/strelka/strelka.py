@@ -569,17 +569,16 @@ class Backend(object):
                                 event = json.loads(event)
                             name = file.name
                             if "___" in name:
-                                uuid_part, filename_part = name.split("___", 1)
+                                uuid_part, request_type = name.split("___")
                             else:
                                 uuid_part = "unknown"
+                                request_type = "unknown"
                             event["mid"] = uuid_part
+                            event["request_type"] = request_type
                         except Exception as e:
                             print("Name Error:", e)
                         try:
-                            logging.exception(f"file {type(format_event(event))} {format_event(event)} timed out")
                             producer.send(ANALYSIS_TOPIC,value=format_event(event))
-                            producer.flush()
-                        
                             print(f"[KAFKA] Sent analysis for {uuid_part}")
                         except Exception as e:
                             print("KAFKA error:", e)

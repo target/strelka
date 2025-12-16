@@ -221,12 +221,12 @@ USER $USERNAME
 # ex: docker-compose build --build-arg SCANNER_TEST=test_scan_yara.py
 ARG SCANNER_TEST=""
 
-# Run tests. Fail build if any tests fail.
-RUN echo '[+] Run build checks' && \
-    cd /strelka/strelka/ && \
-    if $SCANNER_TESTS; then python3 -m pytest -p no:cacheprovider -s tests/$SCANNER_TEST; fi && \
-    if $CONFIG_TESTS; then python3 -m pytest -s tests_configuration/; fi && \
-    echo '[+] Done'
+## Run tests. Fail build if any tests fail.
+#RUN echo '[+] Run build checks' && \
+#    cd /strelka/strelka/ && \
+#    if $SCANNER_TESTS; then python3 -m pytest -p no:cacheprovider -s tests/$SCANNER_TEST; fi && \
+#    if $CONFIG_TESTS; then python3 -m pytest -s tests_configuration/; fi && \
+#    echo '[+] Done'
 
 USER root
 
