@@ -270,6 +270,16 @@ rule ooxml_file {
         uint32(0) == 0x04034B50 and uint32(4) == 0x00060014
 }
 
+rule pptx_file {
+    meta:
+        description = "Microsoft PowerPoint OOXML"
+        type = "document"
+    strings:
+        $pptx_marker = "ppt/presentation.xml"
+    condition:
+        uint32(0) == 0x04034B50 and $pptx_marker
+}
+
 rule pdf_file {
     meta:
         description = "Portable Document Format"
