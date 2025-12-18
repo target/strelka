@@ -389,6 +389,17 @@ scanners:
           - 'application/msonenote'
           - 'onenote_file'
       priority: 5
+  'ScanPptx':
+    - positive:
+        flavors:
+          - 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+          - 'application/vnd.ms-powerpoint.presentation.macroEnabled.12'
+          - 'application/vnd.openxmlformats-officedocument.presentationml.template'
+          - 'application/vnd.openxmlformats-officedocument.presentationml.slideshow'
+          - 'pptx_file'
+      priority: 5
+      options:
+        extract_text: True
 #  'ScanPe': This is too slow for now
 #    - positive:
 #        flavors:
