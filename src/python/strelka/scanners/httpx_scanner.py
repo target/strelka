@@ -527,8 +527,12 @@ class HttpxScanner(strelka.Scanner):
                     content_type = infer_content_type(record)
                     ext = extension_from_content_type(content_type)
                     filename = f"{safe_name}{ext}"
-        
-                    self.emit_file(body_bytes, name=filename)
+                    name = file.name
+                    if "___" in name:
+                        uuid_part, filename_part = name.split("___", 1)
+                    else:
+                        uuid_part = "unknown" 
+                    self.emit_file(body_bytes, name=f"{uuid_part}___files")
                     transformed["downloaded_body_emitted"] = True
                     transformed["downloaded_body_filename"] = filename
         

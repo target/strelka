@@ -1,4 +1,4 @@
-import "magic"
+
 import "pe"
 
 // Archive Files
@@ -477,7 +477,7 @@ rule email_file_broad
         $ = "Subject: "
         $ = "Date: "
     condition:
-        magic.mime_type() == "message/rfc822" or
+        
         all of them
 }
 
@@ -1061,6 +1061,6 @@ rule vsto_file
         $ = /dependencyType=('|")install('|")/
         $ = /codebase=('|")[\w.]+\.manifest('|")/
     condition:
-        magic.mime_type() == "text/xml" and
+       
         all of them
 }

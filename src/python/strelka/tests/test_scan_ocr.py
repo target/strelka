@@ -1029,7 +1029,7 @@ def test_scan_ocr_pdf(mocker):
         scan_class=ScanUnderTest,
         fixture_path=Path(__file__).parent / "fixtures/test.pdf",
     )
-
+    print (test_scan_event)
     # Ensure the text conversion and render fields works properly.
     TestCase().assertEqual(test_scan_event["text"], scanner_event["text"])
     TestCase().assertEqual(test_scan_event["render"], scanner_event["render"])
