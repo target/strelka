@@ -100,7 +100,7 @@ services:
     image: docker.io/postgres:15.14
     restart: unless-stopped
     environment:
-      - POSTGRE_DB=strelka_ui
+      - POSTGRES_DB=strelka_ui
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USERNAME=postgres
     networks:
