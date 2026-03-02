@@ -8,6 +8,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
+from kafka import KafkaProducer
+import base64
+from datetime import datetime, timezone
 
 # لو حابب في المستقبل تفعّل S3:
 # هتفك الكومنت عن boto3 وعن upload_to_s3 تحت، وتزود s3_bucket في options
@@ -359,34 +362,6 @@ def create_run_directory(base_dir: str = "httpx_tmp") -> Path:
     return run_dir.resolve()
 
 
-# مثال لكود S3 (كله كومنت، مش بيتنادى):
-#
-# def upload_to_s3(data: bytes, bucket: str, sha256: str) -> Dict[str, Optional[str]]:
-#     """
-#     يرفع data على S3:
-#     - يستخدم sha256 كـ key
-#     - يرجّع شوية metadata مفيدة
-#     """
-#     key = sha256
-#
-#     s3 = boto3.client("s3")
-#     resp = s3.put_object(
-#         Bucket=bucket,
-#         Key=key,
-#         Body=data,
-#     )
-#
-#     return {
-#         "sha256": sha256,
-#         "s3_key": key,
-#         "s3_url": f"s3://{bucket}/{key}",
-#         "s3_etag": resp.get("ETag"),
-#         "s3_version": resp.get("VersionId"),
-#     }
-
-
-# ================== SCANNER CLASS ==================
-
 
 class HttpxScanner(strelka.Scanner):
     """
@@ -481,83 +456,145 @@ class HttpxScanner(strelka.Scanner):
         - options: من ال backend config (httpx_cmd, run_base_dir, s3_bucket...)
         - expire_at: وقت انتهاء الـ job
         """
-        self.event.setdefault("httpx", {})
-        
+        # ✅ لازم httpx يبقى list (مش dict) طالما انت بتعمل append results
+        if not isinstance(self.event.get("httpx"), list):
+            self.event["httpx"] = []
+
         httpx_cmd = options.get("httpx_cmd", "httpx_tmp")
         run_base_dir = options.get("run_base_dir", "/tmp/httpx_tmp")
-        # s3_bucket = options.get("s3_bucket")  # لو حبيت تفعّل S3 بعدين
-        # نطلّع الـ URL من محتوى الـ txt (أول سطر مش فاضي)
-        urls = self._extract_url_from_text_file(data)
+
+        # نطلّع الـ URLs من محتوى الـ txt
+        urls = self._extract_url_from_text_file(data) or []
         print(len(urls))
-        # fallback: لو لأي سبب ملقيناش URL جوّه الفايل، ممكن نجرّب اسم الفايل
-        self.event["httpx"] = []
+
+        # ✅ جهّز uuid_part مرة واحدة عشان يبقى متاح للـ BODY والـ SCREENSHOT
+        file_name = getattr(file, "name", "") or ""
+        if "___" in file_name:
+            uuid_part = file_name.split("___", 1)[0]
+        else:
+            uuid_part = "unknown"
+
+        # ✅ Producer واحد خارج اللوب (أوفر + أحسن)
+        ANALYSIS_TOPIC = "downloaded.files"
+        producer = KafkaProducer(
+            bootstrap_servers=options.get("kafka_bootstrap", "kafka:29092"),
+            value_serializer=lambda x: json.dumps(x).encode("utf-8"),
+            max_request_size=104857600,  # 100MB
+        )
+
         for url in urls:
-            transformed = {}   
+            transformed = {}
+            run_dir = None
+
             try:
                 run_dir = create_run_directory(run_base_dir)
-        
+
                 if not url:
-                    url = file.name
+                    url = getattr(file, "name", None)
+
                 if not url:
                     self.flags.append("httpx_no_url")
-                    continue    # متعملش return عشان list تكمل
-        
-                # بدّل الكود القديم
+                    continue
+
                 transformed["input_url"] = url
-        
+
                 internal_output_rel = Path("httpx_output.jsonl")
                 internal_output = run_dir / internal_output_rel
-        
+
                 run_httpx(httpx_cmd, url, internal_output_rel, DEFAULT_HTTPX_ARGS, run_dir)
-        
+
                 record = read_last_record(internal_output)
-        
+
                 safe_name = sanitize_name(record.get("host") or urlparse(url).netloc or "target")
-        
+
                 transformed.update(transform_record(record))
                 transformed["raw_httpx_output"] = str(internal_output)
                 transformed["httpx_run_directory"] = str(run_dir)
-        
-                # BODY
+
+                # ========== BODY ==========
                 body_bytes = extract_body_bytes(record, base_dir=run_dir)
                 if body_bytes:
                     sha256_body = hashlib.sha256(body_bytes).hexdigest()
                     transformed["downloaded_body_sha256"] = sha256_body
-        
+
                     content_type = infer_content_type(record)
                     ext = extension_from_content_type(content_type)
                     filename = f"{safe_name}{ext}"
-                    name = file.name
-                    if "___" in name:
-                        uuid_part, filename_part = name.split("___", 1)
-                    else:
-                        uuid_part = "unknown" 
+
                     self.emit_file(body_bytes, name=f"{uuid_part}___files")
                     transformed["downloaded_body_emitted"] = True
                     transformed["downloaded_body_filename"] = filename
-        
-                # SCREENSHOT
+
+                    payload = {
+                        "mid": uuid_part,
+                        "@timestamp": datetime.now(timezone.utc)
+                            .isoformat(timespec="microseconds")
+                            .replace("+00:00", "Z"),
+                        "ingest_meta": {
+                            "source": "smtpsensor",
+                            "journal_mailbox": "unknown",
+                        },
+                        "raw": base64.b64encode(body_bytes).decode("utf-8"),
+                    }
+
+                    try:
+                        producer.send(ANALYSIS_TOPIC, value=payload)
+                        producer.flush(1)
+                        print(f"[KAFKA] Sent BODY JSON for {uuid_part}")
+                    except Exception as e:
+                        print("KAFKA error (body):", e)
+
+                # ========== SCREENSHOT ==========
                 shot_bytes = resolve_screenshot_bytes(record, base_dir=run_dir)
                 if shot_bytes:
                     sha256_shot = hashlib.sha256(shot_bytes).hexdigest()
                     transformed["screenshot_sha256"] = sha256_shot
-        
+
                     suffix = ".png"
                     screenshot_path = record.get("screenshot_path") or record.get("screenshot_path_rel")
                     if isinstance(screenshot_path, str):
                         p = Path(screenshot_path)
                         if p.suffix:
                             suffix = p.suffix
-        
+
                     shot_name = f"{safe_name}_screenshot{suffix}"
                     transformed["screenshot_emitted"] = True
                     transformed["screenshot_filename"] = shot_name
-        
-                # سجل النتيجة 
-                
+
+                    payload = {
+                        "mid": uuid_part,
+                        "@timestamp": datetime.now(timezone.utc)
+                            .isoformat(timespec="microseconds")
+                            .replace("+00:00", "Z"),
+                        "ingest_meta": {
+                            "source": "screenshot",
+                            "journal_mailbox": "unknown",
+                        },
+                        "raw": base64.b64encode(shot_bytes).decode("utf-8"),
+                    }
+
+                    try:
+                        producer.send(ANALYSIS_TOPIC, value=payload)
+                        producer.flush(1)
+                        print(f"[KAFKA] Sent SCREENSHOT JSON for {uuid_part}")
+                    except Exception as e:
+                        print("KAFKA error (screenshot):", e)
+
+                # سجل النتيجة
                 self.event["httpx"].append(transformed)
 
             except Exception as exc:
                 self.flags.append("httpx_error")
-                self.event["httpx"]["error"] = str(exc)
 
+                # ✅ سجل الخطأ بشكل آمن لأن httpx عندنا list
+                self.event.setdefault("errors", [])
+                self.event["errors"].append({
+                    "scanner": "httpx",
+                    "mid": uuid_part,
+                    "url": url,
+                    "error": str(exc),
+                })
+            finally:
+                # قفل producer مش هنا عشان مستخدمينه لباقي URLs
+                # تنظيف run_dir لو عندك cleanup function (اختياري)
+                pass

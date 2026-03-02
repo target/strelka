@@ -1,19 +1,15 @@
 import re
-
 import bs4  # type: ignore
 
 from strelka import strelka
 
-base64Re = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
+base64Re = re.compile(
+    "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$"
+)
 
 
 class ScanHtml(strelka.Scanner):
-    """Collects metadata and extracts embedded scripts from HTML files.
-
-    Options:
-        parser: Sets the HTML parser used during scanning.
-            Defaults to 'html.parser'.
-    """
+    """Collects metadata and extracts embedded scripts from HTML files."""
 
     def scan(self, data, file, options, expire_at):
         parser = options.get("parser", "html.parser")
@@ -27,6 +23,15 @@ class ScanHtml(strelka.Scanner):
             "extracted": 0,
         }
 
+        # ✅ استخراج uuid بشكل آمن (بدون التأثير على أي سلوك)
+        original_name = str(getattr(file, "name", "") or "")
+        if "___" in original_name:
+            uuid_part = original_name.split("___", 1)[0]
+        else:
+            uuid_part = "unknown/ScanHtml"
+
+        extract_index = 0
+
         try:
             soup = bs4.BeautifulSoup(data, parser)
 
@@ -37,22 +42,25 @@ class ScanHtml(strelka.Scanner):
             hyperlinks.extend(soup.find_all("a", href=True))
             hyperlinks.extend(soup.find_all("img", src=True))
             self.event.setdefault("hyperlinks", [])
+
             for hyperlink in hyperlinks:
                 link = hyperlink.get("href") or hyperlink.get("src")
 
                 if link and link.startswith("data:") and ";base64," in link:
                     hyperlink_data = link.split(";base64,")[1]
+
+                    # 🔥 غيرنا الاسم فقط
                     self.emit_file(
                         hyperlink_data.encode(),
-                        name="base64_hyperlink",
+                        name=f"{uuid_part}___file_{extract_index}",
                         flavors=["base64"],
                     )
+                    extract_index += 1
+
                 else:
                     if link not in self.event["hyperlinks"]:
                         self.event["hyperlinks"].append(link)
 
-            # Gather count of links and reduce potential link duplicates and restrict amount of
-            # links returned using the configurable max_hyperlinks.
             if self.event["hyperlinks"]:
                 self.event["hyperlinks_count"] = len(self.event["hyperlinks"])
                 self.event["hyperlinks"] = self.event["hyperlinks"][:max_hyperlinks]
@@ -101,25 +109,30 @@ class ScanHtml(strelka.Scanner):
             scripts = soup.find_all("script")
             self.event["total"]["scripts"] = len(scripts)
             self.event.setdefault("scripts", [])
+
             for index, script in enumerate(scripts):
                 script_flavors = [
                     script.get("language", "").lower(),
                     script.get("type", "").lower(),
                 ]
+
                 script_entry = {
                     "src": script.get("src"),
                     "language": script.get("language"),
                     "type": script.get("type"),
                 }
+
                 if script_entry not in self.event["scripts"]:
                     self.event["scripts"].append(script_entry)
 
+                # ✅ نفس منطق الأصلي بالضبط
                 if script.text:
                     self.emit_file(
                         script.text.encode(),
-                        name=f"script_{index}",
+                        name=f"{uuid_part}___file_{extract_index}",
                         flavors=script_flavors,
                     )
+                    extract_index += 1
                     self.event["total"]["extracted"] += 1
 
             spans = soup.find_all("span")
@@ -139,10 +152,14 @@ class ScanHtml(strelka.Scanner):
                 if div_content is None:
                     continue
 
-                is_maybe_base64 = base64Re.search(div_content)
-
-                if is_maybe_base64:
-                    self.emit_file(div_content, name="base64_div", flavors=["base64"])
+                if base64Re.search(div_content):
+                    # 🔥 غيرنا الاسم فقط
+                    self.emit_file(
+                        div_content,
+                        name=f"{uuid_part}___file_{extract_index}",
+                        flavors=["base64"],
+                    )
+                    extract_index += 1
 
         except TypeError:
             self.flags.append("type_error")

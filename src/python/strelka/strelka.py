@@ -554,7 +554,9 @@ class Backend(object):
                     events.append(event)
                     producer = KafkaProducer(
                     bootstrap_servers="kafka:29092",
-                    value_serializer=lambda x: json.dumps(x).encode('utf-8')
+                    value_serializer=lambda x: json.dumps(x).encode('utf-8'),
+                    max_request_size=104857600  # 100MB (أو 52428800 لـ 50MB)
+
                 )
                     ANALYSIS_TOPIC = "email.files.analysis"
                     # Send event back to Redis coordinator
@@ -568,11 +570,13 @@ class Backend(object):
                             elif isinstance(event, str):
                                 event = json.loads(event)
                             name = file.name
+                            
                             if "___" in name:
                                 uuid_part, request_type = name.split("___")
+                                print(f"[KAFKA] this test inside if that change the name and i print the uuid after split: {uuid_part}")
                             else:
-                                uuid_part = "unknown"
-                                request_type = "unknown"
+                                uuid_part = name
+                                request_type = name
                             event["mid"] = uuid_part
                             event["request_type"] = request_type
                         except Exception as e:
@@ -686,7 +690,7 @@ class Backend(object):
             key=lambda k: k.get("priority", 5),
             reverse=True,
         )
-
+        print (scanner_list)
         return scanner_list
 
 

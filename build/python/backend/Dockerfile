@@ -66,7 +66,6 @@ RUN apt-get -q update && \
     libssl-dev \
     libzbar0 \
     libgl1 \
-    python3-setuptools \
     redis-server \
     suricata \
     tesseract-ocr \
@@ -166,22 +165,26 @@ RUN chmod 777 /var/log/clamav/freshclam.log
 RUN chown clamav /var/log/clamav/freshclam.log
 RUN chown 1001:1001 /var/lib/clamav
 
-# Install Poetry globally and copy project files
-RUN python3 -m pip install -U pip setuptools && \
-    python3 -m pip install poetry && \
+RUN python3 -m pip install -U pip setuptools==75.8.1 && \
+    pip install poetry==2.2.1 && \
+    python3 -m pip install --upgrade wheel && \
     rm -rf /root/.cache/pip
+RUN pip install six pyasn1==0.4.8 && pip install --no-build-isolation ssdeep
 
 # Set the working directory and copy the project files
 WORKDIR /strelka/
-COPY pyproject.toml poetry.lock ./
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
+
+COPY pyproject.toml poetry.lock ./
+RUN poetry lock
 # Use Poetry to install the project dependencies globally
 # This step is after the COPY step because it is more likely to change,
 # and therefore should not be included in earlier layers that can be cached.
 RUN poetry config virtualenvs.create false && \
     poetry install --only main && \
     rm -rf /root/.cache/pypoetry
-
 # Copy Strelka files
 COPY ./src/python/ /strelka/
 COPY ./configs/python/backend/ /etc/strelka/
@@ -221,7 +224,7 @@ USER $USERNAME
 # ex: docker-compose build --build-arg SCANNER_TEST=test_scan_yara.py
 ARG SCANNER_TEST=""
 
-## Run tests. Fail build if any tests fail.
+# Run tests. Fail build if any tests fail.
 RUN echo '[+] Run build checks' && \
     cd /strelka/strelka/ && \
     if $SCANNER_TESTS; then python3 -m pytest -p no:cacheprovider -s tests/$SCANNER_TEST; fi && \

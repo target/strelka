@@ -34,10 +34,15 @@ type RawKafkaMessage struct {
 
 func (s *server) StartKafkaIngest(bootstrap, topic string) {
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": bootstrap,
-		"group.id":          "strelka-kafka-ingest",
-		"auto.offset.reset": "earliest",
+		"bootstrap.servers":        bootstrap,
+		"group.id":                "strelka-kafka-ingest",
+		"auto.offset.reset":       "earliest",
+
+		// ✅ allow large messages (100MB)
+		"max.partition.fetch.bytes": 104857600,
+		"fetch.message.max.bytes":   104857600,
 	})
+
 
 	if err != nil {
 		log.Fatalf("Kafka consumer init error: %v", err)

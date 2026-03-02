@@ -37,8 +37,8 @@ services:
     restart: unless-stopped
     depends_on:
       - coordinator
-
-
+    deploy:
+      replicas: 7
   # ============================
   # Manager (Redis task cleanup)
   # ============================

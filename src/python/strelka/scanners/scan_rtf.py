@@ -20,22 +20,28 @@ class ScanRtf(strelka.Scanner):
         rtf.parse()
         self.event["total"]["rtf_objects"] = len(rtf.rtf_objects)
 
-        for rtf_object in rtf.rtf_objects:
+        # استخراج uuid من اسم الفايل بنفس الطريقة
+        name = file.name or ""
+        if "___" in name:
+            uuid_part, _ = name.split("___", 1)
+        else:
+            uuid_part = "unknown/ScanRtf"
+
+        for index, rtf_object in enumerate(rtf.rtf_objects):
             if self.event["total"]["extracted"] >= file_limit:
                 break
 
-            index = rtf.server.index(rtf_object)
-
+            # تحديد البيانات اللي هتتبعت
             if rtf_object.is_package:
-                # Send extracted file back to Strelka
-                self.emit_file(rtf_object.olepkgdata, name=rtf_object.filename)
-
+                file_bytes = rtf_object.olepkgdata
             elif rtf_object.is_ole:
-                # Send extracted file back to Strelka
-                self.emit_file(rtf_object.oledata, name=f"rtf_object_{index}")
-
+                file_bytes = rtf_object.oledata
             else:
-                # Send extracted file back to Strelka
-                self.emit_file(rtf_object.rawdata, name=f"rtf_object_{index}")
+                file_bytes = rtf_object.rawdata
+
+            # تسمية موحّدة بنفس نمط httpx
+            emitted_name = f"{uuid_part}___file_{index}"
+
+            self.emit_file(file_bytes, name=emitted_name)
 
             self.event["total"]["extracted"] += 1

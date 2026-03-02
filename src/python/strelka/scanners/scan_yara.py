@@ -173,7 +173,7 @@ class ScanYara(strelka.Scanner):
             if not self.compiled_yara:
                 if os.path.isdir(location):
                     globbed_yara_paths = glob.iglob(
-                        f"{location}/**/*.yar*", recursive=True
+                        f"{location}/*.yar*", recursive=True
                     )
                     if not globbed_yara_paths:
                         self.flags.append("yara_rules_not_found")

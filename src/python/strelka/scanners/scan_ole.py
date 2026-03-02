@@ -13,35 +13,37 @@ class ScanOle(strelka.Scanner):
         ole = None
         self.event["total"] = {"streams": 0, "extracted": 0}
 
+        # استخراج uuid_part من اسم الفايل الأصلي
+        uuid_part = str(getattr(file, "name", "") or "")
+        if "___" in uuid_part:
+            uuid_part = uuid_part.split("___", 1)[0]
+        else:
+            uuid_part = "unknown/ScanOle"
+
         try:
             ole = olefile.OleFileIO(data)
             ole_streams = ole.listdir(streams=True)
             self.event["total"]["streams"] = len(ole_streams)
-            for stream in ole_streams:
+
+            for index, stream in enumerate(ole_streams):
                 try:
-                    file = ole.openstream(stream)
-                    extract_data = file.read()
-                    extract_name = f'{"_".join(stream)}'
-                    extract_name = re.sub(r"[\x00-\x1F]", "", extract_name)
-                    if extract_name.endswith("Ole10Native"):
+                    ole_stream = ole.openstream(stream)
+                    extract_data = ole_stream.read()
+
+                    emitted_name = f"{uuid_part}___file_{index}"
+
+                    if "_".join(stream).endswith("Ole10Native"):
                         native_stream = oletools.oleobj.OleNativeStream(
                             bindata=extract_data,
                         )
-                        if native_stream.filename:
-                            extract_name = (
-                                extract_name + f"_{str(native_stream.filename)}"
-                            )
-                        else:
-                            extract_name = extract_name + "_native_data"
 
-                        # Send extracted file back to Strelka
-                        self.emit_file(native_stream.data, name=extract_name)
-
+                        if native_stream.data:
+                            self.emit_file(native_stream.data, name=emitted_name)
                     else:
-                        # Send extracted file back to Strelka
-                        self.emit_file(extract_data, name=extract_name)
+                        self.emit_file(extract_data, name=emitted_name)
 
                     self.event["total"]["extracted"] += 1
+
                 except AttributeError:
                     self.flags.append("attribute_error_in_stream")
 
