@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "strelka-worker"
-version = "0.24.03.04"
+version = "0.26.03.06"
 description = "Strelka's backend Python worker"
 authors = [
     "Paul Hutelmyer <Paul.Hutelmyer@Target.com>",
@@ -94,6 +94,9 @@ setuptools = "^75.8.1"
 black = "^25.1.0"
 isort = "^6.0.1"
 flake8 = "^7.1.2"
+
+[tool.poetry.build-constraints]
+ssdeep = { setuptools = "<78" }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
