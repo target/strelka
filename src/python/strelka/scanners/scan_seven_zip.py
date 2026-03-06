@@ -46,7 +46,7 @@ class ScanSevenZip(strelka.Scanner):
                 self.flags.append("7zip_tmp_error")
                 return
 
-            (stdout, stderr) = subprocess.Popen(
+            stdout, stderr = subprocess.Popen(
                 ["7zz", "l", tmp_data.name],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -112,7 +112,7 @@ class ScanSevenZip(strelka.Scanner):
 
             with tempfile.TemporaryDirectory() as tmp_extract:
                 if password:
-                    (stdout, stderr) = subprocess.Popen(
+                    stdout, stderr = subprocess.Popen(
                         [
                             "7zz",
                             "x",
@@ -124,7 +124,7 @@ class ScanSevenZip(strelka.Scanner):
                         stderr=subprocess.PIPE,
                     ).communicate(timeout=scanner_timeout)
                 else:
-                    (stdout, stderr) = subprocess.Popen(
+                    stdout, stderr = subprocess.Popen(
                         ["7zz", "x", tmp_data.name, f"-o{tmp_extract}"],
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
@@ -160,13 +160,13 @@ class ScanSevenZip(strelka.Scanner):
                     self.event["total"]["extracted"] += 1
 
             if password:
-                (stdout, stderr) = subprocess.Popen(
+                stdout, stderr = subprocess.Popen(
                     ["7zz", "l", tmp_data.name, f"-p{password}"],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                 ).communicate(timeout=scanner_timeout)
             else:
-                (stdout, stderr) = subprocess.Popen(
+                stdout, stderr = subprocess.Popen(
                     ["7zz", "l", tmp_data.name],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,

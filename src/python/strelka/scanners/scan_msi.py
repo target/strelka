@@ -29,7 +29,7 @@ class ScanMsi(strelka.Scanner):
 
             # Run exiftool to extract metadata from the file
             try:
-                (stdout, stderr) = subprocess.Popen(
+                stdout, stderr = subprocess.Popen(
                     ["exiftool", "-d", '"%s"', "-j", tmp_data.name],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.DEVNULL,

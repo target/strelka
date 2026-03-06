@@ -19,7 +19,7 @@ class ScanAntiword(strelka.Scanner):
             tmp_data.write(data)
             tmp_data.flush()
 
-            (stdout, stderr) = subprocess.Popen(
+            stdout, stderr = subprocess.Popen(
                 ["antiword", tmp_data.name],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,

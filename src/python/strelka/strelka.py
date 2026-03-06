@@ -291,7 +291,7 @@ class Backend(object):
                 if task is None:
                     continue
 
-                (queue_name, task_item, expire_at) = task
+                queue_name, task_item, expire_at = task
             else:
                 task = self.coordinator.zpopmin("tasks", count=1)
                 if len(task) == 0:
@@ -299,7 +299,7 @@ class Backend(object):
                     continue
 
                 # Get request metadata and Redis context deadline UNIX timestamp
-                (task_item, expire_at) = task[0]
+                task_item, expire_at = task[0]
 
             traceparent = None
 
