@@ -494,7 +494,7 @@ class ScanPe(strelka.Scanner):
                     elif i.Key == b"VarFileInfo":
                         for v in i.Var:
                             if translation := v.entry.get(b"Translation"):
-                                (lang, char) = translation.split()
+                                lang, char = translation.split()
                                 self.event["file_info"]["var"] = {
                                     "language": VAR_FILE_INFO_LANGS.get(int(lang, 16)),
                                     "character_set": VAR_FILE_INFO_CHARS.get(

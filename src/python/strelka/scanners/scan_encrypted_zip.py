@@ -24,7 +24,7 @@ def crack_zip(
             tmp_data.write(data)
             tmp_data.flush()
 
-            (zip2john, stderr) = subprocess.Popen(
+            zip2john, stderr = subprocess.Popen(
                 [jtr_path + "zip2john", tmp_data.name],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
@@ -38,7 +38,7 @@ def crack_zip(
             tmp_data.write(zip2john)
             tmp_data.flush()
 
-            (stdout, stderr) = subprocess.Popen(
+            stdout, stderr = subprocess.Popen(
                 [jtr_path + "john", "--show", tmp_data.name],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
@@ -54,7 +54,7 @@ def crack_zip(
                 tmp_data.flush()
 
                 if os.path.isfile(password_file):
-                    (stdout, stderr) = subprocess.Popen(
+                    stdout, stderr = subprocess.Popen(
                         [jtr_path + "john", f"-w={password_file}", tmp_data.name],
                         stdout=subprocess.PIPE,
                         stderr=subprocess.DEVNULL,
@@ -71,7 +71,7 @@ def crack_zip(
                             self.flags.append("cracked_by_wordlist")
                             return stdout.split(b"\n")[2].split()[0]
                 if brute:
-                    (stdout, stderr) = subprocess.Popen(
+                    stdout, stderr = subprocess.Popen(
                         [
                             jtr_path + "john",
                             "--incremental=Alnum",

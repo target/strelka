@@ -26,7 +26,7 @@ class ScanExiftool(strelka.Scanner):
 
             try:
                 # Execute exiftool and retrieve JSON metadata output
-                (stdout, stderr) = subprocess.Popen(
+                stdout, stderr = subprocess.Popen(
                     ["exiftool", "-j", tmp_data.name],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.DEVNULL,

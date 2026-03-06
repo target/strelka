@@ -52,7 +52,7 @@ class ScanDmg(strelka.Scanner):
             try:
                 with tempfile.TemporaryDirectory() as tmp_extract:
                     try:
-                        (stdout, stderr) = subprocess.Popen(
+                        stdout, stderr = subprocess.Popen(
                             ["7zz", "x", tmp_data.name, f"-o{tmp_extract}"],
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
@@ -107,7 +107,7 @@ class ScanDmg(strelka.Scanner):
                 self.flags.append("dmg_7zip_extract_error")
 
             try:
-                (stdout, stderr) = subprocess.Popen(
+                stdout, stderr = subprocess.Popen(
                     ["7zz", "l", tmp_data.name],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.DEVNULL,
