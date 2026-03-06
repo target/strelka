@@ -95,6 +95,9 @@ black = "^25.1.0"
 isort = "^6.0.1"
 flake8 = "^7.1.2"
 
+[tool.poetry.build-constraints]
+ssdeep = { setuptools = "<78" }
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
