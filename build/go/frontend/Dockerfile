@@ -13,7 +13,7 @@ COPY go.* .
 
 # Make sure go modules ready
 RUN go mod download
-
+RUN go get github.com/google/uuid
 # Build new frontend including Kafka ingest
 RUN cd src/go/cmd/strelka-frontend && \
     CGO_ENABLED=1 go build -tags musl -o /tmp/strelka-frontend .
