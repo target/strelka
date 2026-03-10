@@ -6,7 +6,7 @@ LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 # User configuration
 ARG CONFIG_TESTS=false
 
-ARG YARA_VERSION=4.3.1
+ARG YARA_VERSION=4.5.4
 ARG EXIFTOOL_VERSION=12.60
 
 # Environment variables
@@ -145,7 +145,7 @@ RUN apt-get update -qq && \
     clamav \
     clamav-base \
     clamav-daemon \
-    clamav-freshclam 
+    clamav-freshclam
 
 # Update permissions for relevant fresclam log files
 RUN touch /var/log/clamav/freshclam.log
