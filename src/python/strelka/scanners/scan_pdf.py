@@ -24,6 +24,7 @@ class ScanPdf(strelka.Scanner):
     def scan(self, data, file, options, expire_at):
         extract_text = options.get("extract_text", False)
         file_limit = options.get("limit", 2000)
+        password = options.get('metadata', {}).get('password', None)
 
         self.event["total"] = {"objects": 0, "extracted": 0}
         extracted_objects = set()
@@ -33,6 +34,8 @@ class ScanPdf(strelka.Scanner):
         try:
             if pdf_to_png:
                 doc = fitz.open(stream=data, filetype='pdf')
+                if password and doc.is_encrypted:
+                    doc.authenticate(password)
 
                 for i in range(0, min(3, doc.page_count)):
                     png_data = doc.get_page_pixmap(i, dpi=150).tobytes('png')
@@ -56,8 +59,18 @@ class ScanPdf(strelka.Scanner):
         try:
             with io.BytesIO(data) as pdf_io:
 
-                # Open file as with PyMuPDF as file object
                 pdf_reader = fitz.open(stream=pdf_io, filetype="pdf")
+                if pdf_reader.is_encrypted:
+                    if password:
+                        auth_result = pdf_reader.authenticate(password)
+                        if auth_result:
+                            self.flags.append("decrypted_with_password")
+                        else:
+                            self.flags.append("password_auth_failed")
+                            return
+                    else:
+                        self.flags.append("encrypted_pdf_no_password")
+                        return
 
                 no_object_extraction = options.get('no_object_extraction', False)
 
