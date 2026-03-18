@@ -125,6 +125,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 	keye := fmt.Sprintf("event:%v", id)
 	keyy := fmt.Sprintf("yara:%v", id)
 	keyo := fmt.Sprintf("yara_cache_key:%s", id)
+	keym := fmt.Sprintf("metadata:%v", id)
 
 	var attr *strelka.Attributes
 	var req *strelka.Request
@@ -154,6 +155,15 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 
 		if attr.YaraCacheKey != "" {
 			p.Set(stream.Context(), keyo, attr.YaraCacheKey, time.Until(deadline))
+		}
+
+		if len(attr.GetMetadata()) > 0 {
+			// We want to store the metadata in a separate key, because it's not part of the file data.
+			// This is to avoid the metadata being included in the file data hash, which would cause the file
+			// to be hashed differently if the metadata changes.
+			if metadataJSON, err := json.Marshal(attr.GetMetadata()); err == nil {
+				p.SetNX(stream.Context(), keym, metadataJSON, time.Until(deadline))
+			}
 		}
 
 		p.RPush(stream.Context(), keyd, in.Data)
