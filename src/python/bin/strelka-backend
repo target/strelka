@@ -437,6 +437,14 @@ class Backend(object):
                         legacy_yara_data = self.coordinator.get(f'yara:{root_id}') # backcompat
                     end_pop_data_time = datetime.now()
 
+                    request_metadata = {}
+                    raw_metadata = self.coordinator.get(f'metadata:{root_id}')
+                    if raw_metadata:
+                        try:
+                            request_metadata = json.loads(raw_metadata)
+                        except Exception:
+                            logging.exception('failed to parse request metadata')
+
                     start_taste_time = datetime.now()
                     file.add_flavors({'mime': self.taste_mime(data)})
                     file.add_flavors({'yara': self.taste_yara(data)})
@@ -492,6 +500,8 @@ class Backend(object):
                         try:
                             options = scanner.get('options', {})
                             options['strelka_id'] = root_id
+                            if request_metadata:
+                                options['metadata'] = request_metadata
                             if name == 'ScanYara':
                                 start_yara_retrieval = datetime.now()
                                 yara_load_took_ms = 0
