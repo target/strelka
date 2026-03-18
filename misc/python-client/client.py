@@ -23,13 +23,15 @@ class StrelkaFrontend:
                  gatekeeper=True,
                  source=None,
                  timeout=60,
-                 chunk=32768):
+                 chunk=32768,
+                 metadata=None):
         self.server = server
         self.cert = cert
         self.gatekeeper = gatekeeper
         self.source = source
         self.timeout = timeout
         self.chunk = chunk
+        self.metadata = metadata or {}
 
     def __ScanFileRequest(self, filename):
         """ Generates a ScanFileRequest message defined in Strelka's Frontend protobuf
@@ -43,7 +45,9 @@ class StrelkaFrontend:
                                       client='strelka-python',
                                       source=self.source,
                                       gatekeeper=self.gatekeeper)
-	attributes = strelka_pb2.Attributes(filename=filename)
+        attributes = strelka_pb2.Attributes(filename=filename,
+                                            metadata=self.metadata,
+                                            yaraFilename=self.yaraFilename)
         with open(filename, 'rb') as f:
             while True:
                 chunk = f.read(self.chunk)
@@ -97,10 +101,17 @@ def main():
     parser.add_argument('-f', '--file',
                         required=True,
                         help='file to submit for scanning')
+    parser.add_argument('-p', '--password',
+                        default=None,
+                        help='password for decrypting protected files (e.g. encrypted PDFs)')
     args = parser.parse_args()
+    metadata = {}
+    if args.password:
+        metadata['password'] = args.password
     client = StrelkaFrontend(server=args.server,
                              cert=args.cert,
-                             gatekeeper=False)
+                             gatekeeper=False,
+                             metadata=metadata)
     result = client.ScanFile(args.file)
     with open(args.log, 'a', encoding='utf-8') as f:
         f.write('\n.'.join(result)+'\n')
