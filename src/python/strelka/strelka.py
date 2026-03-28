@@ -2,6 +2,7 @@ import glob
 import importlib
 import itertools
 import json
+import base64
 import logging
 import math
 import os
@@ -306,6 +307,8 @@ class Backend(object):
                 (task_item, expire_at) = task[0]
 
             traceparent = None
+            task_info = {}
+            request_meta = {}
 
             # Support old (ID only) and new (JSON) style requests
             try:
@@ -316,6 +319,7 @@ class Backend(object):
                 file = File(pointer=root_id)
             else:
                 root_id = task_info["id"]
+                request_meta = task_info.get("meta", {}) or {}
                 try:
                     file = File(
                         pointer=root_id, name=task_info["attributes"]["filename"]
@@ -340,7 +344,14 @@ class Backend(object):
                 signal.alarm(timeout)
 
                 # Distribute the file to the scanners
-                self.distribute(root_id, file, expire_at, traceparent=traceparent)
+                events = self.distribute(
+                    root_id,
+                    file,
+                    expire_at,
+                    traceparent=traceparent,
+                    request_meta=request_meta,
+                )
+                self.aggregate_and_publish(root_id, file, events, request_meta)
 
                 # Push completed event back to Redis to complete request
                 p = self.coordinator.pipeline(transaction=False)
@@ -352,10 +363,10 @@ class Backend(object):
                 signal.alarm(0)
 
             except RequestTimeout:
-                logging.debug(f"request {root_id} timed out")
+                logging.debug(f"[strelka_flow] ⚠️ mid={request_meta.get('mid', root_id)} stage=aggregation action=partial reason=request_timeout status=warning")
             except Exception:
                 signal.alarm(0)
-                logging.exception("unknown exception (see traceback below)")
+                logging.exception(f"[strelka_flow] ❌ mid={request_meta.get('mid', root_id)} stage=analysis action=failure status=failed error=unknown_exception")
 
             count += 1
 
@@ -365,7 +376,12 @@ class Backend(object):
         )
 
     def distribute(
-        self, root_id: str, file: File, expire_at: int, traceparent: Optional[str] = ""
+        self,
+        root_id: str,
+        file: File,
+        expire_at: int,
+        traceparent: Optional[str] = "",
+        request_meta: Optional[dict] = None,
     ) -> list[dict]:
         """Distributes a file through scanners.
 
@@ -392,6 +408,8 @@ class Backend(object):
                 data = b""
                 files = []
                 events = []
+                request_meta = request_meta or {}
+                mid = request_meta.get("mid", root_id)
 
                 pipeline = None
 
@@ -552,40 +570,29 @@ class Backend(object):
 
                     # Collect events for local-only
                     events.append(event)
-                    producer = KafkaProducer(
-                    bootstrap_servers="kafka:29092",
-                    value_serializer=lambda x: json.dumps(x).encode('utf-8'),
-                    max_request_size=104857600  # 100MB (أو 52428800 لـ 50MB)
+                    file_name = file.name or ""
+                    if "___urls___" in file_name:
+                        logging.info(
+                            f"[strelka_flow] 🔗 mid={mid} stage=url_analysis action=start url={request_meta.get('artifact_name', file_name)} status=running"
+                        )
+                    elif file_name.endswith(".zip") or file_name.endswith(".rar") or file_name.endswith(".7z") or file_name.endswith(".tar") or file_name.endswith(".gz"):
+                        logging.info(
+                            f"[strelka_flow] 📦 mid={mid} stage=archive_analysis action=start filename={file_name} status=running"
+                        )
+                    elif file.depth > 0:
+                        logging.info(
+                            f"[strelka_flow] 🧩 mid={mid} stage=archive_child action=analyzed filename={file_name} status=success"
+                        )
+                    else:
+                        logging.info(
+                            f"[strelka_flow] 📄 mid={mid} stage=file_analysis action=start filename={file_name or request_meta.get('artifact_name', 'unknown')} status=running"
+                        )
 
-                )
-                    ANALYSIS_TOPIC = "email.files.analysis"
                     # Send event back to Redis coordinator
                     if pipeline:
                         pipeline.rpush(f"event:{root_id}", format_event(event))
                         pipeline.expireat(f"event:{root_id}", expire_at)
                         pipeline.execute()
-                        try:
-                            if isinstance(event, bytes):
-                                event = json.loads(event.decode("utf-8"))
-                            elif isinstance(event, str):
-                                event = json.loads(event)
-                            name = file.name
-                            
-                            if "___" in name:
-                                uuid_part, request_type = name.split("___")
-                                print(f"[KAFKA] this test inside if that change the name and i print the uuid after split: {uuid_part}")
-                            else:
-                                uuid_part = name
-                                request_type = name
-                            event["mid"] = uuid_part
-                            event["request_type"] = request_type
-                        except Exception as e:
-                            print("Name Error:", e)
-                        try:
-                            producer.send(ANALYSIS_TOPIC,value=format_event(event))
-                            print(f"[KAFKA] Sent analysis for {uuid_part}")
-                        except Exception as e:
-                            print("KAFKA error:", e)
                     signal.alarm(0)
 
                 except DistributionTimeout:
@@ -596,13 +603,304 @@ class Backend(object):
                 for scanner_file in files:
                     scanner_file.parent = file.uid
                     scanner_file.depth = file.depth + 1
-                    events.extend(self.distribute(root_id, scanner_file, expire_at))
+                    events.extend(
+                        self.distribute(
+                            root_id,
+                            scanner_file,
+                            expire_at,
+                            request_meta=request_meta,
+                        )
+                    )
 
             except RequestTimeout:
                 signal.alarm(0)
                 raise
 
             return events
+
+    def aggregate_and_publish(self, root_id: str, root_file: File, events: list[dict], request_meta: Optional[dict] = None) -> None:
+        request_meta = request_meta or {}
+        mid = str(request_meta.get("mid") or root_id)
+        expected_items = self._safe_int(request_meta.get("expected_items"), 1)
+        artifact_type = request_meta.get("artifact_type") or self._derive_request_type(root_file.name)
+        artifact_name = request_meta.get("artifact_name") or root_file.name
+
+        logging.info(f"[strelka_flow] 📥 mid={mid} stage=ingest action=received_full_email status=ok")
+        logging.info(f"[strelka_flow] 🔄 mid={mid} stage=aggregation action=start status=running")
+
+        email_context = self._decode_email_context(mid, request_meta.get("email_context_b64", ""))
+        artifact_payload = {
+            "root_id": root_id,
+            "artifact_type": artifact_type,
+            "artifact_name": artifact_name,
+            "artifact_index": self._safe_int(request_meta.get("artifact_index"), 0),
+            "root_file": root_file.dictionary(),
+            "events": events,
+            "archive_children": [
+                e for e in events if ((e.get("file") or {}).get("tree") or {}).get("parent") not in ("", root_id, None)
+            ],
+            "counts": {
+                "total_events": len(events),
+                "archive_children": len(
+                    [e for e in events if ((e.get("file") or {}).get("tree") or {}).get("parent") not in ("", root_id, None)]
+                ),
+            },
+        }
+
+        agg_key = f"agg:email:{mid}"
+        items_key = f"{agg_key}:items"
+        publish_lock_key = f"{agg_key}:published"
+        ttl_seconds = self.limits.get("time_to_live", 900)
+
+        p = self.coordinator.pipeline(transaction=False)
+        p.hsetnx(agg_key, "mid", mid)
+        p.hsetnx(agg_key, "expected_items", expected_items)
+        if email_context:
+            p.hsetnx(agg_key, "email_context", json.dumps(email_context))
+        p.rpush(items_key, json.dumps(self._json_sanitize(artifact_payload)))
+        p.hincrby(agg_key, "processed_items", 1)
+        p.expire(agg_key, ttl_seconds)
+        p.expire(items_key, ttl_seconds)
+        result = p.execute()
+        processed = int(result[4] if len(result) > 4 else 0)
+        expected = int(self.coordinator.hget(agg_key, "expected_items") or expected_items)
+
+        logging.info(
+            f"[strelka_flow] 🔄 mid={mid} stage=aggregation action=merged processed={processed} expected={expected} status=running"
+        )
+
+        if processed < expected:
+            return
+
+        lock_ok = self.coordinator.set(publish_lock_key, "1", nx=True, ex=ttl_seconds)
+        if not lock_ok:
+            return
+
+        raw_items = self.coordinator.lrange(items_key, 0, -1) or []
+        artifact_items = []
+        for raw_item in raw_items:
+            try:
+                artifact_items.append(json.loads(raw_item))
+            except Exception:
+                continue
+
+        payload = self._build_final_payload(mid, email_context, artifact_items, expected, processed)
+        topic = "email.files.analysis"
+        producer = KafkaProducer(
+            bootstrap_servers="kafka:29092",
+            value_serializer=lambda x: json.dumps(x).encode("utf-8"),
+            max_request_size=104857600,
+        )
+        producer.send(topic, value=self._json_sanitize(payload))
+        producer.flush(timeout=5)
+        logging.info(f"[strelka_flow] 📤✅ mid={mid} stage=publish action=completed topic=email.files.analysis status=success")
+
+    def _decode_email_context(self, mid: str, email_context_b64: str) -> dict:
+        if not email_context_b64:
+            return {}
+        try:
+            return json.loads(base64.b64decode(email_context_b64).decode("utf-8"))
+        except Exception as ex:
+            logging.warning(f"[strelka_flow] ⚠️ mid={mid} stage=aggregation action=partial reason=bad_email_context_b64 status=warning")
+            logging.debug(f"email context decode error: {ex}")
+            return {}
+
+    def _json_sanitize(self, obj):
+        """
+        Make scanner output JSON-safe.
+        Some scanners emit raw bytes/bytearray in events; wrap them in a stable base64 envelope.
+        """
+        if isinstance(obj, (bytes, bytearray)):
+            return {"_type": "bytes", "encoding": "base64", "data": base64.b64encode(bytes(obj)).decode("utf-8")}
+        if isinstance(obj, dict):
+            return {str(k): self._json_sanitize(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [self._json_sanitize(v) for v in obj]
+        if isinstance(obj, tuple):
+            return [self._json_sanitize(v) for v in obj]
+        return obj
+
+    def _derive_request_type(self, file_name: str) -> str:
+        if "___urls" in (file_name or ""):
+            return "urls"
+        return "files"
+
+    def _safe_int(self, value, default: int) -> int:
+        try:
+            return int(value)
+        except Exception:
+            return default
+
+    def _build_final_payload(self, mid: str, email_context: dict, artifact_items: list[dict], expected: int, processed: int) -> dict:
+        try:
+            final_payload = dict(email_context or {})
+            final_payload["mid"] = mid
+            final_payload.setdefault("urls", [])
+            final_payload.setdefault("files", [])
+
+            used_url_indexes = set()
+            used_file_indexes = set()
+            unmatched = 0
+            archive_child_total = 0
+
+            for item in artifact_items:
+                artifact_type = (item.get("artifact_type") or "").lower()
+                artifact_name = item.get("artifact_name") or ""
+                artifact_index = self._safe_int(item.get("artifact_index"), 0)
+                mapped = False
+
+                if artifact_type == "urls":
+                    mapped = self._map_url_analysis(
+                        mid=mid,
+                        payload=final_payload,
+                        item=item,
+                        artifact_name=artifact_name,
+                        artifact_index=artifact_index,
+                        used_indexes=used_url_indexes,
+                    )
+                elif artifact_type in ("files", "email_context"):
+                    mapped, archive_child_count = self._map_file_analysis(
+                        mid=mid,
+                        payload=final_payload,
+                        item=item,
+                        artifact_name=artifact_name,
+                        artifact_index=artifact_index,
+                        used_indexes=used_file_indexes,
+                    )
+                    archive_child_total += archive_child_count
+                else:
+                    logging.warning(
+                        f"[strelka_flow] ⚠️ mid={mid} stage=finalize action=unmatched_artifact status=warning reason=unknown_artifact_type:{artifact_type}"
+                    )
+                    unmatched += 1
+                    continue
+
+                if not mapped:
+                    unmatched += 1
+                    logging.warning(
+                        f"[strelka_flow] ⚠️ mid={mid} stage=finalize action=unmatched_artifact status=warning reason=no_match_for:{artifact_type}:{artifact_name}"
+                    )
+
+            final_payload["aggregation"] = {
+                "expected_items": expected,
+                "processed_items": processed,
+                "completed": processed >= expected,
+                "artifact_count": len(artifact_items),
+                "archive_child_count": archive_child_total,
+                "unmatched_artifacts": unmatched,
+                "completed_at": time.time(),
+            }
+            return final_payload
+        except Exception as ex:
+            logging.exception(
+                f"[strelka_flow] ❌ mid={mid} stage=finalize action=failure status=failed error={ex}"
+            )
+            fallback = dict(email_context or {})
+            fallback["mid"] = mid
+            fallback["aggregation"] = {
+                "expected_items": expected,
+                "processed_items": processed,
+                "completed": processed >= expected,
+                "artifact_count": len(artifact_items),
+                "finalize_error": str(ex),
+                "completed_at": time.time(),
+            }
+            return fallback
+
+    def _map_url_analysis(self, mid: str, payload: dict, item: dict, artifact_name: str, artifact_index: int, used_indexes: set) -> bool:
+        urls = payload.get("urls") or []
+        target_index = -1
+
+        if artifact_name:
+            for idx, url_item in enumerate(urls):
+                if idx in used_indexes:
+                    continue
+                if (url_item.get("url") or "") == artifact_name:
+                    target_index = idx
+                    break
+
+        if target_index < 0 and artifact_index > 0 and artifact_index <= len(urls):
+            idx = artifact_index - 1
+            if idx not in used_indexes:
+                target_index = idx
+
+        if target_index < 0:
+            return False
+
+        urls[target_index]["analysis"] = self._artifact_analysis_object(mid, item)
+        used_indexes.add(target_index)
+        logging.info(
+            f"[strelka_flow] 🔄 mid={mid} stage=finalize action=map_analysis_to_url target={urls[target_index].get('url', artifact_name)} status=success"
+        )
+        return True
+
+    def _map_file_analysis(self, mid: str, payload: dict, item: dict, artifact_name: str, artifact_index: int, used_indexes: set) -> tuple[bool, int]:
+        files = payload.get("files") or []
+        target_index = -1
+        root_sha256 = self._extract_root_sha256(item)
+
+        if root_sha256:
+            for idx, file_item in enumerate(files):
+                if idx in used_indexes:
+                    continue
+                if (file_item.get("sha256") or "") == root_sha256:
+                    target_index = idx
+                    break
+
+        if target_index < 0 and artifact_name:
+            for idx, file_item in enumerate(files):
+                if idx in used_indexes:
+                    continue
+                if (file_item.get("filename") or "") == artifact_name:
+                    target_index = idx
+                    break
+
+        if target_index < 0 and artifact_index > 0 and artifact_index <= len(files):
+            idx = artifact_index - 1
+            if idx not in used_indexes:
+                target_index = idx
+
+        if target_index < 0:
+            return False, 0
+
+        analysis_obj = self._artifact_analysis_object(mid, item)
+        files[target_index]["analysis"] = analysis_obj
+        used_indexes.add(target_index)
+        child_count = len(analysis_obj.get("archive_children") or [])
+
+        logging.info(
+            f"[strelka_flow] 🔄 mid={mid} stage=finalize action=map_analysis_to_file target={files[target_index].get('filename', artifact_name)} status=success"
+        )
+        logging.info(
+            f"[strelka_flow] 📦 mid={mid} stage=finalize action=map_archive_children target={files[target_index].get('filename', artifact_name)} child_count={child_count} status=success"
+        )
+        return True, child_count
+
+    def _extract_root_sha256(self, item: dict) -> str:
+        for ev in (item.get("events") or []):
+            scan = ev.get("scan") or {}
+            hash_obj = scan.get("hash") or {}
+            sha256 = hash_obj.get("sha256")
+            if sha256:
+                return sha256
+        return ""
+
+    def _artifact_analysis_object(self, mid: str, item: dict) -> dict:
+        events = item.get("events") or []
+        root_event = events[0] if events else {}
+        child_events = events[1:] if len(events) > 1 else []
+        if root_event:
+            logging.info(
+                f"[strelka_flow] 🧹 mid={mid} stage=finalize action=deduplicate_root_event artifact={item.get('artifact_name', 'unknown')} status=success"
+            )
+        return {
+            "artifact_type": item.get("artifact_type"),
+            "artifact_name": item.get("artifact_name"),
+            "root_event": root_event,
+            "events": child_events,
+            "archive_children": item.get("archive_children") or [],
+            "counts": item.get("counts") or {},
+        }
 
     def match_scanner(
         self,
