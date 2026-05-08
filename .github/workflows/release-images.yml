@@ -218,7 +218,6 @@ jobs:
       - name: Build and Push Final Manifests to ECR & DockerHub
         env:
           SEM_VER: ${{ steps.get_ver.outputs.SEM_VER }}
-          MINOR_VERSION:  ${{ steps.get_ver.outputs.MINOR_VERSION }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_GC_REGISTRY: ${{ steps.login-ecr-gov-cloud.outputs.registry }}
         run: |

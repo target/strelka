@@ -152,7 +152,7 @@ jobs:
           docker manifest push $ecr_gc:$MAJOR_VERSION
           docker manifest push $docker_hub:$MINOR_VERSION
           docker manifest push $ecr:$MINOR_VERSION
-          docker manifest push $ecr_gc:$MAJOR_VERSION
+          docker manifest push $ecr_gc:$MINOR_VERSION
 
       - name: Pull, Tag, Push BackEnd
         env:
@@ -204,7 +204,7 @@ jobs:
           docker manifest push $ecr_gc:$MAJOR_VERSION
           docker manifest push $docker_hub:$MINOR_VERSION
           docker manifest push $ecr:$MINOR_VERSION
-          docker manifest push $ecr_gc:$MAJOR_VERSION
+          docker manifest push $ecr_gc:$MINOR_VERSION
 
       - name: Pull, Tag, Push Manager
         env:
@@ -256,7 +256,7 @@ jobs:
           docker manifest push $ecr_gc:$MAJOR_VERSION
           docker manifest push $docker_hub:$MINOR_VERSION
           docker manifest push $ecr:$MINOR_VERSION
-          docker manifest push $ecr_gc:$MAJOR_VERSION
+          docker manifest push $ecr_gc:$MINOR_VERSION
 
       - name: Validate All X-Region Replication
         run: |
