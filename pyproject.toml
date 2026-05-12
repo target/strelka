@@ -10,7 +10,7 @@ authors = [
 package-mode = false
 
 [tool.poetry.dependencies]
-python = ">=3.12,<=3.13"
+python = ">=3.12,<3.13"
 arc4 = "0.0.4"
 beautifulsoup4 = "4.12.2"
 boltons = "23.0.0"
@@ -60,7 +60,6 @@ pytest-unordered = "0.5.2"
 pytest = "7.2.2"
 python-docx = "0.8.11"
 python-magic = "0.4.27"
-py7zr = "0.20.2"
 pytz = ">=2022.7.1"
 pyxlsb2 = "0.0.9"
 pyyaml = "6.0.1"
@@ -86,15 +85,12 @@ donut-decryptor = { git = "https://github.com/volexity/donut-decryptor", rev = "
 entropy = { git = "https://github.com/jshlbrd/python-entropy.git", rev = "a49f1addccb88d54115832a6d1982b957a56f329" }
 zipp = "^3.20.1"
 certifi = "^2025.1.31"
-setuptools = "^75.8.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
 isort = "^6.0.1"
 flake8 = "^7.1.2"
 
-[tool.poetry.build-constraints]
-ssdeep = { setuptools = "<78" }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
