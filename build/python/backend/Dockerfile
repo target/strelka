@@ -178,6 +178,33 @@ RUN poetry config virtualenvs.create false && \
 COPY ./src/python/ /strelka/
 COPY ./configs/python/backend/ /etc/strelka/
 
+# Install Strelka
+RUN cd /strelka/ && \
+    python3 setup.py -q build && \
+    python3 setup.py -q install && \
+# Remove build packages
+    python3 setup.py -q clean --all && \
+    rm -rf dist/ strelka.egg-info && \
+    apt-get purge -y \
+    automake \
+    build-essential \
+    cmake \
+    curl \
+    gcc \
+    git \
+    gpg \
+    libtool \
+    make \
+    python3-dev \
+    python3-pip \
+    python3-wheel && \
+    apt-get clean -qq && \
+    rm -rf /var/lib/apt/lists/* && \
+# Assign permissions to Strelka scan result logging directory
+    mkdir /var/log/strelka/ && \
+    chgrp -R 0 /var/log/strelka/ && \
+    chmod -R g=u /var/log/strelka/
+
 # Run tests as non-root user
 USER $USERNAME
 
