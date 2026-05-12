@@ -176,7 +176,8 @@ COPY pyproject.toml poetry.lock ./
 # Use Poetry to install the project dependencies globally
 # This step is after the COPY step because it is more likely to change,
 # and therefore should not be included in earlier layers that can be cached.
-RUN poetry config virtualenvs.create false && \
+RUN pip install --break-system-packages 'ssdeep==3.4' && \
+    poetry config virtualenvs.create false && \
     poetry install --only main && \
     rm -rf /root/.cache/pypoetry
 
