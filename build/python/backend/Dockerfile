@@ -1,5 +1,5 @@
 # Base and setup configuration
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 ARG DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
@@ -32,24 +32,21 @@ RUN apt-get -q update && \
     curl \
     gcc \
     git \
-    dirmngr \
-    gnupg \
     gpg \
+    libffi-dev \
     libglu1-mesa \
     libtool \
     make \
     swig \
     python3-dev \
     python3-pip \
-    python3-wheel \
-    python-is-python3 \
     pkg-config \
     supervisor \
     ncat
 
 # Install Zeek
-RUN echo 'deb http://download.opensuse.org/repositories/security:/zeek/xUbuntu_22.04/ /' | tee /etc/apt/sources.list.d/security:zeek.list && \
-    curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_22.04/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null && \
+RUN echo 'deb http://download.opensuse.org/repositories/security:/zeek/xUbuntu_24.04/ /' | tee /etc/apt/sources.list.d/security:zeek.list && \
+    curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_24.04/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null && \
     apt-get -q update && \
     apt-get install -q -y --no-install-recommends zeek-lts
 ENV PATH=$PATH:/opt/zeek/bin
@@ -63,9 +60,12 @@ RUN apt-get -q update && \
     libfuzzy-dev \
     libjansson-dev \
     libmagic-dev \
+    libmagic-mgc \
     libssl-dev \
+    libssl3 \
     libzbar0 \
     libgl1 \
+    openssl \
     python3-setuptools \
     redis-server \
     suricata \
@@ -172,33 +172,6 @@ RUN poetry config virtualenvs.create false && \
 # Copy Strelka files
 COPY ./src/python/ /strelka/
 COPY ./configs/python/backend/ /etc/strelka/
-
-# Install Strelka
-RUN cd /strelka/ && \
-    python3 setup.py -q build && \
-    python3 setup.py -q install && \
-# Remove build packages
-    python3 setup.py -q clean --all && \
-    rm -rf dist/ strelka.egg-info && \
-    apt-get purge -y \
-    automake \
-    build-essential \
-    cmake \
-    curl \
-    gcc \
-    git \
-    gpg \
-    libtool \
-    make \
-    python3-dev \
-    python3-pip \
-    python3-wheel && \
-    apt-get clean -qq && \
-    rm -rf /var/lib/apt/lists/* && \
-# Assign permissions to Strelka scan result logging directory
-    mkdir /var/log/strelka/ && \
-    chgrp -R 0 /var/log/strelka/ && \
-    chmod -R g=u /var/log/strelka/
 
 # Run tests as non-root user
 USER $USERNAME
