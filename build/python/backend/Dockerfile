@@ -159,9 +159,15 @@ RUN chown clamav /var/log/clamav/freshclam.log
 RUN chown 1001:1001 /var/lib/clamav
 
 # Install Poetry globally and copy project files
-RUN python3 -m pip install -U pip setuptools && \
-    python3 -m pip install poetry && \
-    rm -rf /root/.cache/pip
+ENV POETRY_HOME="/opt/poetry"
+ENV POETRY_VIRTUALENVS_IN_PROJECT=false
+ENV POETRY_NO_INTERACTION=1
+
+# Ensure the poetry bin directory is added to the PATH
+ENV PATH="$POETRY_HOME/bin:$PATH"
+
+# Install Poetry using its official installation script
+RUN curl -sSL https://install.python-poetry.org | python3 -
 
 # Set the working directory and copy the project files
 WORKDIR /strelka/
