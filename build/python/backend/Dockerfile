@@ -37,18 +37,16 @@ RUN apt-get -q update && \
     libglu1-mesa \
     libtool \
     make \
-    swig \
     python3-dev \
     python3-pip \
+    swig \
     pkg-config \
     supervisor \
     ncat
 
 # Install Zeek
 RUN echo 'deb http://download.opensuse.org/repositories/security:/zeek/xUbuntu_24.04/ /' | tee /etc/apt/sources.list.d/security:zeek.list && \
-    curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_24.04/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null && \
-    apt-get -q update && \
-    apt-get install -q -y --no-install-recommends zeek-lts
+    curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_24.04/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null
 ENV PATH=$PATH:/opt/zeek/bin
 
 # Install runtime packages
@@ -59,10 +57,10 @@ RUN apt-get -q update && \
     libarchive-dev \
     libfuzzy-dev \
     libjansson-dev \
-    libmagic-dev \
     libmagic-mgc \
-    libssl-dev \
+    libmagic-dev \
     libssl3 \
+    libssl-dev \
     libzbar0 \
     libgl1 \
     openssl \
@@ -73,33 +71,38 @@ RUN apt-get -q update && \
     unrar \
     unzip \
     upx \
-    jq && \
-#clean up zeek install
-    cp /opt/zeek/bin/zeek /bin/zeek && \
-    rm -rf /opt/zeek/share/btest /opt/zeek/bin && \
-    rm -rf /opt/zeek/lib/*.a && \
-# Download and compile exiftool
+    jq \
+    zeek-lts && \
+    # Download and compile Archive library (For exiftool)
+    cd /tmp/ && \
+    curl -OL https://cpan.metacpan.org/authors/id/P/PH/PHRED/Archive-Zip-1.68.tar.gz && \
+    tar -xzf Archive-Zip-1.68.tar.gz && \
+    cd Archive-Zip-1.68/ && \
+    perl Makefile.PL && \
+    make && \
+    make install && \
+    # Download and compile exiftool
     cd /tmp/ && \
     curl -OL https://github.com/exiftool/exiftool/archive/refs/tags/$EXIFTOOL_VERSION.tar.gz && \
     tar -zxvf $EXIFTOOL_VERSION.tar.gz && \
     cd exiftool-$EXIFTOOL_VERSION/ && \
     perl Makefile.PL && \
-    make -s && \
-    make -s install && \
-# Download and move binary for 7z 24.09
+    make && \
+    make install && \
+    #Download and move binary for 7z 24.09
     cd /tmp/ && \
-    curl -OL https://7-zip.org/a/7z2409-linux-x64.tar.xz &&\
+    curl -OL https://github.com/ip7z/7zip/releases/download/24.09/7z2409-linux-x64.tar.xz &&\
     tar -xf 7z2409-linux-x64.tar.xz &&\
-    cp 7zz /usr/local/bin && \
-# Install YARA
-    cd /tmp/ && \
+    cp 7zz /usr/local/bin
+    # Install YARA
+    RUN cd /tmp/ && \
     curl -OL https://github.com/VirusTotal/yara/archive/v$YARA_VERSION.tar.gz && \
     tar -zxvf v$YARA_VERSION.tar.gz && \
     cd yara-$YARA_VERSION/ && \
     ./bootstrap.sh && \
-    ./configure --with-crypto --enable-magic --enable-cuckoo && \
-    make -s && make -s install && make -s check && \
-# Install yara-python
+    CC='gcc' CFLAGS='-O0 -fPIC -fno-optimize-sibling-calls' ./configure --with-crypto --enable-magic --enable-cuckoo && \
+    make -j1 && make install && \
+    # Install yara-python
     cd /tmp/ && \
     curl -OL https://github.com/VirusTotal/yara-python/archive/v$YARA_VERSION.tar.gz && \
     tar -zxvf v$YARA_VERSION.tar.gz && \
@@ -107,23 +110,25 @@ RUN apt-get -q update && \
     python3 setup.py build --dynamic-linking && \
     python3 setup.py install
 
+# Mark zeek as manual (keeps getting autoremoved?)
+RUN apt-mark manual zeek-lts
+
 #Copy Suricata config to default location
 COPY configs/python/backend/suricata/suricata.yaml /etc/suricata/suricata.yaml
 
 # Install JTR
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get update -qq && \
-    apt-get install -qq -y --no-install-recommends \
+RUN apt-get -q update \
+    && apt-get install -q -y --no-install-recommends \
     ca-certificates \
+    libssl3 \
     zlib1g-dev \
     yasm \
     libgmp-dev \
-    liblzma-dev \
-    libpcap-dev \
     libbz2-dev \
-    libgomp1 && \
-    cpan -i Compress::Raw::Lzma
+    libgomp1 \
+    liblzma-dev
+RUN cpan Compress::Raw::Lzma
+
 # The maintainer isn't big on releases or tags so grab an arbitrary, but consistent, commit.
 # Additionally jump through some extra hoops to get the single commit to save some download time.
 RUN mkdir jtr && cd jtr && git init && git remote add origin https://github.com/openwall/john.git && \
