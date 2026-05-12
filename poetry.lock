@@ -217,6 +217,7 @@ description = "Foreign Function Interface for Python calling C code."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
+markers = "platform_python_implementation != \"PyPy\""
 files = [
     {file = "cffi-2.0.0-cp310-cp310-macosx_10_13_x86_64.whl", hash = "sha256:0cf2d91ecc3fcc0625c2c530fe004f82c110405f101548512cce44322fa8ac44"},
     {file = "cffi-2.0.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:f73b96c41e3b2adedc34a7356e64c8eb96e03a3782b535e043a986276ce12a49"},
@@ -2017,7 +2018,7 @@ description = "C parser in Python"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "implementation_name != \"PyPy\""
+markers = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\""
 files = [
     {file = "pycparser-2.22-py3-none-any.whl", hash = "sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc"},
     {file = "pycparser-2.22.tar.gz", hash = "sha256:491c8be9c040f5390f5bf44a5b07752bd07f56edf992381b05c701439eec10f6"},
@@ -2666,24 +2667,6 @@ files = [
 ]
 
 [[package]]
-name = "ssdeep"
-version = "3.4"
-description = "Python wrapper for the ssdeep library"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "ssdeep-3.4.tar.gz", hash = "sha256:1b5510716bc495a2b18300ea837fcf944552a1cc678bb74e384bce251d99a85f"},
-]
-
-[package.dependencies]
-cffi = ">=0.8.6"
-six = ">=1.4.1"
-
-[package.extras]
-docstest = ["doc8", "readme_renderer (>=16.0)", "sphinx", "sphinx_rtd_theme"]
-
-[[package]]
 name = "tldextract"
 version = "5.3.1"
 description = "Accurately separates a URL's subdomain, domain, and public suffix, using the Public Suffix List (PSL). By default, this includes the public ICANN TLDs and their exceptions. You can optionally support the Public Suffix List's private domains as well."
@@ -2943,4 +2926,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.13"
-content-hash = "709ae27c8187508111398959e0181abdcbbef3001b03775185f08c76cbeb7484"
+content-hash = "fc7c6206b22de2f44c51b156f7c2f2873f08116bcb9f8f267554cfa32f3614c1"
