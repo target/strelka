@@ -1,13 +1,6 @@
 import tempfile
 import traceback
 
-from it_feed.log import LEVELS, setup_logging
-
-# Set up logging with INFO level, custom log name, and silence all external libraries to warnings only.
-strelka_logger = setup_logging(
-    level=LEVELS.INFO, log_name="strelka-worker", silence_libraries=LEVELS.WARNING
-)
-
 from lief import MachO
 
 from strelka import strelka
