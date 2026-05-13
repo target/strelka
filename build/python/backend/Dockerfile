@@ -37,8 +37,7 @@ RUN apt-get -q update && \
     libglu1-mesa \
     libtool \
     make \
-    python3.10 \
-    python3.10-dev \
+    python3-dev \
     python3-pip \
     swig \
     pkg-config \
@@ -108,8 +107,8 @@ RUN apt-get -q update && \
     curl -OL https://github.com/VirusTotal/yara-python/archive/v$YARA_VERSION.tar.gz && \
     tar -zxvf v$YARA_VERSION.tar.gz && \
     cd yara-python-$YARA_VERSION/ && \
-    python3.10 setup.py build --dynamic-linking && \
-    python3.10 setup.py install
+    python3 setup.py build --dynamic-linking && \
+    python3 setup.py install
 
 # Mark zeek as manual (keeps getting autoremoved?)
 RUN apt-mark manual zeek-lts
@@ -177,7 +176,7 @@ COPY pyproject.toml poetry.lock ./
 # Use Poetry to install the project dependencies globally
 # This step is after the COPY step because it is more likely to change,
 # and therefore should not be included in earlier layers that can be cached.
-RUN pip install --break-system-packages 'ssdeep==3.4' && \
+RUN pip install 'ssdeep==3.4' && \
     poetry config virtualenvs.create false && \
     poetry install --only main && \
     rm -rf /root/.cache/pypoetry
