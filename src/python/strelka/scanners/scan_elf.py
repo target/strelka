@@ -7,10 +7,63 @@ lief.logging.disable()
 
 
 class ScanElf(strelka.Scanner):
-    """Collects metadata from ELF files."""
+    """
+    Extracts and analyzes metadata from ELF (Executable and Linkable Format) files.
 
-    def scan(self, data, file, options, expire_at):
-        elf = ELF.parse(raw=list(data))
+    This scanner uses the LIEF library to parse ELF files, extracting detailed metadata such as binary headers,
+    section details, symbol tables, and other ELF-specific attributes. It is capable of identifying various
+    characteristics of the ELF file, including executable and linking details.
+
+    Scanner Type: Collection
+
+    Attributes:
+        None
+
+    Other Parameters:
+        None
+
+    ## Detection Use Cases
+    !!! info "Detection Use Cases"
+        - **Symbol and Dependency Analysis**
+            - Extracts symbols and library dependencies for deeper binary analysis.
+        - **Security Analysis**
+            - Examine ELF files for security attributes like NX and PIE.
+
+    ## Known Limitations
+    !!! warning "Known Limitations"
+        - **Resource Intensive**
+            - Can be resource-intensive, depending on the size and complexity of the ELF file.
+
+    ## To Do
+    !!! question "To Do"
+        - **Optimization**
+            - Optimize resource usage and performance for large or complex ELF files.
+
+    ## References
+    !!! quote "References"
+        - [LIEF Project Documentation](https://lief.quarkslab.com/)
+
+    ## Contributors
+    !!! example "Contributors"
+        - [Josh Liburdi](https://github.com/jshlbrd)
+        - [Paul Hutelmyer](https://github.com/phutelmyer)
+        - [Ryan O'Horo](https://github.com/ryanohoro)
+        - [Sara Kalupa](https://github.com/skalupa)
+    """
+
+    def scan(
+        self, data: bytes, file: strelka.File, options: dict, expire_at: int
+    ) -> None:
+        """
+        Scans an ELF file and extracts its metadata.
+
+        Args:
+            data (bytes): Raw data of the ELF file to be scanned.
+            file (strelka.File): File details and metadata.
+            options (dict): Scanner options (unused in this scanner).
+            expire_at (int): Expiry time of the scan.
+        """
+        elf = ELF.parse(data)
 
         self.event["total"] = {
             "libraries": len(elf.libraries),
@@ -32,14 +85,7 @@ class ScanElf(strelka.Scanner):
                     "version": str(elf.header.object_file_version).split(".")[1],
                 },
                 "flags": {
-                    "arm": [str(f).split(".")[1] for f in elf.header.arm_flags_list],
-                    "hexagon": [
-                        str(f).split(".")[1] for f in elf.header.hexagon_flags_list
-                    ],
-                    "mips": [str(f).split(".")[1] for f in elf.header.mips_flags_list],
-                    "ppc64": [
-                        str(f).split(".")[1] for f in elf.header.ppc64_flags_list
-                    ],
+                    "flags_list": elf.header.flags_list,
                     "processor": elf.header.processor_flag,
                 },
                 "identity": {
@@ -74,16 +120,7 @@ class ScanElf(strelka.Scanner):
             if relo.has_symbol:
                 row["symbol"] = relo.symbol.name
 
-            if elf.header.machine_type == ELF.ARCH.x86_64:
-                row["type"] = str(ELF.RELOCATION_X86_64(relo.type)).split(".")[1]
-            elif elf.header.machine_type == ELF.ARCH.i386:
-                row["type"] = str(ELF.RELOCATION_i386(relo.type)).split(".")[1]
-            elif elf.header.machine_type == ELF.ARCH.ARM:
-                row["type"] = str(ELF.RELOCATION_ARM(relo.type)).split(".")[1]
-            elif elf.header.machine_type == ELF.ARCH.AARCH64:
-                row["type"] = str(ELF.RELOCATION_AARCH64(relo.type)).split(".")[1]
-            else:
-                row["type"] = str(relo.type)
+            row["type"] = str(relo.type)
 
             self.event["relocations"].append(row)
 
@@ -151,9 +188,7 @@ class ScanElf(strelka.Scanner):
                     "information": sym.information,
                     "function": sym.is_function,
                     "symbol": sym.name,
-                    "section_index": str(ELF.SYMBOL_SECTION_INDEX(sym.shndx)).rsplit(
-                        "."
-                    )[1],
+                    "section_index": str(sym.shndx),
                     "size": sym.size,
                     "static": sym.is_static,
                     "version": str(sym.symbol_version),

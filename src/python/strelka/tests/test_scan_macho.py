@@ -23,15 +23,16 @@ def test_scan_macho(mocker):
             "segments": 4,
             "symbols": 3,
         },
-        "nx": True,
+        "nx_stack": True,
+        "nx_heap": True,
         "pie": True,
         "header": {
             "cpu": {
-                "primary": "x86_64",
-                "sub": "x86_ALL, x86_64_ALL, I386_ALL, or 386",
+                "primary": "X86_64",
+                "sub": "X86_ALL, X86_64_ALL, I386_ALL, or 386",
             },
             "file": "EXECUTE",
-            "flags": ["TWOLEVEL", "NOUNDEFS", "DYLDLINK", "PIE"],
+            "flags": ["NOUNDEFS", "DYLDLINK", "TWOLEVEL", "PIE"],
         },
         "relocations": [],
         "sections": [
@@ -121,12 +122,12 @@ def test_scan_macho(mocker):
             "table": [
                 {
                     "export": {"address": 0, "flags": 0},
-                    "origin": "LC_SYMTAB",
+                    "origin": "SYMTAB",
                     "symbol": "__mh_execute_header",
                 },
                 {
                     "export": {"address": 16240, "flags": 0},
-                    "origin": "LC_SYMTAB",
+                    "origin": "SYMTAB",
                     "symbol": "_main",
                 },
                 {
@@ -146,7 +147,7 @@ def test_scan_macho(mocker):
                         "type": None,
                         "weak_import": False,
                     },
-                    "origin": "LC_SYMTAB",
+                    "origin": "SYMTAB",
                     "symbol": "_printf",
                 },
             ],

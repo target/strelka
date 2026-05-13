@@ -1,4 +1,12 @@
 import tempfile
+import traceback
+
+from it_feed.log import LEVELS, setup_logging
+
+# Set up logging with INFO level, custom log name, and silence all external libraries to warnings only.
+strelka_logger = setup_logging(
+    level=LEVELS.INFO, log_name="strelka-worker", silence_libraries=LEVELS.WARNING
+)
 
 from lief import MachO
 
@@ -6,14 +14,14 @@ from strelka import strelka
 
 CPU_SUBTYPES = {
     "ANY": {-2: "ANY", -1: "MULTIPLE", 0: "LITTLE_ENDIAN", 1: "BIG_ENDIAN"},
-    "x86": {
-        -2: "x86 (I386)",
+    "X86_64": {
+        -2: "X86 (I386)",
         -1: "MULITPLE",
         0: "INTEL_MODEL_ALL",
-        3: "x86_ALL, x86_64_ALL, I386_ALL, or 386",
-        4: "x86_ARCH1 or 486",
+        3: "X86_ALL, X86_64_ALL, I386_ALL, or 386",
+        4: "X86_ARCH1 or 486",
         5: "586 or PENT",
-        8: "x86_64_H or PENTIUM_3",
+        8: "X86_64_H or PENTIUM_3",
         9: "PENTIUM_M",
         10: "PENTIUM_4",
         11: "ITANIUM",
@@ -176,29 +184,64 @@ PROTECTIONS = {
 
 
 class ScanMacho(strelka.Scanner):
-    """Collects metadata from Mach-O files."""
+    """
+    This scanner runs on the LIEF library to parse and extract segment information from Mach-0 binary files.
+
+    The Macho-0 filetype was developed to replace the a.out format and generally are a file format for executables, shared libries, dynamically load code, and core dumps
+
+    Scanner Type: Collection
+
+    Attributes:
+        None
+
+    ## Detection Use Cases
+    !!! info "Detection Use Cases"
+    **Malware Analysis**
+    - Since Mach-0 files often executables, analysis of Mach-0 output can help with detecting and analyzing malware signatures.
+
+    ## References
+    !!! quote "References"
+    - [LIEF Project Documentation](https://lief.quarkslab.com/)
+
+    ## Contributors
+    !!! example "Contributors"
+        - [Josh Liburdi](https://github.com/jshlbrd)
+        - [Paul Hutelmyer](https://github.com/phutelmyer)
+        - [Ryan O'Horo](https://github.com/ryanohoro)
+        - [Sara Kalupa](https://github.com/skalupa)
+
+    """
 
     def scan(self, data, file, options, expire_at):
         tmp_directory = options.get("tmp_directory", "/tmp/")
 
-        macho = MachO.parse(raw=list(data), config=MachO.ParserConfig.deep)
+        macho: MachO.Binary = MachO.parse(data, config=MachO.ParserConfig.deep)
 
         self.event["total"] = {
             "binaries": macho.size,
         }
 
         if macho.size > 1:
-            for r in range(0, macho.size):
-                b = macho.at(r)
-                with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
-                    b.write(tmp_data.name)
-                    tmp_data.flush()
+            try:
+                for r in range(0, macho.size):
+                    b = macho.at(r)
+                    with tempfile.NamedTemporaryFile(dir=tmp_directory) as tmp_data:
+                        b.write(tmp_data.name)
+                        tmp_data.flush()
 
-                    with open(tmp_data.name, "rb") as f:
-                        # Send extracted file back to Strelka
-                        self.emit_file(f.read(), name=f"binary_{r}")
+                        with open(tmp_data.name, "rb") as f:
+                            # Send extracted file back to Strelka
+                            self.emit_file(f.read(), name=f"binary_{r}")
 
-            return
+                return
+            except Exception:
+                strelka_logger.error(
+                    "ERROR: Failed to scan in Scan_Macho, see traceback for nmore details."
+                    + traceback.format_exc()
+                )
+            finally:
+                # Ensure tempfile is closed even after error is thrown
+                tmp_data.close()
 
         binary = macho.at(0)
 
@@ -212,7 +255,8 @@ class ScanMacho(strelka.Scanner):
             "symbols": len(binary.symbols),
         }
 
-        self.event["nx"] = binary.has_nx
+        self.event["nx_heap"] = binary.has_nx_heap
+        self.event["nx_stack"] = binary.has_nx_stack
         self.event["pie"] = binary.is_pie
 
         cpu_type = str(binary.header.cpu_type).split(".")[1]
@@ -251,7 +295,7 @@ class ScanMacho(strelka.Scanner):
             self.event["sections"].append(
                 {
                     "alignment": sec.alignment,
-                    "entropy": sec.entropy,
+                    "entropy": float(sec.entropy),
                     "name": sec.name,
                     "offset": sec.offset,
                     "size": sec.size,
