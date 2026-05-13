@@ -1,5 +1,5 @@
 # Base and setup configuration
-FROM ubuntu:24.04
+FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="Target Brands, Inc. TTS-CFC-OpenSource@target.com"
 
@@ -37,7 +37,8 @@ RUN apt-get -q update && \
     libglu1-mesa \
     libtool \
     make \
-    python3-dev \
+    python3.10 \
+    python3.10-dev \
     python3-pip \
     swig \
     pkg-config \
@@ -45,8 +46,8 @@ RUN apt-get -q update && \
     ncat
 
 # Install Zeek
-RUN echo 'deb http://download.opensuse.org/repositories/security:/zeek/xUbuntu_24.04/ /' | tee /etc/apt/sources.list.d/security:zeek.list && \
-    curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_24.04/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null
+RUN echo 'deb http://download.opensuse.org/repositories/security:/zeek/xUbuntu_22.04/ /' | tee /etc/apt/sources.list.d/security:zeek.list && \
+    curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_22.04/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null
 ENV PATH=$PATH:/opt/zeek/bin
 
 # Install runtime packages
@@ -107,8 +108,8 @@ RUN apt-get -q update && \
     curl -OL https://github.com/VirusTotal/yara-python/archive/v$YARA_VERSION.tar.gz && \
     tar -zxvf v$YARA_VERSION.tar.gz && \
     cd yara-python-$YARA_VERSION/ && \
-    python3 setup.py build --dynamic-linking && \
-    python3 setup.py install
+    python3.10 setup.py build --dynamic-linking && \
+    python3.10 setup.py install
 
 # Mark zeek as manual (keeps getting autoremoved?)
 RUN apt-mark manual zeek-lts
