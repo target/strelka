@@ -9,7 +9,7 @@ import struct
 from io import BytesIO
 
 import pefile
-from signify.authenticode import SignedPEFile
+from signify.authenticode.signed_file import SignedPEFile
 from signify.exceptions import (
     AuthenticodeParseError,
     AuthenticodeVerificationError,
