@@ -1,5 +1,4 @@
 import tempfile
-import traceback
 
 from lief import MachO
 
@@ -228,9 +227,8 @@ class ScanMacho(strelka.Scanner):
 
                 return
             except Exception:
-                strelka_logger.error(
+                self.flags.append(
                     "ERROR: Failed to scan in Scan_Macho, see traceback for nmore details."
-                    + traceback.format_exc()
                 )
             finally:
                 # Ensure tempfile is closed even after error is thrown
