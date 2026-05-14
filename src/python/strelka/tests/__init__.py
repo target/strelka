@@ -8,7 +8,6 @@ from pathlib import Path
 from zipfile import ZipFile
 
 import magic
-import py7zr
 import requests
 
 from strelka.strelka import File
@@ -104,13 +103,6 @@ def get_remote_fixture_archive(
                                 )
                             }
                         )
-        except Exception as e:
-            raise e
-
-    elif mime_type == "application/x-7z-compressed":
-        try:
-            with py7zr.SevenZipFile(bytesfile, password=password) as archive:
-                allfiles = archive.readall()
         except Exception as e:
             raise e
 
