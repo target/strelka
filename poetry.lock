@@ -698,14 +698,13 @@ files = [
 
 [[package]]
 name = "eml-parser"
-version = "1.17.5"
+version = "2.0.1"
 description = "Python EML parser library"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "eml_parser-1.17.5-py3-none-any.whl", hash = "sha256:e92e4242e06dbe0e348b408a8e7a0f1a505d969090dbc0d6f8165d0179667b70"},
-    {file = "eml_parser-1.17.5.tar.gz", hash = "sha256:db0b066184afdd73896f411ab303bc0eea69d39c36720074a2d1a767a4b40aa6"},
+    {file = "eml_parser-2.0.1-py3-none-any.whl", hash = "sha256:a32c52d78842c32e78751ce24e2db1989885e98424882ea4727d924e330d650b"},
 ]
 
 [package.dependencies]
@@ -714,12 +713,8 @@ publicsuffixlist = "*"
 python-dateutil = "*"
 
 [package.extras]
-dev = ["flake8", "flake8-comprehensions", "flake8-docstrings", "mypy", "pep8-naming", "pylint", "types-chardet", "types-python-dateutil"]
-docs = ["mkdocs-material", "mkdocstrings[crystal,python]"]
 filemagic = ["file-magic (>=0.4.0)"]
-pyre2 = ["pyre2"]
 regex = ["regex"]
-test = ["coverage", "pytest"]
 
 [[package]]
 name = "entropy"
@@ -3145,4 +3140,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "dc5e0f48ee3a0a115d1f089c89346431837fbe94fcb9ec75125e8931a14fbdef"
+content-hash = "429152287d8d425c9185a9e077bc060909382dad6308ab674c37d5a9dbf5a6ec"
