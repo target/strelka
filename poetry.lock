@@ -2550,14 +2550,14 @@ scripts = ["Pillow (>=3.2.0)"]
 
 [[package]]
 name = "pyzipper"
-version = "0.3.6"
+version = "0.4.0"
 description = "AES encryption for zipfile."
 optional = false
 python-versions = ">=3.4"
 groups = ["main"]
 files = [
-    {file = "pyzipper-0.3.6-py2.py3-none-any.whl", hash = "sha256:6d097f465bfa47796b1494e12ea65d1478107d38e13bc56f6e58eedc4f6c1a87"},
-    {file = "pyzipper-0.3.6.tar.gz", hash = "sha256:0adca90a00c36a93fbe49bfa8c5add452bfe4ef85a1b8e3638739dd1c7b26bfc"},
+    {file = "pyzipper-0.4.0-py3-none-any.whl", hash = "sha256:aa7b8a0fe741d67aac36ead85f6e735af107b72f84e0775f2ed565fc0d3a2f02"},
+    {file = "pyzipper-0.4.0.tar.gz", hash = "sha256:a4b96afcac04c5589d5abdc6158dd362166374e3cc6810aa441e65f8a17cb9e3"},
 ]
 
 [package.dependencies]
@@ -3143,4 +3143,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "bb99d40147913b11517d672dde51c31ab3dc5e44771490ec8d235076c4c8d836"
+content-hash = "3e07d22a0a6f75c0f7211d08545a4ea0f5603d165c0792e14a72fdc2543d3c22"
