@@ -2067,13 +2067,13 @@ update = ["requests"]
 
 [[package]]
 name = "py-tlsh"
-version = "4.7.2"
+version = "5.0.0"
 description = "TLSH (C++ Python extension)"
 optional = false
 python-versions = ">=2.7"
 groups = ["main"]
 files = [
-    {file = "py-tlsh-4.7.2.tar.gz", hash = "sha256:5b6943cfd93a168671f33b84828dca34d252278bdedcacf25cbe711fda655e9f"},
+    {file = "py_tlsh-5.0.0.tar.gz", hash = "sha256:a21cb75eb49e9d9237c8c39d2fb310a5c976b3abc6c35c2e405e16c089abad1b"},
 ]
 
 [[package]]
@@ -3124,4 +3124,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "034e660e12ca99135f96088fc30d84a4a00635c9d92253b03803472532a812b7"
+content-hash = "951df3f41dfa2bed1259c655d5225ae63523426790903daef5e29d9996c76911"
