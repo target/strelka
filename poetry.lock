@@ -581,14 +581,14 @@ dev = ["black (==22.12.0)", "dnfile (==0.12.0)", "hexdump (==3.3.0)", "isort (==
 
 [[package]]
 name = "dnfile"
-version = "0.14.1"
+version = "0.18.0"
 description = "Parse .NET executable files."
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "dnfile-0.14.1-py3-none-any.whl", hash = "sha256:9c6a1497768d7a90a2c3fc301875a90d4f97c6a36496680453bc8a092c143c77"},
-    {file = "dnfile-0.14.1.tar.gz", hash = "sha256:d394a5511253398892157735b66e446388449fe807926243749778deadf2ea8c"},
+    {file = "dnfile-0.18.0-py3-none-any.whl", hash = "sha256:7579fe2d6bb1d854aa154929c309fbf34e70b622053a043a51d42f079fad1772"},
+    {file = "dnfile-0.18.0.tar.gz", hash = "sha256:24eec63d65535b702236001e648bbf2fa139d1a7bea191fdca17c3be337eb4db"},
 ]
 
 [package.dependencies]
@@ -3124,4 +3124,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "951df3f41dfa2bed1259c655d5225ae63523426790903daef5e29d9996c76911"
+content-hash = "e5a12ba08f12b73c3149a9cdddb12bbee9f97550ba422a0bb27cb47948d6b76e"
