@@ -2705,14 +2705,14 @@ requests = ">=1.0.0"
 
 [[package]]
 name = "rpmfile"
-version = "1.1.1"
+version = "2.2.1"
 description = "Read rpm archive files"
 optional = false
-python-versions = "*"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "rpmfile-1.1.1-py3-none-any.whl", hash = "sha256:7292c964f317e0770e084707da23dacc199cb4d228c8157f46efb8f44cf268d0"},
-    {file = "rpmfile-1.1.1.tar.gz", hash = "sha256:6717077b5431746d860483cc36b9c9cba55df124606781ceb70b24b366def02b"},
+    {file = "rpmfile-2.2.1-py3-none-any.whl", hash = "sha256:bf2a4c488702638a95b85c4852891390bb8e54d174569c217fb21f591ead19c3"},
+    {file = "rpmfile-2.2.1.tar.gz", hash = "sha256:8ffc44d15f8d2b6cad1ea885b09e1ca5f1744532c24710554f3fe4873506e9da"},
 ]
 
 [package.extras]
@@ -3124,4 +3124,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "e5a12ba08f12b73c3149a9cdddb12bbee9f97550ba422a0bb27cb47948d6b76e"
+content-hash = "b7229744f2dbdc3632e2bee61211d41bf6844fa36067876cc78c5bb3b608bf40"
