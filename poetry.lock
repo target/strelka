@@ -1009,14 +1009,14 @@ six = ">=1.13.0"
 
 [[package]]
 name = "libarchive-c"
-version = "5.0"
+version = "5.3"
 description = "Python interface to libarchive"
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "libarchive-c-5.0.tar.gz", hash = "sha256:d673f56673d87ec740d1a328fa205cafad1d60f5daca4685594deb039d32b159"},
-    {file = "libarchive_c-5.0-py2.py3-none-any.whl", hash = "sha256:3ed7ee9b7d7d6fc200aecce63cee2084754cb6c00e946f6d007b80236e662bff"},
+    {file = "libarchive_c-5.3-py3-none-any.whl", hash = "sha256:651550a6ec39266b78f81414140a1e04776c935e72dfc70f1d7c8e0a3672ffba"},
+    {file = "libarchive_c-5.3.tar.gz", hash = "sha256:5ddb42f1a245c927e7686545da77159859d5d4c6d00163c59daff4df314dae82"},
 ]
 
 [[package]]
@@ -3127,4 +3127,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "a2a648d395611ecb94451e2655db0ed73ae5face805f25a660c001184dc3cd43"
+content-hash = "36f6e1674bff04e1958b6642617ee6e29c5de374a67771d04c309173f7021bae"
