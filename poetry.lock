@@ -633,17 +633,18 @@ resolved_reference = "5a0f9f87094efe6e8d131d3fa4abf23f31123784"
 
 [[package]]
 name = "dotnetfile"
-version = "0.2.4"
+version = "0.2.10"
 description = "Library to parse the CLR header of .NET assemblies"
 optional = false
 python-versions = ">=3.7"
 groups = ["main"]
 files = [
-    {file = "dotnetfile-0.2.4-py3-none-any.whl", hash = "sha256:d721b104b615c6141110dd2638fae79f2f5683795cfe1008a68afe9a1ca32271"},
-    {file = "dotnetfile-0.2.4.tar.gz", hash = "sha256:d44a3c7b5ab19858d1e27e238b64f2343a02c103b1a0280a1b58e5e7cc8dd8a3"},
+    {file = "dotnetfile-0.2.10-py3-none-any.whl", hash = "sha256:c12f6a852f5495592d2df7fafe6ba66779f51cdaf7585a7c7b58a6e1563547f1"},
+    {file = "dotnetfile-0.2.10.tar.gz", hash = "sha256:20f233f6c70a76c7667b75e13bd686506c7eb6f944f3393e4c26572747d7e943"},
 ]
 
 [package.dependencies]
+dncil = "*"
 pefile = "*"
 
 [[package]]
@@ -3127,4 +3128,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "a2a648d395611ecb94451e2655db0ed73ae5face805f25a660c001184dc3cd43"
+content-hash = "707337cd35f6c27c57c6780b4f9fcb2fd3d9fdd33e9916156a2e64d9bc6eda2a"
