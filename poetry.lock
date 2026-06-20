@@ -2296,18 +2296,18 @@ dev = ["pre-commit", "pytest-asyncio", "tox"]
 
 [[package]]
 name = "pytest-unordered"
-version = "0.5.2"
+version = "0.8.0"
 description = "Test equality of unordered collections in pytest"
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "pytest-unordered-0.5.2.tar.gz", hash = "sha256:8187e6d68a7d54e5447e88c229cbeafa38205e55baf7da7ae57cc965c1ecdbb3"},
-    {file = "pytest_unordered-0.5.2-py3-none-any.whl", hash = "sha256:b01bb0e8ba80db6dd8c840fe24ad1804c8672919303dc9302688221390a7dc29"},
+    {file = "pytest_unordered-0.8.0-py3-none-any.whl", hash = "sha256:c792b879032b33141205e1a38a80234eb0117474bf9459ae65557e29837c2a1c"},
+    {file = "pytest_unordered-0.8.0.tar.gz", hash = "sha256:3c369ed86919d3eb35e11fd27bb679c1e3506ead9327e25aa8a07307256be65a"},
 ]
 
 [package.dependencies]
-pytest = ">=6.0.0"
+pytest = ">=7.0.0"
 
 [[package]]
 name = "python-dateutil"
@@ -3127,4 +3127,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "a2a648d395611ecb94451e2655db0ed73ae5face805f25a660c001184dc3cd43"
+content-hash = "eae8afb698bc4e2876a5aa0a2487dec0da0bab2b6ac15eaf5f4fc4fe774f4f59"
