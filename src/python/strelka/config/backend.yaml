@@ -1,4 +1,4 @@
-version: 2023-07-07-update
+version: 2026-06-23-update
 logging_cfg: '/etc/strelka/logging.yaml'
 limits:
   max_files: 5000
@@ -103,6 +103,18 @@ scanners:
           - 'message/rfc822'
           - 'email_file'
       priority: 5
+      options:
+        max_links: 50
+        capture_raw_headers: False
+        max_header_length: 2048
+        max_headers_total: 32768
+        header_skip_list:
+          - 'x-microsoft-antispam-message-info'
+          - 'x-ms-exchange-organization-network-message-id'
+          - 'x-clx-response'
+          - 'x-authority-analysis'
+          - 'arc-seal'
+          - 'arc-message-signature'
   'ScanEncryptedDoc':
     - positive:
         flavors:

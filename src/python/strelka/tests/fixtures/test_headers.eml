@@ -1,0 +1,24 @@
+Return-Path: <sender@external.example>
+Received: from mail.external.example (mail.external.example [203.0.113.10]) by mx.corp.example with ESMTPS; Mon, 01 Jun 2026 10:00:00 +0000
+Authentication-Results: mx.corp.example; spf=pass smtp.mailfrom=external.example; dkim=pass header.d=external.example; dmarc=pass action=none; compauth=pass reason=100
+Received-SPF: pass (corp.example: domain of sender@external.example designates 203.0.113.10 as permitted sender) client-ip=203.0.113.10;
+X-Forefront-Antispam-Report: CIP:203.0.113.10;CTRY:US;SCL:1;BCL:0;
+X-MS-Exchange-Organization-SCL: 1
+X-Originating-IP: [203.0.113.10]
+X-Microsoft-Antispam-Message-Info: ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+From: Sender Name <sender@external.example>
+To: recipient@corp.example
+Cc: cc1@corp.example, cc2@corp.example
+Reply-To: noreply@external.example
+In-Reply-To: <parent-msgid@external.example>
+References: <root-msgid@external.example> <parent-msgid@external.example>
+Thread-Topic: Test Subject Thread
+Auto-Submitted: auto-generated
+Precedence: bulk
+Subject: Test Subject
+Date: Mon, 01 Jun 2026 10:00:00 +0000
+Message-ID: <test-headers-msgid@external.example>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+
+This is a synthetic test body.

@@ -1,0 +1,10 @@
+From: sender@external.example
+To: recipient@corp.example
+Subject: Links Test
+Date: Mon, 01 Jun 2026 10:00:00 +0000
+Message-ID: <links-test@external.example>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+
+Visit https://one.example/a and https://two.example/b and https://three.example/c
+Duplicate link repeated: https://one.example/a should be deduped.
