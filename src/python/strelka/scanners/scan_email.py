@@ -42,7 +42,7 @@ class ScanEmail(strelka.Scanner):
         - **Curated Header Capture**
             - Populates named fields (``cc``, ``bcc``, ``reply_to``, ``return_path``, ``in_reply_to``,
               ``thread_topic``, ``x_originating_ip``, ``auto_submitted``, ``precedence``, ``content_type``,
-              ``references``) for high-value header data without scanning the full header map.
+              ``x_mailer``, ``references``) for high-value header data without scanning the full header map.
         - **Link Extraction**
             - Collects full URLs found in the message body into a de-duplicated ``links`` list
               (bounded by ``max_links``, default 50) for IOC matching and triage.
@@ -323,6 +323,7 @@ class ScanEmail(strelka.Scanner):
         self.event["auto_submitted"] = self._header_value(raw, "auto-submitted")
         self.event["precedence"] = self._header_value(raw, "precedence")
         self.event["content_type"] = self._header_value(raw, "content-type")
+        self.event["x_mailer"] = self._header_value(raw, "x-mailer")
 
         # References is a single header of whitespace-separated message-ids.
         references_raw = self._header_value(raw, "references")

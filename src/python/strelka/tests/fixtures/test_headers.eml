@@ -15,6 +15,7 @@ References: <root-msgid@external.example> <parent-msgid@external.example>
 Thread-Topic: Test Subject Thread
 Auto-Submitted: auto-generated
 Precedence: bulk
+X-Mailer: Microsoft Office Outlook 12.0
 Subject: Test Subject
 Date: Mon, 01 Jun 2026 10:00:00 +0000
 Message-ID: <test-headers-msgid@external.example>

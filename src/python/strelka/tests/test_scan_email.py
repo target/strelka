@@ -78,6 +78,7 @@ def test_scan_email(mocker):
         "auto_submitted": "",
         "precedence": "",
         "content_type": 'multipart/mixed; boundary="_006_DS7PR03MB5640AD212589DFB7CE58D90CFBEB9DS7PR03MB5640namp_"',
+        "x_mailer": "",
         "auth": {"spf": "pass", "dkim": "", "dmarc": "", "compauth": ""},
         "spam": {"scl": "", "bcl": ""},
         "links": unordered(
@@ -133,6 +134,7 @@ def test_scan_email_incomplete(mocker):
         "auto_submitted": "",
         "precedence": "",
         "content_type": "",
+        "x_mailer": "",
         "auth": {"spf": "", "dkim": "", "dmarc": "", "compauth": ""},
         "spam": {"scl": "", "bcl": ""},
         "links": ["https://acme.com"],
@@ -171,6 +173,7 @@ def test_extract_curated_headers():
         "auto-submitted": ["auto-generated"],
         "precedence": ["bulk"],
         "content-type": ['text/plain; charset="utf-8"'],
+        "x-mailer": ["Microsoft Office Outlook 12.0"],
     }
     scanner._extract_curated_headers(parsed_header, raw)
     assert scanner.event["cc"] == ["cc1@corp.example", "cc2@corp.example"]
@@ -187,6 +190,7 @@ def test_extract_curated_headers():
     assert scanner.event["auto_submitted"] == "auto-generated"
     assert scanner.event["precedence"] == "bulk"
     assert scanner.event["content_type"] == 'text/plain; charset="utf-8"'
+    assert scanner.event["x_mailer"] == "Microsoft Office Outlook 12.0"
 
 
 def test_parse_auth_results():
@@ -342,6 +346,7 @@ def test_scan_email_headers_fixture(mocker):
     assert scanner_event["x_originating_ip"] == "203.0.113.10"
     assert scanner_event["auto_submitted"] == "auto-generated"
     assert scanner_event["precedence"] == "bulk"
+    assert scanner_event["x_mailer"] == "Microsoft Office Outlook 12.0"
 
     # Parsed signals.
     assert scanner_event["auth"] == {
