@@ -307,9 +307,7 @@ class ScanEmail(strelka.Scanner):
         # Address fields - normalized by eml_parser.
         self.event["cc"] = parsed_header.get("cc", [])
         self.event["bcc"] = [
-            addr
-            for _, addr in email.utils.getaddresses(raw.get("bcc", []))
-            if addr
+            addr for _, addr in email.utils.getaddresses(raw.get("bcc", [])) if addr
         ]
         self.event["delivered_to"] = parsed_header.get("delivered_to", [])
 
@@ -321,9 +319,7 @@ class ScanEmail(strelka.Scanner):
         ]
 
         # return_path: single address; empty (<>) yields [].
-        _, return_addr = email.utils.parseaddr(
-            self._header_value(raw, "return-path")
-        )
+        _, return_addr = email.utils.parseaddr(self._header_value(raw, "return-path"))
         self.event["return_path"] = [return_addr] if return_addr else []
         self.event["in_reply_to"] = (
             self._header_value(raw, "in-reply-to").lstrip("<").rstrip(">")

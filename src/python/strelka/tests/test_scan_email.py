@@ -164,7 +164,11 @@ def test_header_value_helper():
 def test_extract_curated_headers():
     scanner = ScanUnderTest.__new__(ScanUnderTest)
     scanner.event = {}
-    parsed_header = {"cc": ["cc1@corp.example", "cc2@corp.example"], "bcc": [], "delivered_to": ["recipient@corp.example"]}
+    parsed_header = {
+        "cc": ["cc1@corp.example", "cc2@corp.example"],
+        "bcc": [],
+        "delivered_to": ["recipient@corp.example"],
+    }
     raw = {
         "reply-to": ["noreply@external.example"],
         "return-path": ["<sender@external.example>"],
@@ -424,7 +428,8 @@ def test_scan_email_complex_recipients(mocker):
     scanner_event = run_test_scan(
         mocker=mocker,
         scan_class=ScanUnderTest,
-        fixture_path=Path(__file__).parent / "fixtures/test_email_complex_recipients.eml",
+        fixture_path=Path(__file__).parent
+        / "fixtures/test_email_complex_recipients.eml",
         options={},
     )
 
@@ -436,7 +441,9 @@ def test_scan_email_complex_recipients(mocker):
         ["marketing-team@corp.example", "sales@example.com", "li.zhang@corp.example"]
     )
     assert scanner_event["bcc"] == ["secret-list@corp.example"]
-    assert scanner_event["reply_to"] == unordered(["no-reply@example.com", "support@example.com"])
+    assert scanner_event["reply_to"] == unordered(
+        ["no-reply@example.com", "support@example.com"]
+    )
     assert scanner_event["return_path"] == ["bounce+12345@example.com"]
     assert scanner_event["in_reply_to"] == "msg-001@example.com"
     assert scanner_event["references"] == unordered(
@@ -459,7 +466,11 @@ def test_scan_email_encoded_headers(mocker):
 
     assert scanner_event["from"] == ["tokyo-office@example.jp"]
     assert scanner_event["to"] == unordered(
-        ["francois@corp.example", "hans.mueller@corp.example", "ivan.petrov@corp.example"]
+        [
+            "francois@corp.example",
+            "hans.mueller@corp.example",
+            "ivan.petrov@corp.example",
+        ]
     )
     assert scanner_event["cc"] == ["cafe-team@corp.example"]
     assert scanner_event["bcc"] == []
@@ -482,11 +493,19 @@ def test_scan_email_group_syntax(mocker):
 
     assert scanner_event["from"] == ["newsletter@example.com"]
     assert scanner_event["to"] == unordered(
-        ["alice@corp.example", "bob@corp.example", "charlie@corp.example",
-         "dave@corp.example", "eve@corp.example", "frank@corp.example"]
+        [
+            "alice@corp.example",
+            "bob@corp.example",
+            "charlie@corp.example",
+            "dave@corp.example",
+            "eve@corp.example",
+            "frank@corp.example",
+        ]
     )
     assert scanner_event["cc"] == ["undisclosed-recipients"]
-    assert scanner_event["reply_to"] == unordered(["manager1@example.com", "manager2@example.com"])
+    assert scanner_event["reply_to"] == unordered(
+        ["manager1@example.com", "manager2@example.com"]
+    )
     assert scanner_event["return_path"] == ["system@example.com"]
     assert scanner_event["subject"] == "Company-wide Announcement"
     assert scanner_event["message_id"] == "group-syntax-001@example.com"
@@ -498,14 +517,21 @@ def test_scan_email_malformed_addresses(mocker):
     scanner_event = run_test_scan(
         mocker=mocker,
         scan_class=ScanUnderTest,
-        fixture_path=Path(__file__).parent / "fixtures/test_email_malformed_addresses.eml",
+        fixture_path=Path(__file__).parent
+        / "fixtures/test_email_malformed_addresses.eml",
         options={},
     )
 
     assert scanner_event["from"] == ["sender@example.com"]
     assert scanner_event["to"] == unordered(
-        ["recipient@corp.example", "no-brackets@corp.example", "extra-comma@corp.example",
-         "user@final.example", "user%domain@example.com", "quoted@corp.example"]
+        [
+            "recipient@corp.example",
+            "no-brackets@corp.example",
+            "extra-comma@corp.example",
+            "user@final.example",
+            "user%domain@example.com",
+            "quoted@corp.example",
+        ]
     )
     assert scanner_event["cc"] == []
     assert scanner_event["bcc"] == []
