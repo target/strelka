@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from unittest import TestCase, mock
 
@@ -70,7 +71,7 @@ def test_scan_email(mocker):
         "cc": [],
         "bcc": [],
         "reply_to": [],
-        "return_path": ["foo.bar@example.com"],
+        "return_path": "foo.bar@example.com",
         "in_reply_to": "",
         "references": [],
         "thread_topic": "Lorem Ipsum",
@@ -78,7 +79,7 @@ def test_scan_email(mocker):
         "auto_submitted": "",
         "precedence": "",
         "content_type": 'multipart/mixed; boundary="_006_DS7PR03MB5640AD212589DFB7CE58D90CFBEB9DS7PR03MB5640namp_"',
-        "x_mailer": "",
+        "x_mailer": [],
         "delivered_to": ["baz.quk@example.com"],
         "auth": {"spf": "pass", "dkim": "", "dmarc": "", "compauth": ""},
         "spam": {"scl": "", "bcl": ""},
@@ -127,7 +128,7 @@ def test_scan_email_incomplete(mocker):
         "cc": [],
         "bcc": [],
         "reply_to": [],
-        "return_path": [],
+        "return_path": "",
         "in_reply_to": "",
         "references": [],
         "thread_topic": "",
@@ -135,7 +136,7 @@ def test_scan_email_incomplete(mocker):
         "auto_submitted": "",
         "precedence": "",
         "content_type": "",
-        "x_mailer": "",
+        "x_mailer": [],
         "delivered_to": [],
         "auth": {"spf": "", "dkim": "", "dmarc": "", "compauth": ""},
         "spam": {"scl": "", "bcl": ""},
@@ -165,11 +166,12 @@ def test_extract_curated_headers():
     scanner = ScanUnderTest.__new__(ScanUnderTest)
     scanner.event = {}
     parsed_header = {
-        "cc": ["cc1@corp.example", "cc2@corp.example"],
-        "bcc": [],
         "delivered_to": ["recipient@corp.example"],
     }
     raw = {
+        "from": ["Test Sender <sender@external.example>"],
+        "to": ["recipient@corp.example"],
+        "cc": ["cc1@corp.example, cc2@corp.example"],
         "reply-to": ["noreply@external.example"],
         "return-path": ["<sender@external.example>"],
         "in-reply-to": ["<parent@external.example>"],
@@ -182,11 +184,13 @@ def test_extract_curated_headers():
         "x-mailer": ["Microsoft Office Outlook 12.0"],
     }
     scanner._extract_curated_headers(parsed_header, raw)
+    assert scanner.event["from"] == ["sender@external.example"]
+    assert scanner.event["to"] == ["recipient@corp.example"]
     assert scanner.event["cc"] == ["cc1@corp.example", "cc2@corp.example"]
     assert scanner.event["bcc"] == []
     assert scanner.event["delivered_to"] == ["recipient@corp.example"]
     assert scanner.event["reply_to"] == ["noreply@external.example"]
-    assert scanner.event["return_path"] == ["sender@external.example"]
+    assert scanner.event["return_path"] == "sender@external.example"
     assert scanner.event["in_reply_to"] == "parent@external.example"
     assert scanner.event["references"] == [
         "root@external.example",
@@ -197,7 +201,7 @@ def test_extract_curated_headers():
     assert scanner.event["auto_submitted"] == "auto-generated"
     assert scanner.event["precedence"] == "bulk"
     assert scanner.event["content_type"] == 'text/plain; charset="utf-8"'
-    assert scanner.event["x_mailer"] == "Microsoft Office Outlook 12.0"
+    assert scanner.event["x_mailer"] == ["Microsoft Office Outlook 12.0"]
 
 
 def test_parse_auth_results():
@@ -343,7 +347,7 @@ def test_scan_email_headers_fixture(mocker):
     # Curated fields.
     assert scanner_event["cc"] == unordered(["cc1@corp.example", "cc2@corp.example"])
     assert scanner_event["reply_to"] == ["noreply@external.example"]
-    assert scanner_event["return_path"] == ["sender@external.example"]
+    assert scanner_event["return_path"] == "sender@external.example"
     assert scanner_event["in_reply_to"] == "parent-msgid@external.example"
     assert scanner_event["references"] == [
         "root-msgid@external.example",
@@ -353,7 +357,7 @@ def test_scan_email_headers_fixture(mocker):
     assert scanner_event["x_originating_ip"] == "203.0.113.10"
     assert scanner_event["auto_submitted"] == "auto-generated"
     assert scanner_event["precedence"] == "bulk"
-    assert scanner_event["x_mailer"] == "Microsoft Office Outlook 12.0"
+    assert scanner_event["x_mailer"] == ["Microsoft Office Outlook 12.0"]
     assert scanner_event["delivered_to"] == []
 
     # Parsed signals.
@@ -444,15 +448,110 @@ def test_scan_email_complex_recipients(mocker):
     assert scanner_event["reply_to"] == unordered(
         ["no-reply@example.com", "support@example.com"]
     )
-    assert scanner_event["return_path"] == ["bounce+12345@example.com"]
+    assert scanner_event["return_path"] == "bounce+12345@example.com"
     assert scanner_event["in_reply_to"] == "msg-001@example.com"
     assert scanner_event["references"] == unordered(
         ["root-msg@example.com", "msg-001@example.com"]
     )
     assert scanner_event["subject"] == "Re: Q1 Sales Report [EXTERNAL]"
     assert scanner_event["message_id"] == "complex-recipients-001@example.com"
-    assert scanner_event["x_mailer"] == "Microsoft Outlook 16.0"
+    assert scanner_event["x_mailer"] == ["Microsoft Outlook 16.0"]
     assert scanner_event["delivered_to"] == []
+
+
+def test_scan_email_display_names_copy(mocker):
+    """mailbox_mode=copy appends formatted addresses to the same array."""
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent
+        / "fixtures/test_email_complex_recipients.eml",
+        options={"mailbox_mode": "copy"},
+    )
+
+    # Addr-spec first, then formatted form for addresses that carry a display name.
+    assert scanner_event["from"] == unordered(
+        [
+            "john.smith+sales@example.com",
+            "Smith, John (Sales) <john.smith+sales@example.com>",
+        ]
+    )
+    assert scanner_event["to"] == unordered(
+        [
+            "jane.doe@corp.example",
+            "bob@corp.example",
+            "patrick.obrien@corp.example",
+            "Doe, Jane <jane.doe@corp.example>",
+            "O'Brien, Patrick <patrick.obrien@corp.example>",
+            # bob@corp.example has no display name -- appears only once
+        ]
+    )
+    assert scanner_event["cc"] == unordered(
+        [
+            "marketing-team@corp.example",
+            "sales@example.com",
+            "li.zhang@corp.example",
+            "Sales Group <sales@example.com>",
+            "Zhang, 李明 <li.zhang@corp.example>",
+            # marketing-team@corp.example has no display name
+        ]
+    )
+    # bcc and reply_to have no display names -- lists unchanged
+    assert scanner_event["bcc"] == ["secret-list@corp.example"]
+    assert scanner_event["reply_to"] == unordered(
+        ["no-reply@example.com", "support@example.com"]
+    )
+    # No *_mailbox fields in copy mode
+    assert "from_mailbox" not in scanner_event
+    assert "to_mailbox" not in scanner_event
+
+
+def test_scan_email_display_names_parallel(mocker):
+    """mailbox_mode=parallel emits *_mailbox sibling fields."""
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent
+        / "fixtures/test_email_complex_recipients.eml",
+        options={"mailbox_mode": "parallel"},
+    )
+
+    # Primary fields contain addr-specs only (unchanged).
+    assert scanner_event["from"] == ["john.smith+sales@example.com"]
+    assert scanner_event["to"] == unordered(
+        ["jane.doe@corp.example", "bob@corp.example", "patrick.obrien@corp.example"]
+    )
+    assert scanner_event["cc"] == unordered(
+        ["marketing-team@corp.example", "sales@example.com", "li.zhang@corp.example"]
+    )
+    assert scanner_event["bcc"] == ["secret-list@corp.example"]
+    assert scanner_event["reply_to"] == unordered(
+        ["no-reply@example.com", "support@example.com"]
+    )
+
+    # *_mailbox fields carry full formatted address strings.
+    assert scanner_event["from_mailbox"] == [
+        "Smith, John (Sales) <john.smith+sales@example.com>"
+    ]
+    # Index-aligned with to; bob has no display name so entry equals addr-spec.
+    assert scanner_event["to_mailbox"] == unordered(
+        [
+            "Doe, Jane <jane.doe@corp.example>",
+            "bob@corp.example",
+            "O'Brien, Patrick <patrick.obrien@corp.example>",
+        ]
+    )
+    assert scanner_event["cc_mailbox"] == unordered(
+        [
+            "marketing-team@corp.example",
+            "Sales Group <sales@example.com>",
+            "Zhang, 李明 <li.zhang@corp.example>",
+        ]
+    )
+    assert scanner_event["bcc_mailbox"] == ["secret-list@corp.example"]
+    assert scanner_event["reply_to_mailbox"] == unordered(
+        ["no-reply@example.com", "support@example.com"]
+    )
 
 
 def test_scan_email_encoded_headers(mocker):
@@ -475,11 +574,11 @@ def test_scan_email_encoded_headers(mocker):
     assert scanner_event["cc"] == ["cafe-team@corp.example"]
     assert scanner_event["bcc"] == []
     assert scanner_event["reply_to"] == ["support@example.jp"]
-    assert scanner_event["return_path"] == ["automated-system@example.com"]
+    assert scanner_event["return_path"] == "automated-system@example.com"
     assert scanner_event["subject"] == "予業通知 - Delivery Notification"
     assert scanner_event["thread_topic"] == "重要：予業通知"
     assert scanner_event["message_id"] == "encoded-headers-001@example.jp"
-    assert scanner_event["x_mailer"] == "Thunderbird 115.0"
+    assert scanner_event["x_mailer"] == ["Thunderbird 115.0"]
 
 
 def test_scan_email_group_syntax(mocker):
@@ -506,10 +605,10 @@ def test_scan_email_group_syntax(mocker):
     assert scanner_event["reply_to"] == unordered(
         ["manager1@example.com", "manager2@example.com"]
     )
-    assert scanner_event["return_path"] == ["system@example.com"]
+    assert scanner_event["return_path"] == "system@example.com"
     assert scanner_event["subject"] == "Company-wide Announcement"
     assert scanner_event["message_id"] == "group-syntax-001@example.com"
-    assert scanner_event["x_mailer"] == "MailChimp API v3.0"
+    assert scanner_event["x_mailer"] == ["MailChimp API v3.0"]
 
 
 def test_scan_email_malformed_addresses(mocker):
@@ -536,10 +635,10 @@ def test_scan_email_malformed_addresses(mocker):
     assert scanner_event["cc"] == []
     assert scanner_event["bcc"] == []
     assert scanner_event["reply_to"] == ["reply@example.com"]
-    assert scanner_event["return_path"] == ["sender@example.com"]
+    assert scanner_event["return_path"] == "sender@example.com"
     assert scanner_event["subject"] == "Test Malformed Addresses"
     assert scanner_event["message_id"] == "malformed-001@example.com"
-    assert scanner_event["x_mailer"] == "Custom Mailer 1.0"
+    assert scanner_event["x_mailer"] == ["Custom Mailer 1.0"]
 
 
 def test_scan_email_special_cases(mocker):
@@ -556,12 +655,12 @@ def test_scan_email_special_cases(mocker):
     assert scanner_event["cc"] == []
     assert scanner_event["bcc"] == []
     assert scanner_event["reply_to"] == []
-    assert scanner_event["return_path"] == []
+    assert scanner_event["return_path"] == ""
     assert scanner_event["subject"] == "Delivery Status Notification (Failure)"
     assert scanner_event["auto_submitted"] == "auto-replied"
     assert scanner_event["precedence"] == "bulk"
     assert scanner_event["message_id"] == "delivery-status-001@example.com"
-    assert scanner_event["x_mailer"] == "Postfix 3.7.2"
+    assert scanner_event["x_mailer"] == ["Postfix 3.7.2"]
 
 
 def test_unwrap_links_no_rules():
@@ -732,6 +831,120 @@ def test_scan_email_gateway_links_replace_mode(mocker):
     assert "https://encoded-destination.example/path?foo=bar" in scanner_event["links"]
     assert "https://no-gateway.example/plain" in scanner_event["links"]
     assert "links_unwrapped" not in scanner_event
+
+
+def test_scan_email_link_stress(mocker):
+    """
+    Stress test for link and domain extraction using a realistic marketing email.
+
+    Documents known eml_parser behaviors that callers should be aware of:
+
+    Links:
+      - Both text/plain and text/html body parts are scanned; duplicates across
+        parts are collapsed by the scanner's dict.fromkeys() dedup pass.
+      - Full UTM-tracked product, category, social, and transactional URLs are
+        collected; cdn image URLs (logo, product photos, icon sprites) are also
+        extracted since they appear in src= attributes.
+      - mailto: hrefs are NOT extracted as links.
+      - The same href appearing twice in the HTML (hero CTA and secondary CTA)
+        is deduplicated by eml_parser within the part.
+      - Tracking pixel URL is extracted like any other src= reference.
+
+    Domains:
+      - CSS class selectors (e.g. ``div.wrapper``, ``span.preheader``) leak as
+        false-positive domain values — eml_parser's domain extractor matches the
+        ``word.word`` pattern in stylesheet text.
+      - Filenames from CSS ``url()`` references (``hero-bg.jpg``, ``acme-sans.woff2``)
+        leak similarly.
+      - CSS dimension values (``14px``, ``0px``, etc.) are filtered by the scanner
+        via the ``re.fullmatch(r"[\\d.]+px", d)`` guard introduced specifically for
+        this false-positive class. No px values should appear in ``domains``.
+    """
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_email_link_stress.eml",
+        options={"capture_raw_headers": False},
+    )
+
+    links = scanner_event["links"]
+    domains = scanner_event["domains"]
+
+    # --- Links: legitimate URLs present ---
+    # Primary sale CTA (appears twice in HTML, deduplicated)
+    assert (
+        "https://acme-store.example.com/sale?utm_source=email&utm_medium=email&utm_campaign=spring2024&utm_content=hero_cta"
+        in links
+    )
+    # Category nav links
+    assert (
+        "https://acme-store.example.com/mens?utm_source=email&utm_medium=email&utm_campaign=spring2024"
+        in links
+    )
+    assert (
+        "https://acme-store.example.com/womens?utm_source=email&utm_medium=email&utm_campaign=spring2024"
+        in links
+    )
+    assert (
+        "https://acme-store.example.com/accessories?utm_source=email&utm_medium=email&utm_campaign=spring2024"
+        in links
+    )
+    # Product deep-links with color/size parameters
+    assert (
+        "https://acme-store.example.com/products/classic-tee?color=white&size=M&utm_source=email&utm_campaign=spring2024"
+        in links
+    )
+    assert (
+        "https://acme-store.example.com/products/slim-chino?color=navy&size=32x32&utm_source=email&utm_campaign=spring2024"
+        in links
+    )
+    # Social links present in both plain and HTML parts — deduplicated to one
+    assert links.count("https://www.facebook.com/acmestore") == 1
+    assert links.count("https://twitter.com/acmestore") == 1
+    assert links.count("https://www.instagram.com/acmestore") == 1
+    # Unsubscribe / preferences links (appear in both parts — deduplicated)
+    assert (
+        links.count("https://acme-store.example.com/unsubscribe?token=abc123xyz") == 1
+    )
+    assert (
+        links.count("https://acme-store.example.com/preferences?token=abc123xyz") == 1
+    )
+    # Tracking pixel extracted as a link
+    assert (
+        "https://tracking.acme-store.example.com/pixel.gif?uid=RCPNT12345&mid=spring2024-001&t=1704067200"
+        in links
+    )
+    # Font URLs from @font-face src extracted
+    assert "https://cdn.acme-store.example.com/fonts/acme-sans.woff2" in links
+    assert "https://cdn.acme-store.example.com/fonts/acme-sans.woff" in links
+
+    # --- Links: mailto href NOT extracted ---
+    assert not any("mailto:" in u for u in links)
+
+    # --- Links: not capped (42 unique < default max_links=50) ---
+    assert "ScanEmail: links_truncated" not in scanner_event["flags"]
+
+    # --- Domains: CSS px dimension values filtered out ---
+    # Our re.fullmatch(r"[\d.]+px", d) guard must prevent any NNpx values
+    assert not any(re.fullmatch(r"[\d.]+px", d) for d in domains)
+
+    # --- Domains: known eml_parser false positives from CSS class selectors ---
+    assert "div.wrapper" in domains
+    assert "span.preheader" in domains
+    assert "p.disclaimer" in domains
+    assert "div.hero-bg" in domains
+
+    # --- Domains: known eml_parser false positives from CSS url() filenames ---
+    assert "hero-bg.jpg" in domains
+    assert "hero-mobile.jpg" in domains
+    assert "acme-sans.woff2" in domains
+    assert "acme-sans.woff" in domains
+
+    # --- Domains: legitimate domains present ---
+    assert "acme-store.example.com" in domains
+    assert "cdn.acme-store.example.com" in domains
+    assert "tracking.acme-store.example.com" in domains
+    assert "www.facebook.com" in domains
 
 
 def test_scan_email_links(mocker):

@@ -48,23 +48,60 @@ class ScanEmail(strelka.Scanner):
         - **Link Extraction**
             - Collects full URLs found in the message body into a de-duplicated ``links`` list
               (bounded by ``max_links``, default 50) for IOC matching and triage.
+        - **Display Name Surfacing (opt-in)**
+            - Controlled by ``mailbox_mode``. When enabled, RFC 5322 display names are surfaced
+              alongside addr-specs for ``from``, ``to``, ``cc``, ``bcc``, and ``reply_to``.
         - **Security Gateway Link Unwrapping (opt-in)**
             - When ``link_rewrite_mode`` is set, applies a user-supplied list of regex rules
               (``link_rewrite_rules``) to extract original destination URLs from security-gateway
-              redirect links. Each rule supplies a ``pattern`` with a named capture group
-              ``(?P<url>...)``. Modes: ``replace`` rewrites links in place; ``copy`` keeps originals
-              and merges unwrapped URLs into ``links`` while also populating ``links_unwrapped``;
-              ``parallel`` leaves ``links`` untouched and populates only ``links_unwrapped`` with
-              the unwrapped destinations, keeping gateway and destination URLs in separate fields.
-              Captured values are URL-decoded according to ``link_rewrite_urldecode``: ``auto``
-              (default) decodes only when the captured value starts with ``https?%``; ``on`` always
-              decodes; ``off`` never decodes.
+              redirect links.
         - **Optional Raw Header Map (opt-in)**
             - Disabled by default. When ``capture_raw_headers`` is explicitly enabled, the full raw
               header map is captured under ``headers`` with a configurable skip-list (``header_skip_list``),
               per-value truncation (``max_header_length``), and a total-size cap (``max_headers_total``);
               every dropped or shortened value is recorded in ``headers_flags``. Kept opt-in because it
               emits a dynamic-keyed object (see Known Limitations).
+
+    ## Scanner Options
+    !!! note "Scanner Options"
+        **``mailbox_mode``** — Display name surfacing for address fields (default: ``none``).
+
+        Controls whether RFC 5322 display names are included alongside bare addr-specs in
+        ``from``, ``to``, ``cc``, ``bcc``, and ``reply_to``. ``return_path`` and
+        ``delivered_to`` are addr-spec–only headers and are never affected.
+
+        - ``none`` — addr-specs only; no display name data emitted.
+        - ``copy`` — for recipients that carry a display name, the full
+          ``"Display Name <addr@spec>"`` string is appended to the same array as the
+          addr-spec. Recipients without a display name appear only once.
+        - ``parallel`` — addr-specs remain in the primary field unchanged; a sibling
+          ``*_mailbox`` field (``from_mailbox``, ``to_mailbox``, ``cc_mailbox``,
+          ``bcc_mailbox``, ``reply_to_mailbox``) is emitted containing full formatted
+          address strings. When an address has no display name the formatted string
+          equals the addr-spec.
+
+        ---
+
+        **``link_rewrite_mode``** — Security-gateway link unwrapping (default: ``none``).
+
+        Applies ``link_rewrite_rules`` to extract original destination URLs from gateway
+        redirect links. Each rule must supply a ``pattern`` with a named capture group
+        ``(?P<url>...)``. Patterns should include the gateway hostname and use ``https?%3A``
+        (not ``https?://``) to match the percent-encoded scheme in redirect querystring
+        parameters.
+
+        - ``none`` — links emitted as-is; no unwrapping performed.
+        - ``replace`` — overwrite each gateway link with the extracted destination.
+        - ``copy`` — keep original links in ``links``; merge unwrapped destinations in and
+          also populate ``links_unwrapped``.
+        - ``parallel`` — leave ``links`` untouched; populate only ``links_unwrapped`` with
+          the extracted destinations.
+
+        **``link_rewrite_urldecode``** — URL-decoding of captured values (default: ``auto``).
+
+        - ``auto`` — decode only when the captured value starts with ``https?%``.
+        - ``on`` — always decode.
+        - ``off`` — never decode.
 
     ## Known Limitations
     !!! warning "Known Limitations"
@@ -228,9 +265,6 @@ class ScanEmail(strelka.Scanner):
 
             # Extract email header information
             self.event["subject"] = parsed_eml["header"].get("subject", "")
-            self.event["to"] = parsed_eml["header"].get("to", [])
-            from_addr = parsed_eml["header"].get("from", "")
-            self.event["from"] = [from_addr] if from_addr else []
             date_header = parsed_eml["header"].get("date")
             if date_header:
                 self.event["date_utc"] = (
@@ -249,7 +283,8 @@ class ScanEmail(strelka.Scanner):
             # Expanded header extraction (curated fields, parsed signals).
             parsed_header = parsed_eml.get("header", {})
             raw_headers = parsed_header.get("header", {})
-            self._extract_curated_headers(parsed_header, raw_headers)
+            display_name_mode = options.get("mailbox_mode", "none")
+            self._extract_curated_headers(parsed_header, raw_headers, display_name_mode)
             self.event["auth"] = self._parse_auth_results(raw_headers)
             self.event["spam"] = self._parse_spam_scores(raw_headers)
 
@@ -361,30 +396,81 @@ class ScanEmail(strelka.Scanner):
 
         return spam
 
-    def _extract_curated_headers(self, parsed_header: dict, raw: dict) -> None:
+    def _extract_curated_headers(
+        self, parsed_header: dict, raw: dict, display_name_mode: str = "none"
+    ) -> None:
         """Populate curated, high-value named header fields on ``self.event``.
 
-        Address fields emit lists of bare addr-specs (user@example.com).
-        eml_parser normalizes to/cc/bcc/delivered_to; reply_to and return_path
-        are parsed from the raw header dict via email.utils.
+        Address fields (from, to, cc, bcc, reply_to) default to emitting lists
+        of bare addr-specs (user@example.com). The ``display_name_mode`` option
+        controls whether display names are also surfaced:
+
+        - ``none`` (default): addr-specs only; no display name data emitted.
+        - ``copy``: for addresses that carry a display name, the full
+          ``"Display Name <addr@spec>"`` string is appended to the same list as
+          the addr-spec. Addresses without a display name appear only once.
+        - ``parallel``: addr-specs remain in the primary field unchanged; a
+          sibling ``*_mailbox`` field (e.g. ``from_mailbox``, ``to_mailbox``)
+          is emitted containing the full formatted address strings for every
+          recipient.  When an address has no display name the formatted string
+          equals the addr-spec.
+
+        ``return_path`` and ``delivered_to`` are addr-spec–only headers (RFC
+        5321 envelope / delivery tracing) and are never affected by this option.
         """
-        # Address fields - normalized by eml_parser.
-        self.event["cc"] = parsed_header.get("cc", [])
-        self.event["bcc"] = [
-            addr for _, addr in email.utils.getaddresses(raw.get("bcc", [])) if addr
-        ]
+
+        def emit_addr_field(field: str, pairs: list) -> None:
+            """Emit one address field, applying display_name_mode."""
+            specs = [addr for _, addr in pairs]
+            if display_name_mode == "copy":
+                extras = [
+                    f"{name} <{addr}>"
+                    for name, addr in pairs
+                    if name  # only add formatted form when a display name exists
+                ]
+                self.event[field] = list(dict.fromkeys(specs + extras))
+            elif display_name_mode == "parallel":
+                self.event[field] = specs
+                self.event[f"{field}_mailbox"] = [
+                    f"{name} <{addr}>" if name else addr for name, addr in pairs
+                ]
+            else:
+                self.event[field] = specs
+
+        # from: single mailbox header
+        raw_from = raw.get("from", [""])[0]
+        from_name, from_addr = email.utils.parseaddr(raw_from)
+        emit_addr_field("from", [(from_name, from_addr)] if from_addr else [])
+
+        # to: mailbox-list
+        emit_addr_field(
+            "to",
+            [(n, a) for n, a in email.utils.getaddresses(raw.get("to", [])) if a],
+        )
+
+        # cc: mailbox-list
+        emit_addr_field(
+            "cc",
+            [(n, a) for n, a in email.utils.getaddresses(raw.get("cc", [])) if a],
+        )
+
+        # bcc: mailbox-list
+        emit_addr_field(
+            "bcc",
+            [(n, a) for n, a in email.utils.getaddresses(raw.get("bcc", [])) if a],
+        )
+
+        # reply_to: address-list (may be multi-address)
+        emit_addr_field(
+            "reply_to",
+            [(n, a) for n, a in email.utils.getaddresses(raw.get("reply-to", [])) if a],
+        )
+
         self.event["delivered_to"] = parsed_header.get("delivered_to", [])
 
-        # reply_to: parse addr-specs from raw string (may be multi-address).
-        self.event["reply_to"] = [
-            addr
-            for _, addr in email.utils.getaddresses(raw.get("reply-to", []))
-            if addr
-        ]
-
-        # return_path: single address; empty (<>) yields [].
+        # return_path: single address scalar; empty string when absent or null sender (<>).
         _, return_addr = email.utils.parseaddr(self._header_value(raw, "return-path"))
-        self.event["return_path"] = [return_addr] if return_addr else []
+        self.event["return_path"] = return_addr
         self.event["in_reply_to"] = (
             self._header_value(raw, "in-reply-to").lstrip("<").rstrip(">")
         )
@@ -397,7 +483,8 @@ class ScanEmail(strelka.Scanner):
         self.event["auto_submitted"] = self._header_value(raw, "auto-submitted")
         self.event["precedence"] = self._header_value(raw, "precedence")
         self.event["content_type"] = self._header_value(raw, "content-type")
-        self.event["x_mailer"] = self._header_value(raw, "x-mailer")
+        x_mailer = self._header_value(raw, "x-mailer")
+        self.event["x_mailer"] = [x_mailer] if x_mailer else []
 
         # References is a single header of whitespace-separated message-ids.
         references_raw = self._header_value(raw, "references")
