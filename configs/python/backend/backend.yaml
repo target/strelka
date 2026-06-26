@@ -128,6 +128,14 @@ scanners:
           - 'x-authority-analysis'
           - 'arc-seal'
           - 'arc-message-signature'
+        # Link unwrapping: extract original URLs from security-gateway redirect links.
+        # Set link_rewrite_mode to 'replace' or 'copy' and add one rule per gateway.
+        # Patterns must include the gateway hostname and use https?%3A to match the
+        # percent-encoded scheme of a properly-formed redirect querystring parameter.
+        # link_rewrite_mode: none   # none (default) | replace | copy | parallel
+        # link_rewrite_urldecode: auto  # auto (default) | on | off
+        # link_rewrite_rules:
+        #   - pattern: 'secure\.gateway\.example/redirect\?url=(?P<url>https?%3A[^&]+)'
   'ScanEncryptedDoc':
     - positive:
         flavors:

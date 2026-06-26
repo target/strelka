@@ -637,6 +637,33 @@ def test_unwrap_links_first_rule_wins():
     assert scanner._unwrap_links(links, rules) == ["https://dest.example/"]
 
 
+def test_scan_email_gateway_links_parallel_mode(mocker):
+    """parallel mode: links unchanged, unwrapped destinations in links_unwrapped only."""
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_email_gateway_links.eml",
+        options={
+            "link_rewrite_mode": "parallel",
+            "link_rewrite_rules": [
+                {
+                    "pattern": r"secure\.gateway\.example/redirect\?url=(?P<url>https?%3A[^&]+)"
+                },
+            ],
+        },
+    )
+    assert (
+        "https://secure.gateway.example/redirect?url=https%3A%2F%2Fencoded-destination.example%2Fpath%3Ffoo%3Dbar&other=param"
+        in scanner_event["links"]
+    )
+    assert (
+        "https://encoded-destination.example/path?foo=bar" not in scanner_event["links"]
+    )
+    assert scanner_event["links_unwrapped"] == [
+        "https://encoded-destination.example/path?foo=bar"
+    ]
+
+
 def test_scan_email_gateway_links_none_mode(mocker):
     """Default (none): links emitted as-is, no rewriting, no links_unwrapped."""
     scanner_event = run_test_scan(

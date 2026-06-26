@@ -48,6 +48,17 @@ class ScanEmail(strelka.Scanner):
         - **Link Extraction**
             - Collects full URLs found in the message body into a de-duplicated ``links`` list
               (bounded by ``max_links``, default 50) for IOC matching and triage.
+        - **Security Gateway Link Unwrapping (opt-in)**
+            - When ``link_rewrite_mode`` is set, applies a user-supplied list of regex rules
+              (``link_rewrite_rules``) to extract original destination URLs from security-gateway
+              redirect links. Each rule supplies a ``pattern`` with a named capture group
+              ``(?P<url>...)``. Modes: ``replace`` rewrites links in place; ``copy`` keeps originals
+              and merges unwrapped URLs into ``links`` while also populating ``links_unwrapped``;
+              ``parallel`` leaves ``links`` untouched and populates only ``links_unwrapped`` with
+              the unwrapped destinations, keeping gateway and destination URLs in separate fields.
+              Captured values are URL-decoded according to ``link_rewrite_urldecode``: ``auto``
+              (default) decodes only when the captured value starts with ``https?%``; ``on`` always
+              decodes; ``off`` never decodes.
         - **Optional Raw Header Map (opt-in)**
             - Disabled by default. When ``capture_raw_headers`` is explicitly enabled, the full raw
               header map is captured under ``headers`` with a configurable skip-list (``header_skip_list``),
@@ -180,6 +191,10 @@ class ScanEmail(strelka.Scanner):
                     ]
                     deduped_links = list(dict.fromkeys(deduped_links + links_unwrapped))
                     self.event["links_unwrapped"] = links_unwrapped
+                elif rewrite_mode == "parallel":
+                    self.event["links_unwrapped"] = [
+                        u for orig, u in zip(deduped_links, unwrapped) if u != orig
+                    ]
 
             if len(deduped_links) > max_links:
                 deduped_links = deduped_links[:max_links]
