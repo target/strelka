@@ -1,0 +1,17 @@
+Return-Path: <automated-system@example.com>
+Received: from mail.example.com (mail.example.com [192.0.2.50]) by mx.corp.example with ESMTPS; Tue, 16 Jan 2024 09:15:00 +0000
+From: =?UTF-8?B?5p2x5Lqs5pSv56S+?= <tokyo-office@example.jp>
+To: =?iso-8859-1?Q?Fran=E7ois_Lefebvre?= <francois@corp.example>,
+ =?UTF-8?Q?M=C3=BCller,_Hans?= <hans.mueller@corp.example>,
+ =?UTF-8?B?0JjQstCw0L0g0J/QtdGC0YDQvtCy?= <ivan.petrov@corp.example>
+Cc: =?UTF-8?Q?Caf=C3=A9_Team?= <cafe-team@corp.example>
+Reply-To: =?UTF-8?B?44K144Od44O844OI?= <support@example.jp>
+Subject: =?UTF-8?B?5LqI5qWt6YCa55+l?= - Delivery Notification
+Thread-Topic: =?UTF-8?B?6YeN6KaB77ya5LqI5qWt6YCa55+l?=
+Date: Tue, 16 Jan 2024 09:15:00 +0000
+Message-ID: <encoded-headers-001@example.jp>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: Thunderbird 115.0
+
+Test email with various RFC 2047 encoded headers.

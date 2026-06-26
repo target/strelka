@@ -1,0 +1,20 @@
+Return-Path: <bounce+12345@example.com>
+Received: from mail.example.com (mail.example.com [192.0.2.1]) by mx.corp.example with ESMTPS; Mon, 15 Jan 2024 14:30:00 +0000
+From: "Smith, John (Sales)" <john.smith+sales@example.com>
+To: "Doe, Jane" <jane.doe@corp.example>, bob@corp.example,
+ "O'Brien, Patrick" <patrick.obrien@corp.example>,
+ undisclosed-recipients:;
+Cc: marketing-team@corp.example, "Sales Group" <sales@example.com>,
+ "Zhang, 李明" <li.zhang@corp.example>
+Bcc: secret-list@corp.example
+Reply-To: no-reply@example.com, support@example.com
+In-Reply-To: <msg-001@example.com>
+References: <root-msg@example.com> <msg-001@example.com>
+Subject: Re: Q1 Sales Report [EXTERNAL]
+Date: Mon, 15 Jan 2024 14:30:00 +0000
+Message-ID: <complex-recipients-001@example.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: Microsoft Outlook 16.0
+
+This is a test email with complex recipient combinations.

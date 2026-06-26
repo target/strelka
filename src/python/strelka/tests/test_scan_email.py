@@ -42,7 +42,7 @@ def test_scan_email(mocker):
         },
         "subject": "Lorem Ipsum",
         "to": unordered(["baz.quk@example.com"]),
-        "from": "foo.bar@example.com",
+        "from": ["foo.bar@example.com"],
         "date_utc": "2022-12-21T02:29:49.000Z",
         "message_id": "DS7PR03MB5640AD212589DFB7CE58D90CFBEB9@DS7PR03MB5640.namprd03.prod.outlook.com",
         "received_domain": unordered(
@@ -69,8 +69,8 @@ def test_scan_email(mocker):
         ),
         "cc": [],
         "bcc": [],
-        "reply_to": "",
-        "return_path": "foo.bar@example.com",
+        "reply_to": [],
+        "return_path": ["foo.bar@example.com"],
         "in_reply_to": "",
         "references": [],
         "thread_topic": "Lorem Ipsum",
@@ -79,6 +79,7 @@ def test_scan_email(mocker):
         "precedence": "",
         "content_type": 'multipart/mixed; boundary="_006_DS7PR03MB5640AD212589DFB7CE58D90CFBEB9DS7PR03MB5640namp_"',
         "x_mailer": "",
+        "delivered_to": ["baz.quk@example.com"],
         "auth": {"spf": "pass", "dkim": "", "dmarc": "", "compauth": ""},
         "spam": {"scl": "", "bcl": ""},
         "links": unordered(
@@ -118,15 +119,15 @@ def test_scan_email_incomplete(mocker):
         "domains": ["acme.com", "share.acme.com"],
         "subject": "",
         "to": [],
-        "from": "",
+        "from": [],
         "date_utc": "1970-01-01T00:00:00.000Z",
         "message_id": "",
         "received_domain": [],
         "received_ip": [],
         "cc": [],
         "bcc": [],
-        "reply_to": "",
-        "return_path": "",
+        "reply_to": [],
+        "return_path": [],
         "in_reply_to": "",
         "references": [],
         "thread_topic": "",
@@ -135,6 +136,7 @@ def test_scan_email_incomplete(mocker):
         "precedence": "",
         "content_type": "",
         "x_mailer": "",
+        "delivered_to": [],
         "auth": {"spf": "", "dkim": "", "dmarc": "", "compauth": ""},
         "spam": {"scl": "", "bcl": ""},
         "links": ["https://acme.com"],
@@ -162,7 +164,7 @@ def test_header_value_helper():
 def test_extract_curated_headers():
     scanner = ScanUnderTest.__new__(ScanUnderTest)
     scanner.event = {}
-    parsed_header = {"cc": ["cc1@corp.example", "cc2@corp.example"], "bcc": []}
+    parsed_header = {"cc": ["cc1@corp.example", "cc2@corp.example"], "bcc": [], "delivered_to": ["recipient@corp.example"]}
     raw = {
         "reply-to": ["noreply@external.example"],
         "return-path": ["<sender@external.example>"],
@@ -178,8 +180,9 @@ def test_extract_curated_headers():
     scanner._extract_curated_headers(parsed_header, raw)
     assert scanner.event["cc"] == ["cc1@corp.example", "cc2@corp.example"]
     assert scanner.event["bcc"] == []
-    assert scanner.event["reply_to"] == "noreply@external.example"
-    assert scanner.event["return_path"] == "sender@external.example"
+    assert scanner.event["delivered_to"] == ["recipient@corp.example"]
+    assert scanner.event["reply_to"] == ["noreply@external.example"]
+    assert scanner.event["return_path"] == ["sender@external.example"]
     assert scanner.event["in_reply_to"] == "parent@external.example"
     assert scanner.event["references"] == [
         "root@external.example",
@@ -335,8 +338,8 @@ def test_scan_email_headers_fixture(mocker):
 
     # Curated fields.
     assert scanner_event["cc"] == unordered(["cc1@corp.example", "cc2@corp.example"])
-    assert scanner_event["reply_to"] == "noreply@external.example"
-    assert scanner_event["return_path"] == "sender@external.example"
+    assert scanner_event["reply_to"] == ["noreply@external.example"]
+    assert scanner_event["return_path"] == ["sender@external.example"]
     assert scanner_event["in_reply_to"] == "parent-msgid@external.example"
     assert scanner_event["references"] == [
         "root-msgid@external.example",
@@ -347,6 +350,7 @@ def test_scan_email_headers_fixture(mocker):
     assert scanner_event["auto_submitted"] == "auto-generated"
     assert scanner_event["precedence"] == "bulk"
     assert scanner_event["x_mailer"] == "Microsoft Office Outlook 12.0"
+    assert scanner_event["delivered_to"] == []
 
     # Parsed signals.
     assert scanner_event["auth"] == {
@@ -379,7 +383,7 @@ def test_scan_email_capture_raw_headers_disabled(mocker):
     assert "headers" not in scanner_event
     assert "headers_flags" not in scanner_event
     # Curated extraction is independent of the raw-map toggle.
-    assert scanner_event["reply_to"] == "noreply@external.example"
+    assert scanner_event["reply_to"] == ["noreply@external.example"]
     assert scanner_event["auth"]["dkim"] == "pass"
 
 
@@ -413,6 +417,125 @@ def test_scan_email_multihop_auth_and_optin_default(mocker):
     # Opt-in default: no option passed -> no raw header map emitted.
     assert "headers" not in scanner_event
     assert "headers_flags" not in scanner_event
+
+
+def test_scan_email_complex_recipients(mocker):
+    """Complex recipient combinations: multi-address To/Cc/Bcc, tagged sender, group syntax."""
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_email_complex_recipients.eml",
+        options={},
+    )
+
+    assert scanner_event["from"] == ["john.smith+sales@example.com"]
+    assert scanner_event["to"] == unordered(
+        ["jane.doe@corp.example", "bob@corp.example", "patrick.obrien@corp.example"]
+    )
+    assert scanner_event["cc"] == unordered(
+        ["marketing-team@corp.example", "sales@example.com", "li.zhang@corp.example"]
+    )
+    assert scanner_event["bcc"] == ["secret-list@corp.example"]
+    assert scanner_event["reply_to"] == unordered(["no-reply@example.com", "support@example.com"])
+    assert scanner_event["return_path"] == ["bounce+12345@example.com"]
+    assert scanner_event["in_reply_to"] == "msg-001@example.com"
+    assert scanner_event["references"] == unordered(
+        ["root-msg@example.com", "msg-001@example.com"]
+    )
+    assert scanner_event["subject"] == "Re: Q1 Sales Report [EXTERNAL]"
+    assert scanner_event["message_id"] == "complex-recipients-001@example.com"
+    assert scanner_event["x_mailer"] == "Microsoft Outlook 16.0"
+    assert scanner_event["delivered_to"] == []
+
+
+def test_scan_email_encoded_headers(mocker):
+    """RFC 2047 encoded display names are decoded; addr-specs are extracted cleanly."""
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_email_encoded_headers.eml",
+        options={},
+    )
+
+    assert scanner_event["from"] == ["tokyo-office@example.jp"]
+    assert scanner_event["to"] == unordered(
+        ["francois@corp.example", "hans.mueller@corp.example", "ivan.petrov@corp.example"]
+    )
+    assert scanner_event["cc"] == ["cafe-team@corp.example"]
+    assert scanner_event["bcc"] == []
+    assert scanner_event["reply_to"] == ["support@example.jp"]
+    assert scanner_event["return_path"] == ["automated-system@example.com"]
+    assert scanner_event["subject"] == "予業通知 - Delivery Notification"
+    assert scanner_event["thread_topic"] == "重要：予業通知"
+    assert scanner_event["message_id"] == "encoded-headers-001@example.jp"
+    assert scanner_event["x_mailer"] == "Thunderbird 115.0"
+
+
+def test_scan_email_group_syntax(mocker):
+    """RFC 5322 group syntax: members are expanded into to; group label appears in cc."""
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_email_group_syntax.eml",
+        options={},
+    )
+
+    assert scanner_event["from"] == ["newsletter@example.com"]
+    assert scanner_event["to"] == unordered(
+        ["alice@corp.example", "bob@corp.example", "charlie@corp.example",
+         "dave@corp.example", "eve@corp.example", "frank@corp.example"]
+    )
+    assert scanner_event["cc"] == ["undisclosed-recipients"]
+    assert scanner_event["reply_to"] == unordered(["manager1@example.com", "manager2@example.com"])
+    assert scanner_event["return_path"] == ["system@example.com"]
+    assert scanner_event["subject"] == "Company-wide Announcement"
+    assert scanner_event["message_id"] == "group-syntax-001@example.com"
+    assert scanner_event["x_mailer"] == "MailChimp API v3.0"
+
+
+def test_scan_email_malformed_addresses(mocker):
+    """Malformed address formats: missing brackets, source routing, percent-encoding."""
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_email_malformed_addresses.eml",
+        options={},
+    )
+
+    assert scanner_event["from"] == ["sender@example.com"]
+    assert scanner_event["to"] == unordered(
+        ["recipient@corp.example", "no-brackets@corp.example", "extra-comma@corp.example",
+         "user@final.example", "user%domain@example.com", "quoted@corp.example"]
+    )
+    assert scanner_event["cc"] == []
+    assert scanner_event["bcc"] == []
+    assert scanner_event["reply_to"] == ["reply@example.com"]
+    assert scanner_event["return_path"] == ["sender@example.com"]
+    assert scanner_event["subject"] == "Test Malformed Addresses"
+    assert scanner_event["message_id"] == "malformed-001@example.com"
+    assert scanner_event["x_mailer"] == "Custom Mailer 1.0"
+
+
+def test_scan_email_special_cases(mocker):
+    """Bounce/DSN: null Return-Path (<>), empty Reply-To, auto-submitted signals."""
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_email_special_cases.eml",
+        options={},
+    )
+
+    assert scanner_event["from"] == ["mailer-daemon@example.com"]
+    assert scanner_event["to"] == ["postmaster@corp.example"]
+    assert scanner_event["cc"] == []
+    assert scanner_event["bcc"] == []
+    assert scanner_event["reply_to"] == []
+    assert scanner_event["return_path"] == []
+    assert scanner_event["subject"] == "Delivery Status Notification (Failure)"
+    assert scanner_event["auto_submitted"] == "auto-replied"
+    assert scanner_event["precedence"] == "bulk"
+    assert scanner_event["message_id"] == "delivery-status-001@example.com"
+    assert scanner_event["x_mailer"] == "Postfix 3.7.2"
 
 
 def test_scan_email_links(mocker):

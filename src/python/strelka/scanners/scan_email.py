@@ -1,6 +1,7 @@
 import base64
 import email
 import email.header
+import email.utils
 import logging
 import re
 
@@ -42,7 +43,7 @@ class ScanEmail(strelka.Scanner):
         - **Curated Header Capture**
             - Populates named fields (``cc``, ``bcc``, ``reply_to``, ``return_path``, ``in_reply_to``,
               ``thread_topic``, ``x_originating_ip``, ``auto_submitted``, ``precedence``, ``content_type``,
-              ``x_mailer``, ``references``) for high-value header data without scanning the full header map.
+              ``x_mailer``, ``references``, ``delivered_to``) for high-value header data without scanning the full header map.
         - **Link Extraction**
             - Collects full URLs found in the message body into a de-duplicated ``links`` list
               (bounded by ``max_links``, default 50) for IOC matching and triage.
@@ -189,8 +190,9 @@ class ScanEmail(strelka.Scanner):
 
             # Extract email header information
             self.event["subject"] = parsed_eml["header"].get("subject", "")
-            self.event["to"] = parsed_eml["header"].get("to", "")
-            self.event["from"] = parsed_eml["header"].get("from", "")
+            self.event["to"] = parsed_eml["header"].get("to", [])
+            from_addr = parsed_eml["header"].get("from", "")
+            self.event["from"] = [from_addr] if from_addr else []
             date_header = parsed_eml["header"].get("date")
             if date_header:
                 self.event["date_utc"] = (
@@ -298,19 +300,31 @@ class ScanEmail(strelka.Scanner):
     def _extract_curated_headers(self, parsed_header: dict, raw: dict) -> None:
         """Populate curated, high-value named header fields on ``self.event``.
 
-        Addresses (cc/bcc) use eml_parser's normalized parsed values to match
-        the existing ``to``/``from`` behavior. All other fields read from the
-        raw header dict. Angle brackets are stripped from id-style values.
+        Address fields emit lists of bare addr-specs (user@example.com).
+        eml_parser normalizes to/cc/bcc/delivered_to; reply_to and return_path
+        are parsed from the raw header dict via email.utils.
         """
-        # Address fields - normalized by eml_parser like to/from.
+        # Address fields - normalized by eml_parser.
         self.event["cc"] = parsed_header.get("cc", [])
-        self.event["bcc"] = parsed_header.get("bcc", [])
+        self.event["bcc"] = [
+            addr
+            for _, addr in email.utils.getaddresses(raw.get("bcc", []))
+            if addr
+        ]
+        self.event["delivered_to"] = parsed_header.get("delivered_to", [])
 
-        # Single-value text/id headers.
-        self.event["reply_to"] = self._header_value(raw, "reply-to")
-        self.event["return_path"] = (
-            self._header_value(raw, "return-path").lstrip("<").rstrip(">")
+        # reply_to: parse addr-specs from raw string (may be multi-address).
+        self.event["reply_to"] = [
+            addr
+            for _, addr in email.utils.getaddresses(raw.get("reply-to", []))
+            if addr
+        ]
+
+        # return_path: single address; empty (<>) yields [].
+        _, return_addr = email.utils.parseaddr(
+            self._header_value(raw, "return-path")
         )
+        self.event["return_path"] = [return_addr] if return_addr else []
         self.event["in_reply_to"] = (
             self._header_value(raw, "in-reply-to").lstrip("<").rstrip(">")
         )

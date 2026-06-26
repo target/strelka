@@ -1,0 +1,22 @@
+Return-Path: <>
+Received: from mail.example.com (mail.example.com [192.0.2.75]) by mx.corp.example with ESMTPS; Fri, 19 Jan 2024 08:00:00 +0000
+From: mailer-daemon@example.com (Mail Delivery System)
+To: postmaster@corp.example
+Reply-To:
+Sender: bounce-handler@example.com
+Resent-From: admin@corp.example
+Resent-To: sysadmin@corp.example
+X-Original-To: old-address@corp.example
+X-Forwarded-For: intermediate@relay.example
+X-Envelope-From: envelope-sender@example.com
+X-Envelope-To: envelope-recipient@corp.example
+Subject: Delivery Status Notification (Failure)
+Date: Fri, 19 Jan 2024 08:00:00 +0000
+Message-ID: <delivery-status-001@example.com>
+Auto-Submitted: auto-replied
+Precedence: bulk
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=delivery-status; boundary="boundary123"
+X-Mailer: Postfix 3.7.2
+
+Bounce message with special headers and empty return-path.
