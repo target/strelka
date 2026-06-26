@@ -4,6 +4,7 @@ import email.header
 import email.utils
 import logging
 import re
+import urllib.parse
 
 import eml_parser
 import pytz
@@ -148,16 +149,38 @@ class ScanEmail(strelka.Scanner):
                             body["content"][:100] + "..." + body["content"][-100:]
                         )
                     if "domain" in body:
+                        # Filter CSS dimension values (e.g. "7.5px") misidentified as domains.
+                        domains = [
+                            d
+                            for d in body["domain"]
+                            if not re.fullmatch(r"[\d.]+px", d)
+                        ]
                         if "domain" in self.event:
-                            self.event["domains"] += body["domain"]
+                            self.event["domains"] += domains
                         else:
-                            self.event["domains"] = body["domain"]
+                            self.event["domains"] = domains
                     # eml_parser already extracts full URLs from each body part.
                     links.extend(body.get("uri", []))
 
             # Emit a deduped, order-preserved, bounded list of links.
             max_links = options.get("max_links", 50)
             deduped_links = list(dict.fromkeys(links))
+
+            # Optional link rewriting: unwrap security-gateway redirects.
+            rewrite_mode = options.get("link_rewrite_mode", "none")
+            rewrite_rules = options.get("link_rewrite_rules", [])
+            urldecode = options.get("link_rewrite_urldecode", "auto")
+            if rewrite_mode != "none" and rewrite_rules:
+                unwrapped = self._unwrap_links(deduped_links, rewrite_rules, urldecode)
+                if rewrite_mode == "replace":
+                    deduped_links = list(dict.fromkeys(unwrapped))
+                elif rewrite_mode == "copy":
+                    links_unwrapped = [
+                        u for orig, u in zip(deduped_links, unwrapped) if u != orig
+                    ]
+                    deduped_links = list(dict.fromkeys(deduped_links + links_unwrapped))
+                    self.event["links_unwrapped"] = links_unwrapped
+
             if len(deduped_links) > max_links:
                 deduped_links = deduped_links[:max_links]
                 self.flags.append(f"{self.__class__.__name__}: links_truncated")
@@ -272,6 +295,32 @@ class ScanEmail(strelka.Scanner):
                 auth["spf"] = spf_header.split()[0].lower()
 
         return auth
+
+    def _unwrap_links(self, links: list, rules: list, urldecode: str = "auto") -> list:
+        """Unwrap security-gateway redirect URLs using configured regex rules.
+
+        Each rule must have a ``pattern`` key with a regex containing a named
+        capture group ``url``. First matching rule wins per link.
+
+        ``urldecode`` controls decoding of captured values: ``auto`` (default)
+        decodes only when the value starts with ``https?%``; ``on`` always
+        decodes; ``off`` never decodes.
+        """
+        result = []
+        for link in links:
+            unwrapped = link
+            for rule in rules:
+                m = re.search(rule.get("pattern", ""), link)
+                if m and "url" in m.groupdict() and m.group("url"):
+                    captured = m.group("url")
+                    if urldecode == "on":
+                        captured = urllib.parse.unquote(captured)
+                    elif urldecode == "auto" and re.match(r"https?%", captured):
+                        captured = urllib.parse.unquote(captured)
+                    unwrapped = captured
+                    break
+            result.append(unwrapped)
+        return result
 
     def _parse_spam_scores(self, raw: dict) -> dict:
         """Extract Exchange spam scores (SCL/BCL) as a low-cardinality dict.

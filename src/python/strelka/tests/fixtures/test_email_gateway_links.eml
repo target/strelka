@@ -1,0 +1,15 @@
+Return-Path: <sender@example.com>
+Received: from mail.example.com (mail.example.com [192.0.2.1]) by mx.corp.example with ESMTPS; Mon, 01 Jan 2024 00:00:00 +0000
+From: sender@example.com
+To: recipient@corp.example
+Subject: Gateway Link Test
+Date: Mon, 01 Jan 2024 00:00:00 +0000
+Message-ID: <gateway-links-001@example.com>
+MIME-Version: 1.0
+Content-Type: text/html; charset="utf-8"
+
+<html><body>
+<a href="https://secure.gateway.example/redirect?url=https://actual-destination.example/path?foo=bar&other=param">raw url</a>
+<a href="https://secure.gateway.example/redirect?url=https%3A%2F%2Fencoded-destination.example%2Fpath%3Ffoo%3Dbar&other=param">encoded url</a>
+<a href="https://no-gateway.example/plain">plain link</a>
+</body></html>

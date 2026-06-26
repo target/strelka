@@ -564,6 +564,149 @@ def test_scan_email_special_cases(mocker):
     assert scanner_event["x_mailer"] == "Postfix 3.7.2"
 
 
+def test_unwrap_links_no_rules():
+    scanner = ScanUnderTest.__new__(ScanUnderTest)
+    links = ["https://gateway.example/?url=https://dest.example/"]
+    assert scanner._unwrap_links(links, []) == links
+
+
+def test_unwrap_links_raw_url():
+    # Path-based redirect: inner URL is unencoded in the path, not a querystring value
+    scanner = ScanUnderTest.__new__(ScanUnderTest)
+    links = ["https://gateway.example/safe/https://dest.example/page"]
+    result = scanner._unwrap_links(
+        links, [{"pattern": r"gateway\.example/safe/(?P<url>https?://\S+)"}]
+    )
+    assert result == ["https://dest.example/page"]
+
+
+def test_unwrap_links_encoded_url():
+    # Querystring-based redirect: inner URL is percent-encoded, auto-decoded on https?%3A prefix
+    scanner = ScanUnderTest.__new__(ScanUnderTest)
+    links = [
+        "https://gateway.example/?url=https%3A%2F%2Fdest.example%2Fpath%3Fa%3D1&other=x"
+    ]
+    result = scanner._unwrap_links(
+        links, [{"pattern": r"gateway\.example/\?url=(?P<url>https?%3A[^&]+)"}]
+    )
+    assert result == ["https://dest.example/path?a=1"]
+
+
+def test_unwrap_links_urldecode_on():
+    # urldecode=on forces decoding regardless of prefix
+    scanner = ScanUnderTest.__new__(ScanUnderTest)
+    links = ["https://gateway.example/?url=https%3A%2F%2Fdest.example%2Fpage&other=x"]
+    result = scanner._unwrap_links(
+        links,
+        [{"pattern": r"gateway\.example/\?url=(?P<url>[^&]+)"}],
+        urldecode="on",
+    )
+    assert result == ["https://dest.example/page"]
+
+
+def test_unwrap_links_urldecode_off():
+    # urldecode=off returns captured value as-is even when encoded
+    scanner = ScanUnderTest.__new__(ScanUnderTest)
+    links = ["https://gateway.example/?url=https%3A%2F%2Fdest.example%2Fpage&other=x"]
+    result = scanner._unwrap_links(
+        links,
+        [{"pattern": r"gateway\.example/\?url=(?P<url>https?%3A[^&]+)"}],
+        urldecode="off",
+    )
+    assert result == ["https%3A%2F%2Fdest.example%2Fpage"]
+
+
+def test_unwrap_links_no_match_unchanged():
+    scanner = ScanUnderTest.__new__(ScanUnderTest)
+    links = ["https://plain.example/no-redirect"]
+    result = scanner._unwrap_links(
+        links, [{"pattern": r"gateway\.example/\?url=(?P<url>https?%3A[^&]+)"}]
+    )
+    assert result == links
+
+
+def test_unwrap_links_first_rule_wins():
+    scanner = ScanUnderTest.__new__(ScanUnderTest)
+    links = [
+        "https://gateway.example/?url=https%3A%2F%2Fdest.example%2F&redirect=https%3A%2F%2Fother.example%2F"
+    ]
+    rules = [
+        {"pattern": r"gateway\.example/\?url=(?P<url>https?%3A[^&]+)"},
+        {"pattern": r"gateway\.example/.*[?&]redirect=(?P<url>https?%3A[^&]+)"},
+    ]
+    assert scanner._unwrap_links(links, rules) == ["https://dest.example/"]
+
+
+def test_scan_email_gateway_links_none_mode(mocker):
+    """Default (none): links emitted as-is, no rewriting, no links_unwrapped."""
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_email_gateway_links.eml",
+        options={},
+    )
+    assert "links_unwrapped" not in scanner_event
+    assert (
+        "https://secure.gateway.example/redirect?url=https://actual-destination.example/path?foo=bar&other=param"
+        in scanner_event["links"]
+    )
+    assert "https://no-gateway.example/plain" in scanner_event["links"]
+
+
+def test_scan_email_gateway_links_copy_mode(mocker):
+    """copy mode: originals stay in links, unwrapped encoded-redirect URL added; raw redirect unchanged."""
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_email_gateway_links.eml",
+        options={
+            "link_rewrite_mode": "copy",
+            "link_rewrite_rules": [
+                {
+                    "pattern": r"secure\.gateway\.example/redirect\?url=(?P<url>https?%3A[^&]+)"
+                },
+            ],
+        },
+    )
+    assert (
+        "https://secure.gateway.example/redirect?url=https://actual-destination.example/path?foo=bar&other=param"
+        in scanner_event["links"]
+    )
+    assert (
+        "https://secure.gateway.example/redirect?url=https%3A%2F%2Fencoded-destination.example%2Fpath%3Ffoo%3Dbar&other=param"
+        in scanner_event["links"]
+    )
+    assert "https://encoded-destination.example/path?foo=bar" in scanner_event["links"]
+    assert "https://no-gateway.example/plain" in scanner_event["links"]
+    assert scanner_event["links_unwrapped"] == [
+        "https://encoded-destination.example/path?foo=bar"
+    ]
+
+
+def test_scan_email_gateway_links_replace_mode(mocker):
+    """replace mode: encoded-redirect URL replaced by destination; raw redirect and plain link unchanged."""
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_path=Path(__file__).parent / "fixtures/test_email_gateway_links.eml",
+        options={
+            "link_rewrite_mode": "replace",
+            "link_rewrite_rules": [
+                {
+                    "pattern": r"secure\.gateway\.example/redirect\?url=(?P<url>https?%3A[^&]+)"
+                },
+            ],
+        },
+    )
+    assert (
+        "https://secure.gateway.example/redirect?url=https://actual-destination.example/path?foo=bar&other=param"
+        in scanner_event["links"]
+    )
+    assert "https://encoded-destination.example/path?foo=bar" in scanner_event["links"]
+    assert "https://no-gateway.example/plain" in scanner_event["links"]
+    assert "links_unwrapped" not in scanner_event
+
+
 def test_scan_email_links(mocker):
     """Links (full URLs) are extracted from the body and de-duplicated."""
     scanner_event = run_test_scan(
