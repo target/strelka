@@ -1,0 +1,18 @@
+Return-Path: sender@example.com
+Received: from mail.example.com (mail.example.com [192.0.2.100]) by mx.corp.example with ESMTPS; Wed, 17 Jan 2024 11:45:00 +0000
+From: sender@example.com
+To: recipient@corp.example, "Missing Angle Brackets" <no-brackets@corp.example,
+ extra-comma@corp.example,,
+ <@relay.example.com:user@final.example>,
+ user%domain@example.com,
+ "Quoted \"Name\" With Escapes" <quoted@corp.example>
+Cc:
+Reply-To: <reply@example.com> (Reply Here)
+Subject: Test Malformed Addresses
+Date: Wed, 17 Jan 2024 11:45:00 +0000
+Message-ID: malformed-001@example.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: Custom Mailer 1.0
+
+Test email with edge cases in address parsing.

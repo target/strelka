@@ -1,0 +1,16 @@
+Return-Path: <system@example.com>
+Received: from mail.example.com (mail.example.com [192.0.2.25]) by mx.corp.example with ESMTPS; Thu, 18 Jan 2024 16:20:00 +0000
+From: "Newsletter Service" <newsletter@example.com>
+To: Engineering: alice@corp.example, bob@corp.example;,
+ Sales: charlie@corp.example, dave@corp.example, eve@corp.example;,
+ Management: frank@corp.example;
+Cc: All Staff: undisclosed-recipients:;
+Reply-To: Management Team <manager1@example.com>, <manager2@example.com>
+Subject: Company-wide Announcement
+Date: Thu, 18 Jan 2024 16:20:00 +0000
+Message-ID: <group-syntax-001@example.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: MailChimp API v3.0
+
+Test email using RFC 5322 group syntax.

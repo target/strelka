@@ -1,0 +1,19 @@
+Return-Path: <newsletter@marketing.example>
+Received: from relay.upstream.example (relay.upstream.example [198.51.100.20]) by mx.corp.example with ESMTPS; Tue, 02 Jun 2026 09:00:00 +0000
+Received: from mail.marketing.example (mail.marketing.example [203.0.113.55]) by relay.upstream.example with ESMTP; Tue, 02 Jun 2026 08:59:59 +0000
+Authentication-Results: mx.corp.example; spf=pass smtp.mailfrom=marketing.example; dkim=pass header.d=marketing.example; dmarc=pass action=none; compauth=pass reason=100
+Authentication-Results: relay.upstream.example; spf=softfail smtp.mailfrom=marketing.example; dkim=fail header.d=marketing.example; dmarc=fail
+X-Forefront-Antispam-Report: CIP:203.0.113.55;CTRY:US;SCL:5;BCL:2;
+X-MS-Exchange-Organization-SCL: 5
+X-Originating-IP: [203.0.113.55]
+From: Marketing <newsletter@marketing.example>
+To: recipient@corp.example
+Subject: Multi-hop Test
+Date: Tue, 02 Jun 2026 09:00:00 +0000
+Message-ID: <multihop-test@marketing.example>
+Auto-Submitted: auto-generated
+Precedence: bulk
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+
+Multi-hop synthetic body.

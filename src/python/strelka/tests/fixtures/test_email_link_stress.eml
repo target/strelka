@@ -1,0 +1,246 @@
+Return-Path: <campaigns@acme-store.example.com>
+Received: from mail.acme-store.example.com (mail.acme-store.example.com [203.0.113.42])
+        by mx.corp.example with ESMTPS id abc123
+        for <recipient@corp.example>; Mon, 01 Jan 2024 10:00:00 +0000
+From: Acme Store <campaigns@acme-store.example.com>
+To: recipient@corp.example
+Subject: Spring Sale -- Up to 50% Off Everything
+Date: Mon, 01 Jan 2024 10:00:00 +0000
+Message-ID: <link-stress-test-001@acme-store.example.com>
+MIME-Version: 1.0
+List-Unsubscribe: <https://acme-store.example.com/unsubscribe?token=abc123xyz>, <mailto:unsubscribe@acme-store.example.com>
+Content-Type: multipart/alternative; boundary="----=_Part_stress_test_001"
+
+------=_Part_stress_test_001
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+SPRING SALE - UP TO 50% OFF EVERYTHING
+
+Shop now: https://acme-store.example.com/sale?utm_source=email&utm_medium=email&utm_campaign=spring2024&utm_content=plaintext
+
+Men's Collection:   https://acme-store.example.com/mens?utm_source=email&utm_campaign=spring2024
+Women's Collection: https://acme-store.example.com/womens?utm_source=email&utm_campaign=spring2024
+Kids' Collection:   https://acme-store.example.com/kids?utm_source=email&utm_campaign=spring2024
+
+New Arrivals: https://acme-store.example.com/new?utm_source=email&utm_campaign=spring2024
+
+Need help? Visit https://help.acme-store.example.com or contact support@acme-store.example.com
+
+Follow us:
+  Facebook:  https://www.facebook.com/acmestore
+  Twitter:   https://twitter.com/acmestore
+  Instagram: https://www.instagram.com/acmestore
+
+Manage preferences: https://acme-store.example.com/preferences?token=abc123xyz
+Unsubscribe:        https://acme-store.example.com/unsubscribe?token=abc123xyz
+
+Acme Store, 123 Commerce St, San Francisco CA 94105
+
+------=_Part_stress_test_001
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang=3D"en">
+<head>
+<meta charset=3D"UTF-8">
+<meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=3D1.0">
+<title>Spring Sale</title>
+<style type=3D"text/css">
+  /* Embedded stylesheet -- dimension values here should NOT leak as domains */
+  /* CSS class selectors WILL leak as false-positive domains in eml_parser   */
+  body { margin: 0; padding: 0; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.5; }
+  div.wrapper { width: 600px; max-width: 100%; margin: 0 auto; }
+  div.header { background-color: #ff6b35; padding: 20px 40px; }
+  div.hero { background-size: cover; height: 300px; }
+  a.button { display: inline-block; padding: 14px 28px; background-color: #ff6b35; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 18px; font-weight: bold; }
+  div.product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 32px 40px; }
+  div.product-card { border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden; }
+  img.product-img { width: 100%; height: 200px; object-fit: cover; }
+  div.footer { background-color: #2c2c2c; color: #ffffff; padding: 32px 40px; font-size: 12px; line-height: 1.6; }
+  a.social-link { display: inline-block; margin: 0 8px; }
+  p.disclaimer { font-size: 11px; color: #666666; }
+  span.preheader { display: none; max-height: 0px; overflow: hidden; }
+  /* CSS url() references -- filenames WILL leak as false-positive domains */
+  div.hero-bg { background-image: url('https://cdn.acme-store.example.com/email/spring2024/hero-bg.jpg'); }
+  /* @font-face src urls -- font filenames WILL leak as false-positive domains */
+  @font-face {
+    font-family: 'AcmeSans';
+    src: url('https://cdn.acme-store.example.com/fonts/acme-sans.woff2') format('woff2'),
+         url('https://cdn.acme-store.example.com/fonts/acme-sans.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+  }
+  /* Media query with dimension values -- should NOT leak */
+  @media screen and (max-width: 600px) {
+    div.wrapper { width: 100% !important; }
+    div.product-grid { grid-template-columns: 1fr !important; padding: 16px 20px !important; }
+    a.button { width: 100% !important; box-sizing: border-box; padding: 14px 0; }
+  }
+</style>
+</head>
+<body>
+
+<span class=3D"preheader">Spring Sale -- Up to 50% off sitewide.</span>
+
+<div class=3D"wrapper">
+
+  <!-- Header with logo -->
+  <div class=3D"header">
+    <a href=3D"https://acme-store.example.com/?utm_source=3Demail&utm_medium=3Demail&utm_campaign=3Dspring2024&utm_content=3Dlogo">
+      <img src=3D"https://cdn.acme-store.example.com/email/spring2024/logo.png"
+           alt=3D"Acme Store" width=3D"160" height=3D"40" style=3D"display:block; border:0;">
+    </a>
+  </div>
+
+  <!-- Hero: background via inline style url() -- filename will leak as false-positive domain -->
+  <div class=3D"hero" style=3D"background-image: url('https://cdn.acme-store.example.com/email/spring2024/hero-mobile.jpg'); padding: 60px 40px; text-align: center;">
+    <h1 style=3D"color:#ffffff; font-size:48px; margin:0 0 16px 0;">Up to 50% Off</h1>
+    <p style=3D"color:#ffffff; font-size:20px; margin:0 0 32px 0;">Spring Sale -- Limited Time Only</p>
+    <!-- Primary CTA -- appears again later (dedup test) -->
+    <a href=3D"https://acme-store.example.com/sale?utm_source=3Demail&utm_medium=3Demail&utm_campaign=3Dspring2024&utm_content=3Dhero_cta"
+       class=3D"button">Shop the Sale</a>
+  </div>
+
+  <!-- Category navigation -->
+  <table width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" style=3D"border-collapse:collapse; padding:24px 0;">
+    <tr>
+      <td align=3D"center" style=3D"padding:0 8px;">
+        <a href=3D"https://acme-store.example.com/mens?utm_source=3Demail&utm_medium=3Demail&utm_campaign=3Dspring2024"
+           style=3D"color:#333333; text-decoration:none; font-size:14px; font-weight:bold;">Men's</a>
+      </td>
+      <td align=3D"center" style=3D"padding:0 8px;">
+        <a href=3D"https://acme-store.example.com/womens?utm_source=3Demail&utm_medium=3Demail&utm_campaign=3Dspring2024"
+           style=3D"color:#333333; text-decoration:none; font-size:14px; font-weight:bold;">Women's</a>
+      </td>
+      <td align=3D"center" style=3D"padding:0 8px;">
+        <a href=3D"https://acme-store.example.com/kids?utm_source=3Demail&utm_medium=3Demail&utm_campaign=3Dspring2024"
+           style=3D"color:#333333; text-decoration:none; font-size:14px; font-weight:bold;">Kids'</a>
+      </td>
+      <td align=3D"center" style=3D"padding:0 8px;">
+        <a href=3D"https://acme-store.example.com/accessories?utm_source=3Demail&utm_medium=3Demail&utm_campaign=3Dspring2024"
+           style=3D"color:#333333; text-decoration:none; font-size:14px; font-weight:bold;">Accessories</a>
+      </td>
+      <td align=3D"center" style=3D"padding:0 8px;">
+        <a href=3D"https://acme-store.example.com/new?utm_source=3Demail&utm_medium=3Demail&utm_campaign=3Dspring2024"
+           style=3D"color:#333333; text-decoration:none; font-size:14px; font-weight:bold;">New Arrivals</a>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Product grid -->
+  <div class=3D"product-grid">
+
+    <div class=3D"product-card">
+      <a href=3D"https://acme-store.example.com/products/classic-tee?color=3Dwhite&size=3DM&utm_source=3Demail&utm_campaign=3Dspring2024">
+        <img class=3D"product-img"
+             src=3D"https://cdn.acme-store.example.com/products/classic-tee-white.jpg"
+             alt=3D"Classic Tee" width=3D"200" height=3D"200" style=3D"border:0;">
+      </a>
+      <div style=3D"padding:12px;">
+        <p style=3D"margin:0 0 4px 0; font-size:14px; font-weight:bold;">Classic Tee</p>
+        <p style=3D"margin:0; font-size:13px; color:#666;"><s>$35.00</s> <strong>$17.50</strong></p>
+      </div>
+    </div>
+
+    <div class=3D"product-card">
+      <a href=3D"https://acme-store.example.com/products/slim-chino?color=3Dnavy&size=3D32x32&utm_source=3Demail&utm_campaign=3Dspring2024">
+        <img class=3D"product-img"
+             src=3D"https://cdn.acme-store.example.com/products/slim-chino-navy.jpg"
+             alt=3D"Slim Chino" width=3D"200" height=3D"200" style=3D"border:0;">
+      </a>
+      <div style=3D"padding:12px;">
+        <p style=3D"margin:0 0 4px 0; font-size:14px; font-weight:bold;">Slim Chino</p>
+        <p style=3D"margin:0; font-size:13px; color:#666;"><s>$79.00</s> <strong>$39.50</strong></p>
+      </div>
+    </div>
+
+    <div class=3D"product-card">
+      <a href=3D"https://acme-store.example.com/products/linen-blazer?color=3Dbeige&size=3DL&utm_source=3Demail&utm_campaign=3Dspring2024">
+        <img class=3D"product-img"
+             src=3D"https://cdn.acme-store.example.com/products/linen-blazer-beige.jpg"
+             alt=3D"Linen Blazer" width=3D"200" height=3D"200" style=3D"border:0;">
+      </a>
+      <div style=3D"padding:12px;">
+        <p style=3D"margin:0 0 4px 0; font-size:14px; font-weight:bold;">Linen Blazer</p>
+        <p style=3D"margin:0; font-size:13px; color:#666;"><s>$149.00</s> <strong>$74.50</strong></p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Secondary CTA -- same URL as hero CTA above (dedup test) -->
+  <div style=3D"text-align:center; padding:32px 40px;">
+    <a href=3D"https://acme-store.example.com/sale?utm_source=3Demail&utm_medium=3Demail&utm_campaign=3Dspring2024&utm_content=3Dhero_cta"
+       class=3D"button">Shop All Sale Items</a>
+  </div>
+
+  <!-- Referral section -->
+  <div style=3D"background:#f9f9f9; border:1px solid #e0e0e0; border-radius:4px; margin:0 40px; padding:20px; text-align:center;">
+    <p style=3D"margin:0 0 8px 0; font-size:15px; font-weight:bold;">Refer a friend, get $20</p>
+    <a href=3D"https://acme-store.example.com/refer?code=3DRCPNT12345&utm_source=3Demail&utm_campaign=3Dreferral"
+       style=3D"color:#ff6b35; font-size:13px;">Get your referral link</a>
+  </div>
+
+  <!-- Footer -->
+  <div class=3D"footer">
+
+    <!-- Social icons -->
+    <div style=3D"text-align:center; margin-bottom:24px;">
+      <a class=3D"social-link" href=3D"https://www.facebook.com/acmestore">
+        <img src=3D"https://cdn.acme-store.example.com/email/icons/facebook.png"
+             alt=3D"Facebook" width=3D"32" height=3D"32" style=3D"border:0;">
+      </a>
+      <a class=3D"social-link" href=3D"https://twitter.com/acmestore">
+        <img src=3D"https://cdn.acme-store.example.com/email/icons/twitter.png"
+             alt=3D"Twitter" width=3D"32" height=3D"32" style=3D"border:0;">
+      </a>
+      <a class=3D"social-link" href=3D"https://www.instagram.com/acmestore">
+        <img src=3D"https://cdn.acme-store.example.com/email/icons/instagram.png"
+             alt=3D"Instagram" width=3D"32" height=3D"32" style=3D"border:0;">
+      </a>
+      <a class=3D"social-link" href=3D"https://www.pinterest.com/acmestore">
+        <img src=3D"https://cdn.acme-store.example.com/email/icons/pinterest.png"
+             alt=3D"Pinterest" width=3D"32" height=3D"32" style=3D"border:0;">
+      </a>
+    </div>
+
+    <!-- Footer nav -- mailto: should NOT appear in links -->
+    <p style=3D"text-align:center; margin:0 0 16px 0; font-size:12px;">
+      <a href=3D"https://acme-store.example.com/help" style=3D"color:#aaaaaa;">Help Center</a> |
+      <a href=3D"https://acme-store.example.com/returns" style=3D"color:#aaaaaa;">Returns</a> |
+      <a href=3D"https://acme-store.example.com/stores" style=3D"color:#aaaaaa;">Find a Store</a> |
+      <a href=3D"mailto:support@acme-store.example.com" style=3D"color:#aaaaaa;">Contact Us</a>
+    </p>
+
+    <!-- View in browser / preferences / unsubscribe -->
+    <p style=3D"text-align:center; margin:0 0 16px 0; font-size:12px;">
+      <a href=3D"https://acme-store.example.com/email/view?mid=3Dspring2024-001&uid=3DRCPNT12345"
+         style=3D"color:#aaaaaa;">View in browser</a> |
+      <a href=3D"https://acme-store.example.com/preferences?token=3Dabc123xyz"
+         style=3D"color:#aaaaaa;">Email preferences</a> |
+      <a href=3D"https://acme-store.example.com/unsubscribe?token=3Dabc123xyz"
+         style=3D"color:#aaaaaa;">Unsubscribe</a>
+    </p>
+
+    <!-- Legal -->
+    <p class=3D"disclaimer" style=3D"text-align:center; margin:0; font-size:11px; color:#888888;">
+      &copy; 2024 Acme Store, Inc. All rights reserved.<br>
+      123 Commerce St, San Francisco, CA 94105<br>
+      <a href=3D"https://acme-store.example.com/privacy" style=3D"color:#888888;">Privacy Policy</a> |
+      <a href=3D"https://acme-store.example.com/terms" style=3D"color:#888888;">Terms of Service</a>
+    </p>
+
+  </div>
+
+</div>
+
+<!-- Tracking pixel: 1x1 image at bottom of body -->
+<img src=3D"https://tracking.acme-store.example.com/pixel.gif?uid=3DRCPNT12345&mid=3Dspring2024-001&t=3D1704067200"
+     width=3D"1" height=3D"1" alt=3D"" style=3D"display:none; width:0px; height:0px; overflow:hidden; border:0;">
+
+</body>
+</html>
+
+------=_Part_stress_test_001--
