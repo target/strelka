@@ -117,6 +117,8 @@ scanners:
           - 'email_file_broad'
       priority: 5
       options:
+        body_enabled: True
+        body_chars: 200
         max_links: 50
         capture_raw_headers: False
         max_header_length: 2048
