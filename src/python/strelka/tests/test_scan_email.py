@@ -19,18 +19,7 @@ def test_scan_email(mocker):
         "flags": [],
         "total": {"attachments": 2, "extracted": 2},
         "body": "Lorem Ipsum\n\n[cid:image001.jpg@01D914BA.2B9507C0]\n\n\nLorem ipsum dolor sit amet, consectetur adipisci...tristique mi, quis finibus justo augue non ligula. Quisque facilisis dui in orci aliquet fermentum.\n",
-        "domains": unordered(
-            [
-                "schemas.microsoft.com",
-                "www.w3.org",
-                "div.msonormal",
-                "span.msohyperlink",
-                "span.msohyperlinkfollowed",
-                "span.emailstyle17",
-                "1.0in",
-                "div.wordsection1",
-            ]
-        ),
+        "domains": unordered(["schemas.microsoft.com", "www.w3.org"]),
         "attachments": {
             "filenames": ["image001.jpg", "test.doc"],
             "hashes": unordered(
@@ -58,7 +47,6 @@ def test_scan_email(mocker):
         ),
         "received_ip": unordered(
             [
-                "022.12.20.18",
                 "fe80::bd8e:df17:2c2f:2490",
                 "8.17.1.19",
                 "2603:10b6:5:2c0::11",
@@ -746,20 +734,21 @@ def test_scan_email_gateway_links_parallel_mode(mocker):
             "link_rewrite_mode": "parallel",
             "link_rewrite_rules": [
                 {
-                    "pattern": r"secure\.gateway\.example/redirect\?url=(?P<url>https?%3A[^&]+)"
+                    "pattern": r"secure\.gateway\.example\.com/redirect\?url=(?P<url>https?%3A[^&]+)"
                 },
             ],
         },
     )
     assert (
-        "https://secure.gateway.example/redirect?url=https%3A%2F%2Fencoded-destination.example%2Fpath%3Ffoo%3Dbar&other=param"
+        "https://secure.gateway.example.com/redirect?url=https%3A%2F%2Fencoded-destination.example.com%2Fpath%3Ffoo%3Dbar&other=param"
         in scanner_event["links"]
     )
     assert (
-        "https://encoded-destination.example/path?foo=bar" not in scanner_event["links"]
+        "https://encoded-destination.example.com/path?foo=bar"
+        not in scanner_event["links"]
     )
     assert scanner_event["links_unwrapped"] == [
-        "https://encoded-destination.example/path?foo=bar"
+        "https://encoded-destination.example.com/path?foo=bar"
     ]
 
 
@@ -773,10 +762,10 @@ def test_scan_email_gateway_links_none_mode(mocker):
     )
     assert "links_unwrapped" not in scanner_event
     assert (
-        "https://secure.gateway.example/redirect?url=https://actual-destination.example/path?foo=bar&other=param"
+        "https://secure.gateway.example.com/redirect?url=https://actual-destination.example.com/path?foo=bar&other=param"
         in scanner_event["links"]
     )
-    assert "https://no-gateway.example/plain" in scanner_event["links"]
+    assert "https://no-gateway.example.com/plain" in scanner_event["links"]
 
 
 def test_scan_email_gateway_links_copy_mode(mocker):
@@ -789,23 +778,25 @@ def test_scan_email_gateway_links_copy_mode(mocker):
             "link_rewrite_mode": "copy",
             "link_rewrite_rules": [
                 {
-                    "pattern": r"secure\.gateway\.example/redirect\?url=(?P<url>https?%3A[^&]+)"
+                    "pattern": r"secure\.gateway\.example\.com/redirect\?url=(?P<url>https?%3A[^&]+)"
                 },
             ],
         },
     )
     assert (
-        "https://secure.gateway.example/redirect?url=https://actual-destination.example/path?foo=bar&other=param"
+        "https://secure.gateway.example.com/redirect?url=https://actual-destination.example.com/path?foo=bar&other=param"
         in scanner_event["links"]
     )
     assert (
-        "https://secure.gateway.example/redirect?url=https%3A%2F%2Fencoded-destination.example%2Fpath%3Ffoo%3Dbar&other=param"
+        "https://secure.gateway.example.com/redirect?url=https%3A%2F%2Fencoded-destination.example.com%2Fpath%3Ffoo%3Dbar&other=param"
         in scanner_event["links"]
     )
-    assert "https://encoded-destination.example/path?foo=bar" in scanner_event["links"]
-    assert "https://no-gateway.example/plain" in scanner_event["links"]
+    assert (
+        "https://encoded-destination.example.com/path?foo=bar" in scanner_event["links"]
+    )
+    assert "https://no-gateway.example.com/plain" in scanner_event["links"]
     assert scanner_event["links_unwrapped"] == [
-        "https://encoded-destination.example/path?foo=bar"
+        "https://encoded-destination.example.com/path?foo=bar"
     ]
 
 
@@ -819,17 +810,19 @@ def test_scan_email_gateway_links_replace_mode(mocker):
             "link_rewrite_mode": "replace",
             "link_rewrite_rules": [
                 {
-                    "pattern": r"secure\.gateway\.example/redirect\?url=(?P<url>https?%3A[^&]+)"
+                    "pattern": r"secure\.gateway\.example\.com/redirect\?url=(?P<url>https?%3A[^&]+)"
                 },
             ],
         },
     )
     assert (
-        "https://secure.gateway.example/redirect?url=https://actual-destination.example/path?foo=bar&other=param"
+        "https://secure.gateway.example.com/redirect?url=https://actual-destination.example.com/path?foo=bar&other=param"
         in scanner_event["links"]
     )
-    assert "https://encoded-destination.example/path?foo=bar" in scanner_event["links"]
-    assert "https://no-gateway.example/plain" in scanner_event["links"]
+    assert (
+        "https://encoded-destination.example.com/path?foo=bar" in scanner_event["links"]
+    )
+    assert "https://no-gateway.example.com/plain" in scanner_event["links"]
     assert "links_unwrapped" not in scanner_event
 
 
@@ -851,14 +844,10 @@ def test_scan_email_link_stress(mocker):
       - Tracking pixel URL is extracted like any other src= reference.
 
     Domains:
-      - CSS class selectors (e.g. ``div.wrapper``, ``span.preheader``) leak as
-        false-positive domain values — eml_parser's domain extractor matches the
-        ``word.word`` pattern in stylesheet text.
-      - Filenames from CSS ``url()`` references (``hero-bg.jpg``, ``acme-sans.woff2``)
-        leak similarly.
-      - CSS dimension values (``14px``, ``0px``, etc.) are filtered by the scanner
-        via the ``re.fullmatch(r"[\\d.]+px", d)`` guard introduced specifically for
-        this false-positive class. No px values should appear in ``domains``.
+      - CSS class selectors (e.g. ``div.wrapper``, ``span.preheader``) and CSS
+        ``url()`` filenames (``hero-bg.jpg``, ``acme-sans.woff2``) are filtered
+        by eml_parser's ``domain_force_tld=True`` setting, which rejects tokens
+        whose suffix is not a known public TLD.
     """
     scanner_event = run_test_scan(
         mocker=mocker,
@@ -928,17 +917,17 @@ def test_scan_email_link_stress(mocker):
     # Our re.fullmatch(r"[\d.]+px", d) guard must prevent any NNpx values
     assert not any(re.fullmatch(r"[\d.]+px", d) for d in domains)
 
-    # --- Domains: known eml_parser false positives from CSS class selectors ---
-    assert "div.wrapper" in domains
-    assert "span.preheader" in domains
-    assert "p.disclaimer" in domains
-    assert "div.hero-bg" in domains
+    # --- Domains: CSS class selectors filtered by domain_force_tld=True ---
+    assert "div.wrapper" not in domains
+    assert "span.preheader" not in domains
+    assert "p.disclaimer" not in domains
+    assert "div.hero-bg" not in domains
 
-    # --- Domains: known eml_parser false positives from CSS url() filenames ---
-    assert "hero-bg.jpg" in domains
-    assert "hero-mobile.jpg" in domains
-    assert "acme-sans.woff2" in domains
-    assert "acme-sans.woff" in domains
+    # --- Domains: CSS url() filenames filtered by domain_force_tld=True ---
+    assert "hero-bg.jpg" not in domains
+    assert "hero-mobile.jpg" not in domains
+    assert "acme-sans.woff2" not in domains
+    assert "acme-sans.woff" not in domains
 
     # --- Domains: legitimate domains present ---
     assert "acme-store.example.com" in domains
@@ -958,9 +947,9 @@ def test_scan_email_links(mocker):
     # The body repeats one URL; it appears once in the deduped output.
     assert scanner_event["links"] == unordered(
         [
-            "https://one.example/a",
-            "https://two.example/b",
-            "https://three.example/c",
+            "https://one.example.com/a",
+            "https://two.example.com/b",
+            "https://three.example.com/c",
         ]
     )
     assert "ScanEmail: links_truncated" not in scanner_event["flags"]
