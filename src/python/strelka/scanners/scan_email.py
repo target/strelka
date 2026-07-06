@@ -8,6 +8,7 @@ import urllib.parse
 
 import eml_parser
 import pytz
+from bs4 import BeautifulSoup
 
 from strelka import strelka
 
@@ -64,6 +65,26 @@ class ScanEmail(strelka.Scanner):
 
     ## Scanner Options
     !!! note "Scanner Options"
+        **``body_enabled``** — Enable body extraction (default: ``True``).
+
+        When ``False``, the ``body`` field is never populated regardless of content type.
+
+        ---
+
+        **``body_chars``** — Maximum characters stored in ``body`` (default: ``200``, ``-1`` for unlimited).
+
+        Long bodies are truncated to the first and last ``body_chars // 2`` characters joined
+        by ``...``. Set to ``-1`` to store the full body without truncation.
+
+        ---
+
+        **``max_links``** — Maximum number of de-duplicated body links to emit (default: ``50``).
+
+        When the de-duplicated link count exceeds this limit the list is truncated and a
+        ``links_truncated`` flag is added to the event.
+
+        ---
+
         **``mailbox_mode``** — Display name surfacing for address fields (default: ``none``).
 
         Controls whether RFC 5322 display names are included alongside bare addr-specs in
@@ -97,19 +118,40 @@ class ScanEmail(strelka.Scanner):
         - ``parallel`` — leave ``links`` untouched; populate only ``links_unwrapped`` with
           the extracted destinations.
 
+        **``link_rewrite_rules``** — List of gateway unwrap rules (default: ``[]``).
+
+        Each entry is a dict with a ``pattern`` key containing a regex with a named capture
+        group ``(?P<url>...)``. No unwrapping is performed when this list is empty regardless
+        of ``link_rewrite_mode``.
+
         **``link_rewrite_urldecode``** — URL-decoding of captured values (default: ``auto``).
 
         - ``auto`` — decode only when the captured value starts with ``https?%``.
         - ``on`` — always decode.
         - ``off`` — never decode.
 
+        ---
+
+        **``capture_raw_headers``** — Emit the full raw header map under ``headers`` (default: ``False``).
+
+        Opt-in because it emits a dynamic-keyed object; enable only with a ``flattened``/
+        ``flat_object`` index mapping (see Known Limitations).
+
+        **``max_header_length``** — Per-value truncation cap in bytes for the raw header map (default: ``2048``).
+
+        **``max_headers_total``** — Total size cap in bytes for the raw header map, ``0`` for unlimited (default: ``32768``).
+
+        **``header_skip_list``** — Header names excluded from the raw header map (default: ``[]``).
+
+        Large or low-value headers to omit entirely from ``headers``.
+
     ## Known Limitations
     !!! warning "Known Limitations"
         - **Email Encoding and Complex Structures**
             - Limited support for certain email encodings or complex email structures.
         - **Body Output Truncation**
-            - Plain-text body content is capped at 200 characters (100-head + 100-tail) to prevent
-              excessive output.
+            - Body content is truncated to ``body_chars`` characters (default 200, head + tail split)
+              to prevent excessive output. Set ``body_chars: -1`` to disable truncation.
         - **Raw Header Map Index Mapping**
             - The optional ``headers`` object uses arbitrary header names as keys with list
               values; map it as ``flattened``/``flat_object`` (or disable indexing) in the
@@ -161,7 +203,9 @@ class ScanEmail(strelka.Scanner):
         try:
             # Open and parse email byte string
             ep = eml_parser.EmlParser(
-                include_attachment_data=True, include_raw_body=True
+                include_attachment_data=True,
+                include_raw_body=True,
+                domain_force_tld=True,
             )
             parsed_eml = ep.decode_email_bytes(data)
 
@@ -180,33 +224,36 @@ class ScanEmail(strelka.Scanner):
 
             # Extract body content, domains, and links
             links = []
+            body_enabled = options.get("body_enabled", True)
+            body_chars = options.get("body_chars", 200)
+
+            def _truncate(text: str) -> str:
+                if body_chars == -1 or len(text) <= body_chars:
+                    return text
+                half = body_chars // 2
+                return text[:half] + "..." + text[-half:]
+
             if "body" in parsed_eml:
                 for body in parsed_eml["body"]:
-                    if "content_type" in body:
-                        if body["content_type"] == "text/plain":
-                            if len(body["content"]) <= 200:
-                                self.event["body"] = body["content"]
-                            else:
-                                self.event["body"] = (
-                                    body["content"][:100]
-                                    + "..."
-                                    + body["content"][-100:]
-                                )
-                    else:
-                        self.event["body"] = (
-                            body["content"][:100] + "..." + body["content"][-100:]
-                        )
-                    if "domain" in body:
-                        # Filter CSS dimension values (e.g. "7.5px") misidentified as domains.
-                        domains = [
-                            d
-                            for d in body["domain"]
-                            if not re.fullmatch(r"[\d.]+px", d)
-                        ]
-                        if "domain" in self.event:
-                            self.event["domains"] += domains
+                    if body_enabled:
+                        if "content_type" in body:
+                            if body["content_type"] == "text/plain":
+                                self.event["body"] = _truncate(body["content"])
+                            elif (
+                                body["content_type"] == "text/html"
+                                and "body" not in self.event
+                            ):
+                                text = BeautifulSoup(
+                                    body["content"], "html.parser"
+                                ).get_text(separator=" ")
+                                self.event["body"] = _truncate(text)
                         else:
-                            self.event["domains"] = domains
+                            self.event["body"] = _truncate(body["content"])
+                    if "domain" in body:
+                        if "domain" in self.event:
+                            self.event["domains"] += body["domain"]
+                        else:
+                            self.event["domains"] = body["domain"]
                     # eml_parser already extracts full URLs from each body part.
                     links.extend(body.get("uri", []))
 
