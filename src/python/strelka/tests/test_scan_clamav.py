@@ -36,8 +36,8 @@ def test_scan_clamav(mocker):
     """
     retrieve_signatures()
     test_scan_event = {
-        "Data read": "0.51 MB (ratio 1.06",
-        "Data scanned": "0.54 MB",
+        "Data read": "526.71 KiB (ratio 1.06",
+        "Data scanned": "557.96 KiB",
         "End Date": mock.ANY,
         "Engine version": mock.ANY,
         "Infected files": "0",
