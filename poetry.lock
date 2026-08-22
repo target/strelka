@@ -669,13 +669,13 @@ files = [
 
 [[package]]
 name = "eml-parser"
-version = "3.0.2"
+version = "3.0.3"
 description = "Python EML parser library"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "eml_parser-3.0.2-py3-none-any.whl", hash = "sha256:f45ca5a724ca8aa7119c4607991eea3643b86fcbd99b8eb6ea4d87ce30ede1e2"},
+    {file = "eml_parser-3.0.3-py3-none-any.whl", hash = "sha256:f6a736ee03f5bad42396910d15befbac3dce170d7b7e957d9c0f775a3b1f33bd"},
 ]
 
 [package.dependencies]
@@ -3124,4 +3124,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "72fdb8f8cacd9808b8cb79c2cb2aa6384d88abbf17fab1b09f610910ca30fd74"
+content-hash = "3004d707c07bb377da3d44821a472baa71fabf84f1402c0f6dfd53ab1c8920b2"
