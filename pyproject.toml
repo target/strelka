@@ -82,7 +82,7 @@ chaskey = { git = "https://github.com/volexity/chaskey-lts", rev = "2fd80f732dd9
 donut-decryptor = { git = "https://github.com/volexity/donut-decryptor", rev = "5a0f9f87094efe6e8d131d3fa4abf23f31123784" } # For donut-decryptor
 entropy = { git = "https://github.com/jshlbrd/python-entropy.git", rev = "a49f1addccb88d54115832a6d1982b957a56f329" }
 zipp = "^3.20.1"
-certifi = "^2025.1.31"
+certifi = ">=2025.1.31,<2027.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = ">=25.1,<27.0"
