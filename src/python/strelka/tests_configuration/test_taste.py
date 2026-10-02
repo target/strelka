@@ -161,6 +161,7 @@ taste_expectations: dict = {
     },
     "test_whitespace.html": {"mime": ["text/html"], "yara": ["html_file"]},
     "test.vsto": {"mime": ["text/xml"], "yara": unordered(["vsto_file", "xml_file"])},
+    "test_object.rtf": {"mime": ["text/rtf"], "yara": ["rtf_file"]},
     "test_xor.exe": {"mime": ["application/x-dosexec"], "yara": ["mz_file"]},
     "test_zip.cab": {
         "mime": ["application/vnd.ms-cab-compressed"],

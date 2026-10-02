@@ -18,13 +18,11 @@ class ScanRtf(strelka.Scanner):
 
         rtf = rtfobj.RtfObjParser(data)
         rtf.parse()
-        self.event["total"]["rtf_objects"] = len(rtf.rtf_objects)
+        self.event["total"]["rtf_objects"] = len(rtf.objects)
 
-        for rtf_object in rtf.rtf_objects:
+        for index, rtf_object in enumerate(rtf.objects):
             if self.event["total"]["extracted"] >= file_limit:
                 break
-
-            index = rtf.server.index(rtf_object)
 
             if rtf_object.is_package:
                 # Send extracted file back to Strelka
