@@ -1,9 +1,9 @@
 module github.com/target/strelka
 
-go 1.25.0
+go 1.26.0
 
 require (
-	github.com/confluentinc/confluent-kafka-go/v2 v2.15.0
+	github.com/confluentinc/confluent-kafka-go/v2 v2.16.0
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gabriel-vasile/mimetype v1.4.15
 	github.com/go-redis/redis/v8 v8.11.5
@@ -22,8 +22,8 @@ require (
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	golang.org/x/net v0.56.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/text v0.38.0 // indirect
+	golang.org/x/net v0.57.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/text v0.41.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
