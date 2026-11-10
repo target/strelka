@@ -108,6 +108,7 @@ test_assignments_expected: dict = {
     "test_hyperlinks.html": ["ScanHtml"],
     "test_lzx.cab": ["ScanLibarchive"],
     "test_manifest.json": ["ScanJson", "ScanManifest"],
+    "test_object.rtf": ["ScanRtf"],
     "test_password.7z": ["ScanSevenZip"],
     "test_password.doc": ["ScanExiftool", "ScanOle", "ScanVba"],
     "test_password.docx": [
