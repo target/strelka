@@ -8,15 +8,14 @@
 #
 # SPDX-License-Identifier: (GPL-2.0-or-later WITH Bootloader-exception)
 # -----------------------------------------------------------------------------
+# In Python3, the MAGIC_NUMBER value is available in the importlib module. However, in the bootstrap phase we cannot use
+# importlib directly, but rather its frozen variant.
+import _frozen_importlib
 import io
 import marshal
 import os
 import struct
 import zlib
-
-# In Python3, the MAGIC_NUMBER value is available in the importlib module. However, in the bootstrap phase we cannot use
-# importlib directly, but rather its frozen variant.
-import _frozen_importlib
 
 # **NOTE** This module is used during bootstrap.
 # Import *ONLY* builtin modules or modules that are collected into the base_library.zip archive.
