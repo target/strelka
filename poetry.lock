@@ -2798,14 +2798,14 @@ web = ["flask", "regex", "requests"]
 
 [[package]]
 name = "signify"
-version = "0.9.2"
+version = "0.9.3"
 description = "Module to generate and verify PE signatures"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "signify-0.9.2-py3-none-any.whl", hash = "sha256:9bbe43a2198dc8f21ae6c3c41227b695b4c3b7c242e2d2b19c3af7af4f29d2c5"},
-    {file = "signify-0.9.2.tar.gz", hash = "sha256:e504d26184b4df3802104d1bdd9c5074c030246c9febf184acd694822d610287"},
+    {file = "signify-0.9.3-py3-none-any.whl", hash = "sha256:c67f327e34e480e18ff7c4d56f48703dc40e12bd77a4cccfebc0fd0e1fd4e3da"},
+    {file = "signify-0.9.3.tar.gz", hash = "sha256:0310558c26c1425f904b21b4cba3477443e233128eea4117fd97fe1808227db0"},
 ]
 
 [package.dependencies]
@@ -3162,4 +3162,4 @@ type = ["pytest-mypy (>=1.0.1) ; platform_python_implementation != \"PyPy\""]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "b0ec4c851b5517053ac81e33a80fb5211133de88ea7c6d4a0459196be75123d9"
+content-hash = "9610e4c88b7e804313c2b053d0844dc4a6b16d0106f4d40b475e0fe20dd310ae"
