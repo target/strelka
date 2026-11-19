@@ -24,6 +24,7 @@ import (
 
 	grpc_health_v1 "github.com/target/strelka/src/go/api/health"
 	"github.com/target/strelka/src/go/api/strelka"
+	"github.com/target/strelka/src/go/pkg/events"
 	"github.com/target/strelka/src/go/pkg/rpc"
 	"github.com/target/strelka/src/go/pkg/structs"
 	tosss3 "github.com/target/strelka/src/go/pkg/tossS3"
@@ -119,8 +120,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 	sha := fmt.Sprintf("hash:%x", hash.Sum(nil))
 
 	// Embed metadata for request in event
-	em := make(map[string]interface{})
-	em["request"] = request{
+	reqMeta := request{
 		Attributes: attr,
 		Client:     req.Client,
 		Id:         req.Id,
@@ -138,11 +138,12 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 			for _, e := range lrange {
 
 				// Add cached event data
-				if err := json.Unmarshal([]byte(e), &em); err != nil {
+				ev, err := events.Decode(e, reqMeta)
+				if err != nil {
 					return err
 				}
 
-				event, err := json.Marshal(em)
+				event, err := json.Marshal(ev)
 				if err != nil {
 					return err
 				}
@@ -169,7 +170,7 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		}
 	}
 
-	requestInfo, err := json.Marshal(em["request"])
+	requestInfo, err := json.Marshal(reqMeta)
 	if err != nil {
 		return err
 	}
@@ -216,11 +217,12 @@ func (s *server) ScanFile(stream strelka.Frontend_ScanFileServer) error {
 		if tx != nil {
 			tx.RPush(stream.Context(), sha, lpop)
 		}
-		if err := json.Unmarshal([]byte(lpop), &em); err != nil {
+		ev, err := events.Decode(lpop, reqMeta)
+		if err != nil {
 			return err
 		}
 
-		event, err := json.Marshal(em)
+		event, err := json.Marshal(ev)
 		if err != nil {
 			return err
 		}
