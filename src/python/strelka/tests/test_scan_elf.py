@@ -1,7 +1,10 @@
+import io
+import struct
 from pathlib import Path
 from unittest import TestCase, mock
 
 from strelka.scanners.scan_elf import ScanElf as ScanUnderTest
+from strelka.strelka import format_event
 from strelka.tests import run_test_scan
 
 
@@ -1143,3 +1146,30 @@ def test_scan_elf(mocker):
 
     TestCase.maxDiff = None
     TestCase().assertDictEqual(test_scan_event, scanner_event)
+
+
+def test_scan_elf_processor_flags(mocker):
+    """
+    Pass: Processor flags are output as strings and the event can be formatted.
+    Failure: Raw LIEF enums in the event make format_event raise TypeError.
+    """
+
+    # Patch the x86-64 fixture header into a RISC-V ELF with RVC and double-float flags
+    data = bytearray((Path(__file__).parent / "fixtures/test.elf").read_bytes())
+    struct.pack_into("<H", data, 18, 243)  # e_machine: EM_RISCV
+    struct.pack_into("<I", data, 48, 0x5)  # e_flags: RVC | FLOAT_ABI_DOUBLE
+
+    scanner_event = run_test_scan(
+        mocker=mocker,
+        scan_class=ScanUnderTest,
+        fixture_fileobj=io.BytesIO(data),
+    )
+
+    TestCase().assertDictEqual(
+        {
+            "flags_list": ["RISCV_RVC", "RISCV_FLOAT_ABI_DOUBLE"],
+            "processor": 5,
+        },
+        scanner_event["header"]["flags"],
+    )
+    format_event({"scan": {"elf": scanner_event}})

@@ -85,7 +85,7 @@ class ScanElf(strelka.Scanner):
                     "version": str(elf.header.object_file_version).split(".")[1],
                 },
                 "flags": {
-                    "flags_list": elf.header.flags_list,
+                    "flags_list": [str(f).split(".")[1] for f in elf.header.flags_list],
                     "processor": elf.header.processor_flag,
                 },
                 "identity": {
